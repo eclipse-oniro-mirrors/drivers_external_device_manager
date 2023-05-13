@@ -1,0 +1,58 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")  # 导入编译模板
+import("//drivers/external_device_manager/extdevmgr.gni")
+
+config("driver_extension_controller_public_config") {
+  include_dirs = [
+    "include",
+  ]
+}
+config("driver_extension_controller_private_config") {
+  include_dirs = [
+    "//third_party/jsoncpp/include/json",
+  ]
+}
+ohos_shared_library("driver_extension_controller") { # 可执行模块
+  sources = [       # 模块源码
+    "src/driver_extension_controller.cpp",
+  ]
+  include_dirs = [] # 模块依赖头文件目录
+  cflags = []
+  cflags_c = []
+  cflags_cc = []
+  ldflags = []
+  configs = [
+    ":driver_extension_controller_public_config",
+    ":driver_extension_controller_private_config",
+    "${part_path}:coverage_flags",
+    "${utils_path}:utils_config"
+  ]
+  public_configs = [
+    ":driver_extension_controller_public_config",
+  ]
+  deps =[
+    "//third_party/jsoncpp:jsoncpp",
+  ]    # 部件内部依赖
+  part_name = "drivers_external_device_manager"    # 所属部件名称，必选
+  install_enable = true  # 是否默认安装（缺省默认不安装），可选
+  external_deps = [
+   "c_utils:utils",
+   "hiviewdfx_hilog_native:libhilog",
+   "ability_runtime:ability_manager",
+   "ability_base:want"
+  ]
+}
+
+
