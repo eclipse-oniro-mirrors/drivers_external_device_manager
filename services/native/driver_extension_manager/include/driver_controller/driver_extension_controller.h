@@ -17,13 +17,13 @@
 #define DRIVER_EXTENSION_CONTROLLER_H
 #include <string>
 namespace OHOS {
-namespace ExtDevMgr {
+namespace ExternalDeviceManager {
 class DriverExtensionController {
 public:
-    static int StartDriverExtension(
+    static uint32_t StartDriverExtension(
         std::string baudleName,
         std::string abilityName);
-    static int StopDriverExtension(
+    static uint32_t StopDriverExtension(
         std::string bundleName,
         std::string abilityName);
 };

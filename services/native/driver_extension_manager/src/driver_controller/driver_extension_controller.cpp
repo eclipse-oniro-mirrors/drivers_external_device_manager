@@ -16,19 +16,19 @@
 #include "ability_manager_client.h"
 #include "hilog_wrapper.h"
 #include "driver_extension_controller.h"
-const uint32_t UEC_OK = 0
 using namespace OHOS;
-using namespace OHOS::ExtDevMgr;
+using namespace OHOS::ExternalDeviceManager;
+static const uint32_t UEC_OK = 0
 
 int DriverExtensionController::StartDriverExtension(
     std::string bundleName,
     std::string abilityName)
 {
-    DEVMGR_LOGI("Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s", \
+    EDM_LOGI("Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
-        DEVMGR_LOGE("Get AMC Instance failed");
+        EDM_LOGE("Get AMC Instance failed");
         return -1;
     }
     AAFwk::Want want;
@@ -36,10 +36,10 @@ int DriverExtensionController::StartDriverExtension(
 
     auto ret = abmc->StartExtensionAbility(want, nullptr);
     if (ret != UEC_OK) {
-        DEVMGR_LOGE("StartExtensionAbility failed %{public}d", ret);
+        EDM_LOGE("StartExtensionAbility failed %{public}d", ret);
         return ret;
     }
-    DEVMGR_LOGI("StartExtensionAbility success");
+    EDM_LOGI("StartExtensionAbility success");
     return 0;
 }
 
@@ -48,20 +48,20 @@ int DriverExtensionController::StopDriverExtension(
     std::string bundleName,
     std::string abilityName)
 {
-    DEVMGR_LOGI("Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s", \
+    EDM_LOGI("Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
-        DEVMGR_LOGE("Get AMC Instance failed");
+        EDM_LOGE("Get AMC Instance failed");
         return -1;
     }
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
     auto ret = abmc->StopExtensionAbility(want, nullptr);
     if (ret != UEC_OK) {
-        DEVMGR_LOGE("StopExtensionAbility failed %{public}d", ret);
+        EDM_LOGE("StopExtensionAbility failed %{public}d", ret);
         return ret;
     }
-    DEVMGR_LOGI("StopExtensionAbility success");
+    EDM_LOGI("StopExtensionAbility success");
     return 0;
 }

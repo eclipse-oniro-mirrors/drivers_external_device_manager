@@ -13,34 +13,36 @@
  * limitations under the License.
  */
 
-#include "driver_extension_controller.h"
+#include "gtest/gtest.h"
 #include "iostream"
-#include "hilog_wrapper.h"
 #include "string_ex.h"
 #include "iservice_registry.h"
 #include "accesstoken_kit.h"
 #include "token_setproc.h"
 #include "nativetoken_kit.h"
-#include "gtest/gtest.h"
-#define USB_SYSTEM_ABILITY_ID 180
+#include "hilog_wrapper.h"
+#include "driver_extension_controller.h"
+
+namespace OHOS {
+namespace ExternalDeviceManager {
 using namespace OHOS;
 using namespace std;
 using namespace testing::ext;
-class DrvExtCtrlTest: public testing::Test {
+class DrvExtCtrlTest : public testing::Test {
 public:
-    void SetUp() override {
+    void SetUp() override
+    {
         cout << "DrvExtCtrlTest SetUp" << endl;
     }
-    void TearDown() override {
+    void TearDown() override
+    {
         cout << "DrvExtCtrlTest TearDown" << endl;
     }
 };
 
-
-#define TEST_BUNDLE_NAME "com.huawei.ohos.screenshot"
-
-#define TEST_ABILITY_NAME "com.huawei.ohos.screenshot.ServiceExtAbility"
-#define TEST_ABILITY_NAME_ERR "com.huawei.ohos.screenshot.XXX"
+const char *TEST_BUNDLE_NAME "com.usb.right.MainAbility"
+const char *TEST_ABILITY_NAME "UsbServiceExtAbility"
+const char *TEST_ABILITY_NAME_ERR "XXX"
 
 using namespace OHOS::Security::AccessToken;
 
@@ -66,21 +68,21 @@ TokenInfoParams g_sysInfoInstance = {
     .aplStr = "system_basic",
 };
 
-class AccessTokenTest
-{
+class AccessTokenTest {
 public:
     static void SetTestCaseNative (TokenInfoParams *infoInstance)
     {
         uint64_t tokenId = GetAccessTokenId(infoInstance);
         int ret = SetSelfTokenID(tokenId);
         if (ret == 0) {
-            DEVMGR_LOGI("SetSelfTokenID success");
+            EDM_LOGI("SetSelfTokenID success");
         } else {
-            DEVMGR_LOGE("SetSelfTokenID fail");
+            EDM_LOGE("SetSelfTokenID fail");
         }
         AccessTokenKit::ReloadNativeTokenInfo();
     }
 };
+
 HWTEST_F(DrvExtCtrlTest, DrvExtCtrlWithSATest, TestSize.Level1)
 {
     AccessTokenTest::SetTestCaseNative(&g_sysInfoInstance);
@@ -99,4 +101,6 @@ HWTEST_F(DrvExtCtrlTest, DrvExtCtrlWithoutSATest, TestSize.Level1)
     ASSERT_NE(ret, 0);
     ret = DriverExtensionController::StopDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME_ERR);
     ASSERT_NE(ret, 0);
+}
+}
 }
