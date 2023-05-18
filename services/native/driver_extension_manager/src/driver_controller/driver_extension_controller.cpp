@@ -13,18 +13,19 @@
  * limitations under the License.
  */
 
-#include "driver_extension_controller.h"
 #include "ability_manager_client.h"
 #include "hilog_wrapper.h"
-#define MODULE_USB_SERVICE
-#define UEC_OK 0
+#include "driver_extension_controller.h"
+const uint32_t UEC_OK = 0
 using namespace OHOS;
+using namespace OHOS::ExtDevMgr;
 
 int DriverExtensionController::StartDriverExtension(
     std::string bundleName,
     std::string abilityName)
 {
-    DEVMGR_LOGI("Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s",bundleName.c_str(), abilityName.c_str());
+    DEVMGR_LOGI("Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s", \
+        bundleName.c_str(), abilityName.c_str());
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         DEVMGR_LOGE("Get AMC Instance failed");
@@ -47,7 +48,8 @@ int DriverExtensionController::StopDriverExtension(
     std::string bundleName,
     std::string abilityName)
 {
-    DEVMGR_LOGI("Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s",bundleName.c_str(), abilityName.c_str());
+    DEVMGR_LOGI("Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s", \
+        bundleName.c_str(), abilityName.c_str());
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         DEVMGR_LOGE("Get AMC Instance failed");

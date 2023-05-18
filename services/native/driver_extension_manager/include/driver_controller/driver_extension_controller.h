@@ -16,7 +16,8 @@
 #ifndef DRIVER_EXTENSION_CONTROLLER_H
 #define DRIVER_EXTENSION_CONTROLLER_H
 #include <string>
-
+namespace OHOS {
+namespace ExtDevMgr {
 class DriverExtensionController {
 public:
     static int StartDriverExtension(
@@ -26,4 +27,6 @@ public:
         std::string bundleName,
         std::string abilityName);
 };
+}
+}
 #endif
