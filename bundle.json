@@ -1,0 +1,42 @@
+{
+  "name": "@ohos/external_device_manager",
+  "version": "3.1.0",
+  "description": "external device manager",
+  "publishAs": "code-segment",
+  "segment": {
+    "destPath": "drivers/external_device_manager"
+  },
+  "repository": "https://gitee.com/openharmony/drivers_external_device_manager",
+  "license": "Apache License 2.0",
+  "dirs": {},
+  "scripts": {},
+  "component": {
+    "name": "external_device_manager",
+    "subsystem": "hdf",
+    "syscap": [
+      "SystemCapability.Driver.DeviceManager.Extension"
+    ],
+    "hisysevent_config": [],
+    "adapted_system_type": [
+      "standard"
+    ],
+    "rom": "0",
+    "ram": "0",
+    "deps": {
+      "components": [],
+      "third_party": []
+    },
+    "build": {
+      "group_type": {
+        "base_group": [],
+        "fwk_group": [],
+        "service_group": [
+          "//drivers/external_device_manager/sa_profile:ext_dev_mgr_sa",
+          "//drivers/external_device_manager/services:driver_extension_manager"
+        ]
+      },
+      "inner_kits": [],
+      "test": []
+    }
+  }
+}

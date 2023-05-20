@@ -12,7 +12,7 @@ AlignEscapedNewlines: Left
 NamespaceIndentation: None
 FixNamespaceComments: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-BreakConstructorInitializers: AfterColon
+BreakConstructorInitializers: BeforeColon
 AlignArrayOfStructures: Left
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortLambdasOnASingleLine: Empty
