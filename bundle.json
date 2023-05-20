@@ -1,0 +1,45 @@
+{
+    "name": "@ohos/external_device_manager",
+    "description": "external device driver framework",
+    "version": "4.0",
+    "license": "Apache License 2.0",
+    "publishAs": "code-segment",
+    "segment": {
+        "destPath": "drivers/external_device_manager"
+    },
+    "dirs": {},
+    "scripts": {},
+    "component": {
+        "name": "external_device_manager",
+        "subsystem": "hdf",
+        "features": [],
+        "adapted_system_type": [
+            "standard",
+            "small"
+        ],
+        "rom": "735KB",
+        "ram": "8000KB",
+        "deps": {
+            "components": [
+                "hiviewdfx_hilog_native",
+                "c_utils",
+                "init",
+                "ipc",
+                "samgr",
+                "selinux"
+            ],
+            "third_party": [
+                "bounds_checking_function",
+                "googletest"
+            ]
+        },
+        "build": {
+            "sub_component": [
+                "//drivers/external_device_manager/frameworks/js/napi:napi_packages",
+                "//drivers/external_device_manager/service/native/driver_extension:driver_extension_module"
+            ],
+            "inner_kits": [],
+            "test": []
+        }
+    }
+}
