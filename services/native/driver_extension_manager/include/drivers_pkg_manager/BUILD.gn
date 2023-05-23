@@ -1,0 +1,55 @@
+import("//build/ohos.gni")  # 导入编译模板
+
+config("drvext_manager_public_config") {
+  include_dirs = [
+    "include",
+    "../bus_extension/include",
+    "../bus_extension/usb_bus_extension/include",
+  ]
+}
+config("drvext_manager_private_config") {
+  include_dirs = [
+    "//third_party/jsoncpp/include/json",
+  ]
+}
+
+ohos_shared_library("drvext_pkg_manager") { # 可执行模块
+  sources = [       # 模块源码
+    "src/driver_pkg_manager.cpp",
+    "src/driver_bundle_status_callback.cpp",
+  ]
+  include_dirs = [] # 模块依赖头文件目
+  cflags = []
+  cflags_c = []
+  cflags_cc = []
+  ldflags = []
+  configs = [
+    ":drvext_manager_public_config",
+    ":drvext_manager_private_config",
+  ]
+  public_configs = [
+    ":drvext_manager_public_config",
+  ]
+  deps =[
+    "//third_party/jsoncpp:jsoncpp",
+    "//drivers/extension_manager/framework/bus_extension:bus_extension",
+  ]    # 部件内部依赖
+
+  part_name = "drivers_extension_manager"    # 所属部件名称，必选
+  install_enable = true  # 是否默认安装（缺省默认不安装），可选
+
+  external_deps = [
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ability_base:want",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "common_event_service:cesfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+    "os_account:os_account_innerkits"
+  ]
+}
+
