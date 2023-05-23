@@ -27,7 +27,7 @@ ohos_fuzztest("UsbDriverInfoFuzzTest") {
 
   ]
   deps = [
-    "${part_path}/framework/bus_extension:bus_extension",
+    "${ext_mgr_path}/framework/bus_extension:bus_extension",
   ]
   external_deps = [
     "c_utils:utils",

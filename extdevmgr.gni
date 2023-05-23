@@ -12,5 +12,5 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-
 ext_mgr_path = "//drivers/external_device_manager"
+utils_path = "//drivers/external_device_manager/utils"
