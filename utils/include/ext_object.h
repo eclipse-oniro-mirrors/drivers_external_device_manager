@@ -16,7 +16,6 @@
 #define EXT_OBJECT_H
 #include <memory>
 #include <unordered_map>
-
 #include "singleton.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -25,16 +24,21 @@ enum BusType : uint32_t {
     BUS_TYPE_USB = 1,
 };
 
-class DriverInfo {
+struct DriverInfoExt {
 public:
-    virtual ~DriverInfo();
+    virtual ~DriverInfoExt() = default;
+    virtual int Serialize(std::string &str) = 0;
+    virtual int UnSerialize(const std::string &str) = 0;
+};
 
-private:
-    std::string bundleName_;
-    std::string abilityName_;
-    std::string vendor_;
-    std::string version_;
-    BusType busType_;
+struct DriverInfo : public DriverInfoExt {
+public:
+    std::string bus;
+    std::string vendor;
+    std::string version;
+    std::shared_ptr<DriverInfoExt> driverInfoExt;
+    int Serialize(std::string &str) override;
+    int UnSerialize(const std::string &str) override;
 };
 
 class DeviceInfo {
@@ -43,7 +47,11 @@ public:
     {
         devInfo_.devBusInfo.busDeviceId = busDeviceId;
     }
-    virtual ~DeviceInfo();
+    virtual ~DeviceInfo() = default;
+    BusType GetBusType() const
+    {
+        return devInfo_.devBusInfo.busType;
+    }
 
 private:
     friend class DevChangeCallback;
@@ -58,33 +66,32 @@ private:
 };
 
 class ExtDeviceManager;
-class DevChangeCallback final {
+class IDevChangeCallback {
+public:
+    virtual ~IDevChangeCallback();
+    virtual int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device);
+    virtual int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device);
+};
+
+class DevChangeCallback final : public IDevChangeCallback {
 public:
     DevChangeCallback(BusType busType, std::shared_ptr<ExtDeviceManager> extDevMgr)
         : busType_(busType), extDevMgr_(extDevMgr) {};
-    int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device);
-    int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device);
+    int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device) override;
+    int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device) override;
 
 private:
     BusType busType_;
     std::shared_ptr<ExtDeviceManager> extDevMgr_;
 };
 
-class IBusExtension {
-public:
-    virtual ~IBusExtension() = 0;
-    virtual std::shared_ptr<DriverInfo> ParseDriverInfo() = 0;
-    virtual bool MatchDriver(std::shared_ptr<DeviceInfo> device, std::shared_ptr<DriverInfo> driver) = 0;
-    virtual void SetDevChangeCallback(DevChangeCallback &cb);
-
-private:
-};
+class IBusExtension;
 
 class BusExtensionCore {
-public:
     DECLARE_DELAYED_SINGLETON(BusExtensionCore)
+public:
     int32_t Init();
-    int32_t RegisterBusExtension(BusType busType, std::shared_ptr<IBusExtension> busExtension);
+    int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
 
 private:
     std::unordered_map<BusType, std::shared_ptr<IBusExtension>> busExtensions_;
@@ -93,9 +100,10 @@ private:
 
 // bus extension should register by __attribute__ ((constructor)) when loading so
 template <typename BusExtension>
-void RegisterBustension(BusType busType)
+void RegisterBusExtension(BusType busType)
 {
-    DelayedSingleton<BusExtensionCore>::GetInstance()->RegisterBusExtension(busType, std::make_shared<BusExtension>());
+    DelayedSingleton<BusExtensionCore>::GetInstance()->Register(\
+        busType, std::make_shared<BusExtension>());
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS
