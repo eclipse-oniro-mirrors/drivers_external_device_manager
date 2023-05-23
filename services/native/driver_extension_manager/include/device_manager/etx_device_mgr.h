@@ -19,6 +19,7 @@
 #include <mutex>
 
 #include "ext_object.h"
+#include "ibus_extension.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 class Device final {
