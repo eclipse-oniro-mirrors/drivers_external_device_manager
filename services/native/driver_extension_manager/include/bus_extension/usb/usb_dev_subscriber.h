@@ -25,16 +25,16 @@ using namespace OHOS::HDI::Usb::V1_0;
 
 class UsbDevSubscriber : public IUsbdSubscriber {
 public:
-    map<uint32_t, shared_ptr<UsbDeviceInfo>> deviceInfos;
     void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb);
     int32_t DeviceEvent(const USBDeviceInfo &info) override;
     int32_t PortChangedEvent(const PortInfo &info) override;
     string ToString(void);
 private:
-    shared_ptr<IDevChangeCallback> callback;
-    sptr<IUsbInterface> iusb;
-    int OnDeviceConnect(const UsbDev &usbDev);
-    int OnDeviceDisconnect(const UsbDev &usbDev);
+    shared_ptr<IDevChangeCallback> callback_;
+    map<uint32_t, shared_ptr<UsbDeviceInfo>> deviceInfos_;
+    sptr<IUsbInterface> iusb_;
+    int32_t OnDeviceConnect(const UsbDev &usbDev);
+    int32_t OnDeviceDisconnect(const UsbDev &usbDev);
 };
 }
 }

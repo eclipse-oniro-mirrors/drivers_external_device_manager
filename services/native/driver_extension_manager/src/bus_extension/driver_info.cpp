@@ -20,56 +20,58 @@
 #include "usb_driver_info.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-int DriverInfo::Serialize(string &str)
+int32_t DriverInfo::Serialize(string &str)
 {
     string extInfo;
-    if (this->driverInfoExt == nullptr) {
-        EDM_LOGE(MODULE_COMMON, "Serialize error, this->driverInfoExt is nullptr");
+    if (this->driverInfoExt_ == nullptr) {
+        EDM_LOGE(MODULE_COMMON, "Serialize error, this->driverInfoExt_ is nullptr");
         return -1;
     }
-    this->driverInfoExt->Serialize(extInfo);
+    this->driverInfoExt_->Serialize(extInfo);
     Json::Value root;
-    root["bus"] = this->bus;
-    root["vendor"] = this->vendor;
-    root["version"] = this->version;
+    root["bus"] = this->bus_;
+    root["vendor"] = this->vendor_;
+    root["version"] = this->version_;
     root["ext_info"] = extInfo;
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
     str = Json::writeString(builder, root);
-    EDM_LOGI(MODULE_COMMON, "DriverInfo Serialize Done, %s", str.c_str());
+    EDM_LOGI(MODULE_COMMON, "DriverInfo Serialize Done, %{public}s", str.c_str());
     return 0;
 }
-static bool IsJsonObjValid(Json::Value jsonObj, string member, uint32_t type)
+static bool IsJsonObjValid(const Json::Value &jsonObj, const string &member, uint32_t type)
 {
     if (!jsonObj.isMember(member)) {
-        EDM_LOGE(MODULE_COMMON, "the json obj do not has menber :%s", member.c_str());
+        EDM_LOGE(MODULE_COMMON, "the json obj do not has menber :%{public}s", member.c_str());
         return false;
     }
     auto realType = jsonObj[member].type();
     if (realType != type) {
-        EDM_LOGE(MODULE_COMMON, "the json obj member[%s] type error, need:%d, which is:%d",
+        EDM_LOGE(MODULE_COMMON, "the json obj member[%{public}s] type error, need:%{public}d, which is:%{public}d",
             member.c_str(), type, realType);
         return false;
     }
     return true;
 }
 
-int DriverInfo::UnSerialize(const string &str)
+int32_t DriverInfo::UnSerialize(const string &str)
 {
     Json::CharReaderBuilder builder;
     const unique_ptr<Json::CharReader> reader(builder.newCharReader());
     JSONCPP_STRING err;
     Json::Value jsonObj;
     string extInfo;
-    auto rawJsonLength = static_cast<int>(str.length());
-    EDM_LOGD(MODULE_COMMON, "UnSeiralize, input str is : [%s], length = %d", str.c_str(), rawJsonLength);
+    auto rawJsonLength = static_cast<int32_t>(str.length());
+    EDM_LOGD(MODULE_COMMON, "UnSeiralize, input str is : [%{public}s], length = %{public}d", \
+        str.c_str(), rawJsonLength);
     bool ret = reader->parse(str.c_str(), \
                              str.c_str() + rawJsonLength, \
                              &jsonObj,\
                              &err);
     if (ret == false) {
-        EDM_LOGE(MODULE_COMMON, "UnSeiralize error, parse json string error, ret = %d, str is : %s", ret, str.c_str());
-        EDM_LOGE(MODULE_COMMON, "JsonErr:%s", err.c_str());
+        EDM_LOGE(MODULE_COMMON, "UnSeiralize error, parse json string error, ret = %{public}d, str is : %{public}s", \
+            ret, str.c_str());
+        EDM_LOGE(MODULE_COMMON, "JsonErr:%{public}s", err.c_str());
         return -1;
     }
     if (jsonObj.size() == 0) {
@@ -85,24 +87,24 @@ int DriverInfo::UnSerialize(const string &str)
         }
     auto busType = jsonObj["bus"].asString();
     if (LowerStr(busType) == "usb") {
-        this->driverInfoExt = make_shared<UsbDriverInfo>();
+        this->driverInfoExt_ = make_shared<UsbDriverInfo>();
     } else {
         EDM_LOGE(MODULE_COMMON, "unknow bus type");
         return -1;
     }
     extInfo = jsonObj["ext_info"].asString();
-    if (this->driverInfoExt == nullptr) {
-        EDM_LOGE(MODULE_COMMON, "error, this->driverInfoExt is nullptr");
+    if (this->driverInfoExt_ == nullptr) {
+        EDM_LOGE(MODULE_COMMON, "error, this->driverInfoExt_ is nullptr");
         return -1;
     }
-    ret = this->driverInfoExt->UnSerialize(extInfo);
+    ret = this->driverInfoExt_->UnSerialize(extInfo);
     if (ret != 0) {
         EDM_LOGE(MODULE_COMMON, "parse ext_info error");
         return -1;
     }
-    this->bus = jsonObj["bus"].asString();
-    this->vendor = jsonObj["vendor"].asString();
-    this->version = jsonObj["version"].asString();
+    this->bus_ = jsonObj["bus"].asString();
+    this->vendor_ = jsonObj["vendor"].asString();
+    this->version_ = jsonObj["version"].asString();
     return 0;
 }
 }
