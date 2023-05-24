@@ -31,7 +31,8 @@ using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
 using namespace DriverExtension;
 
-DriverPkgManager::DriverPkgManager() {
+DriverPkgManager::DriverPkgManager() 
+{
     cout << "DriverPkgManager" << endl;
 };
 
@@ -114,8 +115,10 @@ BundleInfoNames* DriverPkgManager::QueryMatchDriver(struct DeviceInfo &devInfo)
 
         if (extInstance->MatchDriver(devInfo, val)) {
             string bundleName = key;
-            bundleInfoName_.bundleName = bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
-            bundleInfoName_.abilityName = bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
+            bundleInfoName_.bundleName = 
+            bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
+            bundleInfoName_.abilityName = 
+            bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
             return &bundleInfoName_;
         }
     }
@@ -166,9 +169,9 @@ bool DriverPkgManager::UnRegisterCallback()
     return bundleMonitor_->UnSubscribe();
 }
 
-void DriverPkgManager::OnBundleUpdate(PCALLBACKFUN pFun)
+void DriverPkgManager::RegisterOnBundleUpdate(PCALLBACKFUN pFun)
 {
-    if(pFun == nullptr) {
+    if (pFun == nullptr) {
         return;
     }
 

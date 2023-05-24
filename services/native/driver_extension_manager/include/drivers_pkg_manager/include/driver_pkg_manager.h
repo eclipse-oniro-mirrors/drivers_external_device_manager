@@ -25,7 +25,6 @@
 #include "driver_bundle_status_callback.h"
 
 namespace DriverExtension {
-
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::AAFwk;
@@ -58,7 +57,7 @@ public:
 
     BundleInfoNames* QueryMatchDriver(struct DeviceInfo &devInfo);
 
-    void OnBundleUpdate(PCALLBACKFUN pFun);
+    void RegisterOnBundleUpdate(PCALLBACKFUN pFun);
 private:
     shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
     sptr<DrvBundleStateCallback> bundleStateCallback_ = nullptr;
@@ -67,7 +66,5 @@ private:
     bool RegisterCallback(const sptr<IBundleStatusCallback> &callback);
     bool UnRegisterCallback();
 };
-
 } // namespace
-
 #endif // DRIVER_PKG_MANAGER_H

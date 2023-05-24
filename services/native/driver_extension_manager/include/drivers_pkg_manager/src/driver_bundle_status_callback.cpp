@@ -39,7 +39,7 @@ DrvBundleStateCallback::DrvBundleStateCallback()
     stiching += "########";
 
     std::map<string, DriverInfo> drvInfos_;
-    if(GetAllDriverInfos(drvInfos_)) {
+    if (GetAllDriverInfos(drvInfos_)) {
         HDF_LOGI("GetAllDriverInfos in DrvBundleStateCallback OK");
     } else {
         HDF_LOGE("GetAllDriverInfos in DrvBundleStateCallback ERR");
@@ -57,7 +57,7 @@ void DrvBundleStateCallback::PrintTest()
 }
 
 void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, const int32_t resultCode,
-        const std::string &resultMsg, const std::string &bundleName)
+    const std::string &resultMsg, const std::string &bundleName)
 {
     HDF_LOGD("OnBundleStateChanged");
     return;
@@ -204,7 +204,8 @@ ErrCode DrvBundleStateCallback::QueryExtensionAbilityInfos(const std::string &bu
     return ERR_OK;
 }
 
-bool DrvBundleStateCallback::ParseBaseDriverInfo(int onBundleStatus)
+bool DrvBundleStateCallback::
+ParseBaseDriverInfo(int onBundleStatus)
 {
     shared_ptr<IBusExtension> extInstance = nullptr;
     DriverInfo tmpDrvInfo;
@@ -260,7 +261,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int onBundleStatus)
             continue;
         }
 
-        if(m_pFun != nullptr) {
+        if (m_pFun != nullptr) {
             m_pFun(onBundleStatus, bundleName, abilityName);
         }
         
@@ -327,20 +328,12 @@ void DrvBundleStateCallback::StorageHistoryDrvInfo(std::vector<BundleInfo> &bund
         if (ParseBaseDriverInfo(BUNDLE_NULL)) {
             OnBundleDrvAdded();
         }
-
-        /*
-        if (name == "com.ohos.screenshot") {
-            if (QueryExtensionAbilityInfos(name, userIdTest) == ERR_OK) {
-                ParseBaseDriverInfo();
-                OnBundleDrvAdded();
-            }
-        } */
     }
 }
 
 void DrvBundleStateCallback::OnBundleDrvAdded()
 {
-    for(auto ele : innerDrvInfos_) {
+    for (auto ele : innerDrvInfos_) {
         allDrvInfos_[ele.first] = innerDrvInfos_[ele.first];
     }
 }
@@ -352,7 +345,7 @@ void DrvBundleStateCallback::OnBundleDrvUpdated()
 
 void DrvBundleStateCallback::OnBundleDrvRemoved()
 {
-    for(auto ele : innerDrvInfos_) {
+    for (auto ele : innerDrvInfos_) {
         allDrvInfos_.erase(ele.first);
     }
 }

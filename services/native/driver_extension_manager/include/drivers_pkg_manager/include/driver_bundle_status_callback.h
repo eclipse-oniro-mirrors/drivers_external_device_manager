@@ -40,7 +40,7 @@ enum {
     ERR_DRV_STATUS_CALLBACK_ERROR = 1,
 };
 
-enum ON_BUNDLE_STATUS{
+enum ON_BUNDLE_STATUS {
     BUNDLE_NULL,
     BUNDLE_ADDED = 1,
     BUNDLE_UPDATED,
@@ -48,15 +48,6 @@ enum ON_BUNDLE_STATUS{
 };
 
 typedef void(*PCALLBACKFUN)(int, string, string);
-/* class AACallback
-{
-    virtual void OnBundleUpdate(DrvBundleStateCallback *obj, PCALLBACKFUN pFun);
-};
-
-class AACallbackBundleInfo :public AACallback
-{
-     void OnBundleUpdate(DrvBundleStateCallback *obj,PCALLBACKFUN pFun) override;
-}; */
 
 class DrvBundleStateCallback : public IBundleStatusCallback {
 public:
@@ -66,7 +57,7 @@ public:
     void PrintTest();
 
     virtual void OnBundleStateChanged(const uint8_t installType, const int32_t resultCode,
-            const std::string &resultMsg, const std::string &bundleName) override;
+        const std::string &resultMsg, const std::string &bundleName) override;
 
     /**
      * @brief Called when a new application package has been installed on the device.
@@ -115,7 +106,5 @@ private:
     void OnBundleDrvUpdated();
     void OnBundleDrvRemoved();
 };
-
-} // namespace
-
+}// namespace
 #endif // DRIVER_BUNDLE_STATUS_CALLBACK_H
