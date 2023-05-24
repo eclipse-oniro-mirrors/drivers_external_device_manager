@@ -31,7 +31,7 @@ using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
 using namespace DriverExtension;
 
-DriverPkgManager::DriverPkgManager() 
+DriverPkgManager::DriverPkgManager()
 {
     cout << "DriverPkgManager" << endl;
 };
@@ -115,9 +115,9 @@ BundleInfoNames* DriverPkgManager::QueryMatchDriver(struct DeviceInfo &devInfo)
 
         if (extInstance->MatchDriver(devInfo, val)) {
             string bundleName = key;
-            bundleInfoName_.bundleName = 
+            bundleInfoName_.bundleName =
             bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
-            bundleInfoName_.abilityName = 
+            bundleInfoName_.abilityName =
             bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
             return &bundleInfoName_;
         }

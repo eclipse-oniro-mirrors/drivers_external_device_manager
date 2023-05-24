@@ -28,7 +28,6 @@
 #include "ibus_extension.h"
 
 namespace DriverExtension {
-class DrvBundleStateCallback;
 
 using namespace std;
 using namespace OHOS;
@@ -96,7 +95,7 @@ private:
     string stiching = "This is used for Name Stiching";
 
     ErrCode QueryExtensionAbilityInfos(const std::string &bundleName, const int userId);
-    bool ParseBaseDriverInfo(int onBundleStatus);
+    bool ParseBaseDriverInfo(int bundleStatus);
 
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
@@ -106,5 +105,5 @@ private:
     void OnBundleDrvUpdated();
     void OnBundleDrvRemoved();
 };
-}// namespace
+} // namespace
 #endif // DRIVER_BUNDLE_STATUS_CALLBACK_H

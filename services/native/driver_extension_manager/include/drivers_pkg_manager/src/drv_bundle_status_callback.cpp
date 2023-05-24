@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "driver_bundle_status_callback.h"
+#include "drv_bundle_status_callback.h"
 #include "usb_bus_extension.h"
 
 #include <want.h>
@@ -204,8 +204,7 @@ ErrCode DrvBundleStateCallback::QueryExtensionAbilityInfos(const std::string &bu
     return ERR_OK;
 }
 
-bool DrvBundleStateCallback::
-ParseBaseDriverInfo(int onBundleStatus)
+bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
 {
     shared_ptr<IBusExtension> extInstance = nullptr;
     DriverInfo tmpDrvInfo;
@@ -262,7 +261,7 @@ ParseBaseDriverInfo(int onBundleStatus)
         }
 
         if (m_pFun != nullptr) {
-            m_pFun(onBundleStatus, bundleName, abilityName);
+            m_pFun(bundleStatus, bundleName, abilityName);
         }
         
         bundleName += stiching;

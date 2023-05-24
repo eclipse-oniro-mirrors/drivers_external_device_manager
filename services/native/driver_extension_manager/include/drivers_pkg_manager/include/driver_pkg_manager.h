@@ -22,7 +22,7 @@
 #include "bundle_monitor.h"
 
 #include "ibus_extension.h"
-#include "driver_bundle_status_callback.h"
+#include "drv_bundle_status_callback.h"
 
 namespace DriverExtension {
 using namespace std;
