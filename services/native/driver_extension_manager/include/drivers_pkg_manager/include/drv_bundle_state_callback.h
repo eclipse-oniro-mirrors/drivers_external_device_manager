@@ -28,7 +28,6 @@
 #include "ibus_extension.h"
 
 namespace DriverExtension {
-
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::AAFwk;

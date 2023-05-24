@@ -16,7 +16,7 @@ config("drvext_manager_private_config") {
 ohos_shared_library("drvext_pkg_manager") { # 可执行模块
   sources = [       # 模块源码
     "src/driver_pkg_manager.cpp",
-    "src/drv_bundle_status_callback.cpp",
+    "src/drv_bundle_state_callback.cpp",
   ]
   include_dirs = [] # 模块依赖头文件目
   cflags = []

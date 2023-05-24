@@ -238,11 +238,9 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
             if (data.name == "bus") {
                 tmpDrvInfo.bus = data.value;
             }
-
             if (data.name == "vendor") {
                 tmpDrvInfo.vendor = data.value;
             }
-
             if (data.name == "version") {
                 tmpDrvInfo.version = data.value;
             }
@@ -263,7 +261,6 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
         if (m_pFun != nullptr) {
             m_pFun(bundleStatus, bundleName, abilityName);
         }
-        
         bundleName += stiching;
         bundleName += abilityName;
         innerDrvInfos_[bundleName] = tmpDrvInfo;
