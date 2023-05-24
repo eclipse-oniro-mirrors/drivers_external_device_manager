@@ -54,25 +54,22 @@ ohos_shared_library("bus_extension") {
     "//third_party/jsoncpp/include/json",
     "native/driver_extension_manager/include/bus_extension/usb"
   ]
-  cflags = []
-  cflags_c = []
-  cflags_cc = []
-  ldflags = []
   configs = [
     "${utils_path}:coverage_flags",
     "${utils_path}:utils_config"
   ]
   deps =[
     "//third_party/jsoncpp:jsoncpp",
-    "//drivers/peripheral/usb/hdi_service:libusb_interface_service_1.0",
     ":driver_extension_manager"
   ]
-  part_name = "external_device_manager"
-  install_enable = true
   external_deps = [
    "drivers_interface_usb:libusb_proxy_1.0",
    "c_utils:utils",
    "hiviewdfx_hilog_native:libhilog",
    "bundle_framework:appexecfwk_base",
   ]
+
+  install_enable = true
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
 }

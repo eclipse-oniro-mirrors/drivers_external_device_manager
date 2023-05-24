@@ -19,12 +19,14 @@
 #include "ibus_extension.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-struct UsbDriverInfo : public DriverInfoExt {
+class UsbDriverInfo : public DriverInfoExt {
 public:
-    std::vector<uint16_t> pids;
-    std::vector<uint16_t> vids;
-    int Serialize(string &metaData)  override;
-    int UnSerialize(const string &metaData) override;
+    int32_t Serialize(string &metaData)  override;
+    int32_t UnSerialize(const string &metaData) override;
+private:
+    friend class UsbBusExtension;
+    std::vector<uint16_t> pids_;
+    std::vector<uint16_t> vids_;
 };
 }
 }

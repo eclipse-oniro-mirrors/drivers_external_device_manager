@@ -27,14 +27,14 @@ class UsbBusExtension : public IBusExtension {
 public:
     UsbBusExtension();
     ~UsbBusExtension();
-    int SetDevChangeCallback(shared_ptr<IDevChangeCallback> callback) override;
+    int32_t SetDevChangeCallback(shared_ptr<IDevChangeCallback> callback) override;
     bool MatchDriver(const DriverInfo &driver, const DeviceInfo &device) override;
     shared_ptr<DriverInfoExt> ParseDriverInfo(const vector<Metadata> &metadata) override;
     void SetUsbInferface(sptr<IUsbInterface> iusb);
 
 private:
-    sptr<UsbDevSubscriber> subScriber = nullptr;
-    sptr<IUsbInterface> usbInterface = nullptr; // in usb HDI;
+    sptr<UsbDevSubscriber> subScriber_ = nullptr;
+    sptr<IUsbInterface> usbInterface_ = nullptr; // in usb HDI;
     vector<uint16_t> ParseCommaStrToVectorUint16(const string &str);
 };
 }

@@ -26,11 +26,11 @@ BusExtensionCore::~BusExtensionCore()
     return;
 }
 
-int32_t BusExtensionCore::Init()\
+int32_t BusExtensionCore::Init()
 {
     return 0;
 }
-int32_t BusExtensionCore::Register(\
+int32_t BusExtensionCore::Register(
     BusType busType, std::shared_ptr<IBusExtension> busExtension)
 {
     return 0;

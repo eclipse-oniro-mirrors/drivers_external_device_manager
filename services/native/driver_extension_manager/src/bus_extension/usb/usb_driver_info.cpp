@@ -19,15 +19,15 @@
 #include "usb_driver_info.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-int UsbDriverInfo::Serialize(string &driverStr)
+int32_t UsbDriverInfo::Serialize(string &driverStr)
 {
     Json::Value valueRoot;
     Json::Value valueVids;
     Json::Value valuePids;
-    for (auto vid : vids) {
+    for (auto vid : vids_) {
         valueVids.append(Json::Value(vid));
     };
-    for (auto pid : pids) {
+    for (auto pid : pids_) {
         valuePids.append(Json::Value(pid));
     };
     valueRoot["vids"] = valueVids;
@@ -38,7 +38,7 @@ int UsbDriverInfo::Serialize(string &driverStr)
     return 0;
 }
 
-int UsbDriverInfo::UnSerialize(const string &driverStr)
+int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
 {
     EDM_LOGD(MODULE_BUS_USB,  "UsbDrvInfo UnSerialize begin");
     Json::CharReaderBuilder builder;
@@ -47,9 +47,9 @@ int UsbDriverInfo::UnSerialize(const string &driverStr)
     Json::Value jsonObj;
     bool ret = reader->parse(driverStr.c_str(), driverStr.c_str() + driverStr.length(), &jsonObj, &err);
     if (ret == false) {
-        EDM_LOGE(MODULE_BUS_USB,  "UnSeiralize error, parse json string error, ret = %d, str is : %s",\
+        EDM_LOGE(MODULE_BUS_USB,  "UnSeiralize error, parse json string error, ret = %{public}d, str is : %{public}s",\
             ret, driverStr.c_str());
-        EDM_LOGE(MODULE_BUS_USB,  "JsonErr:%s", err.c_str());
+        EDM_LOGE(MODULE_BUS_USB,  "JsonErr:%{public}s", err.c_str());
         return -1;
     }
     if (jsonObj.size() == 0) {
@@ -62,7 +62,7 @@ int UsbDriverInfo::UnSerialize(const string &driverStr)
         return -1;
     }
     if (jsonObj["pids"].type() != Json::arrayValue || jsonObj["vids"].type() != Json::arrayValue) {
-        EDM_LOGE(MODULE_BUS_USB,  "json member type error, pids type is : %d, vids type is %d", \
+        EDM_LOGE(MODULE_BUS_USB,  "json member type error, pids type is : %{public}d, vids type is %{public}d", \
             jsonObj["pids"].type(), jsonObj["vids"].type());
         return -1;
     }
@@ -71,20 +71,20 @@ int UsbDriverInfo::UnSerialize(const string &driverStr)
     vector<uint16_t> pids_;
     for (auto vid : jsonObj["vids"]) {
         if (vid.type() != Json::intValue) {
-            EDM_LOGE(MODULE_BUS_USB,  "json vids type error, %d", vid.type());
+            EDM_LOGE(MODULE_BUS_USB,  "json vids type error, %{public}d", vid.type());
             return -1;
         }
         vids_.push_back(vid.asUInt());
     }
     for (auto pid : jsonObj["pids"]) {
         if (pid.type() != Json::intValue) {
-            EDM_LOGE(MODULE_BUS_USB,  "json pid type error, %d", pid.type());
+            EDM_LOGE(MODULE_BUS_USB,  "json pid type error, %{public}d", pid.type());
             return -1;
         }
         pids_.push_back(pid.asUInt());
     }
-    this->pids = pids_;
-    this->vids = vids_;
+    this->pids_ = pids_;
+    this->vids_ = vids_;
     return 0;
 }
 }

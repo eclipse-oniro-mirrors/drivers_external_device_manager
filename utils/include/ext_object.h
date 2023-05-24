@@ -23,22 +23,32 @@ enum BusType : uint32_t {
     BUS_TYPE_INVALID = 0,
     BUS_TYPE_USB = 1,
 };
+class IBusExtension;
 
-struct DriverInfoExt {
+class DriverInfoExt {
 public:
     virtual ~DriverInfoExt() = default;
-    virtual int Serialize(std::string &str) = 0;
-    virtual int UnSerialize(const std::string &str) = 0;
+    virtual int32_t Serialize(std::string &str) = 0;
+    virtual int32_t UnSerialize(const std::string &str) = 0;
 };
 
-struct DriverInfo : public DriverInfoExt {
+class DriverInfo : public DriverInfoExt {
 public:
-    std::string bus;
-    std::string vendor;
-    std::string version;
-    std::shared_ptr<DriverInfoExt> driverInfoExt;
-    int Serialize(std::string &str) override;
-    int UnSerialize(const std::string &str) override;
+    int32_t Serialize(std::string &str) override;
+    int32_t UnSerialize(const std::string &str) override;
+    std::string GetBusName() const
+    {
+        return bus_;
+    }
+    std::shared_ptr<DriverInfoExt> GetInfoExt() const
+    {
+        return driverInfoExt_;
+    }
+private:
+    std::string bus_;
+    std::string vendor_;
+    std::string version_;
+    std::shared_ptr<DriverInfoExt> driverInfoExt_;
 };
 
 class DeviceInfo {
@@ -85,7 +95,6 @@ private:
     std::shared_ptr<ExtDeviceManager> extDevMgr_;
 };
 
-class IBusExtension;
 
 class BusExtensionCore {
     DECLARE_DELAYED_SINGLETON(BusExtensionCore)
