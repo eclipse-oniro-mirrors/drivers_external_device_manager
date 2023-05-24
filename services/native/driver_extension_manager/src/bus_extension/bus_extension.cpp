@@ -13,27 +13,24 @@
  * limitations under the License.
  */
 
-#include "etx_device_mgr.h"
-
+#include "string_ex.h"
+#include "hilog_wrapper.h"
+#include "ibus_extension.h"
+#include "usb_bus_extension.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-BusExtensionCore::BusExtensionCore()
+shared_ptr<IBusExtension> IBusExtension::GetInstance(const string &busType)
 {
-    return;
-}
-BusExtensionCore::~BusExtensionCore()
-{
-    return;
+    if (LowerStr(busType) == "usb") {
+        return make_shared<UsbBusExtension>();
+    }
+    return nullptr;
 }
 
-int32_t BusExtensionCore::Init()
+__attribute__ ((constructor)) static void RegBusExtension()
 {
-    return 0;
+    EDM_LOGI(MODULE_COMMON, "installing UsbBusExtension");
+    RegisterBusExtension<UsbBusExtension>(BusType::BUS_TYPE_USB);
 }
-int32_t BusExtensionCore::Register(
-    BusType busType, std::shared_ptr<IBusExtension> busExtension)
-{
-    return 0;
 }
-} // namespace ExternalDeviceManager
-} // namespace OHOS
+}

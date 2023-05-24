@@ -13,27 +13,24 @@
  * limitations under the License.
  */
 
-#include "etx_device_mgr.h"
-
+#ifndef USB_DEVICE_INFO_H
+#define USB_DEVICE_INFO_H
+#include "ibus_extension.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-BusExtensionCore::BusExtensionCore()
-{
-    return;
+class UsbDeviceInfo : public DeviceInfo {
+public:
+    UsbDeviceInfo(uint32_t busDeviceId, const std::string &description = "")
+        : DeviceInfo(busDeviceId, description) { }
+    ~UsbDeviceInfo() = default;
+private:
+    friend class UsbBusExtension;
+    friend class UsbDevSubscriber;
+    uint16_t bcdUSB_ = 0;
+    uint8_t  deviceClass_ = 0;
+    uint16_t idVendor_ = 0;
+    uint16_t idProduct_ = 0;
+};
 }
-BusExtensionCore::~BusExtensionCore()
-{
-    return;
 }
-
-int32_t BusExtensionCore::Init()
-{
-    return 0;
-}
-int32_t BusExtensionCore::Register(
-    BusType busType, std::shared_ptr<IBusExtension> busExtension)
-{
-    return 0;
-}
-} // namespace ExternalDeviceManager
-} // namespace OHOS
+#endif

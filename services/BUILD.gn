@@ -18,14 +18,18 @@ ohos_shared_library("driver_extension_manager") {
   sources = [
     "${ext_mgr_path}/services/zidl/src/driver_ext_mgr_stub.cpp",
     "native/driver_extension_manager/src/driver_etx_mgr.cpp",
+    "native/driver_extension_manager/src/device_manager/etx_device_mgr.cpp"
   ]
 
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
   ]
-
+  configs = [
+    "${utils_path}:utils_config"
+  ]
   external_deps = [
     "ability_runtime:ability_manager",
     "c_utils:utils",
@@ -34,6 +38,38 @@ ohos_shared_library("driver_extension_manager") {
     "samgr:samgr_proxy",
   ]
 
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+}
+
+ohos_shared_library("bus_extension") {
+  sources = [
+    "native/driver_extension_manager/src/bus_extension/driver_info.cpp",
+    "native/driver_extension_manager/src/bus_extension/bus_extension.cpp",
+    "native/driver_extension_manager/src/bus_extension/usb/usb_bus_extension.cpp",
+    "native/driver_extension_manager/src/bus_extension/usb/usb_dev_subscriber.cpp",
+    "native/driver_extension_manager/src/bus_extension/usb/usb_driver_info.cpp",
+  ]
+  include_dirs = [
+    "//third_party/jsoncpp/include/json",
+    "native/driver_extension_manager/include/bus_extension/usb"
+  ]
+  configs = [
+    "${utils_path}:coverage_flags",
+    "${utils_path}:utils_config"
+  ]
+  deps =[
+    "//third_party/jsoncpp:jsoncpp",
+    ":driver_extension_manager"
+  ]
+  external_deps = [
+   "drivers_interface_usb:libusb_proxy_1.0",
+   "c_utils:utils",
+   "hiviewdfx_hilog_native:libhilog",
+   "bundle_framework:appexecfwk_base",
+  ]
+
+  install_enable = true
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }

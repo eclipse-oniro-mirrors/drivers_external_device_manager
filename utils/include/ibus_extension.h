@@ -13,27 +13,29 @@
  * limitations under the License.
  */
 
-#include "etx_device_mgr.h"
-
+#ifndef IUSB_EXTENSION_H
+#define IUSB_EXTENSION_H
+#include <vector>
+#include <stdint.h>
+#include <string>
+#include <memory>
+#include "application_info.h"
+#include "ext_object.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-BusExtensionCore::BusExtensionCore()
-{
-    return;
+using namespace std;
+using namespace OHOS::AppExecFwk;
+
+
+class IBusExtension {
+public:
+    virtual ~IBusExtension() = default;
+    static shared_ptr<IBusExtension> GetInstance(const string &busType);
+    virtual shared_ptr<DriverInfoExt> ParseDriverInfo(const vector<Metadata> &metadata) = 0;
+    virtual bool MatchDriver(const DriverInfo &driver, const DeviceInfo &device) = 0;
+    virtual int32_t SetDevChangeCallback(shared_ptr<IDevChangeCallback> callback) = 0;
+};
 }
-BusExtensionCore::~BusExtensionCore()
-{
-    return;
 }
 
-int32_t BusExtensionCore::Init()
-{
-    return 0;
-}
-int32_t BusExtensionCore::Register(
-    BusType busType, std::shared_ptr<IBusExtension> busExtension)
-{
-    return 0;
-}
-} // namespace ExternalDeviceManager
-} // namespace OHOS
+#endif

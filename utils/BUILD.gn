@@ -11,6 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-ext_mgr_path = "//drivers/external_device_manager"
-utils_path = "//drivers/external_device_manager/utils"
+config("utils_config") {
+    include_dirs = ["include"]
+}
+
+declare_args() {
+    external_device_manager_coverage= false
+}
+
+config("coverage_flags") {
+    if (external_device_manager_coverage) {
+        cflags = ["--coverage"]
+        ldflags = ["--coverage"]
+    }
+}
