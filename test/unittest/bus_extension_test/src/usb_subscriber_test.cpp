@@ -17,15 +17,16 @@
 #include "map"
 #include "gmock/gmock.h"
 #include "usb_impl_mock.h"
+#define private public
 #include "ibus_extension.h"
 #include "usb_bus_extension.h"
-
+#undef private
 namespace OHOS {
-namespace ExtDevMgr {
+namespace ExternalDeviceManager {
 using namespace std;
 using namespace testing;
 using namespace testing::ext;
-using namespace ExtDevMgr;
+using namespace ExternalDeviceManager;
 using namespace OHOS::USB;
 
 class UsbSubscriberTest : public testing::Test {
@@ -50,26 +51,26 @@ public:
     UsbBusExtension *usbBusExt;
 };
 
-class TestDevChangeCallback : public DevChangeCallback {
+class TestDevChangeCallback : public IDevChangeCallback {
 public:
-    map<string, DeviceInfo> devInfoMap;
+    map<uint64_t, shared_ptr<DeviceInfo>> devInfoMap;
     TestDevChangeCallback() { };
     ~TestDevChangeCallback() { };
 
-    void OnDeviceAdd(const DeviceInfo &devInfo) override
+    int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device) override
     {
-        this->devInfoMap[devInfo.deviceId] = devInfo;
+        this->devInfoMap[device->devInfo_.deviceId] = device;
+        return 0;
     };
-    void OnDeviceRemove(const DeviceInfo &devInfo) override
+    int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device) override
     {
-        this->devInfoMap.erase(devInfo.deviceId);
+        this->devInfoMap.erase(device->devInfo_.deviceId);
+        return 1;
     };
 };
 
 const uint32_t ACT_DEVUP = 0;
-const uint32_t ACT_DEVDOWN = 1,
-const uint32_t ACT_UPDEVICE = 2,
-const uint32_t ACT_DOWNDEVICE = 2,
+const uint32_t ACT_DEVDOWN = 1;
 
 HWTEST_F(UsbSubscriberTest, UsbDevCallbackTest, TestSize.Level1)
 {

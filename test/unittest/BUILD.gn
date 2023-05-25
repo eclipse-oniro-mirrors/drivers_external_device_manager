@@ -13,7 +13,8 @@
 
 import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
-module_output_path = "${part_name}/unittest"
+module_output_path = "external_device_manager/unittest"
+bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
 ohos_unittest("bus_extension_test") {
     module_out_path = "${module_output_path}"
     sources = [
@@ -25,9 +26,10 @@ ohos_unittest("bus_extension_test") {
     include_dirs = [
         "//third_party/jsoncpp/include/json",
         "bus_extension_test/include",
+        "${bus_extension_include_path}"
     ]
     deps = [
-        "${part_path}/framework/bus_extension:bus_extension",
+        "${ext_mgr_path}/services:bus_extension",
         "//third_party/googletest:gmock_main",
         "//third_party/googletest:gtest_main",
         "//third_party/jsoncpp:jsoncpp",

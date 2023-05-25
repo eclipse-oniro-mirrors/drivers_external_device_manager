@@ -78,7 +78,7 @@ private:
 class ExtDeviceManager;
 class IDevChangeCallback {
 public:
-    virtual ~IDevChangeCallback();
+    virtual ~IDevChangeCallback() = default;
     virtual int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device);
     virtual int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device);
 };
