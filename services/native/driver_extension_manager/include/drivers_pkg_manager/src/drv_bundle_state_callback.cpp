@@ -261,8 +261,8 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
         if (m_pFun != nullptr) {
             m_pFun(bundleStatus, bundleName, abilityName);
         }
-        bundleName += stiching;
-        bundleName += abilityName;
+
+        bundleName += stiching + abilityName;
         innerDrvInfos_[bundleName] = tmpDrvInfo;
         ret = true;
     }
