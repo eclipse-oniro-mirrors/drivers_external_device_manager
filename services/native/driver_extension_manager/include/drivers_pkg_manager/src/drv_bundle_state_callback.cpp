@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "drv_bundle_status_callback.h"
+#include "drv_bundle_state_callback.h"
 #include "usb_bus_extension.h"
 
 #include <want.h>
