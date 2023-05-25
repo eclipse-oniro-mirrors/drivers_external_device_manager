@@ -1,4 +1,4 @@
-import("//build/ohos.gni")  # 导入编译模板
+import("//build/ohos.gni")  # Import Compilation Template
 
 config("drvext_manager_public_config") {
   include_dirs = [
@@ -13,12 +13,12 @@ config("drvext_manager_private_config") {
   ]
 }
 
-ohos_shared_library("drvext_pkg_manager") { # 可执行模块
-  sources = [       # 模块源码
+ohos_shared_library("drvext_pkg_manager") { # executable module
+  sources = [       # Module source code
     "src/driver_pkg_manager.cpp",
     "src/drv_bundle_state_callback.cpp",
   ]
-  include_dirs = [] # 模块依赖头文件目
+  include_dirs = [] # Module dependency header file directory
   cflags = []
   cflags_c = []
   cflags_cc = []
@@ -33,10 +33,10 @@ ohos_shared_library("drvext_pkg_manager") { # 可执行模块
   deps =[
     "//third_party/jsoncpp:jsoncpp",
     "//drivers/extension_manager/framework/bus_extension:bus_extension",
-  ]    # 部件内部依赖
+  ]    # Component internal dependencies
 
-  part_name = "drivers_extension_manager"    # 所属部件名称，必选
-  install_enable = true  # 是否默认安装（缺省默认不安装），可选
+  part_name = "drivers_extension_manager"    # Component name, required
+  install_enable = true  # Default installation (default not installed), optional
 
   external_deps = [
     "drivers_interface_usb:libusb_proxy_1.0",
