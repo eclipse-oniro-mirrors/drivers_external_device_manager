@@ -56,7 +56,22 @@
 ```
 
 ## 场景说明
+
 扩展外部设备管理框架支持三方设备厂商开发非标准协议的USB可插拔设备驱动接入OpenHarmony系统，提供应用直接访问非标准协议的可插拔设备硬件能力。设备厂商开发者只需以HAP包形式开发和发布扩展驱动包，并通过OpenHarmony系统安全认证后，对其他三方HAP和系统服务提供硬件接访问能力，实现非标准协议的可插拔设备快速接入。
+
+## 编译构建
+
+编译32位ARM系统external_device_manager部件
+```
+./build.sh --product-name {product_name} --ccache --build-target external_device_manager
+```
+
+编译64位ARM系统external_device_manager部件
+```
+./build.sh --product-name {product_name} --ccache --target-cpu arm64 --build-target external_device_manager
+```
+
+{product_name}为当前支持的平台，比如rk3568。
 
 ## 相关仓
 
