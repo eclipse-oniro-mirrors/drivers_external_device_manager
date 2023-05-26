@@ -44,7 +44,8 @@
             ],
             "inner_kits": [],
             "test": [
-                "//drivers/external_device_manager/test/unittest:external_device_manager_test"
+                "//drivers/external_device_manager/test/unittest:external_device_manager_test",
+                "//drivers/external_device_manager/test/unittest/driver_extension_context_test:driver_extension_context_test"
             ]
         }
     }
