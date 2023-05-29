@@ -46,11 +46,11 @@ void DriverExtensionContextTest::TearDown(void)
 
 /*
  * Feature: DriverExtensionContext
- * Function: startAbility
+ * Function: UpdateDriverState
  * SubFunction: NA
- * FunctionPoints: DriverExtensionContextTest TerminateAbility
+ * FunctionPoints: DriverExtensionContextTest UpdateDriverState
  * EnvConditions: NA
- * CaseDescription: Verify startAbility
+ * CaseDescription: Verify UpdateDriverState
  */
 HWTEST_F(DriverExtensionContextTest, driver_extension_context_updateDriverState_001, TestSize.Level1)
 {

@@ -129,7 +129,7 @@ vector<uint16_t> UsbBusExtension::ParseCommaStrToVectorUint16(const string &str)
     if (ret.size() == 0) {
         EDM_LOGW(MODULE_BUS_USB,  "parse error, size 0, str:%{public}s.", str.c_str());
     } else {
-        EDM_LOGD(MODULE_BUS_USB,  "parse sucess, size %{public}lu, str:%{public}s", ret.size(), str.c_str());
+        EDM_LOGD(MODULE_BUS_USB,  "parse sucess, size %{public}zu, str:%{public}s", ret.size(), str.c_str());
     }
 
     return ret;
