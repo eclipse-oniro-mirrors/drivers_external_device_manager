@@ -42,4 +42,3 @@ ohos_shared_library("bus_extension") {
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
-

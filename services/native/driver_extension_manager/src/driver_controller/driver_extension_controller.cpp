@@ -18,8 +18,6 @@
 #include "driver_extension_controller.h"
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
-const uint32_t UEC_OK = 0;
-
 int32_t DriverExtensionController::StartDriverExtension(
     std::string bundleName,
     std::string abilityName)
@@ -35,7 +33,7 @@ int32_t DriverExtensionController::StartDriverExtension(
     want.SetElementName(bundleName, abilityName);
 
     auto ret = abmc->StartExtensionAbility(want, nullptr);
-    if (ret != UEC_OK) {
+    if (ret != 0) {
         EDM_LOGE(MODULE_EA_MGR, "StartExtensionAbility failed %{public}d", ret);
         return ret;
     }
@@ -58,7 +56,7 @@ int32_t DriverExtensionController::StopDriverExtension(
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
     auto ret = abmc->StopExtensionAbility(want, nullptr);
-    if (ret != UEC_OK) {
+    if (ret != 0) {
         EDM_LOGE(MODULE_EA_MGR, "StopExtensionAbility failed %{public}d", ret);
         return ret;
     }
