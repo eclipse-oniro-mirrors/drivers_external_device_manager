@@ -14,7 +14,6 @@
  */
 
 #include "usb_impl_mock.h"
-#include "iremote_object.h"
 
 namespace OHOS {
 namespace USB {
