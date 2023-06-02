@@ -18,17 +18,17 @@
 #include "driver_extension_controller.h"
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
-static const uint32_t UEC_OK = 0
+const uint32_t UEC_OK = 0;
 
-int DriverExtensionController::StartDriverExtension(
+int32_t DriverExtensionController::StartDriverExtension(
     std::string bundleName,
     std::string abilityName)
 {
-    EDM_LOGI("Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s", \
+    EDM_LOGI(MODULE_EA_MGR, "Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
-        EDM_LOGE("Get AMC Instance failed");
+        EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
         return -1;
     }
     AAFwk::Want want;
@@ -36,32 +36,32 @@ int DriverExtensionController::StartDriverExtension(
 
     auto ret = abmc->StartExtensionAbility(want, nullptr);
     if (ret != UEC_OK) {
-        EDM_LOGE("StartExtensionAbility failed %{public}d", ret);
+        EDM_LOGE(MODULE_EA_MGR, "StartExtensionAbility failed %{public}d", ret);
         return ret;
     }
-    EDM_LOGI("StartExtensionAbility success");
+    EDM_LOGI(MODULE_EA_MGR, "StartExtensionAbility success");
     return 0;
 }
 
 
-int DriverExtensionController::StopDriverExtension(
+int32_t DriverExtensionController::StopDriverExtension(
     std::string bundleName,
     std::string abilityName)
 {
-    EDM_LOGI("Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s", \
+    EDM_LOGI(MODULE_EA_MGR, "Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
-        EDM_LOGE("Get AMC Instance failed");
+        EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
         return -1;
     }
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
     auto ret = abmc->StopExtensionAbility(want, nullptr);
     if (ret != UEC_OK) {
-        EDM_LOGE("StopExtensionAbility failed %{public}d", ret);
+        EDM_LOGE(MODULE_EA_MGR, "StopExtensionAbility failed %{public}d", ret);
         return ret;
     }
-    EDM_LOGI("StopExtensionAbility success");
+    EDM_LOGI(MODULE_EA_MGR, "StopExtensionAbility success");
     return 0;
 }
