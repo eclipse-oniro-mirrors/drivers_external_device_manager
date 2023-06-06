@@ -15,19 +15,13 @@ import("//build/ohos.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 
 config("driver_extension_controller_public_config") {
-  include_dirs = [
-    "../../include/driver_controller",
-  ]
+  include_dirs = [ "../../include/driver_controller" ]
 }
 config("driver_extension_controller_private_config") {
-  include_dirs = [
-    "//third_party/jsoncpp/include/json",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include/json" ]
 }
 ohos_shared_library("driver_extension_controller") {
-  sources = [
-    "driver_extension_controller.cpp",
-  ]
+  sources = [ "driver_extension_controller.cpp" ]
   include_dirs = []
   cflags = []
   cflags_c = []
@@ -37,22 +31,17 @@ ohos_shared_library("driver_extension_controller") {
     ":driver_extension_controller_public_config",
     ":driver_extension_controller_private_config",
     "${utils_path}:coverage_flags",
-    "${utils_path}:utils_config"
+    "${utils_path}:utils_config",
   ]
-  public_configs = [
-    ":driver_extension_controller_public_config",
-  ]
-  deps =[
-    "//third_party/jsoncpp:jsoncpp",
-  ]
-  part_name = "external_device_manager"
-  install_enable = true
+  public_configs = [ ":driver_extension_controller_public_config" ]
+  deps = [ "//third_party/jsoncpp:jsoncpp" ]
   external_deps = [
-   "c_utils:utils",
-   "hiviewdfx_hilog_native:libhilog",
-   "ability_runtime:ability_manager",
-   "ability_base:want"
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
   ]
+  install_enable = true
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
 }
-
-

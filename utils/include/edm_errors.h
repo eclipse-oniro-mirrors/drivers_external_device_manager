@@ -24,7 +24,7 @@ namespace ExternalDeviceManager {
 
 constexpr int32_t EDM_ERR_OFFSET = ErrCodeOffset(SUBSYS_DRIVERS, EDM_MODULE_ID);
 
-enum UsbErrCode :int32_t{
+enum UsbErrCode : int32_t {
     EDM_OK = 0,
     EDM_NOK = EDM_ERR_OFFSET,
     EDM_ERR_NOT_SUPPORT,
@@ -40,7 +40,6 @@ enum UsbErrCode :int32_t{
     EDM_ERR_JSON_OBJ_ERR,
     EDM_ERR_USB_ERR,
 };
-
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 #endif // EDM_ERRORS_H

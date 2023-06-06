@@ -18,7 +18,5 @@ group("fuzztest") {
   testonly = true
   deps = []
 
-  deps += [
-    "bus_extension_fuzzer:bus_extension_fuzzer",
-  ]
+  deps += [ "bus_extension_fuzzer:bus_extension_fuzzer" ]
 }
