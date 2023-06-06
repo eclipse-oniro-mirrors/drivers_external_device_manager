@@ -15,6 +15,7 @@
 
 #include "ability_manager_client.h"
 #include "hilog_wrapper.h"
+#include "edm_errors.h"
 #include "driver_extension_controller.h"
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
@@ -27,7 +28,7 @@ int32_t DriverExtensionController::StartDriverExtension(
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
-        return -1;
+        return EDM_ERR_INVALID_OBJECT;
     }
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
@@ -38,7 +39,7 @@ int32_t DriverExtensionController::StartDriverExtension(
         return ret;
     }
     EDM_LOGI(MODULE_EA_MGR, "StartExtensionAbility success");
-    return 0;
+    return EDM_OK;
 }
 
 
@@ -51,7 +52,7 @@ int32_t DriverExtensionController::StopDriverExtension(
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
-        return -1;
+        return EDM_ERR_INVALID_OBJECT;
     }
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
@@ -61,5 +62,5 @@ int32_t DriverExtensionController::StopDriverExtension(
         return ret;
     }
     EDM_LOGI(MODULE_EA_MGR, "StopExtensionAbility success");
-    return 0;
+    return EDM_OK;
 }

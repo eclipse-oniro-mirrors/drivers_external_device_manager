@@ -16,6 +16,7 @@
 #include "iostream"
 #include "json.h"
 #include "hilog_wrapper.h"
+#include "edm_errors.h"
 #include "usb_driver_info.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -35,7 +36,7 @@ int32_t UsbDriverInfo::Serialize(string &driverStr)
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
     driverStr = Json::writeString(builder, valueRoot);
-    return 0;
+    return EDM_OK;
 }
 
 int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
@@ -50,21 +51,21 @@ int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
         EDM_LOGE(MODULE_BUS_USB,  "UnSeiralize error, parse json string error, ret = %{public}d, str is : %{public}s",\
             ret, driverStr.c_str());
         EDM_LOGE(MODULE_BUS_USB,  "JsonErr:%{public}s", err.c_str());
-        return -1;
+        return EDM_ERR_JSON_PARSE_FAIL;
     }
     if (jsonObj.size() == 0) {
         EDM_LOGE(MODULE_BUS_USB,  "Json size error");
-        return -1;
+        return EDM_ERR_JSON_PARSE_FAIL;
     }
     EDM_LOGD(MODULE_BUS_USB,  "parse json sucess");
     if (!jsonObj.isMember("vids") || !jsonObj.isMember("pids")) {
         EDM_LOGE(MODULE_BUS_USB,  "json member error, need menbers: vids, pids");
-        return -1;
+        return EDM_ERR_JSON_OBJ_ERR;
     }
     if (jsonObj["pids"].type() != Json::arrayValue || jsonObj["vids"].type() != Json::arrayValue) {
         EDM_LOGE(MODULE_BUS_USB,  "json member type error, pids type is : %{public}d, vids type is %{public}d", \
             jsonObj["pids"].type(), jsonObj["vids"].type());
-        return -1;
+        return EDM_ERR_JSON_OBJ_ERR;
     }
     EDM_LOGD(MODULE_BUS_USB,  "menber type check sucess");
     vector<uint16_t> vids_;
@@ -72,20 +73,20 @@ int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
     for (auto vid : jsonObj["vids"]) {
         if (vid.type() != Json::intValue) {
             EDM_LOGE(MODULE_BUS_USB,  "json vids type error, %{public}d", vid.type());
-            return -1;
+            return EDM_ERR_JSON_OBJ_ERR;
         }
         vids_.push_back(vid.asUInt());
     }
     for (auto pid : jsonObj["pids"]) {
         if (pid.type() != Json::intValue) {
             EDM_LOGE(MODULE_BUS_USB,  "json pid type error, %{public}d", pid.type());
-            return -1;
+            return EDM_ERR_JSON_OBJ_ERR;
         }
         pids_.push_back(pid.asUInt());
     }
     this->pids_ = pids_;
     this->vids_ = vids_;
-    return 0;
+    return EDM_OK;
 }
 }
 }

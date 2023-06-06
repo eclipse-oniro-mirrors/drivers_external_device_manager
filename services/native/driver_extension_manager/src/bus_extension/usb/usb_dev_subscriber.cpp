@@ -16,6 +16,7 @@
 #include "string"
 #include "securec.h"
 #include "hilog_wrapper.h"
+#include "edm_errors.h"
 #include "usb_dev_subscriber.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -66,25 +67,25 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
 {
     int32_t ret = 0;
     if (this->iusb_ == nullptr) {
-        return -1;
+        return EDM_ERR_INVALID_OBJECT;
     }
     vector<uint8_t> descData;
     ret = this->iusb_->GetDeviceDescriptor(usbDev, descData);
     if (ret != 0) {
         EDM_LOGE(MODULE_BUS_USB,  "GetDeviceDescriptor fail, ret = %{public}d\n", ret);
-        return -1;
+        return EDM_ERR_IO;
     }
     uint8_t *buffer = descData.data();
     uint32_t length = descData.size();
     if (length == 0) {
         EDM_LOGE(MODULE_BUS_USB,  "GetRawDescriptor failed len=%{public}d busNum:%{public}d devAddr:%{public}d",\
             length, usbDev.busNum, usbDev.devAddr);
-        return -1;
+        return EDM_ERR_USB_ERR;
     }
     UsbDevDescLite deviceDescriptor = *(reinterpret_cast<const UsbDevDescLite *>(buffer));
     if (deviceDescriptor.bLength != USB_DEV_DESC_SIZE) {
         EDM_LOGE(MODULE_BUS_USB,  "UsbdDeviceDescriptor size error");
-        return -1;
+        return EDM_ERR_USB_ERR;
     }
     string desc = ToDeviceDesc(usbDev, deviceDescriptor);
     uint32_t busDevId = ToBusDeivceId(usbDev);
@@ -101,7 +102,7 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     }
     EDM_LOGD(MODULE_BUS_USB,  "OnDeviceConnect:");
     EDM_LOGD(MODULE_BUS_USB,  "%{public}s", desc.c_str());
-    return 0;
+    return EDM_OK;
 };
 
 int32_t UsbDevSubscriber::OnDeviceDisconnect(const UsbDev &usbDev)

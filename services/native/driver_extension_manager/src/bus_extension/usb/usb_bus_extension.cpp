@@ -17,6 +17,7 @@
 #include "iostream"
 
 #include "hilog_wrapper.h"
+#include "edm_errors.h"
 #include "ibus_extension.h"
 #include "usb_dev_subscriber.h"
 #include "usb_driver_info.h"
@@ -50,7 +51,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
         this->usbInterface_ = IUsbInterface::Get();
         if (this->usbInterface_ == nullptr) {
             EDM_LOGE(MODULE_BUS_USB,  "get IUsbInterface error");
-            return -1;
+            return EDM_ERR_INVALID_OBJECT;
         }
         EDM_LOGD(MODULE_BUS_USB,  "get usbInferface sucess");
     }
@@ -58,7 +59,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
         this->subScriber_ = new UsbDevSubscriber();
         if (this->subScriber_ == nullptr) {
             EDM_LOGE(MODULE_BUS_USB,  "get usbDevSubscriber error");
-            return -1;
+            return EDM_EER_MALLOC_FAIL;
         }
         EDM_LOGD(MODULE_BUS_USB,  "get subScriber_ sucess");
     }
@@ -131,7 +132,6 @@ vector<uint16_t> UsbBusExtension::ParseCommaStrToVectorUint16(const string &str)
     } else {
         EDM_LOGD(MODULE_BUS_USB,  "parse sucess, size %{public}zu, str:%{public}s", ret.size(), str.c_str());
     }
-
     return ret;
 }
 }
