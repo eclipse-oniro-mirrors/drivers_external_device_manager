@@ -17,6 +17,7 @@
 #include <memory>
 #include <unordered_map>
 #include "singleton.h"
+#include "edm_errors.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 enum BusType : uint32_t {

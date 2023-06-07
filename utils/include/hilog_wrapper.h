@@ -54,7 +54,7 @@ enum UsbMgrSubModule {
     EDM_MODULE_BUTT,
 };
 
-// 0xD002900: subsystem:Usb module:Usb, reserved 8 bit.
+// 0xD002550: part:ExternalDeviceManager module:Edm.
 constexpr unsigned int BASE_EDM_DOMAIN_ID = 0xD002550;
 
 enum UsbMgrDomainId {
