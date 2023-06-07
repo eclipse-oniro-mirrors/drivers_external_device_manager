@@ -40,9 +40,9 @@ public:
     }
 };
 
-const char *TEST_BUNDLE_NAME "com.usb.right.MainAbility"
-const char *TEST_ABILITY_NAME "UsbServiceExtAbility"
-const char *TEST_ABILITY_NAME_ERR "XXX"
+constexpr const char *TEST_BUNDLE_NAME = "com.usb.right";
+constexpr const char *TEST_ABILITY_NAME = "UsbServiceExtAbility";
+constexpr const char *TEST_ABILITY_NAME_ERR = "XXX";
 
 using namespace OHOS::Security::AccessToken;
 
@@ -75,9 +75,9 @@ public:
         uint64_t tokenId = GetAccessTokenId(infoInstance);
         int ret = SetSelfTokenID(tokenId);
         if (ret == 0) {
-            EDM_LOGI("SetSelfTokenID success");
+            EDM_LOGI(MODULE_EA_MGR, "SetSelfTokenID success");
         } else {
-            EDM_LOGE("SetSelfTokenID fail");
+            EDM_LOGE(MODULE_EA_MGR, "SetSelfTokenID fail");
         }
         AccessTokenKit::ReloadNativeTokenInfo();
     }

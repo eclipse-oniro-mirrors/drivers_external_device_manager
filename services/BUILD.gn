@@ -38,38 +38,6 @@ ohos_shared_library("driver_extension_manager") {
   part_name = "external_device_manager"
 }
 
-ohos_shared_library("bus_extension") {
-  sources = [
-    "native/driver_extension_manager/src/bus_extension/bus_extension.cpp",
-    "native/driver_extension_manager/src/bus_extension/driver_info.cpp",
-    "native/driver_extension_manager/src/bus_extension/usb/usb_bus_extension.cpp",
-    "native/driver_extension_manager/src/bus_extension/usb/usb_dev_subscriber.cpp",
-    "native/driver_extension_manager/src/bus_extension/usb/usb_driver_info.cpp",
-  ]
-  include_dirs = [
-    "//third_party/jsoncpp/include/json",
-    "native/driver_extension_manager/include/bus_extension/usb",
-  ]
-  configs = [
-    "${utils_path}:coverage_flags",
-    "${utils_path}:utils_config",
-  ]
-  deps = [
-    ":bus_extension_core",
-    "//third_party/jsoncpp:jsoncpp",
-  ]
-  external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "c_utils:utils",
-    "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
-  ]
-
-  install_enable = true
-  subsystem_name = "hdf"
-  part_name = "external_device_manager"
-}
-
 ohos_shared_library("bus_extension_core") {
   install_enable = true
   sources = [

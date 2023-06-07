@@ -24,6 +24,7 @@ constexpr uint32_t MAX_DEV_ID_SIZE = 100;
 constexpr uint32_t ACT_DEVUP       = 0;
 constexpr uint32_t ACT_DEVDOWN     = 1;
 constexpr uint32_t SHIFT_16        = 16;
+constexpr uint32_t USB_DEV_DESC_SIZE = 0x12;
 struct UsbDevDescLite {
     uint8_t bLength;
     uint8_t bDescriptorType;
@@ -41,7 +42,7 @@ static string ToDeviceDesc(const UsbDev& usbDev, const UsbDevDescLite& desc)
     char buffer[MAX_DEV_ID_SIZE];
     auto ret = sprintf_s(buffer, sizeof(buffer), "USB&BUS_%02X&DEV_%02X&PID_%04X&VID_%04X&CLASS_%02X",\
         usbDev.busNum, usbDev.devAddr, desc.idProduct, desc.idVendor, desc.bDeviceClass);
-    if (ret != 0) {
+    if (ret < 0) {
         EDM_LOGE(MODULE_BUS_USB,  "ToBusDeivceId sprintf_s error. ret = %{public}d", ret);
         return string();
     }
@@ -81,7 +82,7 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
         return -1;
     }
     UsbDevDescLite deviceDescriptor = *(reinterpret_cast<const UsbDevDescLite *>(buffer));
-    if (deviceDescriptor.bLength != sizeof(UsbDevDescLite)) {
+    if (deviceDescriptor.bLength != USB_DEV_DESC_SIZE) {
         EDM_LOGE(MODULE_BUS_USB,  "UsbdDeviceDescriptor size error");
         return -1;
     }

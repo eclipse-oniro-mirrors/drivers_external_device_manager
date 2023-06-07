@@ -62,6 +62,14 @@ public:
     {
         return devInfo_.devBusInfo.busType;
     }
+    uint64_t GetDeviceId() const
+    {
+        return devInfo_.deviceId;
+    }
+    const std::string& GetDeviceDescription() const
+    {
+        return description_;
+    }
 
 private:
     friend class DevChangeCallback;

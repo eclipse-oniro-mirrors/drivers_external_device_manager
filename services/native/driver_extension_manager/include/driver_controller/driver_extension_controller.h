@@ -20,10 +20,10 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 class DriverExtensionController {
 public:
-    static uint32_t StartDriverExtension(
+    static int32_t StartDriverExtension(
         std::string baudleName,
         std::string abilityName);
-    static uint32_t StopDriverExtension(
+    static int32_t StopDriverExtension(
         std::string bundleName,
         std::string abilityName);
 };
