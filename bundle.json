@@ -12,10 +12,14 @@
     "component": {
         "name": "external_device_manager",
         "subsystem": "hdf",
+        "syscap": [
+            "SystemCapability.Driver.HID.Extension",
+            "SystemCapability.Driver.DeviceManager.Extension",
+            "SystemCapability.Driver.USB.Extension"
+        ],
         "features": [],
         "adapted_system_type": [
-            "standard",
-            "small"
+            "standard"
         ],
         "rom": "735KB",
         "ram": "8000KB",
