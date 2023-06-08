@@ -25,7 +25,7 @@ enum BusType : uint32_t {
     BUS_TYPE_USB = 1,
 };
 class IBusExtension;
-
+class DrvBundleStateCallback;
 class DriverInfoExt {
 public:
     virtual ~DriverInfoExt() = default;
@@ -46,6 +46,7 @@ public:
         return driverInfoExt_;
     }
 private:
+    friend class DrvBundleStateCallback;
     std::string bus_;
     std::string vendor_;
     std::string version_;

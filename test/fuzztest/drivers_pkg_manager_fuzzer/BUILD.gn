@@ -14,9 +14,9 @@
 import("//build/config/features.gni")
 import("//build/test.gni")
 
-group("fuzztest") {
+group("drivers_pkg_manager_fuzzer") {
   testonly = true
   deps = []
 
-  deps += [ "drivers_pkg_manager_fuzzer:drivers_pkg_manager_fuzzer" ]
+  deps += [ "driverpkgmanager_fuzzer:DriversPkgManagerFuzzTest" ]
 }

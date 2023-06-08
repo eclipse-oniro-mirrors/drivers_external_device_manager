@@ -25,12 +25,19 @@
 #include "os_account_manager.h"
 
 #include "hdf_log.h"
-
+#include "hitrace_meter.h"
+namespace OHOS {
+namespace ExternalDeviceManager {
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
-using namespace DriverExtension;
+using namespace OHOS::ExternalDeviceManager;
+
+constexpr uint64_t LABEL = HITRACE_TAG_OHOS;
+const string DRV_INFO_BUS = "bus";
+const string DRV_INFO_VENDOR = "vendor";
+const string DRV_INFO_VERSION = "version";
 
 DrvBundleStateCallback::DrvBundleStateCallback()
 {
@@ -71,6 +78,7 @@ void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, con
 void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const int userId)
 {
     HDF_LOGD("OnBundleAdded");
+    StartTrace(LABEL, "OnBundleAdded");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
         return;
     }
@@ -78,6 +86,7 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
     if (ParseBaseDriverInfo(BUNDLE_ADDED)) {
         OnBundleDrvAdded();
     }
+    FinishTrace(LABEL);
 }
 /**
     * @brief Called when a new application package has been Updated on the device.
@@ -87,6 +96,7 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
 void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, const int userId)
 {
     HDF_LOGD("OnBundleUpdated");
+    StartTrace(LABEL, "OnBundleUpdated");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
         return;
     }
@@ -94,7 +104,9 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     if (ParseBaseDriverInfo(BUNDLE_UPDATED)) {
         OnBundleDrvUpdated();
     }
+    FinishTrace(LABEL);
 }
+
 /**
     * @brief Called when a new application package has been Removed on the device.
     * @param bundleName Indicates the name of the bundle whose state has been Removed.
@@ -103,6 +115,7 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
 void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, const int userId)
 {
     HDF_LOGD("OnBundleRemoved");
+    StartTrace(LABEL, "OnBundleRemoved");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
         return;
     }
@@ -110,8 +123,8 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
     if (ParseBaseDriverInfo(BUNDLE_REMOVED)) {
         OnBundleDrvRemoved();
     }
+    FinishTrace(LABEL);
 }
-
 
 sptr<IRemoteObject> DrvBundleStateCallback::AsObject()
 {
@@ -204,6 +217,21 @@ ErrCode DrvBundleStateCallback::QueryExtensionAbilityInfos(const std::string &bu
     return ERR_OK;
 }
 
+void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Metadata> &metadata)
+{
+    for (auto data : metadata) {
+        if (data.name == DRV_INFO_BUS) {
+            tmpDrvInfo.bus_ = data.value;
+        }
+        if (data.name == DRV_INFO_VENDOR) {
+            tmpDrvInfo.vendor_ = data.value;
+        }
+        if (data.name == DRV_INFO_VERSION) {
+            tmpDrvInfo.version_ = data.value;
+        }
+    }
+}
+
 bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
 {
     shared_ptr<IBusExtension> extInstance = nullptr;
@@ -219,10 +247,10 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
 
     // parase infos to innerDrvInfos_
     while (!extensionInfos_.empty()) {
-        tmpDrvInfo.bus.clear();
-        tmpDrvInfo.vendor.clear();
-        tmpDrvInfo.version.clear();
-        tmpDrvInfo.driverInfoExt = nullptr;
+        tmpDrvInfo.bus_.clear();
+        tmpDrvInfo.vendor_.clear();
+        tmpDrvInfo.version_.clear();
+        tmpDrvInfo.driverInfoExt_ = nullptr;
 
         type = extensionInfos_.back().type;
         metadata = extensionInfos_.back().metadata;
@@ -234,26 +262,19 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
             continue;
         }
 
-        for (auto data : metadata) {
-            if (data.name == "bus") {
-                tmpDrvInfo.bus = data.value;
-            }
-            if (data.name == "vendor") {
-                tmpDrvInfo.vendor = data.value;
-            }
-            if (data.name == "version") {
-                tmpDrvInfo.version = data.value;
-            }
+        ChangeValue(tmpDrvInfo, metadata);
+
+        if (BusType::BUS_TYPE_USB == stoi(tmpDrvInfo.GetBusName())) {
+            extInstance = IBusExtension::GetInstance("USB");
         }
 
-        extInstance = IBusExtension::GetInstance(tmpDrvInfo.bus);
         if (extInstance == nullptr) {
-            HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", tmpDrvInfo.bus.c_str());
+            HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", tmpDrvInfo.bus_.c_str());
             continue;
         }
 
-        tmpDrvInfo.driverInfoExt = extInstance->ParseDriverInfo(metadata);
-        if (tmpDrvInfo.driverInfoExt == nullptr) {
+        tmpDrvInfo.driverInfoExt_ = extInstance->ParseDriverInfo(metadata);
+        if (tmpDrvInfo.driverInfoExt_ == nullptr) {
             HDF_LOGD("ParseDriverInfo null");
             continue;
         }
@@ -344,4 +365,6 @@ void DrvBundleStateCallback::OnBundleDrvRemoved()
     for (auto ele : innerDrvInfos_) {
         allDrvInfos_.erase(ele.first);
     }
+}
+}
 }
