@@ -20,22 +20,14 @@ ohos_fuzztest("UsbDriverInfoFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "//drivers/external_device_manager/test/fuzztest/bus_extension_fuzzer/usbdriverinfo_fuzzer"
 
-  sources = [
-    "usbdriverinfo_fuzzer.cpp",
-  ]
-  include_dirs = [
-
-  ]
-  deps = [
-    "${ext_mgr_path}/framework/bus_extension:bus_extension",
-  ]
+  sources = [ "usbdriverinfo_fuzzer.cpp" ]
+  include_dirs = []
+  deps = [ "${ext_mgr_path}/framework/bus_extension:bus_extension" ]
   external_deps = [
+    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "bundle_framework:appexecfwk_base",
   ]
-  defines = [  ]
-  configs = [
-    "${utils_path}:utils_config",
-  ]
+  defines = []
+  configs = [ "${utils_path}:utils_config" ]
 }

@@ -26,8 +26,8 @@ ohos_fuzztest("DriversPkgManagerFuzzTest") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
   ]
   deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
     "${ext_mgr_path}/services:drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
   ]
   external_deps = [
     "ability_base:want",
