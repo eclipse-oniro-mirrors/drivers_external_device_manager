@@ -16,26 +16,32 @@ import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 
 module_output_path = "external_device_manager/fuzztest"
-ohos_fuzztest("UsbDriverInfoFuzzTest") {
+ohos_fuzztest("DriversPkgManagerFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//drivers/external_device_manager/test/fuzztest/bus_extension_fuzzer/usbdriverinfo_fuzzer"
+  fuzz_config_file = "${ext_mgr_path}/test/fuzztest/drivers_pkg_manager_fuzzer/driverpkgmanager_fuzzer"
 
-  sources = [
-    "usbdriverinfo_fuzzer.cpp",
-  ]
+  sources = [ "driverpkgmanager_fuzzer.cpp" ]
   include_dirs = [
-
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
   ]
   deps = [
-    "${ext_mgr_path}/framework/bus_extension:bus_extension",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
+    "${ext_mgr_path}/services:drivers_pkg_manager",
   ]
   external_deps = [
-    "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "ability_base:want",
     "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "common_event_service:cesfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
   ]
-  defines = [  ]
-  configs = [
-    "${utils_path}:utils_config",
-  ]
+  defines = []
+  configs = [ "${utils_path}:utils_config" ]
 }

@@ -24,12 +24,13 @@
 #include "matching_skills.h"
 
 #include "hdf_log.h"
-
+namespace OHOS {
+namespace ExternalDeviceManager {
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
-using namespace DriverExtension;
+using namespace OHOS::ExternalDeviceManager;
 
 DriverPkgManager::DriverPkgManager()
 {
@@ -77,12 +78,11 @@ bool DriverPkgManager::Init()
         HDF_LOGE("bundleStateCallback_ GetAllDriverInfos Err");
         return false;
     }
-
     // register calback to BMS
     return RegisterCallback(bundleStateCallback_);
 }
 
-BundleInfoNames* DriverPkgManager::QueryMatchDriver(struct DeviceInfo &devInfo)
+BundleInfoNames* DriverPkgManager::QueryMatchDriver(const DeviceInfo &devInfo)
 {
     HDF_LOGD("Enter QueryMatchDriver");
     shared_ptr<IBusExtension> extInstance = nullptr;
@@ -107,13 +107,13 @@ BundleInfoNames* DriverPkgManager::QueryMatchDriver(struct DeviceInfo &devInfo)
 
     for (auto [key, val] : drvInfos_) {
         cout << "auto [key, val] : drvInfos_" << endl;
-        extInstance = IBusExtension::GetInstance(val.bus);
+        extInstance = IBusExtension::GetInstance(val.GetBusName());
         if (extInstance == nullptr) {
-            HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", val.bus.c_str());
+            HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", val.GetBusName().c_str());
             continue;
         }
 
-        if (extInstance->MatchDriver(devInfo, val)) {
+        if (extInstance->MatchDriver(val, devInfo)) {
             string bundleName = key;
             bundleInfoName_.bundleName =
             bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
@@ -176,8 +176,19 @@ void DriverPkgManager::RegisterOnBundleUpdate(PCALLBACKFUN pFun)
     }
 
     if (bundleStateCallback_ == nullptr) {
-        HDF_LOGE("failed to unregister callback, bundleStateCallback_ is null");
+        HDF_LOGE("failed to register callback, bundleStateCallback_ is null");
         return;
     }
     bundleStateCallback_->m_pFun = pFun;
+}
+
+void DriverPkgManager::UnRegisterOnBundleUpdate()
+{
+    if (bundleStateCallback_ == nullptr) {
+        HDF_LOGE("failed to unregister callback, bundleStateCallback_ is null");
+        return;
+    }
+    bundleStateCallback_->m_pFun = nullptr;
+}
+}
 }

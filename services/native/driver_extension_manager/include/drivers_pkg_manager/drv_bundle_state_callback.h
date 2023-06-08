@@ -26,13 +26,13 @@
 #include "extension_ability_info.h"
 
 #include "ibus_extension.h"
-
-namespace DriverExtension {
+namespace OHOS {
+namespace ExternalDeviceManager {
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
-using namespace DriverExtension;
+using namespace OHOS::ExternalDeviceManager;
 
 enum {
     ERR_DRV_STATUS_CALLBACK_ERROR = 1,
@@ -95,7 +95,7 @@ private:
 
     ErrCode QueryExtensionAbilityInfos(const std::string &bundleName, const int userId);
     bool ParseBaseDriverInfo(int bundleStatus);
-
+    void ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Metadata> &metadata);
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
     void StorageHistoryDrvInfo(std::vector<BundleInfo> &bundleInfos);
@@ -105,4 +105,5 @@ private:
     void OnBundleDrvRemoved();
 };
 } // namespace
+}
 #endif // DRIVER_BUNDLE_STATUS_CALLBACK_H

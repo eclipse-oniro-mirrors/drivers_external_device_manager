@@ -23,13 +23,13 @@
 
 #include "ibus_extension.h"
 #include "drv_bundle_state_callback.h"
-
-namespace DriverExtension {
+namespace OHOS {
+namespace ExternalDeviceManager {
 using namespace std;
 using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
-using namespace DriverExtension;
+using namespace OHOS::ExternalDeviceManager;
 
 enum {
     ERR_DRV_PKG_MGR_ERROR = 1,
@@ -55,9 +55,10 @@ public:
      */
     bool Init();
 
-    BundleInfoNames* QueryMatchDriver(struct DeviceInfo &devInfo);
+    BundleInfoNames* QueryMatchDriver(const DeviceInfo &devInfo);
 
     void RegisterOnBundleUpdate(PCALLBACKFUN pFun);
+    void UnRegisterOnBundleUpdate();
 private:
     shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
     sptr<DrvBundleStateCallback> bundleStateCallback_ = nullptr;
@@ -67,4 +68,5 @@ private:
     bool UnRegisterCallback();
 };
 } // namespace
+}
 #endif // DRIVER_PKG_MANAGER_H
