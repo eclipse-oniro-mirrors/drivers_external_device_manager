@@ -35,9 +35,9 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS::ExternalDeviceManager;
 
 constexpr uint64_t LABEL = HITRACE_TAG_OHOS;
-#define DRV_INFO_BUS "bus"
-#define DRV_INFO_VENDOR "vendor"
-#define DRV_INFO_VERSION "version"
+const string DRV_INFO_BUS = "bus";
+const string DRV_INFO_VENDOR = "vendor";
+const string DRV_INFO_VERSION = "version";
 
 DrvBundleStateCallback::DrvBundleStateCallback()
 {
