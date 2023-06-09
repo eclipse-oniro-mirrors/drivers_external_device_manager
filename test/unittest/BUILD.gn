@@ -103,5 +103,6 @@ group("external_device_manager_test") {
     ":bus_extension_test",
     ":driver_extension_controller_test",
     ":drivers_pkg_manager_test",
+    "device_manager_test:device_manager_test",
   ]
 }

@@ -23,6 +23,7 @@ namespace ExternalDeviceManager {
 enum BusType : uint32_t {
     BUS_TYPE_INVALID = 0,
     BUS_TYPE_USB = 1,
+    BUS_TYPE_TEST,
 };
 class IBusExtension;
 class DrvBundleStateCallback;

@@ -10,35 +10,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("../../../../../extdevmgr.gni")
-ohos_shared_library("bus_extension") {
-  sources = [
-    "bus_extension.cpp",
-    "driver_info.cpp",
-    "usb/usb_bus_extension.cpp",
-    "usb/usb_dev_subscriber.cpp",
-    "usb/usb_driver_info.cpp",
-  ]
+
+import("//build/test.gni")
+import("//drivers/external_device_manager/extdevmgr.gni")
+module_output_path = "external_device_manager/unittest"
+device_manager_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager"
+bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
+utils_include_path = "${ext_mgr_path}/utils/include"
+
+ohos_unittest("device_manager_test") {
+  module_out_path = "${module_output_path}"
+  sources = [ "device_manager_test.cpp" ]
   include_dirs = [
-    "//third_party/jsoncpp/include/json",
-    "../../include/bus_extension/usb",
-  ]
-  configs = [
-    "${utils_path}:coverage_flags",
-    "${utils_path}:utils_config",
+    "${device_manager_include_path}",
+    "${bus_extension_include_path}",
+    "${utils_include_path}",
   ]
   deps = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:bus_extension_core",
-    "//third_party/jsoncpp:jsoncpp",
   ]
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hiviewdfx_hilog_native:libhilog",
   ]
-
-  install_enable = true
-  subsystem_name = "hdf"
-  part_name = "external_device_manager"
+  configs = [ "${utils_path}:utils_config" ]
 }
