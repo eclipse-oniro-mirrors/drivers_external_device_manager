@@ -51,6 +51,7 @@ enum UsbMgrSubModule {
     MODULE_EA_MGR,
     MODULE_BUS_USB,
     MODULE_COMMON,
+    MODULE_USB_DDK,
     EDM_MODULE_BUTT,
 };
 
@@ -64,16 +65,18 @@ enum UsbMgrDomainId {
     EDM_EA_MGR_DOMAIN,
     EDM_BUS_USB_DOMAIN,
     EDM_COMMON_DOMAIN,
+    EDM_USB_DDK_DOMAIN,
     EDM_BUTT,
 };
 
 constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
-    {LOG_CORE, EDM_SERVICE_DOMAIN, "EdmService"},
-    {LOG_CORE, EDM_DEV_MGR_DOMAIN, "EdmDevMgr"},
-    {LOG_CORE, EDM_PKG_MGR_DOMAIN, "EdmPkgMgr"},
-    {LOG_CORE, EDM_EA_MGR_DOMAIN, "EdmEaMgr"},
+    {LOG_CORE, EDM_SERVICE_DOMAIN, "EdmService"  },
+    {LOG_CORE, EDM_DEV_MGR_DOMAIN, "EdmDevMgr"   },
+    {LOG_CORE, EDM_PKG_MGR_DOMAIN, "EdmPkgMgr"   },
+    {LOG_CORE, EDM_EA_MGR_DOMAIN,  "EdmEaMgr"    },
     {LOG_CORE, EDM_BUS_USB_DOMAIN, "EdmBusUsbMgr"},
-    {LOG_CORE, EDM_COMMON_DOMAIN, "EdmCommon"},
+    {LOG_CORE, EDM_COMMON_DOMAIN,  "EdmCommon"   },
+    {LOG_CORE, EDM_USB_DDK_DOMAIN, "EdmUsbDdk"   },
 };
 
 // In order to improve performance, do not check the module range, module should less than EDM_MODULE_BUTT.
