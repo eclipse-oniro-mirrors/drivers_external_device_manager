@@ -39,7 +39,7 @@
         },
         "build": {
             "sub_component": [
-                "//drivers/external_device_manager/frameworks/js/napi:napi_packages",
+                "//drivers/external_device_manager/frameworks:ext_devmgr_frameworks",
                 "//drivers/external_device_manager/services/native/driver_extension:driver_extension_module",
                 "//drivers/external_device_manager/sa_profile:ext_dev_mgr_sa",
                 "//drivers/external_device_manager/services:driver_extension_manager",
