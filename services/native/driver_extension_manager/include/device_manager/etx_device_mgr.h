@@ -14,9 +14,10 @@
  */
 #ifndef DEVICE_MANAGER_ETX_DEVICE_MGR_H
 #define DEVICE_MANAGER_ETX_DEVICE_MGR_H
-#include <forward_list>
 #include <memory>
 #include <mutex>
+#include <list>
+#include <unordered_map>
 
 #include "ext_object.h"
 namespace OHOS {
@@ -26,6 +27,10 @@ public:
     Device(std::shared_ptr<DeviceInfo> info) : info_(info) {};
 
     bool HasDriver() const;
+    std::shared_ptr<DeviceInfo> GetDeviceInfo() const
+    {
+        return info_;
+    }
 
 private:
     std::shared_ptr<DriverInfo> driver_;
@@ -33,16 +38,15 @@ private:
 };
 
 class ExtDeviceManager final {
-public:
     DECLARE_DELAYED_SINGLETON(ExtDeviceManager)
-
+public:
     int32_t Init();
-    Device &RegisterDevice(const DeviceInfo &devInfo);
-    void UnRegisterDevice(const DeviceInfo &devInfo);
+    int32_t RegisterDevice(std::shared_ptr<DeviceInfo> devInfo);
+    void UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInfo);
 
 private:
-    std::forward_list<Device> deviceList_;
-    std::mutex deviceListMutex_;
+    std::unordered_map<BusType, std::list<std::shared_ptr<Device>>> deviceMap_;
+    std::mutex deviceMapMutex_;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

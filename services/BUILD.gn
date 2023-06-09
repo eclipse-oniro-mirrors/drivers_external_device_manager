@@ -38,23 +38,6 @@ ohos_shared_library("driver_extension_manager") {
   part_name = "external_device_manager"
 }
 
-ohos_shared_library("bus_extension_core") {
-  install_enable = true
-  sources = [
-    "native/driver_extension_manager/src/device_manager/etx_device_mgr.cpp",
-  ]
-
-  include_dirs = [ "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager" ]
-  configs = [ "${utils_path}:utils_config" ]
-  external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "c_utils:utils",
-  ]
-
-  subsystem_name = "hdf"
-  part_name = "external_device_manager"
-}
-
 config("drvext_manager_public_config") {
   include_dirs = [ "native/driver_extension_manager/include/bus_extension/usb" ]
 }
