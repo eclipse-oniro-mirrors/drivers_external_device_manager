@@ -14,6 +14,7 @@
  */
 
 #include "etx_device_mgr.h"
+#include "cinttypes"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #include "ibus_extension.h"
@@ -86,14 +87,14 @@ int32_t ExtDeviceManager::RegisterDevice(std::shared_ptr<DeviceInfo> devInfo)
         for (iter = list.begin(); iter != list.end(); iter++) {
             std::shared_ptr<Device> device = *iter;
             if (device->GetDeviceInfo()->GetDeviceId() == deviceId) {
-                EDM_LOGI(MODULE_DEV_MGR, "device has been registered, deviceId is %{public}llu", deviceId);
+                EDM_LOGI(MODULE_DEV_MGR, "device has been registered, deviceId is %{public}016" PRIx64 "", deviceId);
                 return EDM_OK;
             }
         }
     }
     std::shared_ptr<Device> device = std::make_shared<Device>(devInfo);
     deviceMap_[type].push_back(device);
-    EDM_LOGI(MODULE_DEV_MGR, "successfully registered device, deviceId is %{public}llu", deviceId);
+    EDM_LOGI(MODULE_DEV_MGR, "successfully registered device, deviceId is %{public}016" PRIx64 "", deviceId);
     // driver match
     return EDM_OK;
 }
@@ -110,12 +111,13 @@ void ExtDeviceManager::UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInf
             std::shared_ptr<Device> device = *iter;
             if (device->GetDeviceInfo()->GetDeviceId() == deviceId) {
                 iter = list.erase(iter);
-                EDM_LOGI(MODULE_DEV_MGR, "successfully unregistered device, deviceId is %{public}llu", deviceId);
+                EDM_LOGI(
+                    MODULE_DEV_MGR, "successfully unregistered device, deviceId is %{public}016" PRIx64 "", deviceId);
                 return;
             }
         }
     }
-    EDM_LOGI(MODULE_DEV_MGR, "device has been unregistered, deviceId is %{public}llu", deviceId);
+    EDM_LOGI(MODULE_DEV_MGR, "device has been unregistered, deviceId is %{public}016" PRIx64 "", deviceId);
 }
 
 int32_t DevChangeCallback::OnDeviceAdd(std::shared_ptr<DeviceInfo> device)
