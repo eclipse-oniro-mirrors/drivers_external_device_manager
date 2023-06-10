@@ -38,7 +38,7 @@ private:
 };
 
 class ExtDeviceManager final {
-    DECLARE_DELAYED_SINGLETON(ExtDeviceManager)
+    DECLARE_SINGLE_INSTANCE(ExtDeviceManager);
 public:
     int32_t Init();
     int32_t RegisterDevice(std::shared_ptr<DeviceInfo> devInfo);
