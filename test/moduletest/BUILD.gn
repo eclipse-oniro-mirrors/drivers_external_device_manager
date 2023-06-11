@@ -41,8 +41,27 @@ ohos_executable("driver_extension_controller_mt") {
   part_name = "external_device_manager"
   install_enable = false
 }
+
+ohos_executable("bus_extension_core_mt") {
+  sources = [ "bus_extension_core_mt/bus_extension_core_mt.cpp" ]
+  include_dirs = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
+  ]
+  configs = [ "${utils_path}:utils_config" ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:bus_extension_core" ]
+  external_deps = [
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
+  part_name = "external_device_manager"
+  install_enable = false
+}
+
 group("external_device_manager_mt") {
   deps = [
+    ":bus_extension_core_mt",
     ":driver_extension_controller_mt",
     ":usb_bus_extension_mt",
   ]
