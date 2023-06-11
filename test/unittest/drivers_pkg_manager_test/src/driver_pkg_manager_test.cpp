@@ -61,7 +61,7 @@ HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Befor_Init_Test, TestSize.Level
     cout << "DrvExt_QueryMatch_Befor_Init_Test" << endl;
 }
 
-int32_t Fun(int a, int b,const string & c, const string & d)
+int32_t Fun(int a, int b, const string & c, const string & d)
 {
     cout << a << endl;
     cout << b << endl;

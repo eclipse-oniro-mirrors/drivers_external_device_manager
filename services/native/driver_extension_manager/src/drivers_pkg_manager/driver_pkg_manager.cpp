@@ -146,7 +146,7 @@ int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &ca
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if(1 == (int32_t)(bundleMonitor_->Subscribe(callback))) {
+    if ((int32_t)(bundleMonitor_->Subscribe(callback)) == 1) {
         return EDM_OK;
     }
 
@@ -171,7 +171,7 @@ int32_t DriverPkgManager::UnRegisterCallback()
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if(1 == (int32_t)(bundleMonitor_->UnSubscribe())) {
+    if ((int32_t)(bundleMonitor_->UnSubscribe()) == 1) {
         return EDM_OK;
     }
 

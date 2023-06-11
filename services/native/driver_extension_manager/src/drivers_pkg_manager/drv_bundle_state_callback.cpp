@@ -264,7 +264,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
 
         ChangeValue(tmpDrvInfo, metadata);
 
-        if ("USB" == tmpDrvInfo.GetBusName()) {
+        if (tmpDrvInfo.GetBusName() == "USB") {
             extInstance = IBusExtension::GetInstance("USB");
         }
 
