@@ -16,13 +16,14 @@ import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 
 module_output_path = "external_device_manager/fuzztest"
-ohos_fuzztest("UsbDriverInfoFuzzTest") {
+bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
+ohos_fuzztest("UsbExtensionFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//drivers/external_device_manager/test/fuzztest/bus_extension_fuzzer/usbdriverinfo_fuzzer"
+  fuzz_config_file = "${ext_mgr_path}/test/fuzztest/bus_extension_fuzzer/usbextension_fuzzer"
 
-  sources = [ "usbdriverinfo_fuzzer.cpp" ]
-  include_dirs = []
-  deps = [ "${ext_mgr_path}/framework/bus_extension:bus_extension" ]
+  sources = [ "usbextension_fuzzer.cpp" ]
+  include_dirs = [ "${bus_extension_include_path}" ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
