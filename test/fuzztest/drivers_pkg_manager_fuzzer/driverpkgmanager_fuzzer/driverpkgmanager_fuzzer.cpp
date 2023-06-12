@@ -30,15 +30,16 @@ using namespace OHOS::ExternalDeviceManager;
 bool QueryMatchDriverIllegalBusTest(const uint8_t *data, size_t size)
 {
     DriverPkgManager drvPkgMgrInstance;
-    bool ret = drvPkgMgrInstance.Init();
-    if (!ret) {
+    int32_t ret = drvPkgMgrInstance.Init();
+    if (ret != EDM_OK) {
         return false;
     }
 
     int busType = *(static_cast<const uint8_t *>(data));
-    DeviceInfo devInfo = DeviceInfo(busType);
-    devInfo.devInfo_.devBusInfo.busType = BUS_TYPE_USB;
-    BundleInfoNames* bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
+    busType);
+    devInfo->devInfo_.devBusInfo.busType = BUS_TYPE_USB;
+    shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
     if (bundle == nullptr) {
         return false;
     }

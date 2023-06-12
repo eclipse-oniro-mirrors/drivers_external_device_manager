@@ -53,19 +53,19 @@ public:
      * @param launcherShortcutInfo List of LauncherShortcutInfo objects if obtained.
      * @return Returns true if the function is successfully called; returns false otherwise.
      */
-    bool Init();
+    int32_t Init();
 
-    BundleInfoNames* QueryMatchDriver(const DeviceInfo &devInfo);
+    shared_ptr<BundleInfoNames> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo);
 
-    void RegisterOnBundleUpdate(PCALLBACKFUN pFun);
-    void UnRegisterOnBundleUpdate();
+    int32_t RegisterOnBundleUpdate(PCALLBACKFUN pFun);
+    int32_t UnRegisterOnBundleUpdate();
 private:
     shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
     sptr<DrvBundleStateCallback> bundleStateCallback_ = nullptr;
     BundleInfoNames bundleInfoName_;
 
-    bool RegisterCallback(const sptr<IBundleStatusCallback> &callback);
-    bool UnRegisterCallback();
+    int32_t RegisterCallback(const sptr<IBundleStatusCallback> &callback);
+    int32_t UnRegisterCallback();
 };
 } // namespace
 }

@@ -133,11 +133,11 @@ sptr<IRemoteObject> DrvBundleStateCallback::AsObject()
 
 bool DrvBundleStateCallback::GetAllDriverInfos(std::map<string, DriverInfo> &driverInfos)
 {
-    static bool initOnce = false;
     if (initOnce) {
         driverInfos = allDrvInfos_;
         return true;
     }
+
     // query history bundle
     auto iBundleMgr = GetBundleMgrProxy();
     if (iBundleMgr == nullptr) {
@@ -264,7 +264,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
 
         ChangeValue(tmpDrvInfo, metadata);
 
-        if (BusType::BUS_TYPE_USB == stoi(tmpDrvInfo.GetBusName())) {
+        if (tmpDrvInfo.GetBusName() == "USB") {
             extInstance = IBusExtension::GetInstance("USB");
         }
 
@@ -280,7 +280,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
         }
 
         if (m_pFun != nullptr) {
-            m_pFun(bundleStatus, bundleName, abilityName);
+            m_pFun(bundleStatus, BusType::BUS_TYPE_USB, bundleName, abilityName);
         }
 
         bundleName += stiching + abilityName;

@@ -28,89 +28,101 @@ using namespace OHOS::ExternalDeviceManager;
 
 class DriverPkgManagerTest : public testing::Test {
 public:
-    DriverPkgManager drvPkgMgrInstance;
+    DriverPkgManager *drvPkgMgrInstance = nullptr;;
     void SetUp() override
     {
+        drvPkgMgrInstance = new DriverPkgManager();
         cout << "DriverPkgManagerTest SetUp" << endl;
     }
     void TearDown() override
     {
+        if (drvPkgMgrInstance != nullptr) {
+            delete drvPkgMgrInstance;
+            drvPkgMgrInstance = nullptr;
+        }
         cout << "DriverPkgManagerTest TearDown" << endl;
     }
 };
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_Init_Test, TestSize.Level1)
 {
-    bool ret = drvPkgMgrInstance.Init();
-    EXPECT_EQ(true, ret);
+    int32_t ret = drvPkgMgrInstance->Init();
+    EXPECT_EQ(0, ret);
     cout << "DrvExt_Init_New_BundleTest" << endl;
 }
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Befor_Init_Test, TestSize.Level1)
 {
-    DeviceInfo devInfo = DeviceInfo(1);
-    devInfo.devInfo_.devBusInfo.busType = BUS_TYPE_USB;
-    BundleInfoNames* bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
+    1);
+    devInfo->devInfo_.devBusInfo.busType = BUS_TYPE_USB;
+    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
     EXPECT_EQ(nullptr, bundle);
     cout << "DrvExt_QueryMatch_Befor_Init_Test" << endl;
 }
 
-void Fun(int a, string b, string c)
+int32_t Fun(int a, int b, const string & c, const string & d)
 {
     cout << a << endl;
     cout << b << endl;
     cout << c << endl;
+    cout << d << endl;
+    return EDM_OK;
 }
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_RegisterOnBundleUpdate_Befor_Init_Test, TestSize.Level1)
 {
-    bool ret = drvPkgMgrInstance.Init();
-    if (!ret) {
-        EXPECT_EQ(true, ret);
+    int32_t ret = drvPkgMgrInstance->Init();
+    if (ret != 0) {
+        EXPECT_EQ(0, ret);
         return;
     }
-    drvPkgMgrInstance.RegisterOnBundleUpdate(Fun);
+    int32_t regist = drvPkgMgrInstance->RegisterOnBundleUpdate(Fun);
+    EXPECT_EQ(0, regist);
     cout << "DrvExt_RegisterOnBundleUpdate_Befor_Init_Test" << endl;
 }
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Illegal_Bus_Test, TestSize.Level1)
 {
-    bool ret = drvPkgMgrInstance.Init();
-    if (!ret) {
-        EXPECT_EQ(true, ret);
+    int32_t ret = drvPkgMgrInstance->Init();
+    if (ret != 0) {
+        EXPECT_EQ(0, ret);
         return;
     }
-    DeviceInfo devInfo = DeviceInfo(1);
-    devInfo.devInfo_.devBusInfo.busType = BUS_TYPE_INVALID;
-    BundleInfoNames* bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
+    1);
+    devInfo->devInfo_.devBusInfo.busType = BUS_TYPE_INVALID;
+    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
     EXPECT_EQ(nullptr, bundle);
     cout << "DrvExt_QueryMatch_Illegal_Bus_Test" << endl;
 }
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Illegal_ID_Test, TestSize.Level1)
 {
-    bool ret = drvPkgMgrInstance.Init();
-    if (!ret) {
-        EXPECT_EQ(true, ret);
+    int32_t ret = drvPkgMgrInstance->Init();
+    if (ret != 0) {
+        EXPECT_EQ(0, ret);
         return;
     }
-    DeviceInfo devInfo = DeviceInfo(1);
-    devInfo.devInfo_.devBusInfo.busType = BUS_TYPE_USB;
-    BundleInfoNames* bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
+    1);
+    devInfo->devInfo_.devBusInfo.busType = BUS_TYPE_USB;
+    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
     EXPECT_EQ(nullptr, bundle);
     cout << "DrvExt_QueryMatch_Illegal_ID_Test" << endl;
 }
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Null_ID_Test, TestSize.Level1)
 {
-    bool ret = drvPkgMgrInstance.Init();
-    if (!ret) {
-        EXPECT_EQ(true, ret);
+    int32_t ret = drvPkgMgrInstance->Init();
+    if (ret != 0) {
+        EXPECT_EQ(0, ret);
         return;
     }
-    DeviceInfo devInfo = DeviceInfo(0);
-    devInfo.devInfo_.devBusInfo.busType = BUS_TYPE_USB;
-    BundleInfoNames* bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
+    0);
+    devInfo->devInfo_.devBusInfo.busType = BUS_TYPE_USB;
+    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
     EXPECT_EQ(nullptr, bundle);
     cout << "DrvExt_QueryMatch_Illegal_ID_Test" << endl;
 }
@@ -135,9 +147,9 @@ public:
 
 HWTEST_F(DriverPkgManagerPtrTest, DrvExt_New_Test, TestSize.Level1)
 {
-    bool ret = drvPkgMgrInstance->Init();
-    if (!ret) {
-        EXPECT_EQ(true, ret);
+    int32_t ret = drvPkgMgrInstance->Init();
+    if (ret != 0) {
+        EXPECT_EQ(0, ret);
         return;
     }
     EXPECT_NE(nullptr, drvPkgMgrInstance);
@@ -146,8 +158,9 @@ HWTEST_F(DriverPkgManagerPtrTest, DrvExt_New_Test, TestSize.Level1)
 
 HWTEST_F(DriverPkgManagerPtrTest, DrvExt_QueryMatch_Before_Init_Test, TestSize.Level1)
 {
-    DeviceInfo devInfo = DeviceInfo(0);
-    BundleInfoNames* bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
+    0);
+    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
     EXPECT_EQ(nullptr, bundle);
     cout << "DrvExt_QueryMatch_Before_Init_Test" << endl;
 }

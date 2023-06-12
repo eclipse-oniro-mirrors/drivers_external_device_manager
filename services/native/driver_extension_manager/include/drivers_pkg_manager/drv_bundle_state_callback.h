@@ -45,7 +45,7 @@ enum ON_BUNDLE_STATUS {
     BUNDLE_REMOVED,
 };
 
-typedef void(*PCALLBACKFUN)(int, string, string);
+typedef int32_t(*PCALLBACKFUN)(int, int, const string &, const string &);
 
 class DrvBundleStateCallback : public IBundleStatusCallback {
 public:
@@ -92,6 +92,7 @@ private:
     std::mutex bundleMgrMutex_;
     sptr<IBundleMgr> bundleMgr_ = nullptr;
     string stiching = "This is used for Name Stiching";
+    bool initOnce = false;
 
     ErrCode QueryExtensionAbilityInfos(const std::string &bundleName, const int userId);
     bool ParseBaseDriverInfo(int bundleStatus);
