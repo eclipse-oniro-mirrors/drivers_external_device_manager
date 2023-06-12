@@ -184,7 +184,7 @@ int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const struct Us
  * @since 10
  * @version 1.0
  */
-int32_t OH_Usb_SendPipRequest(const struct UsbRequestPipe *pipe, UsbDeviceMemMap *devMmap);
+int32_t OH_Usb_SendPipeRequest(const struct UsbRequestPipe *pipe, UsbDeviceMemMap *devMmap);
 
 /**
  * @brief Creates a buffer. To avoid resource leakage, destroy a buffer by calling\n

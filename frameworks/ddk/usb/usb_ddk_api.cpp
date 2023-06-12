@@ -198,7 +198,7 @@ int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const UsbContro
     return g_ddk->SendControlWriteRequest(interfaceHandle, *tmpSetUp, timeout, dataTmp);
 }
 
-int32_t OH_Usb_SendPipRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devMmap)
+int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devMmap)
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
