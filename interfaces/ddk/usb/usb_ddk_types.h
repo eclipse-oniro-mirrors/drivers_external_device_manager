@@ -49,20 +49,20 @@ extern "C" {
  * @version 1.0
  */
 typedef struct UsbControlRequestSetup {
-    /** Request type, corresponding to bmRequestType in the USB protocol. */
-    uint8_t requestType;
-    /** Request command, corresponding to bRequest in the USB protocol. */
-    uint8_t requestCmd;
-    /** Value corresponding to wValue in the USB protocol. Its meaning varies according to the request. */
-    uint16_t value;
-    /** Index corresponding to wIndex in the USB protocol. It is usually used to transfer the index or offset.\n
+    /** Request type. */
+    uint8_t bmRequestType;
+    /** Request command. */
+    uint8_t bRequest;
+    /** Its meaning varies according to the request. */
+    uint16_t wValue;
+    /** It is usually used to transfer the index or offset.\n
      * Its meaning varies according to the request.
      */
-    uint16_t index;
-    /** Data length, corresponding to wLength in the USB protocol. If data is transferred,\n
+    uint16_t wIndex;
+    /** Data length. If data is transferred,\n
      * this field indicates the number of transferred bytes.
      */
-    uint16_t length;
+    uint16_t wLength;
 } __attribute__((aligned(8))) UsbControlRequestSetup;
 
 /**
@@ -311,5 +311,6 @@ typedef enum {
 } UsbDdkErrCode;
 #ifdef __cplusplus
 }
+/** @} */
 #endif /* __cplusplus */
 #endif // USB_DDK_TYPES_H
