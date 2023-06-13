@@ -13,19 +13,54 @@
  * limitations under the License.
  */
 
-#include "etx_device_mgr.h"
+#include <dlfcn.h>
+#include <sstream>
+
 #include "cinttypes"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #include "ibus_extension.h"
+#include "etx_device_mgr.h"
+
+#ifdef __aarch64__
+static constexpr const char *BUS_EXTENSION_SO_PATH = "/system/lib64";
+#else
+static constexpr const char *BUS_EXTENSION_SO_PATH = "/system/lib";
+#endif
+static constexpr const char *HDI_SO_SUFFIX = ".z.so";
+static constexpr const char *HDI_SO_PREFIX = "lib";
+static constexpr const char *USB_BUS_EXTENSION = "bus_extension";
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 IMPLEMENT_SINGLE_INSTANCE(BusExtensionCore);
 IMPLEMENT_SINGLE_INSTANCE(ExtDeviceManager);
 
+static void LoadLib()
+{
+    for (BusType i = BUS_TYPE_USB; i < BUS_TYPE_MAX; i = (BusType)(i + 1)) {
+        std::ostringstream libPath;
+        libPath << BUS_EXTENSION_SO_PATH << "/" << HDI_SO_PREFIX;
+        switch (i) {
+            case BUS_TYPE_USB:
+                libPath << USB_BUS_EXTENSION;
+                break;
+            default:
+                EDM_LOGE(MODULE_DEV_MGR, "invalid bus type");
+                continue;
+        }
+        libPath << HDI_SO_SUFFIX;
+        void *handler = dlopen(libPath.str().c_str(), RTLD_LAZY);
+        if (handler == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to dlopen  %{public}s, %{public}s", libPath.str().c_str(), dlerror());
+            continue;
+        }
+    }
+}
+
 int32_t BusExtensionCore::Init()
 {
+    LoadLib();
     int ret = EDM_OK;
     for (auto &iter : busExtensions_) {
         std::shared_ptr<DevChangeCallback> callback =

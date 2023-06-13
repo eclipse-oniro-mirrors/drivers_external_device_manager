@@ -22,6 +22,9 @@
 #include "etx_device_mgr.h"
 #undef private
 
+constexpr const char *START_TEXT = "Begin to loop and listen usb event:\n\
+enter q to exit.\n\
+enter p to print all usb device.";
 using namespace OHOS::ExternalDeviceManager;
 using namespace std;
 static void PrintAllDevice()
@@ -46,6 +49,7 @@ int main(int argc, char **argv)
         cout << "dlopen libbus_extension.z.so failed" << endl;
         return -1;
     }
+    cout << START_TEXT << endl;
     BusExtensionCore &core = BusExtensionCore::GetInstance();
     size_t size = core.busExtensions_.size();
     cout << "busExtensions_.size: " << size << endl;

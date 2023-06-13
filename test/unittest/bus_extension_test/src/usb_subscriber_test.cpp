@@ -42,7 +42,6 @@ public:
     void TearDown() override
     {
         cout << "UsbSubscriberTest TearDown" << endl;
-        delete mockUsb;
         mockUsb = nullptr;
     }
 
