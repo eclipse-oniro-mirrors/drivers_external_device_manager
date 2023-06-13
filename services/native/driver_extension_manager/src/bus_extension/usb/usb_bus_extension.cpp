@@ -124,7 +124,9 @@ vector<uint16_t> UsbBusExtension::ParseCommaStrToVectorUint16(const string &str)
     string s;
     int num;
     while (getline(ss, s, ',')) {
-        stringstream(s) >> num;
+        stringstream out;
+        out << hex << s;
+        out >> num;
         ret.push_back(num);
     }
     if (ret.size() == 0) {
