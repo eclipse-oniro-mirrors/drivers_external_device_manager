@@ -34,7 +34,6 @@ using namespace OHOS::ExternalDeviceManager;
 
 DriverPkgManager::DriverPkgManager()
 {
-
 };
 
 DriverPkgManager::~DriverPkgManager()
