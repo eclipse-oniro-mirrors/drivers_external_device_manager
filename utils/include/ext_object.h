@@ -16,13 +16,16 @@
 #define EXT_OBJECT_H
 #include <memory>
 #include <unordered_map>
-#include "singleton.h"
+
 #include "edm_errors.h"
+#include "single_instance.h"
+#include "singleton.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 enum BusType : uint32_t {
     BUS_TYPE_INVALID = 0,
     BUS_TYPE_USB = 1,
+    BUS_TYPE_MAX,
     BUS_TYPE_TEST,
 };
 class IBusExtension;
@@ -96,24 +99,25 @@ public:
 
 class DevChangeCallback final : public IDevChangeCallback {
 public:
-    DevChangeCallback(BusType busType, std::shared_ptr<ExtDeviceManager> extDevMgr)
-        : busType_(busType), extDevMgr_(extDevMgr) {};
+    DevChangeCallback(BusType busType, ExtDeviceManager &extDevMgr) : busType_(busType), extDevMgr_(extDevMgr) {};
     int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device) override;
     int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device) override;
 
 private:
     BusType busType_;
-    std::shared_ptr<ExtDeviceManager> extDevMgr_;
+    ExtDeviceManager &extDevMgr_;
 };
 
-
 class BusExtensionCore {
-    DECLARE_DELAYED_SINGLETON(BusExtensionCore)
+    DECLARE_SINGLE_INSTANCE_BASE(BusExtensionCore);
+
 public:
+    ~BusExtensionCore() = default;
     int32_t Init();
     int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
 
 private:
+    BusExtensionCore() = default;
     std::unordered_map<BusType, std::shared_ptr<IBusExtension>> busExtensions_;
     const uint32_t MAX_BUS_EXTENSIONS = 100;
 };
@@ -122,8 +126,7 @@ private:
 template <typename BusExtension>
 void RegisterBusExtension(BusType busType)
 {
-    DelayedSingleton<BusExtensionCore>::GetInstance()->Register(\
-        busType, std::make_shared<BusExtension>());
+    BusExtensionCore::GetInstance().Register(busType, std::make_shared<BusExtension>());
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

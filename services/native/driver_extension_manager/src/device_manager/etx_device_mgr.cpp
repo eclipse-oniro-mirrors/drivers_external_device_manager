@@ -13,44 +13,63 @@
  * limitations under the License.
  */
 
-#include "etx_device_mgr.h"
+#include <dlfcn.h>
+#include <sstream>
+
 #include "cinttypes"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #include "ibus_extension.h"
+#include "etx_device_mgr.h"
+
+#ifdef __aarch64__
+static constexpr const char *BUS_EXTENSION_SO_PATH = "/system/lib64";
+#else
+static constexpr const char *BUS_EXTENSION_SO_PATH = "/system/lib";
+#endif
+static constexpr const char *HDI_SO_SUFFIX = ".z.so";
+static constexpr const char *HDI_SO_PREFIX = "lib";
+static constexpr const char *USB_BUS_EXTENSION = "bus_extension";
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-BusExtensionCore::BusExtensionCore()
-{
-    return;
-}
+IMPLEMENT_SINGLE_INSTANCE(BusExtensionCore);
+IMPLEMENT_SINGLE_INSTANCE(ExtDeviceManager);
 
-BusExtensionCore::~BusExtensionCore()
+static void LoadLib()
 {
-    return;
-}
-
-ExtDeviceManager::~ExtDeviceManager()
-{
-    return;
-}
-
-ExtDeviceManager::ExtDeviceManager()
-{
-    return;
+    for (BusType i = BUS_TYPE_USB; i < BUS_TYPE_MAX; i = (BusType)(i + 1)) {
+        std::ostringstream libPath;
+        libPath << BUS_EXTENSION_SO_PATH << "/" << HDI_SO_PREFIX;
+        switch (i) {
+            case BUS_TYPE_USB:
+                libPath << USB_BUS_EXTENSION;
+                break;
+            default:
+                EDM_LOGE(MODULE_DEV_MGR, "invalid bus type");
+                continue;
+        }
+        libPath << HDI_SO_SUFFIX;
+        void *handler = dlopen(libPath.str().c_str(), RTLD_LAZY);
+        if (handler == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to dlopen  %{public}s, %{public}s", libPath.str().c_str(), dlerror());
+            continue;
+        }
+    }
 }
 
 int32_t BusExtensionCore::Init()
 {
+    LoadLib();
     int ret = EDM_OK;
     for (auto &iter : busExtensions_) {
         std::shared_ptr<DevChangeCallback> callback =
-            std::make_shared<DevChangeCallback>(iter.first, DelayedSingleton<ExtDeviceManager>::GetInstance());
+            std::make_shared<DevChangeCallback>(iter.first, ExtDeviceManager::GetInstance());
         if (iter.second->SetDevChangeCallback(callback) != EDM_OK) {
             ret = EDM_NOK;
             EDM_LOGE(MODULE_DEV_MGR, "busExtension init failed, busType is %{public}d", iter.first);
         }
+        EDM_LOGD(MODULE_DEV_MGR, "busExtension init successfully, busType is %{public}d", iter.first);
     }
     return ret;
 }
@@ -66,13 +85,13 @@ int32_t BusExtensionCore::Register(BusType busType, std::shared_ptr<IBusExtensio
         return EDM_OK;
     }
     busExtensions_.insert(std::make_pair(busType, busExtension));
-    EDM_LOGI(MODULE_DEV_MGR, "busType %{public}d register successfully", busType);
+    EDM_LOGD(MODULE_DEV_MGR, "busType %{public}d register successfully", busType);
     return EDM_OK;
 }
 
 int32_t ExtDeviceManager::Init()
 {
-    EDM_LOGI(MODULE_DEV_MGR, "ExtDeviceManager Init start");
+    EDM_LOGD(MODULE_DEV_MGR, "ExtDeviceManager Init start");
     return EDM_OK;
 }
 
@@ -94,7 +113,7 @@ int32_t ExtDeviceManager::RegisterDevice(std::shared_ptr<DeviceInfo> devInfo)
     }
     std::shared_ptr<Device> device = std::make_shared<Device>(devInfo);
     deviceMap_[type].push_back(device);
-    EDM_LOGI(MODULE_DEV_MGR, "successfully registered device, deviceId is %{public}016" PRIx64 "", deviceId);
+    EDM_LOGD(MODULE_DEV_MGR, "successfully registered device, deviceId is %{public}016" PRIx64 "", deviceId);
     // driver match
     return EDM_OK;
 }
@@ -117,21 +136,21 @@ void ExtDeviceManager::UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInf
             }
         }
     }
-    EDM_LOGI(MODULE_DEV_MGR, "device has been unregistered, deviceId is %{public}016" PRIx64 "", deviceId);
+    EDM_LOGD(MODULE_DEV_MGR, "device has been unregistered, deviceId is %{public}016" PRIx64 "", deviceId);
 }
 
 int32_t DevChangeCallback::OnDeviceAdd(std::shared_ptr<DeviceInfo> device)
 {
-    EDM_LOGI(MODULE_DEV_MGR, "OnDeviceAdd start");
+    EDM_LOGD(MODULE_DEV_MGR, "OnDeviceAdd start");
     device->devInfo_.devBusInfo.busType = this->busType_;
-    return this->extDevMgr_->RegisterDevice(device);
+    return this->extDevMgr_.RegisterDevice(device);
 }
 
 int32_t DevChangeCallback::OnDeviceRemove(std::shared_ptr<DeviceInfo> device)
 {
-    EDM_LOGI(MODULE_DEV_MGR, "OnDeviceRemove start");
+    EDM_LOGD(MODULE_DEV_MGR, "OnDeviceRemove start");
     device->devInfo_.devBusInfo.busType = this->busType_;
-    this->extDevMgr_->UnRegisterDevice(device);
+    this->extDevMgr_.UnRegisterDevice(device);
     return EDM_OK;
 }
 } // namespace ExternalDeviceManager

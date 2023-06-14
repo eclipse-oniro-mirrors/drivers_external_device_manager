@@ -38,13 +38,15 @@ private:
 };
 
 class ExtDeviceManager final {
-    DECLARE_DELAYED_SINGLETON(ExtDeviceManager)
+    DECLARE_SINGLE_INSTANCE_BASE(ExtDeviceManager);
 public:
+    ~ExtDeviceManager() = default;
     int32_t Init();
     int32_t RegisterDevice(std::shared_ptr<DeviceInfo> devInfo);
     void UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInfo);
 
 private:
+    ExtDeviceManager() = default;
     std::unordered_map<BusType, std::list<std::shared_ptr<Device>>> deviceMap_;
     std::mutex deviceMapMutex_;
 };

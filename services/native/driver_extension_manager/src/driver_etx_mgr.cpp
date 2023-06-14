@@ -14,7 +14,10 @@
  */
 
 #include "driver_ext_mgr.h"
-
+#include "driver_pkg_manager.h"
+#include "edm_errors.h"
+#include "etx_device_mgr.h"
+#include "hilog_wrapper.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 
@@ -26,9 +29,21 @@ const bool G_REGISTER_RESULT =
 DriverExtMgr::DriverExtMgr() : SystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID, true) {}
 DriverExtMgr::~DriverExtMgr() {}
 
-void DriverExtMgr::OnStart() {}
+void DriverExtMgr::OnStart()
+{
+    EDM_LOGI(MODULE_DEV_MGR, "hdf_ext_devmgr OnStart");
+    DriverPkgManager::GetInstance().Init();
+    ExtDeviceManager::GetInstance().Init();
+    BusExtensionCore::GetInstance().Init();
+}
 
-void DriverExtMgr::OnStop() {}
+void DriverExtMgr::OnStop()
+{
+    EDM_LOGI(MODULE_DEV_MGR, "hdf_ext_devmgr OnStop");
+    delete &(DriverPkgManager::GetInstance());
+    delete &(ExtDeviceManager::GetInstance());
+    delete &(BusExtensionCore::GetInstance());
+}
 
 int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
 {

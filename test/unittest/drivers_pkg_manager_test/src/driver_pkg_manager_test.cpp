@@ -134,44 +134,34 @@ HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Null_ID_Test, TestSize.Level1)
 
 class DriverPkgManagerPtrTest : public testing::Test {
 public:
-    DriverPkgManager *drvPkgMgrInstance = nullptr;
-    void SetUp() override
-    {
-        drvPkgMgrInstance = new DriverPkgManager();
-        cout << "DriverPkgManagerPtrTest SetUp" << endl;
-    }
-    void TearDown() override
-    {
-        if (drvPkgMgrInstance != nullptr) {
-            delete drvPkgMgrInstance;
-            drvPkgMgrInstance = nullptr;
-        }
-        cout << "DriverPkgManagerPtrTest TearDown" << endl;
-    }
+    void SetUp() override {}
+    void TearDown() override {}
 };
-
-HWTEST_F(DriverPkgManagerPtrTest, DrvExt_New_Test, TestSize.Level1)
-{
-    int32_t ret = drvPkgMgrInstance->Init();
-    if (ret != 0) {
-        EXPECT_EQ(0, ret);
-        return;
-    }
-    EXPECT_NE(nullptr, drvPkgMgrInstance);
-    cout << "DrvExt_New_Test" << endl;
-}
 
 HWTEST_F(DriverPkgManagerPtrTest, DrvExt_QueryMatch_Before_Init_Test, TestSize.Level1)
 {
-    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
-    0);
-    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
+    DriverPkgManager &drvPkgMgrInstance = DriverPkgManager::GetInstance();
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(0);
+    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
     EXPECT_EQ(nullptr, bundle);
     cout << "DrvExt_QueryMatch_Before_Init_Test" << endl;
 }
 
+HWTEST_F(DriverPkgManagerPtrTest, DrvExt_New_Test, TestSize.Level1)
+{
+    DriverPkgManager &drvPkgMgrInstance = DriverPkgManager::GetInstance();
+    bool ret = drvPkgMgrInstance.Init();
+    if (ret != 0) {
+        EXPECT_EQ(0, ret);
+        return;
+    }
+    EXPECT_NE(nullptr, &drvPkgMgrInstance);
+    cout << "DrvExt_New_Test" << endl;
+}
+
 HWTEST_F(DriverPkgManagerPtrTest, DrvExt_Delete_Test, TestSize.Level1)
 {
+    auto drvPkgMgrInstance = &(DriverPkgManager::GetInstance());
     if (drvPkgMgrInstance != nullptr) {
         delete drvPkgMgrInstance;
         drvPkgMgrInstance = nullptr;
