@@ -24,11 +24,21 @@ ohos_shared_library("driver_extension_manager") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
   ]
   configs = [ "${utils_path}:utils_config" ]
+  deps = [
+    ":drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:bus_extension_core",
+  ]
   external_deps = [
     "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

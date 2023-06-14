@@ -25,6 +25,7 @@ namespace ExternalDeviceManager {
 enum BusType : uint32_t {
     BUS_TYPE_INVALID = 0,
     BUS_TYPE_USB = 1,
+    BUS_TYPE_MAX,
     BUS_TYPE_TEST,
 };
 class IBusExtension;
@@ -108,13 +109,15 @@ private:
 };
 
 class BusExtensionCore {
-    DECLARE_SINGLE_INSTANCE(BusExtensionCore);
+    DECLARE_SINGLE_INSTANCE_BASE(BusExtensionCore);
 
 public:
+    ~BusExtensionCore() = default;
     int32_t Init();
     int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
 
 private:
+    BusExtensionCore() = default;
     std::unordered_map<BusType, std::shared_ptr<IBusExtension>> busExtensions_;
     const uint32_t MAX_BUS_EXTENSIONS = 100;
 };

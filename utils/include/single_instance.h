@@ -35,6 +35,7 @@ private:                                    \
     className() = default;                  \
     ~className() = default;
 
+// please remeber release instance
 #define IMPLEMENT_SINGLE_INSTANCE(className)    \
     className &className::GetInstance()         \
     {                                           \

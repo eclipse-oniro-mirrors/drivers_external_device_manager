@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-#include "driver_pkg_manager.h"
-#include "usb_bus_extension.h"
-
-#include <want.h>
 #include <element_name.h>
-
-#include "common_event_subscribe_info.h"
-#include "common_event_support.h"
-#include "matching_skills.h"
+#include <want.h>
 
 #include "hdf_log.h"
+#include "hilog_wrapper.h"
+#include "matching_skills.h"
+#include "usb_bus_extension.h"
+#include "common_event_support.h"
+#include "common_event_subscribe_info.h"
+#include "driver_pkg_manager.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -31,6 +31,8 @@ using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::ExternalDeviceManager;
+
+IMPLEMENT_SINGLE_INSTANCE(DriverPkgManager);
 
 DriverPkgManager::DriverPkgManager()
 {
@@ -116,10 +118,8 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
 
         if (extInstance->MatchDriver(val, *devInfo)) {
             string bundleName = key;
-            ret->bundleName =
-            bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
-            ret->abilityName =
-            bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
+            ret->bundleName = bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
+            ret->abilityName = bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
             return ret;
         }
     }
@@ -201,5 +201,5 @@ int32_t DriverPkgManager::UnRegisterOnBundleUpdate()
     bundleStateCallback_->m_pFun = nullptr;
     return EDM_OK;
 }
-}
-}
+} // namespace ExternalDeviceManager
+} // namespace OHOS

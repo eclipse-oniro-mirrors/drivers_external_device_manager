@@ -16,13 +16,13 @@
 #ifndef DRIVER_PKG_MANAGER_H
 #define DRIVER_PKG_MANAGER_H
 
-#include <stdint.h>
 #include <iostream>
+#include <stdint.h>
 
 #include "bundle_monitor.h"
-
-#include "ibus_extension.h"
 #include "drv_bundle_state_callback.h"
+#include "ibus_extension.h"
+#include "single_instance.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -41,12 +41,10 @@ struct BundleInfoNames {
 };
 
 class DriverPkgManager {
+    DECLARE_SINGLE_INSTANCE_BASE(DriverPkgManager);
+
 public:
-    DriverPkgManager();
-    ~DriverPkgManager();
-
     void PrintTest();
-
     /**
      * @brief Called at first before Monitor DriverExtension Package.
      * @param bundleName Indicates the bundle name of the application.
@@ -54,11 +52,10 @@ public:
      * @return Returns true if the function is successfully called; returns false otherwise.
      */
     int32_t Init();
-
     shared_ptr<BundleInfoNames> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo);
-
     int32_t RegisterOnBundleUpdate(PCALLBACKFUN pFun);
     int32_t UnRegisterOnBundleUpdate();
+    ~DriverPkgManager();
 private:
     shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
     sptr<DrvBundleStateCallback> bundleStateCallback_ = nullptr;
@@ -66,7 +63,8 @@ private:
 
     int32_t RegisterCallback(const sptr<IBundleStatusCallback> &callback);
     int32_t UnRegisterCallback();
+    DriverPkgManager();
 };
-} // namespace
-}
+} // namespace ExternalDeviceManager
+} // namespace OHOS
 #endif // DRIVER_PKG_MANAGER_H
