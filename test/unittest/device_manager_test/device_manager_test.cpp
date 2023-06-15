@@ -17,9 +17,11 @@
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #define private public
+#include "dev_change_callback.h"
 #include "etx_device_mgr.h"
 #include "ibus_extension.h"
 #include "usb_bus_extension.h"
+#include "bus_extension_core.h"
 #undef private
 
 namespace OHOS {
@@ -56,8 +58,7 @@ HWTEST_F(DeviceManagerTest, InitTest, TestSize.Level1)
 // test OnDeviceAdd and OnDeviceRemove
 HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest001, TestSize.Level1)
 {
-    std::shared_ptr<DevChangeCallback> callback =
-        std::make_shared<DevChangeCallback>(BusType::BUS_TYPE_TEST, ExtDeviceManager::GetInstance());
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
     std::shared_ptr<DeviceInfo> device = std::make_shared<DeviceInfo>(0);
     device->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
     device->devInfo_.devBusInfo.busDeviceId = 1;
@@ -73,8 +74,7 @@ HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest001, TestSize.Level1)
 // test adding device repeatedly
 HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest002, TestSize.Level1)
 {
-    std::shared_ptr<DevChangeCallback> callback =
-        std::make_shared<DevChangeCallback>(BusType::BUS_TYPE_TEST, ExtDeviceManager::GetInstance());
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
     std::shared_ptr<DeviceInfo> device = std::make_shared<DeviceInfo>(0);
     device->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
     device->devInfo_.devBusInfo.busDeviceId = 1;
@@ -93,8 +93,7 @@ HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest002, TestSize.Level1)
 
 HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest003, TestSize.Level1)
 {
-    std::shared_ptr<DevChangeCallback> callback =
-        std::make_shared<DevChangeCallback>(BusType::BUS_TYPE_TEST, ExtDeviceManager::GetInstance());
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
     std::shared_ptr<DeviceInfo> device0 = std::make_shared<DeviceInfo>(0);
     device0->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
     device0->devInfo_.devBusInfo.busDeviceId = 1;

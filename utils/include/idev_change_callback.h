@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,8 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef USB_DRIVER_INFO_FUZZER
-#define USB_DRIVER_INFO_FUZZER
-#define FUZZ_PROJECT_NAME "usbdriverinfo_fuzzer"
+#ifndef IDEV_CHANGE_CALLBACK_H
+#define IDEV_CHANGE_CALLBACK_H
 
-#endif
+#include <memory>
+#include "ext_object.h"
+
+namespace OHOS {
+namespace ExternalDeviceManager {
+class IDevChangeCallback {
+public:
+    virtual ~IDevChangeCallback() = default;
+    virtual int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device);
+    virtual int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device);
+};
+} // namespace ExternalDeviceManager
+} // namespace OHOS
+#endif // IDEV_CHANGE_CALLBACK_H

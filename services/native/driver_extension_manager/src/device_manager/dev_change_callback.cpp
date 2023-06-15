@@ -13,25 +13,23 @@
  * limitations under the License.
  */
 
-#include "string_ex.h"
+#include "dev_change_callback.h"
+#include "edm_errors.h"
+#include "etx_device_mgr.h"
 #include "hilog_wrapper.h"
-#include "ibus_extension.h"
-#include "usb_bus_extension.h"
-#include "bus_extension_core.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
-shared_ptr<IBusExtension> IBusExtension::GetInstance(const string &busType)
+int32_t DevChangeCallback::OnDeviceAdd(std::shared_ptr<DeviceInfo> device)
 {
-    if (LowerStr(busType) == "usb") {
-        return make_shared<UsbBusExtension>();
-    }
-    return nullptr;
+    EDM_LOGD(MODULE_DEV_MGR, "OnDeviceAdd start");
+    return ExtDeviceManager::GetInstance().RegisterDevice(device);
 }
 
-__attribute__ ((constructor)) static void RegBusExtension()
+int32_t DevChangeCallback::OnDeviceRemove(std::shared_ptr<DeviceInfo> device)
 {
-    EDM_LOGI(MODULE_COMMON, "installing UsbBusExtension");
-    RegisterBusExtension<UsbBusExtension>(BusType::BUS_TYPE_USB);
+    EDM_LOGD(MODULE_DEV_MGR, "OnDeviceRemove start");
+    return ExtDeviceManager::GetInstance().UnRegisterDevice(device);
 }
-}
-}
+} // namespace ExternalDeviceManager
+} // namespace OHOS

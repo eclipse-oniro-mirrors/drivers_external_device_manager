@@ -18,7 +18,5 @@ group("bus_extension_fuzzer") {
   testonly = true
   deps = []
 
-  deps += [
-    "usbdriverinfo_fuzzer:UsbDriverInfoFuzzTest",
-  ]
+  deps += [ "usbextension_fuzzer:UsbExtensionFuzzTest" ]
 }

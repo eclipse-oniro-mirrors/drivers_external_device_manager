@@ -20,6 +20,8 @@
 #include "iostream"
 #define private public
 #include "etx_device_mgr.h"
+#include "bus_extension_core.h"
+#include "dev_change_callback.h"
 #undef private
 
 constexpr const char *START_TEXT = "Begin to loop and listen usb event:\n\
@@ -31,11 +33,10 @@ static void PrintAllDevice()
 {
     ExtDeviceManager &devmgr = ExtDeviceManager::GetInstance();
     cout << "------------------" << endl;
-    std::list<std::shared_ptr<Device>> list = devmgr.deviceMap_[BUS_TYPE_USB];
-    cout << "usb device size: " << list.size() << endl;
-    std::list<std::shared_ptr<Device>>::iterator iter;
-    for (iter = list.begin(); iter != list.end(); iter++) {
-        std::shared_ptr<Device> device = *iter;
+    std::unordered_map<uint64_t, std::shared_ptr<Device>> &map = devmgr.deviceMap_[BUS_TYPE_USB];
+    cout << "usb device size: " << map.size() << endl;
+    for (auto &iter : map) {
+        std::shared_ptr<Device> device = iter.second;
         cout << device->GetDeviceInfo()->GetDeviceDescription().c_str() << endl;
     }
     cout << "------------------" << endl;
@@ -53,7 +54,8 @@ int main(int argc, char **argv)
     BusExtensionCore &core = BusExtensionCore::GetInstance();
     size_t size = core.busExtensions_.size();
     cout << "busExtensions_.size: " << size << endl;
-    int32_t ret = core.Init();
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    int32_t ret = core.Init(callback);
     if (ret != EDM_OK) {
         cout << "busExtensionCore init failed" << endl;
         return ret;

@@ -22,13 +22,14 @@ ohos_shared_library("bus_extension") {
   include_dirs = [
     "//third_party/jsoncpp/include/json",
     "../../include/bus_extension/usb",
+    "../../include/bus_extension/core",
   ]
   configs = [
     "${utils_path}:coverage_flags",
     "${utils_path}:utils_config",
   ]
   deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:bus_extension_core",
+    "core:driver_extension_bus_core",
     "//third_party/jsoncpp:jsoncpp",
   ]
   external_deps = [

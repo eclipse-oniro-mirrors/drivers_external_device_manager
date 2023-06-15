@@ -18,5 +18,8 @@ group("fuzztest") {
   testonly = true
   deps = []
 
-  deps += [ "drivers_pkg_manager_fuzzer:drivers_pkg_manager_fuzzer" ]
+  deps += [
+    "bus_extension_fuzzer:bus_extension_fuzzer",
+    "drivers_pkg_manager_fuzzer:drivers_pkg_manager_fuzzer",
+  ]
 }
