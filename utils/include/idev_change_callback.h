@@ -12,26 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef IDEV_CHANGE_CALLBACK_H
+#define IDEV_CHANGE_CALLBACK_H
 
-#include "string_ex.h"
-#include "hilog_wrapper.h"
-#include "ibus_extension.h"
-#include "usb_bus_extension.h"
-#include "bus_extension_core.h"
+#include <memory>
+#include "ext_object.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
-shared_ptr<IBusExtension> IBusExtension::GetInstance(const string &busType)
-{
-    if (LowerStr(busType) == "usb") {
-        return make_shared<UsbBusExtension>();
-    }
-    return nullptr;
-}
-
-__attribute__ ((constructor)) static void RegBusExtension()
-{
-    EDM_LOGI(MODULE_COMMON, "installing UsbBusExtension");
-    RegisterBusExtension<UsbBusExtension>(BusType::BUS_TYPE_USB);
-}
-}
-}
+class IDevChangeCallback {
+public:
+    virtual ~IDevChangeCallback() = default;
+    virtual int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device);
+    virtual int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device);
+};
+} // namespace ExternalDeviceManager
+} // namespace OHOS
+#endif // IDEV_CHANGE_CALLBACK_H

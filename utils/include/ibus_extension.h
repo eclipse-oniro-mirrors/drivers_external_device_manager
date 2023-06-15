@@ -21,6 +21,7 @@
 #include <memory>
 #include "application_info.h"
 #include "ext_object.h"
+#include "idev_change_callback.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;

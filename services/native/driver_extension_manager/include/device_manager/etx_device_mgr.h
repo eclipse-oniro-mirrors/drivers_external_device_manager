@@ -18,8 +18,9 @@
 #include <mutex>
 #include <list>
 #include <unordered_map>
-
 #include "ext_object.h"
+#include "single_instance.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 class Device final {
@@ -43,11 +44,12 @@ public:
     ~ExtDeviceManager() = default;
     int32_t Init();
     int32_t RegisterDevice(std::shared_ptr<DeviceInfo> devInfo);
-    void UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInfo);
+    int32_t UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInfo);
+    std::vector<std::shared_ptr<DeviceInfo>> QueryDeivce(const BusType busType);
 
 private:
     ExtDeviceManager() = default;
-    std::unordered_map<BusType, std::list<std::shared_ptr<Device>>> deviceMap_;
+    std::unordered_map<BusType, std::unordered_map<uint64_t, std::shared_ptr<Device>>> deviceMap_;
     std::mutex deviceMapMutex_;
 };
 } // namespace ExternalDeviceManager
