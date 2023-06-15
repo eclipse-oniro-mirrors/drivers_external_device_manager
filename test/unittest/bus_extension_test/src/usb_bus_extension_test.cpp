@@ -44,8 +44,8 @@ static const vector<Metadata> g_testMetaDatas = {
     Metadata("bus", "usb", ""),
     Metadata("desc", "test usb driver extension", ""),
     Metadata("vendor", "testVendor", ""),
-    Metadata("pid", "1234,5678", ""),
-    Metadata("vid", "1111,2222", "")
+    Metadata("pid", "0x1234,0x5678", ""),
+    Metadata("vid", "0x1111,0x2222", "")
 };
 HWTEST_F(UsbBusExtensionTest, GetExtensionInstanceTest, TestSize.Level1)
 {
@@ -75,19 +75,19 @@ HWTEST_F(UsbBusExtensionTest, ParseDriverInfoTest, TestSize.Level1)
     ASSERT_NE(usbDriverinfo, nullptr);
     ASSERT_EQ(usbDriverinfo->pids_.size(), (size_t)2);
     ASSERT_EQ(usbDriverinfo->vids_.size(), (size_t)2);
-    ASSERT_EQ(usbDriverinfo->pids_[0], 1234);
-    ASSERT_EQ(usbDriverinfo->pids_[1], 5678);
-    ASSERT_EQ(usbDriverinfo->vids_[0], 1111);
-    ASSERT_EQ(usbDriverinfo->vids_[1], 2222);
+    ASSERT_EQ(usbDriverinfo->pids_[0], 0x1234);
+    ASSERT_EQ(usbDriverinfo->pids_[1], 0x5678);
+    ASSERT_EQ(usbDriverinfo->vids_[0], 0x1111);
+    ASSERT_EQ(usbDriverinfo->vids_[1], 0x2222);
 }
 
 HWTEST_F(UsbBusExtensionTest, MatchDriverTest, TestSize.Level1)
 {
     auto usbDrvInfo = make_shared<UsbDriverInfo>();
-    usbDrvInfo->pids_.push_back(1234);
-    usbDrvInfo->pids_.push_back(5678);
-    usbDrvInfo->vids_.push_back(1111);
-    usbDrvInfo->vids_.push_back(2222);
+    usbDrvInfo->pids_.push_back(0x1234);
+    usbDrvInfo->pids_.push_back(0x5678);
+    usbDrvInfo->vids_.push_back(0x1111);
+    usbDrvInfo->vids_.push_back(0x2222);
     auto drvInfo = make_shared<DriverInfo>();
     drvInfo->bus_ = "USB";
     drvInfo->vendor_ = "TestVendor";
@@ -98,8 +98,8 @@ HWTEST_F(UsbBusExtensionTest, MatchDriverTest, TestSize.Level1)
 
     auto deviceInfo = make_shared<UsbDeviceInfo>(0);
     deviceInfo->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_USB;
-    deviceInfo->idProduct_ = 1234;
-    deviceInfo->idVendor_ = 1111;
+    deviceInfo->idProduct_ = 0x1234;
+    deviceInfo->idVendor_ = 0x1111;
     deviceInfo->deviceClass_ = 0;
     deviceInfo->bcdUSB_ = 0x1122;
 
@@ -108,12 +108,12 @@ HWTEST_F(UsbBusExtensionTest, MatchDriverTest, TestSize.Level1)
     ASSERT_EQ(isMatched, true);
 
     UsbDeviceInfo deviceInfo2 = *deviceInfo;
-    deviceInfo2.idProduct_ = 9999;
+    deviceInfo2.idProduct_ = 0x9999;
     isMatched = usbBus->MatchDriver(*drvInfo, deviceInfo2);
     ASSERT_EQ(isMatched, false);
 
     UsbDeviceInfo deviceInfo3 = *deviceInfo;
-    deviceInfo3.idVendor_ = 9999;
+    deviceInfo3.idVendor_ = 0x9999;
     isMatched = usbBus->MatchDriver(*drvInfo, deviceInfo3);
     ASSERT_EQ(isMatched, false);
 
