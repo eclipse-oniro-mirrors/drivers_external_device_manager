@@ -26,12 +26,14 @@ ohos_shared_library("driver_extension_manager") {
     "${ext_mgr_path}/services/zidl/include/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [
     ":drivers_pkg_manager",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:bus_extension_core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
   ]
   external_deps = [
     "ability_runtime:ability_manager",
@@ -61,8 +63,10 @@ ohos_shared_library("drivers_pkg_manager") {
     "native/driver_extension_manager/src/drivers_pkg_manager/driver_pkg_manager.cpp",
     "native/driver_extension_manager/src/drivers_pkg_manager/drv_bundle_state_callback.cpp",
   ]
-  include_dirs =
-      [ "native/driver_extension_manager/include/drivers_pkg_manager" ]
+  include_dirs = [
+    "native/driver_extension_manager/include/drivers_pkg_manager",
+    "native/driver_extension_manager/include/bus_extension/core",
+  ]
   configs = [
     ":drvext_manager_public_config",
     ":drvext_manager_private_config",
@@ -70,7 +74,8 @@ ohos_shared_library("drivers_pkg_manager") {
   ]
   public_configs = [ ":drvext_manager_public_config" ]
   deps = [
-    "native/driver_extension_manager/src/bus_extension:bus_extension",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "//third_party/jsoncpp:jsoncpp",
   ]  # Component internal dependencies
 

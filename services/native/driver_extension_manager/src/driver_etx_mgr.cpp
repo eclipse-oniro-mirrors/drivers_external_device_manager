@@ -20,6 +20,8 @@
 #include "hilog_wrapper.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "dev_change_callback.h"
+#include "bus_extension_core.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -31,15 +33,16 @@ DriverExtMgr::~DriverExtMgr() {}
 
 void DriverExtMgr::OnStart()
 {
-    EDM_LOGI(MODULE_DEV_MGR, "hdf_ext_devmgr OnStart");
+    EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStart");
     DriverPkgManager::GetInstance().Init();
     ExtDeviceManager::GetInstance().Init();
-    BusExtensionCore::GetInstance().Init();
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    BusExtensionCore::GetInstance().Init(callback);
 }
 
 void DriverExtMgr::OnStop()
 {
-    EDM_LOGI(MODULE_DEV_MGR, "hdf_ext_devmgr OnStop");
+    EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStop");
     delete &(DriverPkgManager::GetInstance());
     delete &(ExtDeviceManager::GetInstance());
     delete &(BusExtensionCore::GetInstance());

@@ -23,6 +23,7 @@
 #include "drv_bundle_state_callback.h"
 #include "ibus_extension.h"
 #include "single_instance.h"
+#include "ext_object.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;

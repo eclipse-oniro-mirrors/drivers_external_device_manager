@@ -14,12 +14,10 @@
  */
 #ifndef EXT_OBJECT_H
 #define EXT_OBJECT_H
-#include <memory>
-#include <unordered_map>
 
+#include <memory>
+#include <string>
 #include "edm_errors.h"
-#include "single_instance.h"
-#include "singleton.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 enum BusType : uint32_t {
@@ -28,7 +26,7 @@ enum BusType : uint32_t {
     BUS_TYPE_MAX,
     BUS_TYPE_TEST,
 };
-class IBusExtension;
+
 class DrvBundleStateCallback;
 class DriverInfoExt {
 public:
@@ -78,7 +76,6 @@ public:
     }
 
 private:
-    friend class DevChangeCallback;
     union DevInfo {
         uint64_t deviceId;
         struct {
@@ -88,46 +85,6 @@ private:
     } devInfo_;
     std::string description_ {""};
 };
-
-class ExtDeviceManager;
-class IDevChangeCallback {
-public:
-    virtual ~IDevChangeCallback() = default;
-    virtual int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device);
-    virtual int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device);
-};
-
-class DevChangeCallback final : public IDevChangeCallback {
-public:
-    DevChangeCallback(BusType busType, ExtDeviceManager &extDevMgr) : busType_(busType), extDevMgr_(extDevMgr) {};
-    int32_t OnDeviceAdd(std::shared_ptr<DeviceInfo> device) override;
-    int32_t OnDeviceRemove(std::shared_ptr<DeviceInfo> device) override;
-
-private:
-    BusType busType_;
-    ExtDeviceManager &extDevMgr_;
-};
-
-class BusExtensionCore {
-    DECLARE_SINGLE_INSTANCE_BASE(BusExtensionCore);
-
-public:
-    ~BusExtensionCore() = default;
-    int32_t Init();
-    int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
-
-private:
-    BusExtensionCore() = default;
-    std::unordered_map<BusType, std::shared_ptr<IBusExtension>> busExtensions_;
-    const uint32_t MAX_BUS_EXTENSIONS = 100;
-};
-
-// bus extension should register by __attribute__ ((constructor)) when loading so
-template <typename BusExtension>
-void RegisterBusExtension(BusType busType)
-{
-    BusExtensionCore::GetInstance().Register(busType, std::make_shared<BusExtension>());
-}
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 #endif // EXT_OBJECT_H

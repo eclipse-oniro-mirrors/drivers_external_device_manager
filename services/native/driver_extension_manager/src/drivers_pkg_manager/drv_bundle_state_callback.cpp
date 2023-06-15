@@ -26,6 +26,7 @@
 
 #include "hdf_log.h"
 #include "hitrace_meter.h"
+#include "bus_extension_core.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -265,7 +266,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
         ChangeValue(tmpDrvInfo, metadata);
 
         if (tmpDrvInfo.GetBusName() == "USB") {
-            extInstance = IBusExtension::GetInstance("USB");
+            extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName("USB");
         }
 
         if (extInstance == nullptr) {

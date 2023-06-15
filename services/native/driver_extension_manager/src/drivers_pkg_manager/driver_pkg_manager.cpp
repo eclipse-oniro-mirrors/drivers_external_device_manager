@@ -22,6 +22,7 @@
 #include "usb_bus_extension.h"
 #include "common_event_support.h"
 #include "common_event_subscribe_info.h"
+#include "bus_extension_core.h"
 #include "driver_pkg_manager.h"
 
 namespace OHOS {
@@ -107,7 +108,7 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
     }
 
     for (auto [key, val] : drvInfos_) {
-        extInstance = IBusExtension::GetInstance(val.GetBusName());
+        extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(val.GetBusName());
         if (extInstance == nullptr) {
             HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", val.GetBusName().c_str());
             continue;

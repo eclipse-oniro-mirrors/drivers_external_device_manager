@@ -13,16 +13,37 @@
 
 import("../../../../../extdevmgr.gni")
 
-ohos_shared_library("bus_extension_core") {
+ohos_shared_library("driver_extension_dev_callback") {
   install_enable = true
-  sources = [ "etx_device_mgr.cpp" ]
+  sources = [ "dev_change_callback.cpp" ]
 
   include_dirs = [ "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager" ]
   configs = [ "${utils_path}:utils_config" ]
+  deps = [ ":driver_extension_device_manager" ]
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
+  ]
+
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+}
+
+ohos_shared_library("driver_extension_device_manager") {
+  install_enable = true
+  sources = [ "etx_device_mgr.cpp" ]
+
+  include_dirs = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
+  ]
+  configs = [ "${utils_path}:utils_config" ]
+  deps = [ "${ext_mgr_path}/services:drivers_pkg_manager" ]
+  external_deps = [
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
   ]
 
   subsystem_name = "hdf"
