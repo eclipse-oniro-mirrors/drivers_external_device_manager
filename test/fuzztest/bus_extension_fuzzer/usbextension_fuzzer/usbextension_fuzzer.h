@@ -14,6 +14,6 @@
  */
 #ifndef USB_DRIVER_INFO_FUZZER
 #define USB_DRIVER_INFO_FUZZER
-#define FUZZ_PROJECT_NAME "usbdriverinfo_fuzzer"
+#define FUZZ_PROJECT_NAME "usbextension_fuzzer"
 
 #endif

@@ -18,9 +18,9 @@
 #include "ibus_extension.h"
 #include "usb_driver_info.h"
 #include "hilog_wrapper.h"
-#include "usbdriverinfo_fuzzer.h"
+#include "usbextension_fuzzer.h"
 namespace OHOS {
-namespace ExtDevMgr {
+namespace ExternalDeviceManager {
 using namespace std;
 
 bool IBusGetFuzzer(const uint8_t *data, size_t size)
@@ -71,7 +71,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t *rawData, size_t size)
     if (size < sizeof(int)) {
         return false;
     }
-    int index = *(reinterpret_cast<int *>(rawData));
+    const int index = *(static_cast<const uint8_t *>(rawData));
     rawData += sizeof(int);
     size -= sizeof(int);
     int funcCount = sizeof(g_allTestFunc) / sizeof(g_allTestFunc[0]);
@@ -88,6 +88,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t *rawData, size_t size)
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
-    OHOS::ExtDevMgr::DoSomethingInterestingWithMyAPI(data, size);
+    OHOS::ExternalDeviceManager::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }
