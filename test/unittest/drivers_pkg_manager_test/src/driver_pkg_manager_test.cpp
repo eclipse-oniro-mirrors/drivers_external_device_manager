@@ -90,9 +90,6 @@ HWTEST_F(DriverPkgManagerTest, DrvExt_OnBundleChange_Test, TestSize.Level1)
     std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
     1);
     std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
-    while(1) {
-        sleep(2000);
-    }
     cout << "DrvExt_OnBundleChange_Test" << endl;
 }
 
