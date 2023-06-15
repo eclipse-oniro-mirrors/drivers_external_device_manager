@@ -113,5 +113,41 @@ HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest003, TestSize.Level1)
     ASSERT_EQ(ret, EDM_OK);
     ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 0);
 }
+
+HWTEST_F(DeviceManagerTest, QueryDeivceTest, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    std::vector<std::shared_ptr<DeviceInfo>> devVec = extMgr.QueryDeivce(BUS_TYPE_TEST);
+    ASSERT_EQ(devVec.size(), 0);
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    std::shared_ptr<DeviceInfo> device0 = std::make_shared<DeviceInfo>(0);
+    device0->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
+    device0->devInfo_.devBusInfo.busDeviceId = 1;
+    int32_t ret = callback->OnDeviceAdd(device0);
+    ASSERT_EQ(ret, EDM_OK);
+    std::shared_ptr<DeviceInfo> device1 = std::make_shared<DeviceInfo>(0);
+    device1->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
+    device1->devInfo_.devBusInfo.busDeviceId = 2;
+    ret = callback->OnDeviceAdd(device1);
+    ASSERT_EQ(ret, EDM_OK);
+    devVec = extMgr.QueryDeivce(BUS_TYPE_TEST);
+    ASSERT_EQ(devVec.size(), 2);
+    ret = callback->OnDeviceRemove(device0);
+    ret = callback->OnDeviceRemove(device1);
+    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 0);
+}
+
+HWTEST_F(DeviceManagerTest, GetBusExtensionByNameTest, TestSize.Level1)
+{
+    BusExtensionCore &core = BusExtensionCore::GetInstance();
+    ASSERT_NE(core.busExtensions_[BusType::BUS_TYPE_USB], nullptr);
+    std::shared_ptr<IBusExtension> extension = core.GetBusExtensionByName("HDMI");
+    ASSERT_EQ(extension, nullptr);
+    extension = core.GetBusExtensionByName("USB");
+    ASSERT_NE(extension, nullptr);
+    core.busExtensions_.erase(BusType::BUS_TYPE_USB);
+    extension = core.GetBusExtensionByName("USB");
+    ASSERT_EQ(extension, nullptr);
+}
 } // namespace ExternalDeviceManager
 } // namespace OHOS
