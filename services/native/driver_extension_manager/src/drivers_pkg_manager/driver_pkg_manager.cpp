@@ -36,14 +36,12 @@ IMPLEMENT_SINGLE_INSTANCE(DriverPkgManager);
 
 DriverPkgManager::DriverPkgManager()
 {
-    cout << "DriverPkgManager" << endl;
 };
 
 DriverPkgManager::~DriverPkgManager()
 {
-    if (!UnRegisterCallback()) {
+    if (UnRegisterCallback() == 0) {
         HDF_LOGE("~DriverPkgManager UnRegisterCallback Fail");
-        cout << "UnRegisterCallback Fail" << endl;
     }
     delete bundleStateCallback_;
     bundleStateCallback_ = nullptr;
@@ -109,7 +107,6 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
     }
 
     for (auto [key, val] : drvInfos_) {
-        cout << "auto [key, val] : drvInfos_" << endl;
         extInstance = IBusExtension::GetInstance(val.GetBusName());
         if (extInstance == nullptr) {
             HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", val.GetBusName().c_str());

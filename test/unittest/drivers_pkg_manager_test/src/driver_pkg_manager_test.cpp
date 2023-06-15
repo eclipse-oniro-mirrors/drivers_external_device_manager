@@ -18,6 +18,7 @@
 #define private public
 #include "driver_pkg_manager.h"
 #include "ibus_extension.h"
+#include "usb_device_info.h"
 #undef private
 
 namespace OHOS {
@@ -70,7 +71,7 @@ int32_t Fun(int a, int b, const string & c, const string & d)
     return EDM_OK;
 }
 
-HWTEST_F(DriverPkgManagerTest, DrvExt_RegisterOnBundleUpdate_Befor_Init_Test, TestSize.Level1)
+HWTEST_F(DriverPkgManagerTest, DrvExt_RegisterOnBundleUpdate_Init_Test, TestSize.Level1)
 {
     int32_t ret = drvPkgMgrInstance->Init();
     if (ret != 0) {
@@ -79,7 +80,7 @@ HWTEST_F(DriverPkgManagerTest, DrvExt_RegisterOnBundleUpdate_Befor_Init_Test, Te
     }
     int32_t regist = drvPkgMgrInstance->RegisterOnBundleUpdate(Fun);
     EXPECT_EQ(0, regist);
-    cout << "DrvExt_RegisterOnBundleUpdate_Befor_Init_Test" << endl;
+    cout << "DrvExt_RegisterOnBundleUpdate_Init_Test" << endl;
 }
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Illegal_Bus_Test, TestSize.Level1)
@@ -97,19 +98,23 @@ HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Illegal_Bus_Test, TestSize.Leve
     cout << "DrvExt_QueryMatch_Illegal_Bus_Test" << endl;
 }
 
-HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Illegal_ID_Test, TestSize.Level1)
+HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_ID_Test, TestSize.Level1)
 {
     int32_t ret = drvPkgMgrInstance->Init();
     if (ret != 0) {
         EXPECT_EQ(0, ret);
         return;
     }
-    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
-    1);
-    devInfo->devInfo_.devBusInfo.busType = BUS_TYPE_USB;
-    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(devInfo);
-    EXPECT_EQ(nullptr, bundle);
-    cout << "DrvExt_QueryMatch_Illegal_ID_Test" << endl;
+    auto deviceInfo = make_shared<UsbDeviceInfo>(0);
+    deviceInfo->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_USB;
+    deviceInfo->idProduct_ = 0x8835;
+    deviceInfo->idVendor_ = 0x0B57;
+    deviceInfo->deviceClass_ = 0;
+    deviceInfo->bcdUSB_ = 0x1122;
+    
+    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance->QueryMatchDriver(deviceInfo);
+    EXPECT_NE(nullptr, bundle);
+    cout << "DrvExt_QueryMatch_ID_Test" << endl;
 }
 
 HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Null_ID_Test, TestSize.Level1)
