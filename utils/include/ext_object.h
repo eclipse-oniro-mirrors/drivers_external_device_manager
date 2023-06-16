@@ -57,8 +57,12 @@ private:
 
 class DeviceInfo {
 public:
-    DeviceInfo(uint32_t busDeviceId, const std::string &description = "") : description_(description)
+    DeviceInfo(
+        uint32_t busDeviceId,
+        BusType busType = BusType::BUS_TYPE_INVALID,
+        const std::string &description = "") : description_(description)
     {
+        devInfo_.devBusInfo.busType = busType;
         devInfo_.devBusInfo.busDeviceId = busDeviceId;
     }
     virtual ~DeviceInfo() = default;
@@ -79,8 +83,8 @@ private:
     union DevInfo {
         uint64_t deviceId;
         struct {
-            uint32_t busDeviceId;
             BusType busType;
+            uint32_t busDeviceId;
         } devBusInfo;
     } devInfo_;
     std::string description_ {""};

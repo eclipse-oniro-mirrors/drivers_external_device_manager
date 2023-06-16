@@ -44,7 +44,7 @@ static string ToDeviceDesc(const UsbDev& usbDev, const UsbDevDescLite& desc)
     auto ret = sprintf_s(buffer, sizeof(buffer), "USB&BUS_%02X&DEV_%02X&PID_%04X&VID_%04X&CLASS_%02X",\
         usbDev.busNum, usbDev.devAddr, desc.idProduct, desc.idVendor, desc.bDeviceClass);
     if (ret < 0) {
-        EDM_LOGE(MODULE_BUS_USB,  "ToBusDeivceId sprintf_s error. ret = %{public}d", ret);
+        EDM_LOGE(MODULE_BUS_USB,  "ToDeivceDesc sprintf_s error. ret = %{public}d", ret);
         return string();
     }
     return string(buffer);

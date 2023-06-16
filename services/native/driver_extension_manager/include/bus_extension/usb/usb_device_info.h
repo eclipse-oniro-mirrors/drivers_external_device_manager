@@ -21,7 +21,7 @@ namespace ExternalDeviceManager {
 class UsbDeviceInfo : public DeviceInfo {
 public:
     UsbDeviceInfo(uint32_t busDeviceId, const std::string &description = "")
-        : DeviceInfo(busDeviceId, description) { }
+        : DeviceInfo(busDeviceId, BusType::BUS_TYPE_USB, description) { }
     ~UsbDeviceInfo() = default;
 private:
     friend class UsbBusExtension;
