@@ -78,7 +78,6 @@ void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, con
     */
 void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const int userId)
 {
-    cout << "OnBundleAdded" << endl;
     HDF_LOGD("OnBundleAdded");
     StartTrace(LABEL, "OnBundleAdded");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
@@ -97,7 +96,6 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
     */
 void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, const int userId)
 {
-    cout << "OnBundleUpdated" << endl;
     HDF_LOGD("OnBundleUpdated");
     StartTrace(LABEL, "OnBundleUpdated");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
@@ -117,7 +115,6 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     */
 void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, const int userId)
 {
-    cout << "OnBundleRemoved" << endl;
     HDF_LOGD("OnBundleRemoved");
     StartTrace(LABEL, "OnBundleRemoved");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
