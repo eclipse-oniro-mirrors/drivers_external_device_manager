@@ -67,13 +67,16 @@ int32_t ExtDeviceManager::UnRegisterDevice(const std::shared_ptr<DeviceInfo> dev
 std::vector<std::shared_ptr<DeviceInfo>> ExtDeviceManager::QueryDeivce(const BusType busType)
 {
     std::vector<std::shared_ptr<DeviceInfo>> devInfoVec;
-    if (deviceMap_.find(busType) != deviceMap_.end()) {
+    std::lock_guard<std::mutex> lock(deviceMapMutex_);
+    if (deviceMap_.find(busType) == deviceMap_.end()) {
+        EDM_LOGE(MODULE_DEV_MGR, "no device is found or busType %{public}d is invalid", busType);
         return devInfoVec;
     }
     std::unordered_map<uint64_t, std::shared_ptr<Device>> map = deviceMap_[busType];
     for (auto device : map) {
         devInfoVec.push_back(device.second->GetDeviceInfo());
     }
+    EDM_LOGD(MODULE_DEV_MGR, "find %{public}zu device of busType %{public}d", devInfoVec.size(), busType);
     return devInfoVec;
 }
 } // namespace ExternalDeviceManager

@@ -88,11 +88,11 @@ int32_t BusExtensionCore::Register(BusType busType, std::shared_ptr<IBusExtensio
 std::shared_ptr<IBusExtension> BusExtensionCore::GetBusExtensionByName(std::string busName)
 {
     static std::unordered_map<std::string, BusType> busTypeMap = {
-        {"bus", BusType::BUS_TYPE_USB}
+        {"usb", BusType::BUS_TYPE_USB}
     };
-    auto iterMap = busTypeMap.find(busName);
+    auto iterMap = busTypeMap.find(LowerStr(busName));
     if (iterMap == busTypeMap.end()) {
-        EDM_LOGE(MODULE_DEV_MGR, "invalid bus name");
+        EDM_LOGE(MODULE_DEV_MGR, "invalid bus name: %{public}s", busName.c_str());
         return nullptr;
     }
     BusType busType = iterMap->second;
