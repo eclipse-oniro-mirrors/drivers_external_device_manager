@@ -26,16 +26,24 @@
         "deps": {
             "components": [
                 "hiviewdfx_hilog_native",
-                "c_utils",
                 "init",
                 "ipc",
                 "samgr",
                 "selinux",
-                "bundle_framework"
+                "ability_base",
+                "common_event_service",
+                "c_utils",
+                "os_account",
+                "drivers_interface_usb",
+                "bundle_framework",
+                "ability_runtime",
+                "hisysevent_native",
+                "hitrace_native"
             ],
             "third_party": [
                 "bounds_checking_function",
-                "googletest"
+                "googletest",
+                "jsoncpp"
             ]
         },
         "build": {
