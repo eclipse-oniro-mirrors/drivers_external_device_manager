@@ -42,7 +42,7 @@ static void PrintQueryMatchDriver()
     deviceInfo->bcdUSB_ = 0x1122;
     std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance.QueryMatchDriver(deviceInfo);
 
-    if(bundle != nullptr) {
+    if (bundle != nullptr) {
         cout << "Query Success" << endl;
     }
     cout << "------------------" << endl;

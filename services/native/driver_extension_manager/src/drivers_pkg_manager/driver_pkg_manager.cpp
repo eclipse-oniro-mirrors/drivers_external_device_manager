@@ -15,7 +15,6 @@
 
 #include <element_name.h>
 #include <want.h>
-#include <algorithm>
 
 #include "hdf_log.h"
 #include "hilog_wrapper.h"
