@@ -76,8 +76,8 @@ ohos_unittest("drivers_pkg_manager_test") {
     "${bus_extension_include_path}",
   ]
   deps = [
-    "${ext_mgr_path}/services:drivers_pkg_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]

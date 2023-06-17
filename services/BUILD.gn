@@ -30,10 +30,10 @@ ohos_shared_library("driver_extension_manager") {
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [
-    ":drivers_pkg_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [
     "ability_runtime:ability_manager",
@@ -46,54 +46,6 @@ ohos_shared_library("driver_extension_manager") {
     "samgr:samgr_proxy",
   ]
   shlib_type = "sa"
-  subsystem_name = "hdf"
-  part_name = "external_device_manager"
-}
-
-config("drvext_manager_public_config") {
-  include_dirs = [ "native/driver_extension_manager/include/bus_extension/usb" ]
-}
-config("drvext_manager_private_config") {
-  include_dirs = [ "//third_party/jsoncpp/include/json" ]
-}
-
-ohos_shared_library("drivers_pkg_manager") {
-  install_enable = true
-  sources = [
-    "native/driver_extension_manager/src/drivers_pkg_manager/driver_pkg_manager.cpp",
-    "native/driver_extension_manager/src/drivers_pkg_manager/drv_bundle_state_callback.cpp",
-  ]
-  include_dirs = [
-    "native/driver_extension_manager/include/drivers_pkg_manager",
-    "native/driver_extension_manager/include/bus_extension/core",
-  ]
-  configs = [
-    ":drvext_manager_public_config",
-    ":drvext_manager_private_config",
-    "${utils_path}:utils_config",
-  ]
-  public_configs = [ ":drvext_manager_public_config" ]
-  deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "//third_party/jsoncpp:jsoncpp",
-  ]  # Component internal dependencies
-
-  external_deps = [
-    "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "c_utils:utils",
-    "common_event_service:cesfwk_core",
-    "common_event_service:cesfwk_innerkits",
-    "drivers_interface_usb:libusb_proxy_1.0",
-    "hisysevent_native:libhisysevent",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
-    "os_account:os_account_innerkits",
-    "samgr:samgr_proxy",
-  ]
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
