@@ -88,8 +88,8 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     string usbDrvInfoStr;
     const_cast<UsbDriverInfo*>(usbDriverInfo)->Serialize(usbDrvInfoStr);
     EDM_LOGD(MODULE_BUS_USB, "UsbDriverInfo:%{public}s", usbDrvInfoStr.c_str());
-    EDM_LOGD(MODULE_BUS_USB, "UsbDeviceInfo: vid = %{public}d, pid = %{public}d",
-        usbDeviceInfo->idVendor_ , usbDeviceInfo->idProduct_);
+    EDM_LOGD(MODULE_BUS_USB, "UsbDeviceInfo: vid = %{public}d, pid = %{public}d", 
+    usbDeviceInfo->idVendor_ , usbDeviceInfo->idProduct_);
 
     auto vidFind = find(usbDriverInfo->vids_.begin(), usbDriverInfo->vids_.end(), usbDeviceInfo->idVendor_);
     if (vidFind == usbDriverInfo->vids_.end()) {
