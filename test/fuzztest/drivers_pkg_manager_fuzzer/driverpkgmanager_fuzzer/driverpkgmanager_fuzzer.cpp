@@ -29,7 +29,7 @@ using namespace OHOS::ExternalDeviceManager;
 
 bool QueryMatchDriverIllegalBusTest(const uint8_t *data, size_t size)
 {
-    DriverPkgManager drvPkgMgrInstance;
+    DriverPkgManager &drvPkgMgrInstance = DriverPkgManager::GetInstance();
     int32_t ret = drvPkgMgrInstance.Init();
     if (ret != EDM_OK) {
         return false;

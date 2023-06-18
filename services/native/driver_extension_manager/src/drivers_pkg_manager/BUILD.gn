@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,25 +10,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//build/config/features.gni")
-import("//build/ohos.gni")
-import("//build/test.gni")
-import("//drivers/external_device_manager/extdevmgr.gni")
 
-module_output_path = "external_device_manager/fuzztest"
-ohos_fuzztest("DriversPkgManagerFuzzTest") {
-  module_out_path = module_output_path
-  fuzz_config_file = "${ext_mgr_path}/test/fuzztest/drivers_pkg_manager_fuzzer/driverpkgmanager_fuzzer"
+import("../../../../../extdevmgr.gni")
 
-  sources = [ "driverpkgmanager_fuzzer.cpp" ]
-  include_dirs = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
-    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
+config("drvext_manager_public_config") {
+  include_dirs = [ "../../include/bus_extension/usb" ]
+}
+config("drvext_manager_private_config") {
+  include_dirs = [ "//third_party/jsoncpp/include/json" ]
+}
+
+ohos_shared_library("drivers_pkg_manager") {
+  install_enable = true
+  sources = [
+    "driver_pkg_manager.cpp",
+    "drv_bundle_state_callback.cpp",
   ]
+  include_dirs = [
+    "../../include/drivers_pkg_manager",
+    "../../include/bus_extension/core",
+  ]
+  configs = [
+    ":drvext_manager_public_config",
+    ":drvext_manager_private_config",
+    "${utils_path}:utils_config",
+  ]
+  public_configs = [ ":drvext_manager_public_config" ]
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
-  ]
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
+    "//third_party/jsoncpp:jsoncpp",
+  ]  # Component internal dependencies
+
   external_deps = [
     "ability_base:want",
     "bundle_framework:appexecfwk_base",
@@ -37,11 +50,13 @@ ohos_fuzztest("DriversPkgManagerFuzzTest") {
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
-  defines = []
-  configs = [ "${utils_path}:utils_config" ]
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
 }

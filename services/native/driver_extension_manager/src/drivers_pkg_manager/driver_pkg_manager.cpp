@@ -119,6 +119,10 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
             ret->bundleName = bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
             ret->abilityName = bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
             return ret;
+        } else {
+            string drvInfoStr;
+            val.Serialize(drvInfoStr);
+            HDF_LOGD("PKG Serialize:%{public}s", drvInfoStr.c_str());
         }
     }
 

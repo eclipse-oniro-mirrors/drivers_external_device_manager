@@ -64,10 +64,38 @@ ohos_executable("bus_extension_core_mt") {
   install_enable = false
 }
 
+ohos_executable("drivers_pkg_manager_mt") {
+  sources = [ "drivers_pkg_manager_mt/drivers_pkg_manager_mt.cpp" ]
+  include_dirs = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
+  ]
+  configs = [ "${utils_path}:utils_config" ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager" ]
+  external_deps = [
+    "ability_base:want",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "common_event_service:cesfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
+  ]
+  part_name = "external_device_manager"
+  install_enable = false
+}
+
 group("external_device_manager_mt") {
   deps = [
     ":bus_extension_core_mt",
     ":driver_extension_controller_mt",
+    ":drivers_pkg_manager_mt",
     ":usb_bus_extension_mt",
   ]
 }
