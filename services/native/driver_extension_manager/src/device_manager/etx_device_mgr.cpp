@@ -64,7 +64,7 @@ int32_t ExtDeviceManager::UnRegisterDevice(const std::shared_ptr<DeviceInfo> dev
     return EDM_OK;
 }
 
-std::vector<std::shared_ptr<DeviceInfo>> ExtDeviceManager::QueryDeivce(const BusType busType)
+std::vector<std::shared_ptr<DeviceInfo>> ExtDeviceManager::QueryDevice(const BusType busType)
 {
     std::vector<std::shared_ptr<DeviceInfo>> devInfoVec;
     std::lock_guard<std::mutex> lock(deviceMapMutex_);
