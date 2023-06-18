@@ -45,7 +45,7 @@ public:
     int32_t Init();
     int32_t RegisterDevice(std::shared_ptr<DeviceInfo> devInfo);
     int32_t UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInfo);
-    std::vector<std::shared_ptr<DeviceInfo>> QueryDeivce(const BusType busType);
+    std::vector<std::shared_ptr<DeviceInfo>> QueryDevice(const BusType busType);
 
 private:
     ExtDeviceManager() = default;
