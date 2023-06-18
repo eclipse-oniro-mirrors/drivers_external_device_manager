@@ -97,7 +97,7 @@ ohos_unittest("drivers_pkg_manager_test") {
   configs = [ "${utils_path}:utils_config" ]
 }
 
-group("external_device_manager_test") {
+group("external_device_manager_ut") {
   testonly = true
   deps = [
     ":bus_extension_test",

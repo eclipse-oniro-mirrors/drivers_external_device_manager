@@ -33,11 +33,21 @@ DriverExtMgr::~DriverExtMgr() {}
 
 void DriverExtMgr::OnStart()
 {
+    int32_t ret;
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStart");
-    DriverPkgManager::GetInstance().Init();
-    ExtDeviceManager::GetInstance().Init();
+    ret = DriverPkgManager::GetInstance().Init();
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_SERVICE, "DriverPkgManager Init failed %{public}d", ret);
+    }
+    ret = ExtDeviceManager::GetInstance().Init();
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_SERVICE, "ExtDeviceManager Init failed %{public}d", ret);
+    }
     std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
-    BusExtensionCore::GetInstance().Init(callback);
+    ret = BusExtensionCore::GetInstance().Init(callback);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_SERVICE, "BusExtensionCore Init failed %{public}d", ret);
+    }
 }
 
 void DriverExtMgr::OnStop()
