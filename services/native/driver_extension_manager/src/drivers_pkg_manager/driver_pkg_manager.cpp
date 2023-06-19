@@ -85,7 +85,7 @@ int32_t DriverPkgManager::Init()
 
 shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo> devInfo)
 {
-    HDF_LOGD("Enter QueryMatchDriver");
+    EDM_LOGE(MODULE_PKG_MGR, "Enter QueryMatchDriver");
     shared_ptr<IBusExtension> extInstance = nullptr;
     auto ret = make_shared<BundleInfoNames>();
     ret->bundleName.clear();
@@ -103,14 +103,14 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
     }
 
     if (drvInfos_.empty()) {
-        HDF_LOGD("QueryMatchDriver drvInfos_ Empty");
+        EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver drvInfos_ Empty");
         return nullptr;
     }
 
     for (auto [key, val] : drvInfos_) {
         extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(val.GetBusName());
         if (extInstance == nullptr) {
-            HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", val.GetBusName().c_str());
+            EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetInstance at bus:%{public}s", val.GetBusName().c_str());
             continue;
         }
 
@@ -122,17 +122,17 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
         } else {
             string drvInfoStr;
             val.Serialize(drvInfoStr);
-            HDF_LOGD("PKG Serialize:%{public}s", drvInfoStr.c_str());
+            EDM_LOGE(MODULE_PKG_MGR, "PKG Serialize:%{public}s", drvInfoStr.c_str());
         }
     }
 
-    HDF_LOGD("QueryMatchDriver return null");
+    EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver return null");
     return nullptr;
 }
 
 int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &callback)
 {
-    HDF_LOGD("RegisterCallback called");
+    EDM_LOGE(MODULE_PKG_MGR, "RegisterCallback called");
     if (bundleStateCallback_ == nullptr) {
         HDF_LOGE("failed to register callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
@@ -157,7 +157,7 @@ int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &ca
 
 int32_t DriverPkgManager::UnRegisterCallback()
 {
-    HDF_LOGD("UnRegisterCallback called");
+    EDM_LOGE(MODULE_PKG_MGR, "UnRegisterCallback called");
     if (bundleStateCallback_ == nullptr) {
         HDF_LOGE("failed to unregister callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;

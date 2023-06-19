@@ -69,7 +69,7 @@ void DrvBundleStateCallback::PrintTest()
 void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, const int32_t resultCode,
     const std::string &resultMsg, const std::string &bundleName)
 {
-    HDF_LOGD("OnBundleStateChanged");
+    EDM_LOGE(MODULE_PKG_MGR, "OnBundleStateChanged");
     return;
 };
 
@@ -268,13 +268,13 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
         }
 
         if (extInstance == nullptr) {
-            HDF_LOGD("QueryMatchDriver GetInstance at bus:%{public}s", tmpDrvInfo.bus_.c_str());
+            EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetInstance at bus:%{public}s", tmpDrvInfo.bus_.c_str());
             continue;
         }
 
         tmpDrvInfo.driverInfoExt_ = extInstance->ParseDriverInfo(metadata);
         if (tmpDrvInfo.driverInfoExt_ == nullptr) {
-            HDF_LOGD("ParseDriverInfo null");
+            EDM_LOGE(MODULE_PKG_MGR, "ParseDriverInfo null");
             continue;
         }
 
@@ -299,7 +299,7 @@ int32_t DrvBundleStateCallback::GetCurrentActiveUserId()
     }
     if (activeIds.empty()) {
         HDF_LOGE("QueryActiveOsAccountIds activeIds empty");
-        return Constants::INVALID_USERID;
+        return Constants::ALL_USERID;
     }
     return activeIds[0];
 }
