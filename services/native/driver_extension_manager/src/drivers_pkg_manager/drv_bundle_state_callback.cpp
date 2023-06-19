@@ -25,6 +25,8 @@
 #include "os_account_manager.h"
 
 #include "hdf_log.h"
+#include "edm_errors.h"
+#include "hilog_wrapper.h"
 #include "hitrace_meter.h"
 #include "bus_extension_core.h"
 namespace OHOS {
@@ -78,7 +80,7 @@ void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, con
     */
 void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const int userId)
 {
-    HDF_LOGD("OnBundleAdded");
+    EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded");
     StartTrace(LABEL, "OnBundleAdded");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
         return;
@@ -96,7 +98,7 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
     */
 void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, const int userId)
 {
-    HDF_LOGD("OnBundleUpdated");
+    EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated");
     StartTrace(LABEL, "OnBundleUpdated");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
         return;
@@ -115,15 +117,11 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     */
 void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, const int userId)
 {
-    HDF_LOGD("OnBundleRemoved");
+    EDM_LOGE(MODULE_PKG_MGR, "OnBundleRemoved");
     StartTrace(LABEL, "OnBundleRemoved");
-    if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
-        return;
-    }
 
-    if (ParseBaseDriverInfo(BUNDLE_REMOVED)) {
-        OnBundleDrvRemoved();
-    }
+    OnBundleDrvRemoved(bundleName);
+
     FinishTrace(LABEL);
 }
 
@@ -200,7 +198,7 @@ ErrCode DrvBundleStateCallback::QueryExtensionAbilityInfos(const std::string &bu
         HDF_LOGE("BundleMgr_ nullptr");
         return ERR_DRV_STATUS_CALLBACK_ERROR;
     }
-
+ 
     BundleInfo tmpBundleInfo;
     int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY) + \
                     static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
@@ -361,10 +359,14 @@ void DrvBundleStateCallback::OnBundleDrvUpdated()
     OnBundleDrvAdded();
 }
 
-void DrvBundleStateCallback::OnBundleDrvRemoved()
+void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
 {
-    for (auto ele : innerDrvInfos_) {
-        allDrvInfos_.erase(ele.first);
+    for(auto iter = allDrvInfos_.begin(); iter != allDrvInfos_.end();) {
+        if (iter->first.find(bundleName) != std::string::npos) {
+            iter = allDrvInfos_.erase(iter);
+        } else {
+            ++iter;
+        }       
     }
 }
 }
