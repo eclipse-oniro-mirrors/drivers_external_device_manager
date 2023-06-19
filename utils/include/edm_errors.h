@@ -15,8 +15,8 @@
 #ifndef EDM_ERRORS_H
 #define EDM_ERRORS_H
 
-#include <errors.h>
 #include <cstdint>
+#include <errors.h>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -27,6 +27,9 @@ constexpr int32_t EDM_ERR_OFFSET = ErrCodeOffset(SUBSYS_DRIVERS, EDM_MODULE_ID);
 enum UsbErrCode : int32_t {
     EDM_OK = 0,
     EDM_NOK = EDM_ERR_OFFSET,
+    EDM_ERR_GET_SYSTEM_ABILITY_MANAGER_FAILED,
+    EDM_ERR_GET_SERVICE_FAILED,
+    EDM_ERR_CONNECTION_FAILED,
     EDM_ERR_NOT_SUPPORT,
     EDM_ERR_INVALID_PARAM,
     EDM_ERR_INVALID_OBJECT,

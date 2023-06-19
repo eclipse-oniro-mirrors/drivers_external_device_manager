@@ -12,16 +12,16 @@
 # limitations under the License.
 
 config("utils_config") {
-    include_dirs = ["include"]
+  include_dirs = [ "include" ]
 }
 
 declare_args() {
-    external_device_manager_coverage= false
+  external_device_manager_coverage = false
 }
 
 config("coverage_flags") {
-    if (external_device_manager_coverage) {
-        cflags = ["--coverage"]
-        ldflags = ["--coverage"]
-    }
+  if (external_device_manager_coverage) {
+    cflags = [ "--coverage" ]
+    ldflags = [ "--coverage" ]
+  }
 }

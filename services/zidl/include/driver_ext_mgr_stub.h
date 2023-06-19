@@ -12,12 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DRIVER_EXT_MGR_STUB_H
-#define DRIVER_EXT_MGR_STUB_H
+
+#ifndef DRIVER_EXTENSION_MANAGER_STUB_H
+#define DRIVER_EXTENSION_MANAGER_STUB_H
+
+#include <iremote_stub.h>
+#include <message_option.h>
+#include <nocopyable.h>
 #include "idriver_ext_mgr.h"
-#include "iremote_stub.h"
-#include "message_option.h"
-#include "nocopyable.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -32,9 +34,10 @@ public:
     int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    int32_t QueryDeviceStub();
+    int32_t OnQueryDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    int32_t OnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    int32_t OnUnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
-
-#endif // DRIVER_EXT_MGR_STUB_H
+#endif // DRIVER_EXTENSION_MANAGER_STUB_H

@@ -97,11 +97,28 @@ ohos_unittest("drivers_pkg_manager_test") {
   configs = [ "${utils_path}:utils_config" ]
 }
 
+ohos_unittest("driver_extension_manager_client_test") {
+  module_out_path = "${module_output_path}"
+
+  sources = [ "driver_extension_manager_client_test/driver_extension_manager_client_test.cpp" ]
+
+  include_dirs = [ "${ext_mgr_path}/services/zidl/include" ]
+
+  deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_single",
+  ]
+}
+
 group("external_device_manager_ut") {
   testonly = true
   deps = [
     ":bus_extension_test",
     ":driver_extension_controller_test",
+    ":driver_extension_manager_client_test",
     ":drivers_pkg_manager_test",
     "device_manager_test:device_manager_test",
   ]
