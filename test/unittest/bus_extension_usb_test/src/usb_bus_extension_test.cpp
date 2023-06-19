@@ -49,15 +49,13 @@ static const vector<Metadata> g_testMetaDatas = {
 };
 HWTEST_F(UsbBusExtensionTest, GetExtensionInstanceTest, TestSize.Level1)
 {
-    auto usbBus = IBusExtension::GetInstance("usb");
+    auto usbBus = make_shared<UsbBusExtension>();
     ASSERT_NE(usbBus, nullptr);
-    auto bus2 = IBusExtension::GetInstance("unknow");
-    ASSERT_EQ(bus2, nullptr);
 }
 
 HWTEST_F(UsbBusExtensionTest, SetDevChangeCallbackTest, TestSize.Level1)
 {
-    auto usbBus = IBusExtension::GetInstance("usb");
+    auto usbBus = make_shared<UsbBusExtension>();
     ASSERT_NE(usbBus, nullptr);
     auto ret = usbBus->SetDevChangeCallback(nullptr);
     ASSERT_EQ(ret, 0);
@@ -66,7 +64,7 @@ HWTEST_F(UsbBusExtensionTest, SetDevChangeCallbackTest, TestSize.Level1)
 HWTEST_F(UsbBusExtensionTest, ParseDriverInfoTest, TestSize.Level1)
 {
     EDM_LOGI(MODULE_BUS_USB, "PraseDriverInfoTest Start");
-    auto usbBus = IBusExtension::GetInstance("usb");
+    auto usbBus = make_shared<UsbBusExtension>();
     ASSERT_NE(usbBus, nullptr);
     auto driverInfoExt = usbBus->ParseDriverInfo(g_testMetaDatas);
     EDM_LOGD(MODULE_BUS_USB, "parse driver info done");
@@ -103,7 +101,7 @@ HWTEST_F(UsbBusExtensionTest, MatchDriverTest, TestSize.Level1)
     deviceInfo->deviceClass_ = 0;
     deviceInfo->bcdUSB_ = 0x1122;
 
-    auto usbBus = IBusExtension::GetInstance("usb");
+    auto usbBus = make_shared<UsbBusExtension>();
     bool isMatched = usbBus->MatchDriver(*drvInfo, *deviceInfo);
     ASSERT_EQ(isMatched, true);
 

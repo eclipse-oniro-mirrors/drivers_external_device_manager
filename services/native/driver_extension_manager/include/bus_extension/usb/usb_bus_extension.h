@@ -30,6 +30,7 @@ public:
     int32_t SetDevChangeCallback(shared_ptr<IDevChangeCallback> callback) override;
     bool MatchDriver(const DriverInfo &driver, const DeviceInfo &device) override;
     shared_ptr<DriverInfoExt> ParseDriverInfo(const vector<Metadata> &metadata) override;
+    shared_ptr<DriverInfoExt> GetNewDriverInfoExtObject() override;
     void SetUsbInferface(sptr<IUsbInterface> iusb);
 
 private:

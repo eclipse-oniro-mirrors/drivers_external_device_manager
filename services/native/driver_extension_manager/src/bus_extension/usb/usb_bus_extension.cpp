@@ -19,10 +19,12 @@
 #include "hilog_wrapper.h"
 #include "edm_errors.h"
 #include "ibus_extension.h"
+#include "bus_extension_core.h"
 #include "usb_dev_subscriber.h"
 #include "usb_driver_info.h"
 #include "usb_device_info.h"
 #include "usb_bus_extension.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -76,7 +78,8 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
         return false;
     }
     if (device.GetBusType() != BusType::BUS_TYPE_USB) {
-        EDM_LOGW(MODULE_BUS_USB,  "deivce type not support");
+        EDM_LOGW(MODULE_BUS_USB,  "deivce type not support %d != %d",
+            (uint32_t)device.GetBusType(), (uint32_t)BusType::BUS_TYPE_USB);
         return false;
     }
     const UsbDriverInfo *usbDriverInfo = static_cast<const UsbDriverInfo *>(driver.GetInfoExt().get());
@@ -140,6 +143,16 @@ vector<uint16_t> UsbBusExtension::ParseCommaStrToVectorUint16(const string &str)
         EDM_LOGD(MODULE_BUS_USB,  "parse sucess, size %{public}zu, str:%{public}s", ret.size(), str.c_str());
     }
     return ret;
+}
+shared_ptr<DriverInfoExt> UsbBusExtension::GetNewDriverInfoExtObject()
+{
+    return make_shared<UsbDriverInfo>();
+}
+
+__attribute__ ((constructor)) static void RegBusExtension()
+{
+    EDM_LOGI(MODULE_COMMON, "installing UsbBusExtension");
+    RegisterBusExtension<UsbBusExtension>(BusType::BUS_TYPE_USB);
 }
 }
 }
