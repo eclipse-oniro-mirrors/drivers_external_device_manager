@@ -31,27 +31,25 @@ public:
         const OHOS::AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int resultCode) override
     {
         EDM_LOGI(MODULE_EA_MGR,
-            "OnAbilityConnectDone, budnle = %{public}s, ability = %{public}s, resultCode = %{public}d",
+            "OnAbilityConnectDone, bundle = %{public}s, ability = %{public}s, resultCode = %{public}d",
             element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
         remoteObject_ = remoteObject;
         auto cb = callback_.lock();
         if (cb != nullptr) {
             cb->OnConnectDone(remoteObject, resultCode);
         }
-        return;
     }
     void OnAbilityDisconnectDone(
         const OHOS::AppExecFwk::ElementName &element, int resultCode) override
     {
         EDM_LOGI(MODULE_EA_MGR,
-            "OnAbilityDisconnectDone, budnle = %{public}s,ability = %{public}s, resultCode = %{public}d",
+            "OnAbilityDisconnectDone, bundle = %{public}s,ability = %{public}s, resultCode = %{public}d",
             element.GetBundleName().c_str(), element.GetAbilityName().c_str(), resultCode);
         remoteObject_ = nullptr;
         auto cb = callback_.lock();
         if (cb != nullptr) {
             cb->OnDisconnectDone(resultCode);
         }
-        return;
     }
     std::weak_ptr<IDriverExtensionConnectCallback> callback_;
     sptr<IRemoteObject> remoteObject_;
@@ -119,11 +117,7 @@ int32_t DriverExtensionController::ConnectDriverExtension(
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to Connect DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
-    auto abmc = AAFwk::AbilityManagerClient::GetInstance();
-    if (abmc == nullptr) {
-        EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
-        return EDM_ERR_INVALID_OBJECT;
-    }
+
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;
@@ -138,6 +132,11 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     callback->info_->abilityName_ = abilityName;
     callback->info_->connectInner_ = new DriverExtensionAbilityConnection();
     callback->info_->connectInner_->callback_ = callback;
+    auto abmc = AAFwk::AbilityManagerClient::GetInstance();
+    if (abmc == nullptr) {
+        EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
+        return EDM_ERR_INVALID_OBJECT;
+    }
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
     auto ret = abmc->ConnectAbility(want, callback->info_->connectInner_, -1);
@@ -157,11 +156,6 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to Disconnect DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
-    auto abmc = AAFwk::AbilityManagerClient::GetInstance();
-    if (abmc == nullptr) {
-        EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
-        return EDM_ERR_INVALID_OBJECT;
-    }
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;
@@ -173,6 +167,11 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
     if (callback->info_->bundleName_ != bundleName ||
         callback->info_->abilityName_ != abilityName) {
         EDM_LOGE(MODULE_EA_MGR, "bundleName or abilityName not match info in callback");
+        return EDM_ERR_INVALID_OBJECT;
+    }
+    auto abmc = AAFwk::AbilityManagerClient::GetInstance();
+    if (abmc == nullptr) {
+        EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
         return EDM_ERR_INVALID_OBJECT;
     }
     auto ret = abmc->DisconnectAbility(callback->info_->connectInner_);
