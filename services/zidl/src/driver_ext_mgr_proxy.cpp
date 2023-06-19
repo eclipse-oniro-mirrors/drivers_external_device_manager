@@ -14,6 +14,7 @@
  */
 
 #include "driver_ext_mgr_proxy.h"
+#include <cinttypes>
 #include <message_parcel.h>
 #include <securec.h>
 #include "hilog_wrapper.h"
@@ -63,7 +64,7 @@ UsbErrCode DriverExtMgrProxy::QueryDevice(uint32_t busType, std::vector<std::sha
     for (uint64_t i = 0; i < deviceInfoSize; i++) {
         std::shared_ptr<DeviceData> device = DeviceData::UnMarshalling(reply);
         if (device == nullptr) {
-            EDM_LOGE(MODULE_FRAMEWORK, "failed to read %{public}llu device", i);
+            EDM_LOGE(MODULE_FRAMEWORK, "failed to read %{public}016" PRIX64 " device", i);
             return UsbErrCode::EDM_ERR_INVALID_PARAM;
         }
         devices.push_back(std::move(device));
