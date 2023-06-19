@@ -103,7 +103,7 @@ private:
 
     void OnBundleDrvAdded();
     void OnBundleDrvUpdated();
-    void OnBundleDrvRemoved();
+    void OnBundleDrvRemoved(const std::string &bundleName);
 };
 } // namespace
 }
