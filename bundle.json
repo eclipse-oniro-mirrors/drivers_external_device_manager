@@ -59,7 +59,17 @@
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core"
             ],
-            "inner_kits": [],
+            "inner_kits": [
+                {
+                    "name": "//drivers/external_device_manager/interfaces/innerkits:driver_ext_mgr_client",
+                    "header": {
+                        "header_files": [
+                            "driver_ext_mgr_client.h"
+                        ],
+                        "header_base": "//drivers/external_device_manager/interfaces/innerkits"
+                    }
+                }
+            ],
             "test": [
                 "//drivers/external_device_manager/test/unittest:external_device_manager_ut",
                 "//drivers/external_device_manager/test/unittest/driver_extension_context_test:driver_extension_context_test",
