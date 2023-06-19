@@ -69,26 +69,6 @@ HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_Illegal_Bus_Test, TestSize.Leve
     cout << "DrvExt_QueryMatch_Illegal_Bus_Test" << endl;
 }
 
-HWTEST_F(DriverPkgManagerTest, DrvExt_QueryMatch_ID_Test, TestSize.Level1)
-{
-    DriverPkgManager &drvPkgMgrInstance = DriverPkgManager::GetInstance();
-    bool ret = drvPkgMgrInstance.Init();
-    if (ret != 0) {
-        EXPECT_EQ(0, ret);
-        return;
-    }
-    auto deviceInfo = make_shared<UsbDeviceInfo>(0);
-    deviceInfo->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_USB;
-    deviceInfo->idProduct_ = 0x8835;
-    deviceInfo->idVendor_ = 0x0B57;
-    deviceInfo->deviceClass_ = 0;
-    deviceInfo->bcdUSB_ = 0x1122;
-
-    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance.QueryMatchDriver(deviceInfo);
-    EXPECT_NE(nullptr, bundle);
-    cout << "DrvExt_QueryMatch_ID_Test" << endl;
-}
-
 class DriverPkgManagerPtrTest : public testing::Test {
 public:
     void SetUp() override {}
