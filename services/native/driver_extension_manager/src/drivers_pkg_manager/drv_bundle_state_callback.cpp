@@ -361,12 +361,12 @@ void DrvBundleStateCallback::OnBundleDrvUpdated()
 
 void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
 {
-    for(auto iter = allDrvInfos_.begin(); iter != allDrvInfos_.end();) {
+    for (auto iter = allDrvInfos_.begin(); iter != allDrvInfos_.end();) {
         if (iter->first.find(bundleName) != std::string::npos) {
             iter = allDrvInfos_.erase(iter);
         } else {
             ++iter;
-        }       
+        }
     }
 }
 }
