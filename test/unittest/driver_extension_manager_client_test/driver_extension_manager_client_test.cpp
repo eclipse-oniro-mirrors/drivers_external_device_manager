@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cinttypes>
 #include <iostream>
 #include <gtest/gtest.h>
 #include "driver_ext_mgr_callback_stub.h"
@@ -67,7 +68,7 @@ public:
 
 void DriverExtMgrCallbackTest::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
-    EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}llu",
+    EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}016" PRIX64 "",
         static_cast<UsbErrCode>(errMsg.errCode), errMsg.msg.c_str(), deviceId);
     std::cout << "OnConnect {errCode:" << static_cast<UsbErrCode>(errMsg.errCode) << ", ";
     std::cout << "msg:" << errMsg.msg << ", ";
@@ -76,7 +77,7 @@ void DriverExtMgrCallbackTest::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
 
 void DriverExtMgrCallbackTest::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
-    EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}llu",
+    EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}016" PRIX64 "",
         static_cast<UsbErrCode>(errMsg.errCode), errMsg.msg.c_str(), deviceId);
     std::cout << "OnDisconnect {errCode:" << static_cast<UsbErrCode>(errMsg.errCode) << ", ";
     std::cout << "msg:" << errMsg.msg << ", ";
@@ -85,7 +86,7 @@ void DriverExtMgrCallbackTest::OnDisconnect(uint64_t deviceId, const ErrMsg &err
 
 void DriverExtMgrCallbackTest::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 {
-    EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}llu",
+    EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}016" PRIX64 "",
         static_cast<UsbErrCode>(errMsg.errCode), errMsg.msg.c_str(), deviceId);
     std::cout << "OnUnBind {errCode:" << static_cast<UsbErrCode>(errMsg.errCode) << ", ";
     std::cout << "msg:" << errMsg.msg << ", ";

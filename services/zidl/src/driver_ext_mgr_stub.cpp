@@ -14,6 +14,7 @@
  */
 
 #include "driver_ext_mgr_stub.h"
+#include <cinttypes>
 #include <securec.h>
 #include "hilog_wrapper.h"
 
@@ -61,12 +62,12 @@ int32_t DriverExtMgrStub::OnQueryDevice(MessageParcel &data, MessageParcel &repl
 
     for (uint64_t i = 0; i < devices.size(); i++) {
         if (devices[i] == nullptr) {
-            EDM_LOGE(MODULE_FRAMEWORK, "invalid %{public}llu device", i);
+            EDM_LOGE(MODULE_FRAMEWORK, "invalid %{public}016" PRIX64 " device", i);
             return UsbErrCode::EDM_ERR_INVALID_PARAM;
         }
 
         if (!devices[i]->Marshalling(reply)) {
-            EDM_LOGE(MODULE_FRAMEWORK, "failed to write %{public}llu device", i);
+            EDM_LOGE(MODULE_FRAMEWORK, "failed to write %{public}016" PRIX64 " device", i);
             return UsbErrCode::EDM_ERR_INVALID_PARAM;
         }
     }
