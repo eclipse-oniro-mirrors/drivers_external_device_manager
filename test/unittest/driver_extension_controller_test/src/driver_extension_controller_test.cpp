@@ -38,11 +38,30 @@ public:
     {
         cout << "DrvExtCtrlTest TearDown" << endl;
     }
+    class TestConCb : public IDriverExtensionConnectCallback {
+    public:
+        TestConCb() { };
+        int32_t OnConnectDone(const sptr<IRemoteObject> &remote, int resultCode) override
+        {
+            cout << "ConCb OnConnectDone, "<<  remote.GetRefPtr() << ", " << resultCode << endl;
+            connectCount_++;
+            return 0;
+        };
+        int32_t OnDisconnectDone(int resultCode) override
+        {
+            cout << "ConCb OnDisconnectDone, " << resultCode << endl;
+            disconnectCount_++;
+            return 0;
+        }
+        int connectCount_ = 0;
+        int disconnectCount_ = 0;
+    };
 };
 
 constexpr const char *TEST_BUNDLE_NAME = "com.usb.right";
 constexpr const char *TEST_ABILITY_NAME = "UsbServiceExtAbility";
 constexpr const char *TEST_ABILITY_NAME_ERR = "XXX";
+constexpr const int MAX_WAIT_FOR_CONNECT = 10;
 
 using namespace OHOS::Security::AccessToken;
 
@@ -87,9 +106,10 @@ HWTEST_F(DrvExtCtrlTest, DrvExtCtrlWithSATest, TestSize.Level1)
 {
     AccessTokenTest::SetTestCaseNative(&g_sysInfoInstance);
     int ret = 0;
-    ret = DriverExtensionController::StartDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME);
+    auto &ctrl = DriverExtensionController::GetInstance();
+    ret = ctrl.StartDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME);
     ASSERT_EQ(ret, 0);
-    ret = DriverExtensionController::StopDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME);
+    ret = ctrl.StopDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME);
     ASSERT_EQ(ret, 0);
 }
 
@@ -97,10 +117,83 @@ HWTEST_F(DrvExtCtrlTest, DrvExtCtrlWithoutSATest, TestSize.Level1)
 {
     AccessTokenTest::SetTestCaseNative(&g_normalInfoInstance);
     int ret = 0;
-    ret = DriverExtensionController::StartDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME_ERR);
+    auto &ctrl = DriverExtensionController::GetInstance();
+    ret = ctrl.StartDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME_ERR);
     ASSERT_NE(ret, 0);
-    ret = DriverExtensionController::StopDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME_ERR);
+    ret = ctrl.StopDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME_ERR);
     ASSERT_NE(ret, 0);
+}
+
+
+HWTEST_F(DrvExtCtrlTest, DrvExtCtrlConnectTest0, TestSize.Level1)
+{
+    AccessTokenTest::SetTestCaseNative(&g_sysInfoInstance);
+    int ret = 0;
+    bool isTimeout = true;
+    auto &ctrl = DriverExtensionController::GetInstance();
+    auto con = make_shared<TestConCb>();
+    ret = ctrl.ConnectDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME, con);
+    ASSERT_EQ(ret, 0);
+    isTimeout = true;
+    for (int i = 0; i < MAX_WAIT_FOR_CONNECT; i++) {
+        sleep(1);
+        if (con->IsConnectDone()) {
+            isTimeout = false;
+            break;
+        }
+    }
+    ASSERT_EQ(con->connectCount_, 1);
+    ASSERT_EQ(isTimeout, false);
+    ret = ctrl.DisconnectDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME, con);
+    ASSERT_EQ(ret, 0);
+    isTimeout = true;
+    for (int i = 0; i < MAX_WAIT_FOR_CONNECT; i++) {
+        sleep(1);
+        if (!con->IsConnectDone()) {
+            isTimeout = false;
+            break;
+        }
+    }
+    ASSERT_EQ(isTimeout, false);
+    ASSERT_EQ(con->disconnectCount_, 1);
+}
+
+HWTEST_F(DrvExtCtrlTest, DrvExtCtrlConnectTest1, TestSize.Level1)
+{
+    AccessTokenTest::SetTestCaseNative(&g_sysInfoInstance);
+    int ret = 0;
+    bool isTimeout = true;
+    auto &ctrl = DriverExtensionController::GetInstance();
+    auto conErr = make_shared<TestConCb>();
+    ret = ctrl.ConnectDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME_ERR, conErr);
+    ASSERT_NE(ret, 0);
+
+    auto con = make_shared<TestConCb>();
+    ret = ctrl.ConnectDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME, con);
+    ASSERT_EQ(ret, 0);
+
+    isTimeout = true;
+    for (int i = 0; i < MAX_WAIT_FOR_CONNECT; i++) {
+        sleep(1);
+        if (con->IsConnectDone()) {
+            isTimeout = false;
+            break;
+        }
+    }
+    ASSERT_EQ(isTimeout, false);
+    ret = ctrl.DisconnectDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME_ERR, con);
+    ASSERT_NE(ret, 0);
+    ret = ctrl.DisconnectDriverExtension(TEST_BUNDLE_NAME, TEST_ABILITY_NAME, con);
+    ASSERT_EQ(ret, 0);
+    isTimeout = true;
+    for (int i = 0; i < MAX_WAIT_FOR_CONNECT; i++) {
+        sleep(1);
+        if (!con->IsConnectDone()) {
+            isTimeout = false;
+            break;
+        }
+    }
+    ASSERT_EQ(isTimeout, false);
 }
 }
 }
