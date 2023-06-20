@@ -22,6 +22,7 @@
 
 #include "ext_object.h"
 #include "single_instance.h"
+#include "timer.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -62,6 +63,7 @@ private:
 
 class ExtDeviceManager final {
     DECLARE_SINGLE_INSTANCE_BASE(ExtDeviceManager);
+
 public:
     ~ExtDeviceManager() = default;
     int32_t Init();
@@ -81,11 +83,15 @@ private:
     int32_t AddBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
     int32_t RemoveBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
     int32_t UpdateBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
+    void UnLoadSelf(void);
+    size_t GetTotalDeviceNum(void) const;
     string stiching_ = "_stiching_";
     unordered_map<BusType, unordered_map<uint64_t, shared_ptr<Device>>> deviceMap_;
     unordered_map<string, unordered_set<uint64_t>> bundleMatchMap_; // driver matching table
     mutex deviceMapMutex_;
     mutex bundleMatchMapMutex_;
+    Utils::Timer unloadSelftimer_ {"unLoadSelfTimer"};
+    uint32_t unloadSelftimerId_ {UINT32_MAX};
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

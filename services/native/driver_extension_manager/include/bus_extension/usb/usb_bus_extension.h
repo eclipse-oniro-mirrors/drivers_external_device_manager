@@ -15,10 +15,14 @@
 
 #ifndef USB_BUS_EXTENSION_H
 #define USB_BUS_EXTENSION_H
+#include <iproxy_broker.h>
+#include <iremote_object.h>
+
 #include "ibus_extension.h"
+#include "usb_dev_subscriber.h"
 #include "usb_device_info.h"
 #include "v1_0/iusb_interface.h"
-#include "usb_dev_subscriber.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -33,9 +37,14 @@ public:
     void SetUsbInferface(sptr<IUsbInterface> iusb);
 
 private:
+    class UsbdDeathRecipient : public IRemoteObject::DeathRecipient {
+    public:
+        void OnRemoteDied(const wptr<IRemoteObject> &object) override;
+    };
     sptr<UsbDevSubscriber> subScriber_ = nullptr;
     sptr<IUsbInterface> usbInterface_ = nullptr; // in usb HDI;
     vector<uint16_t> ParseCommaStrToVectorUint16(const string &str);
+    sptr<IRemoteObject::DeathRecipient> recipient_;
 };
 }
 }

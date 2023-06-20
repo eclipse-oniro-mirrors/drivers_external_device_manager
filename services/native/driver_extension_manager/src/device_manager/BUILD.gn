@@ -47,6 +47,7 @@ ohos_shared_library("driver_extension_device_manager") {
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "hdf"

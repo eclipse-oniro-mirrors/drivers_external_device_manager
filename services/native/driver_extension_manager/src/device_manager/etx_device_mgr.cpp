@@ -15,13 +15,17 @@
 
 #include "etx_device_mgr.h"
 #include "cinttypes"
+#include "common_timer_errors.h"
 #include "driver_extension_controller.h"
 #include "driver_pkg_manager.h"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+constexpr uint32_t UNLOAD_SA_TIMER_INTERVAL = 30 * 1000;
 IMPLEMENT_SINGLE_INSTANCE(ExtDeviceManager);
 
 void ExtDeviceManager::PrintMatchDriverMap()
@@ -313,6 +317,7 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
 
     deviceMap_[type].emplace(deviceId, device);
     EDM_LOGD(MODULE_DEV_MGR, "successfully registered device, deviceId = %{public}016" PRIx64 "", deviceId);
+    unloadSelftimer_.Unregister(unloadSelftimerId_);
 
     // not match driver, waitting install driver
     if (bundleInfo.empty()) {
@@ -346,6 +351,7 @@ int32_t ExtDeviceManager::UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo)
             bundleInfo = map[deviceId]->GetBundleInfo();
             map.erase(deviceId);
             EDM_LOGI(MODULE_DEV_MGR, "successfully unregistered device, deviceId is %{public}016" PRIx64 "", deviceId);
+            UnLoadSelf();
         }
     }
 
@@ -384,6 +390,46 @@ vector<shared_ptr<DeviceInfo>> ExtDeviceManager::QueryDevice(const BusType busTy
     EDM_LOGD(MODULE_DEV_MGR, "find %{public}zu device of busType %{public}d", devInfoVec.size(), busType);
 
     return devInfoVec;
+}
+
+size_t ExtDeviceManager::GetTotalDeviceNum(void) const
+{
+    // Please do not add lock. This will be called in the UnRegisterDevice.
+    size_t totalNum = 0;
+    for (auto &[_, device] : deviceMap_) {
+        totalNum += device.size();
+    }
+    EDM_LOGD(MODULE_DEV_MGR, "total device num is %{public}zu", totalNum);
+    return totalNum;
+}
+
+void ExtDeviceManager::UnLoadSelf(void)
+{
+    unloadSelftimer_.Unregister(unloadSelftimerId_);
+    unloadSelftimer_.Shutdown();
+    if (GetTotalDeviceNum() != 0) {
+        EDM_LOGI(MODULE_DEV_MGR, "not need unload");
+        return;
+    }
+
+    if (auto ret = unloadSelftimer_.Setup(); ret != Utils::TIMER_ERR_OK) {
+        EDM_LOGE(MODULE_DEV_MGR, "set up timer failed %{public}u", ret);
+        return;
+    }
+
+    auto task = []() {
+        auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (samgrProxy == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "get samgr failed");
+            return;
+        }
+
+        auto ret = samgrProxy->UnloadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
+        if (ret != EDM_OK) {
+            EDM_LOGE(MODULE_DEV_MGR, "unload failed");
+        }
+    };
+    unloadSelftimerId_ = unloadSelftimer_.Register(task, UNLOAD_SA_TIMER_INTERVAL, true);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

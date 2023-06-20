@@ -35,7 +35,7 @@ int32_t OH_Usb_Init()
     g_ddk = OHOS::HDI::Usb::Ddk::V1_0::IUsbDdk::Get();
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "get ddk failed");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_FAILED;
     }
 
     return g_ddk->Init();
@@ -55,11 +55,11 @@ int32_t OH_Usb_GetDeviceDescriptor(uint64_t deviceId, UsbDeviceDescriptor *desc)
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
     if (desc == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "param is null");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     auto tmpDesc = reinterpret_cast<OHOS::HDI::Usb::Ddk::V1_0::UsbDeviceDescriptor *>(desc);
@@ -76,11 +76,11 @@ int32_t OH_Usb_GetConfigDescriptor(
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
     if (config == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "param is null");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
     std::vector<uint8_t> configDescriptor;
     int32_t ret = g_ddk->GetConfigDescriptor(deviceId, configIndex, configDescriptor);
@@ -101,11 +101,11 @@ int32_t OH_Usb_ClaimInterface(uint64_t deviceId, uint8_t interfaceIndex, uint64_
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
     if (interfaceHandle == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "param is null");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     return g_ddk->ClaimInterface(deviceId, interfaceIndex, *interfaceHandle);
@@ -115,7 +115,7 @@ int32_t OH_Usb_ReleaseInterface(uint64_t interfaceHandle)
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
 
     return g_ddk->ReleaseInterface(interfaceHandle);
@@ -125,7 +125,7 @@ int32_t OH_Usb_SelectInterfaceSetting(uint64_t interfaceHandle, uint8_t settingI
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
 
     return g_ddk->SelectInterfaceSetting(interfaceHandle, settingIndex);
@@ -135,12 +135,12 @@ int32_t OH_Usb_GetCurrentInterfaceSetting(uint64_t interfaceHandle, uint8_t *set
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
 
     if (settingIndex == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "param is null");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     return g_ddk->GetCurrentInterfaceSetting(interfaceHandle, *settingIndex);
@@ -151,12 +151,12 @@ int32_t OH_Usb_SendControlReadRequest(
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
 
     if (setup == nullptr || data == nullptr || dataLen == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "param is null");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbControlRequestSetup *>(setup);
@@ -164,17 +164,17 @@ int32_t OH_Usb_SendControlReadRequest(
     int32_t ret = g_ddk->SendControlReadRequest(interfaceHandle, *tmpSetUp, timeout, dataTmp);
     if (ret != 0) {
         EDM_LOGE(MODULE_USB_DDK, "send control req failed");
-        return -EDM_ERR_INVALID_PARAM;
+        return ret;
     }
 
     if (*dataLen < dataTmp.size()) {
         EDM_LOGE(MODULE_USB_DDK, "The data is too small");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     if (memcpy_s(data, *dataLen, dataTmp.data(), dataTmp.size()) != 0) {
         EDM_LOGE(MODULE_USB_DDK, "copy data failed");
-        return -EDM_NOK;
+        return USB_DDK_MEMORY_ERROR;
     }
     *dataLen = dataTmp.size();
     return EDM_OK;
@@ -185,12 +185,12 @@ int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const UsbContro
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
 
     if (setup == nullptr || data == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "param is null");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbControlRequestSetup *>(setup);
@@ -202,12 +202,12 @@ int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devM
 {
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
-        return -EDM_ERR_INVALID_OBJECT;
+        return USB_DDK_INVALID_OPERATION;
     }
 
     if (pipe == nullptr || devMmap == nullptr || devMmap->address == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "param is null");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbRequestPipe *>(pipe);
@@ -219,7 +219,7 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
 {
     if (devMmap == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid param");
-        return -EDM_ERR_INVALID_PARAM;
+        return USB_DDK_INVALID_PARAMETER;
     }
 
     int32_t fd = -1;
@@ -233,13 +233,13 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
     auto buffer = static_cast<uint8_t *>(mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
     if (buffer == MAP_FAILED) {
         EDM_LOGE(MODULE_USB_DDK, "mmap failed, errno=%{public}d", errno);
-        return -EDM_EER_MALLOC_FAIL;
+        return USB_DDK_MEMORY_ERROR;
     }
 
     UsbDeviceMemMap *memMap = new UsbDeviceMemMap({buffer, size, 0, size, 0});
     if (memMap == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "alloc dev mem failed, errno=%{public}d", errno);
-        return -EDM_EER_MALLOC_FAIL;
+        return USB_DDK_MEMORY_ERROR;
     }
 
     *devMmap = memMap;
