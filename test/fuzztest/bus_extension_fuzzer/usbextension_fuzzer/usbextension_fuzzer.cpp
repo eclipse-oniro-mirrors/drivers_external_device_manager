@@ -15,7 +15,7 @@
 #include "iostream"
 #include "string"
 #include "securec.h"
-#include "ibus_extension.h"
+#include "usb_bus_extension.h"
 #include "usb_driver_info.h"
 #include "hilog_wrapper.h"
 #include "usbextension_fuzzer.h"
@@ -23,29 +23,20 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
 
-bool IBusGetFuzzer(const uint8_t *data, size_t size)
-{
-    string str(reinterpret_cast<const char *>(data));
-    auto bus = IBusExtension::GetInstance(str);
-    return true;
-}
-
-bool DriverInfoUnSerializeFuzzer(const uint8_t *data, size_t size)
+bool UsbDriverInfoUnSerializeFuzzer(const uint8_t *data, size_t size)
 {
     string drvInfoStr(reinterpret_cast<const char *>(data));
     if (drvInfoStr.size() == 0) {
         return false;
     }
 
-    DriverInfo devInfo;
-    devInfo.UnSerialize(drvInfoStr);
     UsbDriverInfo usbDevInfo;
     usbDevInfo.UnSerialize(drvInfoStr);
     return true;
 }
 bool ParseDriverInfoTest(const uint8_t *data, size_t size)
 {
-    auto bus = IBusExtension::GetInstance("USB");
+    auto bus = make_shared<UsbBusExtension>();
     string str(reinterpret_cast<const char *>(data));
     Metadata vids;
     Metadata pids;
@@ -61,8 +52,7 @@ bool ParseDriverInfoTest(const uint8_t *data, size_t size)
 using TestFuncDef = bool (*)(const uint8_t *data, size_t size);
 
 TestFuncDef g_allTestFunc[] = {
-    IBusGetFuzzer,
-    DriverInfoUnSerializeFuzzer,
+    UsbDriverInfoUnSerializeFuzzer,
     ParseDriverInfoTest,
 };
 

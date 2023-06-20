@@ -25,10 +25,7 @@ ohos_fuzztest("DriversPkgManagerFuzzTest") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
   ]
-  deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
-  ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager" ]
   external_deps = [
     "ability_base:want",
     "bundle_framework:appexecfwk_base",

@@ -14,22 +14,23 @@
 import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 module_output_path = "external_device_manager/unittest"
-bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
-ohos_unittest("bus_extension_test") {
+usb_bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
+ohos_unittest("bus_extension_usb_test") {
   module_out_path = "${module_output_path}"
   sources = [
-    "bus_extension_test/src/usb_bus_extension_test.cpp",
-    "bus_extension_test/src/usb_driver_info_test.cpp",
-    "bus_extension_test/src/usb_impl_mock.cpp",
-    "bus_extension_test/src/usb_subscriber_test.cpp",
+    "bus_extension_usb_test/src/usb_bus_extension_test.cpp",
+    "bus_extension_usb_test/src/usb_driver_info_test.cpp",
+    "bus_extension_usb_test/src/usb_impl_mock.cpp",
+    "bus_extension_usb_test/src/usb_subscriber_test.cpp",
   ]
   include_dirs = [
     "//third_party/jsoncpp/include/json",
-    "bus_extension_test/include",
-    "${bus_extension_include_path}",
+    "bus_extension_usb_test/include",
+    "${usb_bus_extension_include_path}",
   ]
   deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
     "//third_party/jsoncpp:jsoncpp",
@@ -73,10 +74,9 @@ ohos_unittest("drivers_pkg_manager_test") {
   ]
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
-    "${bus_extension_include_path}",
+    "${usb_bus_extension_include_path}",
   ]
   deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -116,7 +116,7 @@ ohos_unittest("driver_extension_manager_client_test") {
 group("external_device_manager_ut") {
   testonly = true
   deps = [
-    ":bus_extension_test",
+    ":bus_extension_usb_test",
     ":driver_extension_controller_test",
     ":driver_extension_manager_client_test",
     ":drivers_pkg_manager_test",

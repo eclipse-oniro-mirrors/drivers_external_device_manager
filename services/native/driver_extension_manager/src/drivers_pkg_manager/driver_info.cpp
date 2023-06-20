@@ -17,6 +17,7 @@
 #include "json.h"
 #include "hilog_wrapper.h"
 #include "ibus_extension.h"
+#include "bus_extension_core.h"
 #include "usb_driver_info.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -86,16 +87,17 @@ int32_t DriverInfo::UnSerialize(const string &str)
             return EDM_ERR_JSON_OBJ_ERR;
         }
     auto busType = jsonObj["bus"].asString();
-    if (LowerStr(busType) == "usb") {
-        this->driverInfoExt_ = make_shared<UsbDriverInfo>();
-        if (this->driverInfoExt_ == nullptr) {
-            EDM_LOGE(MODULE_COMMON, "error, this->driverInfoExt_ is nullptr");
-            return EDM_EER_MALLOC_FAIL;
-        }
-    } else {
-        EDM_LOGE(MODULE_COMMON, "unknow bus type");
+    auto busExt = BusExtensionCore::GetInstance().GetBusExtensionByName(LowerStr(busType));
+    if (busExt == nullptr) {
+        EDM_LOGE(MODULE_COMMON, "unknow bus type. %{public}s", busType.c_str());
         return EDM_ERR_NOT_SUPPORT;
     }
+    this->driverInfoExt_ = busExt->GetNewDriverInfoExtObject();
+    if (this->driverInfoExt_ == nullptr) {
+        EDM_LOGE(MODULE_COMMON, "error, this->driverInfoExt_ is nullptr");
+        return EDM_EER_MALLOC_FAIL;
+    }
+
     extInfo = jsonObj["ext_info"].asString();
     ret = this->driverInfoExt_->UnSerialize(extInfo);
     if (ret != EDM_OK) {

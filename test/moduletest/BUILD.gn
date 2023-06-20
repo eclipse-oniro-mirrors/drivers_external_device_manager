@@ -13,12 +13,18 @@
 
 import("//build/ohos.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
-ohos_executable("usb_bus_extension_mt") {
-  sources = [ "usb_bus_extension_mt/usb_bus_extension_mt.cpp" ]
-  include_dirs = []
+usb_bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
+ohos_executable("bus_extension_usb_mt") {
+  sources = [ "bus_extension_usb_mt/bus_extension_usb_mt.cpp" ]
+  include_dirs = [ "${usb_bus_extension_include_path}" ]
   configs = [ "${utils_path}:utils_config" ]
-  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension" ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus" ]
+  external_deps = [
+    "bundle_framework:appexecfwk_base",
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
   part_name = "external_device_manager"
   install_enable = false
 }
@@ -94,8 +100,8 @@ ohos_executable("drivers_pkg_manager_mt") {
 group("external_device_manager_mt") {
   deps = [
     ":bus_extension_core_mt",
+    ":bus_extension_usb_mt",
     ":driver_extension_controller_mt",
     ":drivers_pkg_manager_mt",
-    ":usb_bus_extension_mt",
   ]
 }
