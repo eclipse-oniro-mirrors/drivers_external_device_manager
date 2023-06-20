@@ -32,12 +32,14 @@ public:
     int32_t ConnectDriverExtension(
         std::string bundleName,
         std::string abilityName,
-        std::shared_ptr<IDriverExtensionConnectCallback> callback
+        std::shared_ptr<IDriverExtensionConnectCallback> callback,
+        uint32_t deviceId = 0
     );
     int32_t DisconnectDriverExtension(
         std::string bundleName,
         std::string abilityName,
-        std::shared_ptr<IDriverExtensionConnectCallback> callback
+        std::shared_ptr<IDriverExtensionConnectCallback> callback,
+        uint32_t deviceId = 0
     );
     class DriverExtensionAbilityConnection;
 };
@@ -45,6 +47,7 @@ public:
 struct DrvExtConnectionInfo {
     std::string bundleName_;
     std::string abilityName_;
+    uint32_t deviceId_;
     sptr<DriverExtensionController::DriverExtensionAbilityConnection> connectInner_;
 };
 

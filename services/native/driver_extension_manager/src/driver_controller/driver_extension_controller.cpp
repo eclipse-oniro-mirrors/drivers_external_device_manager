@@ -112,7 +112,8 @@ int32_t DriverExtensionController::StopDriverExtension(
 int32_t DriverExtensionController::ConnectDriverExtension(
     std::string bundleName,
     std::string abilityName,
-    std::shared_ptr<IDriverExtensionConnectCallback> callback
+    std::shared_ptr<IDriverExtensionConnectCallback> callback,
+    uint32_t deviceId
 )
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to Connect DriverExtension, bundle:%{public}s, ability:%{public}s", \
@@ -130,6 +131,7 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     callback->info_ = make_shared<DrvExtConnectionInfo>();
     callback->info_->bundleName_ = bundleName;
     callback->info_->abilityName_ = abilityName;
+    callback->info_->deviceId_ = deviceId;
     callback->info_->connectInner_ = new DriverExtensionAbilityConnection();
     callback->info_->connectInner_->callback_ = callback;
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
@@ -139,6 +141,7 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     }
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
+    want.SetParam("deviceId", static_cast<int>(deviceId));
     auto ret = abmc->ConnectAbility(want, callback->info_->connectInner_, -1);
     if (ret != 0) {
         EDM_LOGE(MODULE_EA_MGR, "ConnectExtensionAbility failed %{public}d", ret);
@@ -151,7 +154,8 @@ int32_t DriverExtensionController::ConnectDriverExtension(
 int32_t DriverExtensionController::DisconnectDriverExtension(
     std::string bundleName,
     std::string abilityName,
-    std::shared_ptr<IDriverExtensionConnectCallback> callback
+    std::shared_ptr<IDriverExtensionConnectCallback> callback,
+    uint32_t deviceId
 )
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to Disconnect DriverExtension, bundle:%{public}s, ability:%{public}s", \
@@ -165,8 +169,9 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
         return EDM_ERR_INVALID_PARAM;
     }
     if (callback->info_->bundleName_ != bundleName ||
-        callback->info_->abilityName_ != abilityName) {
-        EDM_LOGE(MODULE_EA_MGR, "bundleName or abilityName not match info in callback");
+        callback->info_->abilityName_ != abilityName ||
+        callback->info_->deviceId_ != deviceId) {
+        EDM_LOGE(MODULE_EA_MGR, "bundleName, abilityName, or deviceId not match info in callback");
         return EDM_ERR_INVALID_OBJECT;
     }
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
