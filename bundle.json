@@ -38,7 +38,11 @@
                 "bundle_framework",
                 "ability_runtime",
                 "hisysevent_native",
-                "hitrace_native"
+                "hitrace_native",
+                "napi",
+                "safwk",
+                "eventhandler",
+                "ace_engine"
             ],
             "third_party": [
                 "bounds_checking_function",
