@@ -16,17 +16,19 @@ import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 
 module_output_path = "external_device_manager/fuzztest"
-bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
+usb_bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
 ohos_fuzztest("UsbExtensionFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "${ext_mgr_path}/test/fuzztest/bus_extension_fuzzer/usbextension_fuzzer"
+  fuzz_config_file =
+      "${ext_mgr_path}/test/fuzztest/bus_extension_fuzzer/usbextension_fuzzer"
 
   sources = [ "usbextension_fuzzer.cpp" ]
-  include_dirs = [ "${bus_extension_include_path}" ]
-  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension" ]
+  include_dirs = [ "${usb_bus_extension_include_path}" ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
     "hiviewdfx_hilog_native:libhilog",
   ]
   defines = []

@@ -23,6 +23,7 @@ config("drvext_manager_private_config") {
 ohos_shared_library("drivers_pkg_manager") {
   install_enable = true
   sources = [
+    "driver_info.cpp",
     "driver_pkg_manager.cpp",
     "drv_bundle_state_callback.cpp",
   ]
@@ -37,7 +38,6 @@ ohos_shared_library("drivers_pkg_manager") {
   ]
   public_configs = [ ":drvext_manager_public_config" ]
   deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "//third_party/jsoncpp:jsoncpp",
   ]  # Component internal dependencies
