@@ -28,7 +28,7 @@ static constexpr const char *BUS_EXTENSION_SO_PATH = "/system/lib";
 #endif
 static constexpr const char *HDI_SO_SUFFIX = ".z.so";
 static constexpr const char *HDI_SO_PREFIX = "lib";
-static constexpr const char *USB_BUS_EXTENSION = "bus_extension";
+static constexpr const char *USB_BUS_EXTENSION = "driver_extension_usb_bus";
 
 namespace OHOS {
 namespace ExternalDeviceManager {
