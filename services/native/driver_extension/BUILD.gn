@@ -27,28 +27,22 @@ config("ability_config") {
 }
 
 ohos_shared_library("driver_extension") {
-  include_dirs = [
-    "include",
-  ]
+  include_dirs = [ "include" ]
 
   sources = [
-    "src/js_driver_extension.cpp",
-    "src/js_driver_extension_context.cpp",
     "src/driver_extension.cpp",
     "src/driver_extension_context.cpp",
-  ]
-
-  deps = [
-    "${ability_runtime_path}/frameworks/native/ability/native:abilitykit_native",
-    "${ability_runtime_napi_path}/inner/napi_common:napi_common",
-    "${ability_runtime_native_path}/ability/native:ability_business_error",
-    "${ability_runtime_native_path}/appkit:app_context",
+    "src/js_driver_extension.cpp",
+    "src/js_driver_extension_context.cpp",
   ]
 
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:napi_common",
     "ability_runtime:runtime",
     "c_utils:utils",
     "eventhandler:libeventhandler",
@@ -64,8 +58,7 @@ ohos_shared_library("driver_extension") {
 }
 
 ohos_shared_library("driver_extension_module") {
-  include_dirs =
-      [ "include" ]
+  include_dirs = [ "include" ]
 
   sources = [ "src/driver_extension_module_loader.cpp" ]
 
