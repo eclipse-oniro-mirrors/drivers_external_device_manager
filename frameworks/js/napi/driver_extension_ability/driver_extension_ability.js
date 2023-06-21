@@ -13,24 +13,24 @@
  * limitations under the License.
  */
 
-var ExtensionAbility = requireNapi("app.ability.ExtensionAbility")
+let ExtensionAbility = requireNapi('app.ability.ExtensionAbility');
 
 class DriverExtensionAbility extends ExtensionAbility {
-    onInit(want) {
-        console.log('onInit, want:' + want.abilityName);
-    }
+  onInit(want) {
+    console.log('onInit, want:' + want.abilityName);
+  }
 
-    onConnect(want) {
-        console.log('onConnect, want:' + want.abilityName);
-    }
+  onConnect(want) {
+    console.log('onConnect, want:' + want.abilityName);
+  }
 
-    onDisconnect(want) {
-        console.log('onDisconnect');
-    }
+  onDisconnect(want) {
+    console.log('onDisconnect');
+  }
 
-    onRelease() {
-        console.log('onRelease');
-    }
+  onRelease() {
+    console.log('onRelease');
+  }
 }
 
-export default DriverExtensionAbility
+export default DriverExtensionAbility;
