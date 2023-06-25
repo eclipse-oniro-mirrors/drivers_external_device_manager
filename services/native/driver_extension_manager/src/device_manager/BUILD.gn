@@ -17,7 +17,10 @@ ohos_shared_library("driver_extension_dev_callback") {
   install_enable = true
   sources = [ "dev_change_callback.cpp" ]
 
-  include_dirs = [ "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager" ]
+  include_dirs = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",
+  ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [ ":driver_extension_device_manager" ]
   external_deps = [
@@ -36,6 +39,7 @@ ohos_shared_library("driver_extension_device_manager") {
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [

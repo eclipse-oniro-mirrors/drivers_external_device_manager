@@ -46,6 +46,11 @@ void ExtDeviceManager::PrintMatchDriverMap()
 int32_t ExtDeviceManager::Init()
 {
     EDM_LOGD(MODULE_DEV_MGR, "ExtDeviceManager Init success");
+    int32_t ret = DriverPkgManager::GetInstance().RegisterOnBundleUpdate(UpdateBundleStatusCallback);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_DEV_MGR, "register bundle status callback fail");
+        return EDM_NOK;
+    }
     return EDM_OK;
 }
 
@@ -71,16 +76,17 @@ string ExtDeviceManager::GetAbilityName(string &bundleInfo) const
     return bundleInfo.substr(pos + stiching_.length());
 }
 
-int32_t ExtDeviceManager::AddDevIdOfBundleInfoMap(uint64_t deviceId, string &bundleInfo)
+int32_t ExtDeviceManager::AddDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo)
 {
-    if (bundleInfo.empty()) {
-        EDM_LOGE(MODULE_DEV_MGR, "bundleInfo is null");
+    if (bundleInfo.empty() || device == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "bundleInfo or device is null");
         return EDM_NOK;
     }
 
     // update bundle info
     lock_guard<mutex> lock(bundleMatchMapMutex_);
     auto pos = bundleMatchMap_.find(bundleInfo);
+    uint64_t deviceId = device->GetDeviceInfo()->GetDeviceId();
     if (pos == bundleMatchMap_.end()) {
         unordered_set<uint64_t> tmpSet;
         tmpSet.emplace(deviceId);
@@ -92,18 +98,18 @@ int32_t ExtDeviceManager::AddDevIdOfBundleInfoMap(uint64_t deviceId, string &bun
         if (!pairRet.second || pos->second.size() > 1) {
             EDM_LOGD(MODULE_DEV_MGR, "bundleMap had existed driver, add deviceId %{public}016" PRIX64 "", deviceId);
             PrintMatchDriverMap();
-            return EDM_OK;
         }
     }
 
+    // start ability
     PrintMatchDriverMap();
     return EDM_OK;
 }
 
-int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(uint64_t deviceId, string &bundleInfo)
+int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo)
 {
-    if (bundleInfo.empty()) {
-        EDM_LOGE(MODULE_DEV_MGR, "bundleInfo is null");
+    if (bundleInfo.empty() || device == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "bundleInfo or device is null");
         return EDM_NOK;
     }
 
@@ -116,6 +122,7 @@ int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(uint64_t deviceId, string &
     }
 
     // If the number of devices is greater than one, only the device erase
+    uint64_t deviceId = device->GetDeviceInfo()->GetDeviceId();
     if (pos->second.size() > 1) {
         pos->second.erase(deviceId);
         EDM_LOGD(MODULE_DEV_MGR, "bundleMap existed driver, remove deviceId %{public}016" PRIX64 "", deviceId);
@@ -130,8 +137,12 @@ int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(uint64_t deviceId, string &
     return EDM_OK;
 }
 
-int32_t ExtDeviceManager::RemoveAllDevIdOfBundleInfoMap(string &bundleInfo)
+int32_t ExtDeviceManager::RemoveAllDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo)
 {
+    if (device == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "device is null");
+        return EDM_ERR_INVALID_PARAM;
+    }
     // update bundle info
     lock_guard<mutex> lock(bundleMatchMapMutex_);
     auto pos = bundleMatchMap_.find(bundleInfo);
@@ -140,7 +151,6 @@ int32_t ExtDeviceManager::RemoveAllDevIdOfBundleInfoMap(string &bundleInfo)
     }
 
     bundleMatchMap_.erase(pos);
-
     return EDM_OK;
 }
 
@@ -172,14 +182,17 @@ int32_t ExtDeviceManager::AddBundleInfo(enum BusType busType, const string &bund
         shared_ptr<Device> device = iter.second;
 
         // iterate over device by bustype
-        shared_ptr<BundleInfoNames> bundleInfoNames = make_shared<BundleInfoNames>();
-        bundleInfoNames->bundleName = "bundle_name_test";
-        bundleInfoNames->abilityName = "ability_name_test";
+        auto bundleInfoNames = DriverPkgManager::GetInstance().QueryMatchDriver(device->GetDeviceInfo());
+        if (bundleInfoNames == nullptr) {
+            EDM_LOGD(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "], not find driver",
+                device->GetDeviceInfo()->GetDeviceId());
+            continue;
+        }
 
         if (bundleName.compare(bundleInfoNames->bundleName) == 0 &&
             abilityName.compare(bundleInfoNames->abilityName) == 0) {
             device->AddBundleInfo(bundleInfo);
-            int32_t ret = AddDevIdOfBundleInfoMap(device->GetDeviceInfo()->GetDeviceId(), bundleInfo);
+            int32_t ret = AddDevIdOfBundleInfoMap(device, bundleInfo);
             if (ret != EDM_OK) {
                 EDM_LOGE(MODULE_DEV_MGR,
                 "deviceId[%{public}016" PRIX64 "] start driver extension ability[%{public}s] fail[%{public}d]",
@@ -219,7 +232,7 @@ int32_t ExtDeviceManager::RemoveBundleInfo(enum BusType busType, const string &b
         // iterate over device by bustype
         if (bundleInfo.compare(device->GetBundleInfo()) == 0) {
             device->RemoveBundleInfo(); // update device
-            int32_t ret = RemoveAllDevIdOfBundleInfoMap(bundleInfo);
+            int32_t ret = RemoveAllDevIdOfBundleInfoMap(device, bundleInfo);
             if (ret != EDM_OK) {
                 EDM_LOGE(MODULE_DEV_MGR,
                 "deviceId[%{public}016" PRIX64 "] stop driver extension ability[%{public}s] fail[%{public}d]",
@@ -290,46 +303,43 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
     BusType type = devInfo->GetBusType();
     uint64_t deviceId = devInfo->GetDeviceId();
 
+    shared_ptr<Device> device;
     lock_guard<mutex> lock(deviceMapMutex_);
     if (deviceMap_.find(type) != deviceMap_.end()) {
         unordered_map<uint64_t, shared_ptr<Device>> &map = deviceMap_[type];
         if (map.find(deviceId) != map.end()) {
+            // device has been registered and need to connect
             EDM_LOGI(MODULE_DEV_MGR, "device has been registered, deviceId is %{public}016" PRIx64 "", deviceId);
-            return EDM_OK;
         }
     }
-    EDM_LOGD(MODULE_DEV_MGR, "device begin register deviceId is %{public}016" PRIx64 "", deviceId);
+    EDM_LOGD(MODULE_DEV_MGR, "begin to register device, deviceId is %{public}016" PRIx64 "", deviceId);
 
     // driver match
-    shared_ptr<BundleInfoNames> bundleInfoNames = make_shared<BundleInfoNames>();
-    bundleInfoNames->bundleName = "bundle_name_test";
-    bundleInfoNames->abilityName = "ability_name_test";
-
-    // add device
-    shared_ptr<Device> device = make_shared<Device>(devInfo);
-    string bundleInfo;
-
-    // add bundle info
-    if (bundleInfoNames != nullptr) {
-        bundleInfo = bundleInfoNames->bundleName + stiching_ + bundleInfoNames->abilityName;
-        device->AddBundleInfo(bundleInfo);
+    string bundleInfo = device->GetBundleInfo();
+    // if device does not have a matching driver, match driver here
+    if (bundleInfo.empty()) {
+        auto bundleInfoNames = DriverPkgManager::GetInstance().QueryMatchDriver(devInfo);
+        if (bundleInfoNames != nullptr) {
+            bundleInfo = bundleInfoNames->bundleName + stiching_ + bundleInfoNames->abilityName;
+            device->AddBundleInfo(bundleInfo);
+        }
     }
-
+    // register device
     deviceMap_[type].emplace(deviceId, device);
     EDM_LOGD(MODULE_DEV_MGR, "successfully registered device, deviceId = %{public}016" PRIx64 "", deviceId);
     unloadSelftimer_.Unregister(unloadSelftimerId_);
 
-    // not match driver, waitting install driver
+    // match driver failed, waitting to install driver package
     if (bundleInfo.empty()) {
-        EDM_LOGD(MODULE_DEV_MGR, "deviceId %{public}016" PRIX64 "not match driver, waitting for install ext driver",
-            deviceId);
+        EDM_LOGD(MODULE_DEV_MGR,
+            "deviceId %{public}016" PRIX64 "match driver failed, waitting to install ext driver package", deviceId);
         return EDM_OK;
     }
 
-    int32_t ret = AddDevIdOfBundleInfoMap(deviceId, bundleInfo);
+    int32_t ret = AddDevIdOfBundleInfoMap(device, bundleInfo);
     if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "] update bundle info map failed[%{public}d]",
-            deviceId, ret);
+        EDM_LOGE(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "] update bundle info map failed[%{public}d]", deviceId,
+            ret);
         return EDM_NOK;
     }
     EDM_LOGD(MODULE_DEV_MGR, "successfully match driver[%{public}s], deviceId is %{public}016" PRIx64 "",
@@ -342,12 +352,14 @@ int32_t ExtDeviceManager::UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo)
 {
     BusType type = devInfo->GetBusType();
     uint64_t deviceId = devInfo->GetDeviceId();
+    shared_ptr<Device> device;
     string bundleInfo;
 
     lock_guard<mutex> lock(deviceMapMutex_);
     if (deviceMap_.find(type) != deviceMap_.end()) {
         unordered_map<uint64_t, shared_ptr<Device>> &map = deviceMap_[type];
         if (map.find(deviceId) != map.end()) {
+            device = map[deviceId];
             bundleInfo = map[deviceId]->GetBundleInfo();
             map.erase(deviceId);
             EDM_LOGI(MODULE_DEV_MGR, "successfully unregistered device, deviceId is %{public}016" PRIx64 "", deviceId);
@@ -356,11 +368,11 @@ int32_t ExtDeviceManager::UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo)
     }
 
     if (bundleInfo.empty()) {
-        EDM_LOGD(MODULE_DEV_MGR, "deviceId %{public}016" PRIX64 "not find device", deviceId);
+        EDM_LOGD(MODULE_DEV_MGR, "deviceId %{public}016" PRIX64 " bundleInfo is empty", deviceId);
         return EDM_OK;
     }
 
-    int32_t ret = RemoveDevIdOfBundleInfoMap(deviceId, bundleInfo);
+    int32_t ret = RemoveDevIdOfBundleInfoMap(device, bundleInfo);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "] remove bundleInfo map failed[%{public}d]",
             deviceId, ret);

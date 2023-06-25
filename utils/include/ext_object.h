@@ -74,6 +74,10 @@ public:
     {
         return devInfo_.deviceId;
     }
+    uint32_t GetBusDevId() const
+    {
+        return devInfo_.devBusInfo.busDeviceId;
+    }
     const std::string& GetDeviceDescription() const
     {
         return description_;
