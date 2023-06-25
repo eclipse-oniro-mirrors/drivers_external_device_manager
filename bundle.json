@@ -29,7 +29,7 @@
                 "init",
                 "ipc",
                 "samgr",
-                "selinux",
+                "selinux_adapter",
                 "ability_base",
                 "common_event_service",
                 "c_utils",
