@@ -18,39 +18,80 @@
 #include <mutex>
 #include <list>
 #include <unordered_map>
+#include <unordered_set>
+
 #include "ext_object.h"
 #include "single_instance.h"
+#include "timer.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+using namespace std;
+
 class Device final {
 public:
-    Device(std::shared_ptr<DeviceInfo> info) : info_(info) {};
+    Device(shared_ptr<DeviceInfo> info) : info_(info) {};
+    bool HasDriver() const
+    {
+        return !bundleInfo_.empty();
+    };
 
-    bool HasDriver() const;
-    std::shared_ptr<DeviceInfo> GetDeviceInfo() const
+    shared_ptr<DeviceInfo> GetDeviceInfo() const
     {
         return info_;
     }
 
+    void AddBundleInfo(const string &bundleInfo)
+    {
+        bundleInfo_ = bundleInfo;
+    }
+
+    void RemoveBundleInfo()
+    {
+        bundleInfo_.clear();
+    }
+
+    string GetBundleInfo() const
+    {
+        return bundleInfo_;
+    }
 private:
-    std::shared_ptr<DriverInfo> driver_;
-    std::shared_ptr<DeviceInfo> info_;
+    string bundleInfo_;
+    shared_ptr<DriverInfo> driver_;
+    shared_ptr<DeviceInfo> info_;
 };
 
 class ExtDeviceManager final {
     DECLARE_SINGLE_INSTANCE_BASE(ExtDeviceManager);
+
 public:
     ~ExtDeviceManager() = default;
     int32_t Init();
-    int32_t RegisterDevice(std::shared_ptr<DeviceInfo> devInfo);
-    int32_t UnRegisterDevice(const std::shared_ptr<DeviceInfo> devInfo);
-    std::vector<std::shared_ptr<DeviceInfo>> QueryDeivce(const BusType busType);
-
+    int32_t RegisterDevice(shared_ptr<DeviceInfo> devInfo);
+    int32_t UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo);
+    vector<shared_ptr<DeviceInfo>> QueryDevice(const BusType busType);
+    static int32_t UpdateBundleStatusCallback(int32_t bundleStatus, int32_t busType,
+        const string &bundleName, const string &abilityName);
 private:
     ExtDeviceManager() = default;
-    std::unordered_map<BusType, std::unordered_map<uint64_t, std::shared_ptr<Device>>> deviceMap_;
-    std::mutex deviceMapMutex_;
+    void PrintMatchDriverMap();
+    string GetBundleName(string &bundleInfo) const;
+    string GetAbilityName(string &bundleInfo) const;
+    int32_t AddDevIdOfBundleInfoMap(uint64_t deviceId, string &bundleInfo);
+    int32_t RemoveDevIdOfBundleInfoMap(uint64_t deviceId, string &bundleInfo);
+    int32_t RemoveAllDevIdOfBundleInfoMap(string &bundleInfo);
+    int32_t AddBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
+    int32_t RemoveBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
+    int32_t UpdateBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
+    void UnLoadSelf(void);
+    size_t GetTotalDeviceNum(void) const;
+    string stiching_ = "_stiching_";
+    unordered_map<BusType, unordered_map<uint64_t, shared_ptr<Device>>> deviceMap_;
+    unordered_map<string, unordered_set<uint64_t>> bundleMatchMap_; // driver matching table
+    mutex deviceMapMutex_;
+    mutex bundleMatchMapMutex_;
+    Utils::Timer unloadSelftimer_ {"unLoadSelfTimer"};
+    uint32_t unloadSelftimerId_ {UINT32_MAX};
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

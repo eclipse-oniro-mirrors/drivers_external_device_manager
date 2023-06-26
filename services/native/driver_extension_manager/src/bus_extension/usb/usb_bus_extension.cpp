@@ -16,13 +16,17 @@
 #include "sstream"
 #include "iostream"
 
-#include "hilog_wrapper.h"
 #include "edm_errors.h"
+#include "hilog_wrapper.h"
 #include "ibus_extension.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+#include "bus_extension_core.h"
 #include "usb_dev_subscriber.h"
-#include "usb_driver_info.h"
 #include "usb_device_info.h"
+#include "usb_driver_info.h"
 #include "usb_bus_extension.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -37,6 +41,9 @@ UsbBusExtension::~UsbBusExtension()
 {
     if (this->usbInterface_ != nullptr && this->subScriber_ != nullptr) {
         this->usbInterface_->UnbindUsbdSubscriber(this->subScriber_);
+        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<HDI::Usb::V1_0::IUsbInterface>(usbInterface_);
+        remote->RemoveDeathRecipient(recipient_);
+        recipient_.clear();
     }
 }
 
@@ -66,6 +73,13 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
 
     this->subScriber_->Init(devCallback, usbInterface_);
     this->usbInterface_->BindUsbdSubscriber(subScriber_);
+
+    recipient_ = new UsbdDeathRecipient();
+    sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<HDI::Usb::V1_0::IUsbInterface>(usbInterface_);
+    if (!remote->AddDeathRecipient(recipient_)) {
+        EDM_LOGE(MODULE_BUS_USB, "add DeathRecipient failed");
+        return EDM_NOK;
+    }
     return 0;
 };
 
@@ -77,7 +91,8 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     }
 
     if (device.GetBusType() != BusType::BUS_TYPE_USB) {
-        EDM_LOGW(MODULE_BUS_USB,  "deivce type not support");
+        EDM_LOGW(MODULE_BUS_USB,  "deivce type not support %d != %d",
+            (uint32_t)device.GetBusType(), (uint32_t)BusType::BUS_TYPE_USB);
         return false;
     }
     const UsbDriverInfo *usbDriverInfo = static_cast<const UsbDriverInfo *>(driver.GetInfoExt().get());
@@ -142,6 +157,30 @@ vector<uint16_t> UsbBusExtension::ParseCommaStrToVectorUint16(const string &str)
         EDM_LOGD(MODULE_BUS_USB,  "parse sucess, size %{public}zu, str:%{public}s", ret.size(), str.c_str());
     }
     return ret;
+}
+void UsbBusExtension::UsbdDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        EDM_LOGE(MODULE_BUS_USB, "get samgr failed");
+        return;
+    }
+
+    auto ret = samgrProxy->UnloadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_BUS_USB, "unload failed");
+    }
+}
+
+shared_ptr<DriverInfoExt> UsbBusExtension::GetNewDriverInfoExtObject()
+{
+    return make_shared<UsbDriverInfo>();
+}
+
+__attribute__ ((constructor)) static void RegBusExtension()
+{
+    EDM_LOGI(MODULE_COMMON, "installing UsbBusExtension");
+    RegisterBusExtension<UsbBusExtension>(BusType::BUS_TYPE_USB);
 }
 }
 }

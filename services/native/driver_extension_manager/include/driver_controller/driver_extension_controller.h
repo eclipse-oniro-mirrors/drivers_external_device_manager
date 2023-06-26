@@ -16,16 +16,51 @@
 #ifndef DRIVER_EXTENSION_CONTROLLER_H
 #define DRIVER_EXTENSION_CONTROLLER_H
 #include <string>
+#include <memory>
+#include <map>
+#include "single_instance.h"
+#include "iremote_object.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
+class IDriverExtensionConnectCallback;
 class DriverExtensionController {
+    DECLARE_SINGLE_INSTANCE(DriverExtensionController);
 public:
-    static int32_t StartDriverExtension(
-        std::string baudleName,
-        std::string abilityName);
-    static int32_t StopDriverExtension(
+    int32_t StartDriverExtension(std::string baudleName, std::string abilityName);
+    int32_t StopDriverExtension(std::string bundleName, std::string abilityName);
+    int32_t ConnectDriverExtension(
         std::string bundleName,
-        std::string abilityName);
+        std::string abilityName,
+        std::shared_ptr<IDriverExtensionConnectCallback> callback,
+        uint32_t deviceId = 0
+    );
+    int32_t DisconnectDriverExtension(
+        std::string bundleName,
+        std::string abilityName,
+        std::shared_ptr<IDriverExtensionConnectCallback> callback,
+        uint32_t deviceId = 0
+    );
+    class DriverExtensionAbilityConnection;
+};
+
+struct DrvExtConnectionInfo {
+    std::string bundleName_;
+    std::string abilityName_;
+    uint32_t deviceId_;
+    sptr<DriverExtensionController::DriverExtensionAbilityConnection> connectInner_;
+};
+
+class IDriverExtensionConnectCallback {
+public:
+    virtual ~IDriverExtensionConnectCallback() = default;
+    virtual int32_t OnConnectDone(const sptr<IRemoteObject> &remote, int resultCode) = 0;
+    virtual int32_t OnDisconnectDone(int resultCode) = 0;
+    bool IsConnectDone();
+    sptr<IRemoteObject> GetRemoteObj();
+private:
+    friend class DriverExtensionController;
+    std::shared_ptr<DrvExtConnectionInfo> info_ = nullptr;
 };
 }
 }

@@ -12,22 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef IDRIVER_EXT_MGR_H
-#define IDRIVER_EXT_MGR_H
-#include <string>
 
-#include "iremote_broker.h"
-#include "iremote_object.h"
+#ifndef IDRIVER_EXTENSION_MANAGER_H
+#define IDRIVER_EXTENSION_MANAGER_H
+
+#include <vector>
+#include <iremote_broker.h>
+#include "driver_ext_mgr_types.h"
+#include "edm_errors.h"
+#include "ext_object.h"
+#include "hdf_ext_devmgr_interface_code.h"
+#include "idriver_ext_mgr_callback.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 class IDriverExtMgr : public IRemoteBroker {
 public:
-    virtual int32_t QueryDevice() = 0;
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.driver.IDriverExtMgr");
+    ~IDriverExtMgr() = default;
 
-public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.driver.IExtDeviceManager");
+    virtual UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) = 0;
+    virtual UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) = 0;
+    virtual UsbErrCode UnBindDevice(uint64_t deviceId) = 0;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
-#endif // IDRIVER_EXT_MGR_H
+#endif // IDRIVER_EXTENSION_MANAGER_H

@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef DRIVER_EXT_MGR_H
-#define DRIVER_EXT_MGR_H
+#ifndef DRIVER_EXTENSION_MANAGER_H
+#define DRIVER_EXTENSION_MANAGER_H
+
+#include <singleton.h>
+#include <system_ability.h>
 #include "driver_ext_mgr_stub.h"
-#include "singleton.h"
-#include "system_ability.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -29,9 +30,15 @@ public:
     void OnStart() override;
     void OnStop() override;
     int Dump(int fd, const std::vector<std::u16string> &args) override;
+    UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
+    UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
+    UsbErrCode UnBindDevice(uint64_t deviceId) override;
+    void DeleteConnectCallback(const wptr<IRemoteObject> &remote);
+private:
 
-    int32_t QueryDevice() override;
+    std::mutex connectCallbackMutex;
+    std::map<uint64_t, std::vector<sptr<IDriverExtMgrCallback>>> connectCallbackMap;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
-#endif // DRIVER_EXT_MGR_H
+#endif // DRIVER_EXTENSION_MANAGER_H

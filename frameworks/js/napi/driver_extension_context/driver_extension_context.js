@@ -13,27 +13,27 @@
  * limitations under the License.
  */
 
-var ExtensionContext = requireNapi("application.ExtensionContext")
-var Caller = requireNapi("application.Caller")
+let ExtensionContext = requireNapi('application.ExtensionContext');
+let Caller = requireNapi('application.Caller');
 
 const ERROR_CODE_INVALID_PARAM = 401;
-const ERROR_MSG_INVALID_PARAM = "Invalid input parameter.";
+const ERROR_MSG_INVALID_PARAM = 'Invalid input parameter.';
 class ParamError extends Error {
-    constructor() {
-        super(ERROR_MSG_INVALID_PARAM);
-        this.code = ERROR_CODE_INVALID_PARAM;
-    }
+  constructor() {
+    super(ERROR_MSG_INVALID_PARAM);
+    this.code = ERROR_CODE_INVALID_PARAM;
+  }
 }
 
 class DriverExtensionContext extends ExtensionContext {
-    constructor(obj) {
-        super(obj);
-    }
-    
-    updateDriverState() {
-        console.log("updateDriverState");
-        return this.__context_impl__.updateDriverState();
-    }
+  constructor(obj) {
+    super(obj);
+  }
+  
+  updateDriverState() {
+    console.log('updateDriverState');
+    return this.__context_impl__.updateDriverState();
+  }
 }
 
-export default DriverExtensionContext
+export default DriverExtensionContext;

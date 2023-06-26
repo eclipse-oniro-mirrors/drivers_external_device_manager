@@ -46,11 +46,22 @@ bool QueryMatchDriverIllegalBusTest(const uint8_t *data, size_t size)
     
     return true;
 }
+bool DriverInfoUnSerializeFuzzer(const uint8_t *data, size_t size)
+{
+    string drvInfoStr(reinterpret_cast<const char *>(data));
+    if (drvInfoStr.size() == 0) {
+        return false;
+    }
 
+    DriverInfo devInfo;
+    devInfo.UnSerialize(drvInfoStr);
+    return true;
+}
 using TestFuncDef = bool (*)(const uint8_t *data, size_t size);
 
 TestFuncDef g_allTestFunc[] = {
     QueryMatchDriverIllegalBusTest,
+    DriverInfoUnSerializeFuzzer
 };
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t *rawData, size_t size)

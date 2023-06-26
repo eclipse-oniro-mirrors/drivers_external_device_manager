@@ -14,15 +14,111 @@
  */
 
 #include "driver_ext_mgr_stub.h"
+#include <cinttypes>
+#include <securec.h>
+#include "hilog_wrapper.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 int DriverExtMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    return 0;
+    EDM_LOGD(MODULE_FRAMEWORK, "cmd:%u, flags:%d", code, option.GetFlags());
+    if (data.ReadInterfaceToken() != GetDescriptor()) {
+        EDM_LOGE(MODULE_FRAMEWORK, "remote descriptor is not matched");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    switch (code) {
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::QUERY_DEVICE):
+            return OnQueryDevice(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::BIND_DEVICE):
+            return OnBindDevice(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::UNBIND_DEVICE):
+            return OnUnBindDevice(data, reply, option);
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
 }
-int32_t DriverExtMgrStub::QueryDeviceStub()
+
+int32_t DriverExtMgrStub::OnQueryDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    return 0;
+    uint32_t busType = 0;
+    if (!data.ReadUint32(busType)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read busType");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    std::vector<std::shared_ptr<DeviceData>> devices;
+    UsbErrCode ret = QueryDevice(busType, devices);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call QueryDevice function:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    if (!reply.WriteUint64(static_cast<uint64_t>(devices.size()))) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write size of devices");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    for (uint64_t i = 0; i < devices.size(); i++) {
+        if (devices[i] == nullptr) {
+            EDM_LOGE(MODULE_FRAMEWORK, "invalid %{public}016" PRIX64 " device", i);
+            return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        }
+
+        if (!devices[i]->Marshalling(reply)) {
+            EDM_LOGE(MODULE_FRAMEWORK, "failed to write %{public}016" PRIX64 " device", i);
+            return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        }
+    }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    uint64_t deviceId = 0;
+    if (!data.ReadUint64(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    sptr<IRemoteObject> remote = data.ReadRemoteObject();
+    if (remote == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read remote object of connectCallback");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    sptr<IDriverExtMgrCallback> connectCallback = iface_cast<IDriverExtMgrCallback>(remote);
+    if (connectCallback == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to create connectCallback object");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    UsbErrCode ret = BindDevice(deviceId, connectCallback);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call QueryDevice function:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnUnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    uint64_t deviceId = 0;
+    if (!data.ReadUint64(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    UsbErrCode ret = UnBindDevice(deviceId);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call QueryDevice function:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    return UsbErrCode::EDM_OK;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

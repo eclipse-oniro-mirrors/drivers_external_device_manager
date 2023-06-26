@@ -34,7 +34,7 @@ public:
     void SetUp() override
     {
         cout << "UsbSubscriberTest SetUp" << endl;
-        busExt = IBusExtension::GetInstance("usb");
+        busExt = make_shared<UsbBusExtension>();
         usbBusExt = static_cast<UsbBusExtension*>(busExt.get());
         mockUsb = sptr<UsbImplMock>(new UsbImplMock());
         usbBusExt->SetUsbInferface(mockUsb);

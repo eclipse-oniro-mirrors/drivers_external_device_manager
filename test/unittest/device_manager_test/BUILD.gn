@@ -24,8 +24,8 @@ ohos_unittest("device_manager_test") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
   ]
   deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension:bus_extension",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
   ]

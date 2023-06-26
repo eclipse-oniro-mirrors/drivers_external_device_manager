@@ -10,26 +10,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("../../../../../extdevmgr.gni")
-ohos_shared_library("bus_extension") {
+import("../../../../../../extdevmgr.gni")
+ohos_shared_library("driver_extension_usb_bus") {
   sources = [
-    "bus_extension.cpp",
-    "driver_info.cpp",
-    "usb/usb_bus_extension.cpp",
-    "usb/usb_dev_subscriber.cpp",
-    "usb/usb_driver_info.cpp",
+    "usb_bus_extension.cpp",
+    "usb_dev_subscriber.cpp",
+    "usb_driver_info.cpp",
   ]
   include_dirs = [
     "//third_party/jsoncpp/include/json",
-    "../../include/bus_extension/usb",
-    "../../include/bus_extension/core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
   ]
   configs = [
     "${utils_path}:coverage_flags",
     "${utils_path}:utils_config",
   ]
   deps = [
-    "core:driver_extension_bus_core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "//third_party/jsoncpp:jsoncpp",
   ]
   external_deps = [
@@ -37,6 +35,8 @@ ohos_shared_library("bus_extension") {
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
   ]
 
   install_enable = true

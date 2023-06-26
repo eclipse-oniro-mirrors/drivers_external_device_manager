@@ -45,13 +45,15 @@ namespace ExternalDeviceManager {
 
 // param of log interface, such as EDM_LOGF.
 enum UsbMgrSubModule {
-    MODULE_SERVICE = 0,
+    MODULE_FRAMEWORK = 0,
+    MODULE_SERVICE,
     MODULE_DEV_MGR,
     MODULE_PKG_MGR,
     MODULE_EA_MGR,
     MODULE_BUS_USB,
     MODULE_COMMON,
     MODULE_USB_DDK,
+    EDM_MODULE_TEST,
     EDM_MODULE_BUTT,
 };
 
@@ -59,24 +61,28 @@ enum UsbMgrSubModule {
 constexpr unsigned int BASE_EDM_DOMAIN_ID = 0xD002550;
 
 enum UsbMgrDomainId {
-    EDM_SERVICE_DOMAIN = BASE_EDM_DOMAIN_ID + MODULE_SERVICE,
+    EDM_FRAMEWORK_DOMAIN = BASE_EDM_DOMAIN_ID + MODULE_FRAMEWORK,
+    EDM_SERVICE_DOMAIN,
     EDM_DEV_MGR_DOMAIN,
     EDM_PKG_MGR_DOMAIN,
     EDM_EA_MGR_DOMAIN,
     EDM_BUS_USB_DOMAIN,
     EDM_COMMON_DOMAIN,
     EDM_USB_DDK_DOMAIN,
+    EDM_TEST,
     EDM_BUTT,
 };
 
 constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
-    {LOG_CORE, EDM_SERVICE_DOMAIN, "EdmService"  },
-    {LOG_CORE, EDM_DEV_MGR_DOMAIN, "EdmDevMgr"   },
-    {LOG_CORE, EDM_PKG_MGR_DOMAIN, "EdmPkgMgr"   },
-    {LOG_CORE, EDM_EA_MGR_DOMAIN,  "EdmEaMgr"    },
-    {LOG_CORE, EDM_BUS_USB_DOMAIN, "EdmBusUsbMgr"},
-    {LOG_CORE, EDM_COMMON_DOMAIN,  "EdmCommon"   },
-    {LOG_CORE, EDM_USB_DDK_DOMAIN, "EdmUsbDdk"   },
+    {LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmFwk"      },
+    {LOG_CORE, EDM_SERVICE_DOMAIN,   "EdmService"  },
+    {LOG_CORE, EDM_DEV_MGR_DOMAIN,   "EdmDevMgr"   },
+    {LOG_CORE, EDM_PKG_MGR_DOMAIN,   "EdmPkgMgr"   },
+    {LOG_CORE, EDM_EA_MGR_DOMAIN,    "EdmEaMgr"    },
+    {LOG_CORE, EDM_BUS_USB_DOMAIN,   "EdmBusUsbMgr"},
+    {LOG_CORE, EDM_COMMON_DOMAIN,    "EdmCommon"   },
+    {LOG_CORE, EDM_USB_DDK_DOMAIN,   "EdmUsbDdk"   },
+    {LOG_CORE, EDM_TEST,             "EdmTest"     },
 };
 
 // In order to improve performance, do not check the module range, module should less than EDM_MODULE_BUTT.
