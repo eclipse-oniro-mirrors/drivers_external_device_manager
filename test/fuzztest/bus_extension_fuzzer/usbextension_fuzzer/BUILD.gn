@@ -29,7 +29,7 @@ ohos_fuzztest("UsbExtensionFuzzTest") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
   defines = []
   configs = [ "${utils_path}:utils_config" ]

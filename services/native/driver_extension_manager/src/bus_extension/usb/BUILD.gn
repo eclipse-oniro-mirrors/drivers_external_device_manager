@@ -34,7 +34,7 @@ ohos_shared_library("driver_extension_usb_bus") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]

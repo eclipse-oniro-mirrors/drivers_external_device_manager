@@ -23,7 +23,7 @@ ohos_executable("bus_extension_usb_mt") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
   part_name = "external_device_manager"
   install_enable = false
@@ -41,7 +41,7 @@ ohos_executable("driver_extension_controller_mt") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "samgr:samgr_proxy",
   ]
   part_name = "external_device_manager"
@@ -64,7 +64,7 @@ ohos_executable("bus_extension_core_mt") {
   external_deps = [
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
   part_name = "external_device_manager"
   install_enable = false
@@ -86,9 +86,9 @@ ohos_executable("drivers_pkg_manager_mt") {
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hisysevent_native:libhisysevent",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",

@@ -32,7 +32,7 @@ ohos_unittest("device_manager_test") {
   external_deps = [
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
   configs = [ "${utils_path}:utils_config" ]
 }
