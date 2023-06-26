@@ -77,9 +77,9 @@ private:
     void PrintMatchDriverMap();
     string GetBundleName(string &bundleInfo) const;
     string GetAbilityName(string &bundleInfo) const;
-    int32_t AddDevIdOfBundleInfoMap(uint64_t deviceId, string &bundleInfo);
-    int32_t RemoveDevIdOfBundleInfoMap(uint64_t deviceId, string &bundleInfo);
-    int32_t RemoveAllDevIdOfBundleInfoMap(string &bundleInfo);
+    int32_t AddDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
+    int32_t RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
+    int32_t RemoveAllDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
     int32_t AddBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
     int32_t RemoveBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
     int32_t UpdateBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
