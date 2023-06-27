@@ -4,8 +4,7 @@
         {
             "name": 5110,
             "libpath": "libdriver_extension_manager.z.so",
-            "run-on-create": false,
-            "auto-restart": true,
+            "run-on-create": true,
             "distributed": false,
             "dump_level": 1
         }

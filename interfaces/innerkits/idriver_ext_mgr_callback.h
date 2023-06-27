@@ -17,11 +17,8 @@
 #define IDRIVER_EXTENSION_MANAGER_CALLBACK_H
 
 #include <string>
-
 #include <iremote_broker.h>
-
 #include "driver_ext_mgr_types.h"
-
 #include "edm_errors.h"
 
 namespace OHOS {

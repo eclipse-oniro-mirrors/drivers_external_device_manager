@@ -97,7 +97,7 @@ int32_t DriverExtMgrStub::OnBindDevice(MessageParcel &data, MessageParcel &reply
 
     UsbErrCode ret = BindDevice(deviceId, connectCallback);
     if (ret != UsbErrCode::EDM_OK) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call QueryDevice function:%{public}d", static_cast<int32_t>(ret));
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call BindDevice function:%{public}d", static_cast<int32_t>(ret));
         return ret;
     }
 
@@ -114,7 +114,7 @@ int32_t DriverExtMgrStub::OnUnBindDevice(MessageParcel &data, MessageParcel &rep
 
     UsbErrCode ret = UnBindDevice(deviceId);
     if (ret != UsbErrCode::EDM_OK) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call QueryDevice function:%{public}d", static_cast<int32_t>(ret));
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call UnBindDevice function:%{public}d", static_cast<int32_t>(ret));
         return ret;
     }
 

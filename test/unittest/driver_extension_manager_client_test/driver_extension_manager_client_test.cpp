@@ -47,6 +47,9 @@ HWTEST_F(DrvExtMgrClientTest, QueryDevice002, TestSize.Level1)
     UsbErrCode ret = DriverExtMgrClient::GetInstance().QueryDevice(busType, devices);
     ASSERT_EQ(ret, UsbErrCode::EDM_OK);
     std::cout << "size of devices:" << devices.size() << std::endl;
+    for (const auto &device : devices) {
+        std::cout << device->Dump() << std::endl;
+    }
 }
 
 HWTEST_F(DrvExtMgrClientTest, BindDevice001, TestSize.Level1)
@@ -98,14 +101,14 @@ HWTEST_F(DrvExtMgrClientTest, BindDevice002, TestSize.Level1)
     uint64_t deviceId = 0;
     sptr<IDriverExtMgrCallback> connectCallback = new DriverExtMgrCallbackTest {};
     UsbErrCode ret = DriverExtMgrClient::GetInstance().BindDevice(deviceId, connectCallback);
-    ASSERT_EQ(ret, UsbErrCode::EDM_OK);
+    ASSERT_EQ(ret, UsbErrCode::EDM_NOK);
 }
 
 HWTEST_F(DrvExtMgrClientTest, UnBindDevice001, TestSize.Level1)
 {
     uint64_t deviceId = 0;
     UsbErrCode ret = DriverExtMgrClient::GetInstance().UnBindDevice(deviceId);
-    ASSERT_EQ(ret, UsbErrCode::EDM_OK);
+    ASSERT_EQ(ret, UsbErrCode::EDM_NOK);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS
