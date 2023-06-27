@@ -89,6 +89,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
         EDM_LOGW(MODULE_BUS_USB,  "driver bus not support by this module [UsbBusExtension]");
         return false;
     }
+
     if (device.GetBusType() != BusType::BUS_TYPE_USB) {
         EDM_LOGW(MODULE_BUS_USB,  "deivce type not support %d != %d",
             (uint32_t)device.GetBusType(), (uint32_t)BusType::BUS_TYPE_USB);
@@ -105,7 +106,6 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     EDM_LOGD(MODULE_BUS_USB, "UsbDriverInfo:%{public}s", usbDrvInfoStr.c_str());
     EDM_LOGD(MODULE_BUS_USB, "UsbDeviceInfo: vid = %{public}d, pid = %{public}d",
         usbDeviceInfo->idVendor_, usbDeviceInfo->idProduct_);
-
     auto vidFind = find(usbDriverInfo->vids_.begin(), usbDriverInfo->vids_.end(), usbDeviceInfo->idVendor_);
     if (vidFind == usbDriverInfo->vids_.end()) {
         EDM_LOGI(MODULE_BUS_USB,  "vid not match\n");

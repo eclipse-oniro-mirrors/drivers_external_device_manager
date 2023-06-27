@@ -22,6 +22,8 @@
 #include "driver_pkg_manager.h"
 #include "ibus_extension.h"
 #include "usb_device_info.h"
+#include "dev_change_callback.h"
+#include "bus_extension_core.h"
 #undef private
 
 constexpr const char *START_TEXT = "Begin to loop and listen pkg event:\n\
@@ -51,8 +53,14 @@ static void PrintQueryMatchDriver()
 int main(int argc, char **argv)
 {
     cout << START_TEXT << endl;
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    bool ret = BusExtensionCore::GetInstance().Init(callback);
+    if (ret != EDM_OK) {
+        cout << "BusExtensionCore init failed" << endl;
+        return ret;
+    }
     DriverPkgManager &drvPkgMgrInstance = DriverPkgManager::GetInstance();
-    bool ret = drvPkgMgrInstance.Init();
+    ret = drvPkgMgrInstance.Init();
     if (ret != EDM_OK) {
         cout << "drvPkgMgrInstance init failed" << endl;
         return ret;
