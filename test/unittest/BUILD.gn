@@ -39,7 +39,7 @@ ohos_unittest("bus_extension_usb_test") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "samgr:samgr_proxy",
   ]
   configs = [ "${utils_path}:utils_config" ]
@@ -60,7 +60,7 @@ ohos_unittest("driver_extension_controller_test") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "samgr:samgr_proxy",
   ]
   configs = [ "${utils_path}:utils_config" ]
@@ -89,7 +89,7 @@ ohos_unittest("drivers_pkg_manager_test") {
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
@@ -108,7 +108,7 @@ ohos_unittest("driver_extension_manager_client_test") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_single",
   ]
 }

@@ -22,7 +22,7 @@ ohos_shared_library("driver_extension_bus_core") {
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "hdf"
