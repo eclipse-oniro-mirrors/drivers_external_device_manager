@@ -50,9 +50,9 @@ DrvBundleStateCallback::DrvBundleStateCallback()
 
     std::map<string, DriverInfo> drvInfos_;
     if (GetAllDriverInfos(drvInfos_)) {
-        HDF_LOGI("GetAllDriverInfos in DrvBundleStateCallback OK");
+        EDM_LOGE(MODULE_PKG_MGR, "GetAllDriverInfos in DrvBundleStateCallback OK");
     } else {
-        HDF_LOGE("GetAllDriverInfos in DrvBundleStateCallback ERR");
+        EDM_LOGE(MODULE_PKG_MGR, "GetAllDriverInfos in DrvBundleStateCallback ERR");
     }
 };
 
@@ -140,7 +140,7 @@ bool DrvBundleStateCallback::GetAllDriverInfos(std::map<string, DriverInfo> &dri
     // query history bundle
     auto iBundleMgr = GetBundleMgrProxy();
     if (iBundleMgr == nullptr) {
-        HDF_LOGE("Can not get iBundleMgr");
+        EDM_LOGE(MODULE_PKG_MGR, "Can not get iBundleMgr");
         driverInfos = allDrvInfos_;
         return false;
     }
@@ -150,7 +150,7 @@ bool DrvBundleStateCallback::GetAllDriverInfos(std::map<string, DriverInfo> &dri
     int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY) + \
                     static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
     if (!(iBundleMgr->GetBundleInfos(flags, bundleInfos, userId))) {
-        HDF_LOGE("GetBundleInfos err");
+        EDM_LOGE(MODULE_PKG_MGR, "GetBundleInfos err");
         driverInfos = allDrvInfos_;
         return false;
     }
@@ -170,15 +170,15 @@ bool DrvBundleStateCallback::CheckBundleMgrProxyPermission()
     // check permission
     auto iBundleMgr = GetBundleMgrProxy();
     if (iBundleMgr == nullptr) {
-        HDF_LOGE("Can not get iBundleMgr");
+        EDM_LOGE(MODULE_PKG_MGR, "Can not get iBundleMgr");
         return false;
     }
     if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
-        HDF_LOGE("non-system app calling system api");
+        EDM_LOGE(MODULE_PKG_MGR, "non-system app calling system api");
         return false;
     }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
-        HDF_LOGE("register bundle status callback failed due to lack of permission");
+        EDM_LOGE(MODULE_PKG_MGR, "register bundle status callback failed due to lack of permission");
         return false;
     }
     return true;
@@ -190,12 +190,12 @@ ErrCode DrvBundleStateCallback::QueryExtensionAbilityInfos(const std::string &bu
     extensionInfos_.clear();
 
     if (bundleName.empty()) {
-        HDF_LOGE("BundleName empty");
+        EDM_LOGE(MODULE_PKG_MGR, "BundleName empty");
         return ERR_DRV_STATUS_CALLBACK_ERROR;
     }
 
     if (bundleMgr_ == nullptr) {
-        HDF_LOGE("BundleMgr_ nullptr");
+        EDM_LOGE(MODULE_PKG_MGR, "BundleMgr_ nullptr");
         return ERR_DRV_STATUS_CALLBACK_ERROR;
     }
  
@@ -203,13 +203,13 @@ ErrCode DrvBundleStateCallback::QueryExtensionAbilityInfos(const std::string &bu
     int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY) + \
                     static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
     if (!(bundleMgr_->GetBundleInfo(bundleName, flags, tmpBundleInfo, userId))) {
-        HDF_LOGE("GetBundleInfo err");
+        EDM_LOGE(MODULE_PKG_MGR, "GetBundleInfo err");
         return ERR_DRV_STATUS_CALLBACK_ERROR;
     }
 
     extensionInfos_ = tmpBundleInfo.extensionInfos;
     if (extensionInfos_.empty()) {
-        HDF_LOGE("GetBundleInfo extensionInfos_ empty");
+        EDM_LOGE(MODULE_PKG_MGR, "GetBundleInfo extensionInfos_ empty");
         return ERR_DRV_STATUS_CALLBACK_ERROR;
     }
 
@@ -294,11 +294,11 @@ int32_t DrvBundleStateCallback::GetCurrentActiveUserId()
     std::vector<int32_t> activeIds;
     int ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
     if (ret != 0) {
-        HDF_LOGE("QueryActiveOsAccountIds failed ret:%{public}d", ret);
+        EDM_LOGE(MODULE_PKG_MGR, "QueryActiveOsAccountIds failed ret:%{public}d", ret);
         return Constants::INVALID_USERID;
     }
     if (activeIds.empty()) {
-        HDF_LOGE("QueryActiveOsAccountIds activeIds empty");
+        EDM_LOGE(MODULE_PKG_MGR, "QueryActiveOsAccountIds activeIds empty");
         return Constants::ALL_USERID;
     }
     return activeIds[0];
@@ -311,17 +311,17 @@ sptr<OHOS::AppExecFwk::IBundleMgr> DrvBundleStateCallback::GetBundleMgrProxy()
         if (bundleMgr_ == nullptr) {
             auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
             if (systemAbilityManager == nullptr) {
-                HDF_LOGE("GetBundleMgr GetSystemAbilityManager is null");
+                EDM_LOGE(MODULE_PKG_MGR, "GetBundleMgr GetSystemAbilityManager is null");
                 return nullptr;
             }
             auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
             if (bundleMgrSa == nullptr) {
-                HDF_LOGE("GetBundleMgr GetSystemAbility is null");
+                EDM_LOGE(MODULE_PKG_MGR, "GetBundleMgr GetSystemAbility is null");
                 return nullptr;
             }
             auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
             if (bundleMgr == nullptr) {
-                HDF_LOGE("GetBundleMgr iface_cast get null");
+                EDM_LOGE(MODULE_PKG_MGR, "GetBundleMgr iface_cast get null");
             }
             bundleMgr_ = bundleMgr;
         }

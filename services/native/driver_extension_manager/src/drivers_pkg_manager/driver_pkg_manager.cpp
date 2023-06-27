@@ -42,7 +42,7 @@ DriverPkgManager::DriverPkgManager()
 DriverPkgManager::~DriverPkgManager()
 {
     if (UnRegisterCallback() == 0) {
-        HDF_LOGE("~DriverPkgManager UnRegisterCallback Fail");
+        EDM_LOGE(MODULE_PKG_MGR, "~DriverPkgManager UnRegisterCallback Fail");
     }
     delete bundleStateCallback_;
     bundleStateCallback_ = nullptr;
@@ -63,20 +63,20 @@ int32_t DriverPkgManager::Init()
     bundleMonitor_ = std::make_shared<BundleMonitor>(subscribeInfo);
 
     if (bundleMonitor_ == nullptr) {
-        HDF_LOGE("bundleMonitor_ new Err");
+        EDM_LOGE(MODULE_PKG_MGR, "bundleMonitor_ new Err");
         return EDM_ERR_INVALID_OBJECT;
     }
 
     bundleStateCallback_ = new DrvBundleStateCallback();
 
     if (bundleStateCallback_ == nullptr) {
-        HDF_LOGE("bundleStateCallback_ new Err");
+        EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ new Err");
         return EDM_ERR_INVALID_OBJECT;
     }
 
     std::map<string, DriverInfo> drvInfos_;
     if (!bundleStateCallback_->GetAllDriverInfos(drvInfos_)) {
-        HDF_LOGE("bundleStateCallback_ GetAllDriverInfos Err");
+        EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ GetAllDriverInfos Err");
         return EDM_ERR_NOT_SUPPORT;
     }
     // register calback to BMS
@@ -92,13 +92,13 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
     ret->abilityName.clear();
 
     if (bundleStateCallback_ == nullptr) {
-        HDF_LOGE("QueryMatchDriver bundleStateCallback_ null");
+        EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver bundleStateCallback_ null");
         return nullptr;
     }
 
     std::map<string, DriverInfo> drvInfos_;
     if (!bundleStateCallback_->GetAllDriverInfos(drvInfos_)) {
-        HDF_LOGE("QueryMatchDriver GetAllDriverInfos Err");
+        EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetAllDriverInfos Err");
         return nullptr;
     }
 
@@ -134,17 +134,17 @@ int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &ca
 {
     EDM_LOGE(MODULE_PKG_MGR, "RegisterCallback called");
     if (bundleStateCallback_ == nullptr) {
-        HDF_LOGE("failed to register callback, bundleStateCallback_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
 
     if (!bundleStateCallback_->CheckBundleMgrProxyPermission()) {
-        HDF_LOGE("failed to register callback, Permission check is false");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, Permission check is false");
         return EDM_ERR_NOT_SUPPORT;
     }
 
     if (bundleMonitor_ == nullptr) {
-        HDF_LOGE("failed to register callback, bundleMonitor_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, bundleMonitor_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
 
@@ -159,17 +159,17 @@ int32_t DriverPkgManager::UnRegisterCallback()
 {
     EDM_LOGE(MODULE_PKG_MGR, "UnRegisterCallback called");
     if (bundleStateCallback_ == nullptr) {
-        HDF_LOGE("failed to unregister callback, bundleStateCallback_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to unregister callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
 
     if (!bundleStateCallback_->CheckBundleMgrProxyPermission()) {
-        HDF_LOGE("failed to unregister callback, Permission check is false");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to unregister callback, Permission check is false");
         return EDM_ERR_NOT_SUPPORT;
     }
 
     if (bundleMonitor_ == nullptr) {
-        HDF_LOGE("failed to unregister callback, bundleMonitor is null");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to unregister callback, bundleMonitor is null");
         return EDM_ERR_INVALID_OBJECT;
     }
 
@@ -187,7 +187,7 @@ int32_t DriverPkgManager::RegisterOnBundleUpdate(PCALLBACKFUN pFun)
     }
 
     if (bundleStateCallback_ == nullptr) {
-        HDF_LOGE("failed to register callback, bundleStateCallback_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
     bundleStateCallback_->m_pFun = pFun;
@@ -197,7 +197,7 @@ int32_t DriverPkgManager::RegisterOnBundleUpdate(PCALLBACKFUN pFun)
 int32_t DriverPkgManager::UnRegisterOnBundleUpdate()
 {
     if (bundleStateCallback_ == nullptr) {
-        HDF_LOGE("failed to unregister callback, bundleStateCallback_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "failed to unregister callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
     bundleStateCallback_->m_pFun = nullptr;
