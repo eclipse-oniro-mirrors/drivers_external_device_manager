@@ -44,6 +44,7 @@ public:
 
     virtual bool Marshalling(MessageParcel &parcel) const;
     static std::shared_ptr<DeviceData> UnMarshalling(MessageParcel &parcel);
+    virtual std::string Dump();
 
     BusType busType;
     uint64_t deviceId;
@@ -56,9 +57,10 @@ public:
 
     bool Marshalling(MessageParcel &parcel) const override;
     static std::shared_ptr<DeviceData> UnMarshalling(MessageParcel &parcel);
+    std::string Dump() override;
 
-    std::string productId;
-    std::string vendorId;
+    uint16_t productId;
+    uint16_t vendorId;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

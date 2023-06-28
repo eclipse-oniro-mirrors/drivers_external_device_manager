@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+ 
 #include "driver_ext_mgr_types.h"
+#include <sstream>
 #include "hilog_wrapper.h"
 
 namespace OHOS {
@@ -50,17 +51,17 @@ bool ErrMsg::UnMarshalling(MessageParcel &parcel, ErrMsg &data)
 
 bool DeviceData::Marshalling(MessageParcel &parcel) const
 {
-    if (parcel.WriteUint32(static_cast<uint32_t>(busType))) {
+    if (!parcel.WriteUint32(static_cast<uint32_t>(busType))) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to write busType");
         return false;
     }
 
-    if (parcel.WriteUint64(deviceId)) {
+    if (!parcel.WriteUint64(deviceId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to write deviceId");
         return false;
     }
 
-    if (parcel.WriteString(descripton)) {
+    if (!parcel.WriteString(descripton)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to write descripton");
         return false;
     }
@@ -70,16 +71,16 @@ bool DeviceData::Marshalling(MessageParcel &parcel) const
 
 bool USBDevice::Marshalling(MessageParcel &parcel) const
 {
-    if (DeviceData::Marshalling(parcel)) {
+    if (!DeviceData::Marshalling(parcel)) {
         return false;
     }
 
-    if (parcel.WriteString(productId)) {
+    if (!parcel.WriteUint16(productId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to write productId");
         return false;
     }
 
-    if (parcel.WriteString(vendorId)) {
+    if (!parcel.WriteUint16(vendorId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to write vendorId");
         return false;
     }
@@ -118,6 +119,15 @@ std::shared_ptr<DeviceData> DeviceData::UnMarshalling(MessageParcel &parcel)
     return device;
 }
 
+std::string DeviceData::Dump()
+{
+    std::stringstream os;
+    os << "{busType:" << busType << ", ";
+    os << "deviceId:" << deviceId << ", ";
+    os << "descripton:" << descripton << "}";
+    return os.str();
+}
+
 std::shared_ptr<DeviceData> USBDevice::UnMarshalling(MessageParcel &parcel)
 {
     // the busType has been read
@@ -132,17 +142,28 @@ std::shared_ptr<DeviceData> USBDevice::UnMarshalling(MessageParcel &parcel)
         return nullptr;
     }
 
-    if (!parcel.ReadString(device->productId)) {
+    if (!parcel.ReadUint16(device->productId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read productId");
         return nullptr;
     }
 
-    if (!parcel.ReadString(device->vendorId)) {
+    if (!parcel.ReadUint16(device->vendorId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read vendorId");
         return nullptr;
     }
 
     return device;
+}
+
+std::string USBDevice::Dump()
+{
+    std::stringstream os;
+    os << "{busType:" << busType << ", ";
+    os << "deviceId:" << deviceId << ", ";
+    os << "descripton:" << descripton << ", ";
+    os << "productId:" << productId << ", ";
+    os << "vendorId:" << vendorId << "}";
+    return os.str();
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

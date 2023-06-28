@@ -33,7 +33,6 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     UsbErrCode UnBindDevice(uint64_t deviceId) override;
-    void DeleteConnectCallback(const wptr<IRemoteObject> &remote);
 private:
 
     std::mutex connectCallbackMutex;

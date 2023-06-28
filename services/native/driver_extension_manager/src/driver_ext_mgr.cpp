@@ -16,13 +16,13 @@
 #include "driver_ext_mgr.h"
 #include "bus_extension_core.h"
 #include "dev_change_callback.h"
-#include "driver_ext_mgr_callback_death_recipient.h"
 #include "driver_pkg_manager.h"
 #include "edm_errors.h"
 #include "etx_device_mgr.h"
 #include "hilog_wrapper.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "usb_device_info.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -80,12 +80,13 @@ UsbErrCode DriverExtMgr::QueryDevice(uint32_t busType, std::vector<std::shared_p
     for (const auto &deviceInfo : deviceInfos) {
         switch (deviceInfo->GetBusType()) {
             case BusType::BUS_TYPE_USB: {
+                std::shared_ptr<UsbDeviceInfo> usbDeviceInfo = std::static_pointer_cast<UsbDeviceInfo>(deviceInfo);
                 std::shared_ptr<USBDevice> device = std::make_shared<USBDevice>();
-                device->busType = deviceInfo->GetBusType();
-                device->deviceId = deviceInfo->GetDeviceId();
-                device->descripton = deviceInfo->GetDeviceDescription();
-                device->productId = "";
-                device->vendorId = "";
+                device->busType = usbDeviceInfo->GetBusType();
+                device->deviceId = usbDeviceInfo->GetDeviceId();
+                device->descripton = usbDeviceInfo->GetDeviceDescription();
+                device->productId = usbDeviceInfo->GetProductId();
+                device->vendorId = usbDeviceInfo->GetVendorId();
                 devices.push_back(device);
                 break;
             }
@@ -98,85 +99,16 @@ UsbErrCode DriverExtMgr::QueryDevice(uint32_t busType, std::vector<std::shared_p
     return UsbErrCode::EDM_OK;
 }
 
-static bool RegisteDeathRecipient(const sptr<IDriverExtMgrCallback> &connectCallback)
-{
-    sptr<DriverExtMgrCallbackDeathRecipient> deathRecipient = new DriverExtMgrCallbackDeathRecipient();
-    return connectCallback->AsObject()->AddDeathRecipient(deathRecipient);
-}
-
 UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    std::lock_guard<std::mutex> lock(connectCallbackMutex);
-    auto connectCallbackListIter = connectCallbackMap.find(deviceId);
-    if (connectCallbackListIter == connectCallbackMap.end()) {
-        if (!RegisteDeathRecipient(connectCallback)) {
-            EDM_LOGE(MODULE_DEV_MGR, "%{public}s failed to add death recipient", __func__);
-            return UsbErrCode::EDM_NOK;
-        }
-        connectCallbackMap[deviceId].push_back(connectCallback);
-        connectCallback->OnConnect(0, nullptr, {UsbErrCode::EDM_ERR_NOT_SUPPORT, ""});
-        connectCallback->OnDisconnect(0, {UsbErrCode::EDM_ERR_NOT_SUPPORT, ""});
-        return UsbErrCode::EDM_OK;
-    }
-
-    auto &connectCallbackList = connectCallbackListIter->second;
-    auto iter = std::find_if(connectCallbackList.begin(), connectCallbackList.end(),
-        [&connectCallback](const sptr<IDriverExtMgrCallback> &element) {
-            return connectCallback->AsObject() == element->AsObject();
-        });
-
-    if (iter != connectCallbackList.end()) {
-        (*iter)->OnConnect(0, nullptr, {UsbErrCode::EDM_ERR_NOT_SUPPORT, ""});
-        (*iter)->OnDisconnect(0, {UsbErrCode::EDM_ERR_NOT_SUPPORT, ""});
-        return UsbErrCode::EDM_OK;
-    }
-
-    if (!RegisteDeathRecipient(connectCallback)) {
-        EDM_LOGE(MODULE_DEV_MGR, "%{public}s failed to add death recipient", __func__);
-        return UsbErrCode::EDM_NOK;
-    }
-    connectCallbackList.push_back(connectCallback);
-    connectCallback->OnConnect(0, nullptr, {UsbErrCode::EDM_ERR_NOT_SUPPORT, ""});
-    connectCallback->OnDisconnect(0, {UsbErrCode::EDM_ERR_NOT_SUPPORT, ""});
-    return UsbErrCode::EDM_OK;
+    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, connectCallback));
 }
 
 UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
 {
-    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
-
-    std::lock_guard<std::mutex> lock(connectCallbackMutex);
-    auto connectCallbackListIter = connectCallbackMap.find(deviceId);
-    if (connectCallbackListIter == connectCallbackMap.end()) {
-        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
-    }
-
-    auto &connectCallbackList = connectCallbackListIter->second;
-    for (const auto &connectCallback : connectCallbackList) {
-        connectCallback->OnUnBind(deviceId, {UsbErrCode::EDM_ERR_NOT_SUPPORT, ""});
-    }
-    connectCallbackMap.erase(deviceId);
-
-    return UsbErrCode::EDM_OK;
-}
-
-void DriverExtMgr::DeleteConnectCallback(const wptr<IRemoteObject> &remote)
-{
-    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
-
-    std::lock_guard<std::mutex> lock(connectCallbackMutex);
-    for (auto &connectCallbackListPair : connectCallbackMap) {
-        auto &connectCallbackList = connectCallbackListPair.second;
-        auto iter = std::find_if(connectCallbackList.begin(), connectCallbackList.end(),
-            [&remote](const sptr<IDriverExtMgrCallback> &element) {
-                return remote == element->AsObject();
-            });
-        if (iter != connectCallbackList.end()) {
-            connectCallbackList.erase(iter);
-            break;
-        }
-    }
+    EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId));
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

@@ -23,6 +23,17 @@ public:
     UsbDeviceInfo(uint32_t busDeviceId, const std::string &description = "")
         : DeviceInfo(busDeviceId, BusType::BUS_TYPE_USB, description) { }
     ~UsbDeviceInfo() = default;
+
+    uint16_t GetVendorId() const
+    {
+        return idVendor_;
+    }
+
+    uint16_t GetProductId() const
+    {
+        return idProduct_;
+    }
+
 private:
     friend class UsbBusExtension;
     friend class UsbDevSubscriber;
