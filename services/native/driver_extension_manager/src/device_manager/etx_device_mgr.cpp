@@ -29,6 +29,12 @@ constexpr uint32_t UNLOAD_SA_TIMER_INTERVAL = 30 * 1000;
 std::string Device::stiching_ = "_stiching_";
 IMPLEMENT_SINGLE_INSTANCE(ExtDeviceManager);
 
+ExtDeviceManager::~ExtDeviceManager()
+{
+    unloadSelftimer_.Unregister(unloadSelftimerId_);
+    unloadSelftimer_.Shutdown();
+}
+
 void ExtDeviceManager::PrintMatchDriverMap()
 {
     if (!bundleMatchMap_.empty()) {
@@ -59,7 +65,7 @@ int32_t ExtDeviceManager::AddDevIdOfBundleInfoMap(shared_ptr<Device> device, str
 {
     if (bundleInfo.empty() || device == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "bundleInfo or device is null");
-        return EDM_NOK;
+        return EDM_ERR_INVALID_PARAM;
     }
 
     // update bundle info
@@ -70,17 +76,24 @@ int32_t ExtDeviceManager::AddDevIdOfBundleInfoMap(shared_ptr<Device> device, str
         unordered_set<uint64_t> tmpSet;
         tmpSet.emplace(deviceId);
         bundleMatchMap_.emplace(bundleInfo, tmpSet);
-        EDM_LOGD(MODULE_DEV_MGR, "bundleMap emplace New driver, add deviceId %{public}016" PRIX64 "", deviceId);
+        EDM_LOGI(MODULE_DEV_MGR, "bundleMap emplace New driver, add deviceId %{public}016" PRIX64 "", deviceId);
     } else {
         auto pairRet = pos->second.emplace(deviceId);
         // Check whether the deviceId matches the driver
         if (!pairRet.second || pos->second.size() > 1) {
-            EDM_LOGD(MODULE_DEV_MGR, "bundleMap had existed driver, add deviceId %{public}016" PRIX64 "", deviceId);
+            EDM_LOGI(MODULE_DEV_MGR, "bundleMap had existed driver, add deviceId %{public}016" PRIX64 "", deviceId);
             PrintMatchDriverMap();
         }
     }
 
     // start ability
+    int32_t ret = device->Connect();
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_DEV_MGR,
+            "deviceId[%{public}016" PRIX64 "] connect driver extension ability[%{public}s] failed[%{public}d]",
+            deviceId, Device::GetAbilityName(bundleInfo).c_str(), ret);
+        return EDM_NOK;
+    }
     PrintMatchDriverMap();
     return EDM_OK;
 }
@@ -89,7 +102,7 @@ int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, 
 {
     if (bundleInfo.empty() || device == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "bundleInfo or device is null");
-        return EDM_NOK;
+        return EDM_ERR_INVALID_PARAM;
     }
 
     // update bundle info
@@ -112,6 +125,14 @@ int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, 
     EDM_LOGD(MODULE_DEV_MGR, "bundleMap remove bundleInfo[%{public}s]", bundleInfo.c_str());
     bundleMatchMap_.erase(pos);
 
+    // stop ability and destory sa
+    int32_t ret = device->Disconnect();
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_DEV_MGR,
+            "deviceId[%{public}016" PRIX64 "] disconnect driver extension ability[%{public}s] failed[%{public}d]",
+            deviceId, Device::GetAbilityName(bundleInfo).c_str(), ret);
+        return ret;
+    }
     PrintMatchDriverMap();
     return EDM_OK;
 }
@@ -130,6 +151,13 @@ int32_t ExtDeviceManager::RemoveAllDevIdOfBundleInfoMap(shared_ptr<Device> devic
     }
 
     bundleMatchMap_.erase(pos);
+    // stop ability and destory sa
+    int32_t ret = device->Disconnect();
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_DEV_MGR, "disconnect driver extension ability[%{public}s] failed[%{public}d]",
+            Device::GetAbilityName(bundleInfo).c_str(), ret);
+        return ret;
+    }
     return EDM_OK;
 }
 
@@ -281,20 +309,29 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
 {
     BusType type = devInfo->GetBusType();
     uint64_t deviceId = devInfo->GetDeviceId();
-
+    shared_ptr<Device> device;
     lock_guard<mutex> lock(deviceMapMutex_);
     if (deviceMap_.find(type) != deviceMap_.end()) {
         unordered_map<uint64_t, shared_ptr<Device>> &map = deviceMap_[type];
         if (map.find(deviceId) != map.end()) {
+            device = map.find(deviceId)->second;
+            // device has been registered and do not need to connect again
+            if (device->GetDrvExtRemote() != nullptr) {
+                EDM_LOGI(MODULE_DEV_MGR, "device has been registered, deviceId is %{public}016" PRIx64 "", deviceId);
+                return EDM_OK;
+            }
             // device has been registered and need to connect
             EDM_LOGI(MODULE_DEV_MGR, "device has been registered, deviceId is %{public}016" PRIx64 "", deviceId);
-            return EDM_OK;
         }
     }
     EDM_LOGD(MODULE_DEV_MGR, "begin to register device, deviceId is %{public}016" PRIx64 "", deviceId);
-
+    // device need to register
+    if (device == nullptr) {
+        device = make_shared<Device>(devInfo);
+        deviceMap_[type].emplace(deviceId, device);
+        EDM_LOGI(MODULE_DEV_MGR, "successfully registered device, deviceId = %{public}016" PRIx64 "", deviceId);
+    }
     // driver match
-    std::shared_ptr<Device> device = make_shared<Device>(devInfo);
     std::string bundleInfo = device->GetBundleInfo();
     // if device does not have a matching driver, match driver here
     if (bundleInfo.empty()) {
@@ -304,9 +341,6 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
             device->AddBundleInfo(bundleInfo);
         }
     }
-    // register device
-    deviceMap_[type].emplace(deviceId, device);
-    EDM_LOGD(MODULE_DEV_MGR, "successfully registered device, deviceId = %{public}016" PRIx64 "", deviceId);
     unloadSelftimer_.Unregister(unloadSelftimerId_);
 
     // match driver failed, waitting to install driver package
@@ -322,7 +356,7 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
             ret);
         return EDM_NOK;
     }
-    EDM_LOGD(MODULE_DEV_MGR, "successfully match driver[%{public}s], deviceId is %{public}016" PRIx64 "",
+    EDM_LOGI(MODULE_DEV_MGR, "successfully match driver[%{public}s], deviceId is %{public}016" PRIx64 "",
         bundleInfo.c_str(), deviceId);
 
     return ret;

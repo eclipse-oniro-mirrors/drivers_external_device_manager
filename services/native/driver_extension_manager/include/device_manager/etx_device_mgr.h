@@ -33,7 +33,7 @@ class ExtDeviceManager final {
     DECLARE_SINGLE_INSTANCE_BASE(ExtDeviceManager);
 
 public:
-    ~ExtDeviceManager() = default;
+    ~ExtDeviceManager();
     int32_t Init();
     int32_t RegisterDevice(shared_ptr<DeviceInfo> devInfo);
     int32_t UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo);
