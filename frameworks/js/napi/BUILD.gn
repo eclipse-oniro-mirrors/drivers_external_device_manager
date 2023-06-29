@@ -16,8 +16,8 @@ import("//foundation/ability/ability_runtime/ability_runtime.gni")
 
 group("napi_packages") {
   deps = [
+    "device_manager:devicemanager_napi",
     "driver_extension_ability:driverextensionability",
     "driver_extension_context:driverextensioncontext_napi",
-    "device_manager:devicemanager_napi",
   ]
 }
