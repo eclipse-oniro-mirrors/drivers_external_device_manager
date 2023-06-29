@@ -27,6 +27,11 @@
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+constexpr int32_t PARAM_COUNT_1 = 1;
+constexpr int32_t PARAM_COUNT_2 = 2;
+constexpr int32_t PARAM_COUNT_3 = 3;
+constexpr uint64_t MAX_JS_NUMBER = 9007199254740991;
+
 static const std::map<int32_t, std::string> ERROR_MESSAGES = {
     {SERVICE_EXCEPTION,  "Service exception."},
     {PERMISSION_DENIED,  "Permission denied."},
@@ -41,6 +46,63 @@ static sptr<DeviceManagerCallback> g_edmCallback = new (std::nothrow) DeviceMana
 static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errMsg);
 static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId);
 static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj);
+
+static void BindDeviceWorkCb(uv_work_t *work, int status)
+{
+    if (work == nullptr) {
+        return;
+    }
+    sptr<AsyncData> data(reinterpret_cast<AsyncData *>(work->data));
+    data->DecStrongRef(nullptr);
+    delete work;
+
+    napi_value result = GetCallbackResult(data->env, data->deviceId, data->drvExtObj);
+    napi_value err = ConvertToBusinessError(data->env, data->errMsg);
+    if (data->bindCallback != nullptr) {
+        napi_value callback;
+        napi_get_reference_value(data->env, data->bindCallback, &callback);
+        napi_value argv[PARAM_COUNT_2] = {err, result};
+        napi_value callResult;
+        napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
+        EDM_LOGI(MODULE_DEV_MGR, "bind device callback finish.");
+    } else if (data->bindDeferred != nullptr) {
+        if (data->errMsg.IsOk()) {
+            napi_resolve_deferred(data->env, data->bindDeferred, result);
+        } else {
+            napi_reject_deferred(data->env, data->bindDeferred, err);
+        }
+        EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
+    }
+}
+
+static void UnbindDeviceWorkCb(uv_work_t *work, int status)
+{
+    if (work == nullptr) {
+        return;
+    }
+    sptr<AsyncData> data(reinterpret_cast<AsyncData *>(work->data));
+    data->DecStrongRef(nullptr);
+    delete work;
+
+    napi_value err = ConvertToBusinessError(data->env, data->errMsg);
+    napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
+    if (data->unbindCallback != nullptr) {
+        napi_value callback;
+        NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->unbindCallback, &callback));
+
+        napi_value argv[PARAM_COUNT_2] = {err, result};
+        napi_value callResult;
+        napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
+        EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
+    } else if (data->bindDeferred != nullptr) {
+        if (data->errMsg.IsOk()) {
+            napi_resolve_deferred(data->env, data->unbindDeferred, result);
+        } else {
+            napi_reject_deferred(data->env, data->unbindDeferred, err);
+        }
+        EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
+    }
+}
 
 void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
@@ -66,32 +128,7 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
     asyncData->errMsg = errMsg;
     asyncData->IncStrongRef(nullptr);
     work->data = asyncData.GetRefPtr();
-    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        if (work == nullptr) {
-            return;
-        }
-        sptr<AsyncData> data(reinterpret_cast<AsyncData*>(work->data));
-        data->DecStrongRef(nullptr);
-        delete work;
-
-        napi_value result = GetCallbackResult(data->env, data->deviceId, data->drvExtObj);
-        napi_value err = ConvertToBusinessError(data->env, data->errMsg);
-        if (data->bindCallback != nullptr) {
-            napi_value callback;
-            napi_get_reference_value(data->env, data->bindCallback, &callback);
-            napi_value argv[2] = {err, result};
-            napi_value callResult;
-            napi_call_function(data->env, nullptr, callback, 2, argv, &callResult);
-            EDM_LOGI(MODULE_DEV_MGR, "bind device callback finish.");
-        } else if (data->bindDeferred != nullptr) {
-            if (data->errMsg.IsOk()) {
-                napi_resolve_deferred(data->env, data->bindDeferred, result);
-            } else {
-                napi_reject_deferred(data->env, data->bindDeferred, err);
-            }
-            EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
-        }
-    });
+    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, BindDeviceWorkCb);
     if (ret != 0) {
         delete work;
         asyncData->DecStrongRef(nullptr);
@@ -136,9 +173,9 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
 
         napi_value err = ConvertToBusinessError(data->env, data->errMsg);
         napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
-        napi_value argv[2] = {err, result};
+        napi_value argv[PARAM_COUNT_2] = {err, result};
         napi_value callResult;
-        napi_call_function(data->env, nullptr, callback, 2, argv, &callResult);
+        napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
         EDM_LOGI(MODULE_DEV_MGR, "onDisconnect callback finish.");
     });
     if (ret != 0) {
@@ -172,33 +209,7 @@ void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
     asyncData->errMsg = errMsg;
     asyncData->IncStrongRef(nullptr);
     work->data = asyncData.GetRefPtr();
-    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        if (work == nullptr) {
-            return;
-        }
-        sptr<AsyncData> data(reinterpret_cast<AsyncData*>(work->data));
-        data->DecStrongRef(nullptr);
-        delete work;
-
-        napi_value err = ConvertToBusinessError(data->env, data->errMsg);
-        napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
-        if (data->unbindCallback != nullptr) {
-            napi_value callback;
-            NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->unbindCallback, &callback));
-
-            napi_value argv[2] = {err, result};
-            napi_value callResult;
-            napi_call_function(data->env, nullptr, callback, 2, argv, &callResult);
-            EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
-        } else if (data->bindDeferred != nullptr) {
-            if (data->errMsg.IsOk()) {
-                napi_resolve_deferred(data->env, data->unbindDeferred, result);
-            } else {
-                napi_reject_deferred(data->env, data->unbindDeferred, err);
-            }
-            EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
-        }
-    });
+    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, UnbindDeviceWorkCb);
     if (ret != 0) {
         delete work;
         asyncData->DecStrongRef(nullptr);
@@ -407,8 +418,8 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     data->deviceId = deviceId;
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
     napi_value promise = nullptr;
-    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[2], napi_function)) {
-        NAPI_CALL(env, napi_create_reference(env, argv[2], 1, &data->bindCallback));
+    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
+        NAPI_CALL(env, napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback));
     } else {
         NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
     }
@@ -440,7 +451,7 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    if(g_edmClient.UnBindDevice(deviceId) != UsbErrCode::EDM_OK) {
+    if (g_edmClient.UnBindDevice(deviceId) != UsbErrCode::EDM_OK) {
         ThrowErr(env, SERVICE_EXCEPTION, "unbindDevice service failed");
         return nullptr;
     }
@@ -492,7 +503,7 @@ static napi_value ExtDeviceManagerInit(napi_env env, napi_value exports)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 
-    CreateEnumBusType(env, exports);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+    CreateEnumBusType(env, exports);
 
     return exports;
 }

@@ -24,11 +24,6 @@
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-constexpr int32_t PARAM_COUNT_1 = 1;
-constexpr int32_t PARAM_COUNT_2 = 2;
-constexpr int32_t PARAM_COUNT_3 = 3;
-constexpr uint64_t MAX_JS_NUMBER = 9007199254740991;
-
 enum ErrorCode : int32_t {
     PERMISSION_DENIED = 201, // Use this error code when permission is denied.
     PARAMETER_ERROR = 401, // Use this error code when the input parameter type or range does not match.
@@ -64,8 +59,7 @@ public:
     }
 };
 
-class DeviceManagerCallback : public DriverExtMgrCallbackStub
-{
+class DeviceManagerCallback : public DriverExtMgrCallbackStub {
 public:
     void OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg) override;
 
