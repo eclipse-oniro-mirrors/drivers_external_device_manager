@@ -18,5 +18,6 @@ group("napi_packages") {
   deps = [
     "driver_extension_ability:driverextensionability",
     "driver_extension_context:driverextensioncontext_napi",
+    "device_manager:devicemanager_napi",
   ]
 }
