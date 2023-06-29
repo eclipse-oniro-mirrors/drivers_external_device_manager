@@ -34,7 +34,7 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 IMPLEMENT_SINGLE_INSTANCE(BusExtensionCore);
 
-static void LoadLib()
+void BusExtensionCore::LoadBusExtensionLibs()
 {
     for (BusType i = BUS_TYPE_USB; i < BUS_TYPE_MAX; i = (BusType)(i + 1)) {
         std::ostringstream libPath;
@@ -58,7 +58,6 @@ static void LoadLib()
 
 int32_t BusExtensionCore::Init(std::shared_ptr<IDevChangeCallback> callback)
 {
-    LoadLib();
     int ret = EDM_OK;
     for (auto &iter : busExtensions_) {
         if (iter.second->SetDevChangeCallback(callback) != EDM_OK) {

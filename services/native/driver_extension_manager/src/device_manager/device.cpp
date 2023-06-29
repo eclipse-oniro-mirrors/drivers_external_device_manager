@@ -44,12 +44,13 @@ int32_t Device::Connect()
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    uint64_t deviceId = GetDeviceInfo()->GetDeviceId();
-    // temporary test data
-    std::string bundleName = "com.ohos.nativeapplication";
-    std::string abilityName = "DriverAbility";
+    uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
+    std::string bundleInfo = GetBundleInfo();
+    std::string bundleName = Device::GetBundleName(bundleInfo);
+    std::string abilityName = Device::GetAbilityName(bundleInfo);
+    AddDrvExtConnNotify();
     int32_t ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
-        bundleName, abilityName, connectNofitier_, deviceId);
+        bundleName, abilityName, connectNofitier_, busDevId);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
         return ret;
@@ -78,11 +79,13 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback)
     }
 
     UpdateDrvExtConnNotify();
-    // temporary test data
-    std::string bundleName = "com.ohos.nativeapplication";
-    std::string abilityName = "DriverAbility";
+    std::string bundleInfo = GetBundleInfo();
+    std::string bundleName = Device::GetBundleName(bundleInfo);
+    std::string abilityName = Device::GetAbilityName(bundleInfo);
+    AddDrvExtConnNotify();
+    uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
     ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
-        bundleName, abilityName, connectNofitier_, deviceId);
+        bundleName, abilityName, connectNofitier_, busDevId);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
         UnregisterDrvExtMgrCallback(connectCallback);
@@ -95,16 +98,12 @@ int32_t Device::Disconnect()
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    uint64_t deviceId = GetDeviceInfo()->GetDeviceId();
-    // std::string bundleInfo = GetBundleInfo();
-    // std::string bundleName = Device::GetBundleName(bundleInfo);
-    // std::string abilityName = Device::GetAbilityName(bundleInfo);
-
-    // temporary test data
-    std::string bundleName = "com.ohos.nativeapplication";
-    std::string abilityName = "DriverAbility";
+    uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
+    std::string bundleInfo = GetBundleInfo();
+    std::string bundleName = Device::GetBundleName(bundleInfo);
+    std::string abilityName = Device::GetAbilityName(bundleInfo);
     int32_t ret = DriverExtensionController::GetInstance().DisconnectDriverExtension(
-        bundleName, abilityName, connectNofitier_, deviceId);
+        bundleName, abilityName, connectNofitier_, busDevId);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
         return ret;

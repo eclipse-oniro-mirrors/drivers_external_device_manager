@@ -32,6 +32,7 @@ public:
     int32_t Init(std::shared_ptr<IDevChangeCallback> callback);
     int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
     std::shared_ptr<IBusExtension> GetBusExtensionByName(std::string busName);
+    void LoadBusExtensionLibs();
 
 private:
     BusExtensionCore() = default;

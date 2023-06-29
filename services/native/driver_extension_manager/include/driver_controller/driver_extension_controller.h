@@ -25,8 +25,9 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 class IDriverExtensionConnectCallback;
 class DriverExtensionController {
-    DECLARE_SINGLE_INSTANCE(DriverExtensionController);
+    DECLARE_SINGLE_INSTANCE_BASE(DriverExtensionController);
 public:
+    ~DriverExtensionController() = default;
     int32_t StartDriverExtension(std::string baudleName, std::string abilityName);
     int32_t StopDriverExtension(std::string bundleName, std::string abilityName);
     int32_t ConnectDriverExtension(
@@ -42,6 +43,9 @@ public:
         uint32_t deviceId = 0
     );
     class DriverExtensionAbilityConnection;
+
+private:
+    DriverExtensionController() = default;
 };
 
 struct DrvExtConnectionInfo {

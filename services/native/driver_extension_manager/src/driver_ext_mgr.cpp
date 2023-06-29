@@ -23,6 +23,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "usb_device_info.h"
+#include "driver_extension_controller.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -36,6 +37,7 @@ void DriverExtMgr::OnStart()
 {
     int32_t ret;
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStart");
+    BusExtensionCore::GetInstance().LoadBusExtensionLibs();
     ret = DriverPkgManager::GetInstance().Init();
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_SERVICE, "DriverPkgManager Init failed %{public}d", ret);
@@ -61,6 +63,7 @@ void DriverExtMgr::OnStop()
     delete &(DriverPkgManager::GetInstance());
     delete &(ExtDeviceManager::GetInstance());
     delete &(BusExtensionCore::GetInstance());
+    delete &(DriverExtensionController::GetInstance());
 }
 
 int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
