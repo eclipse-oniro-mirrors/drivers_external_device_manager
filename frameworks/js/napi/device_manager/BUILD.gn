@@ -19,8 +19,6 @@ ohos_shared_library("devicemanager_napi") {
   ]
 
   include_dirs = [
-    "//foundation/arkui/napi/native_engine",
-    "//foundation/arkui/napi/interfaces/kits",
     "${utils_path}/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
