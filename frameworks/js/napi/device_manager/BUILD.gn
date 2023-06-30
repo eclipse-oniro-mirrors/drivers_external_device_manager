@@ -11,13 +11,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-import("//foundation/ability/ability_runtime/ability_runtime.gni")
+import("//drivers/external_device_manager/extdevmgr.gni")
 
-group("napi_packages") {
-  deps = [
-    "device_manager:devicemanager_napi",
-    "driver_extension_ability:driverextensionability",
-    "driver_extension_context:driverextensioncontext_napi",
+ohos_shared_library("devicemanager_napi") {
+  sources = [ "device_manager_middle.cpp" ]
+
+  include_dirs = [
+    "${utils_path}/include/",
+    "${ext_mgr_path}/interfaces/innerkits/",
+    "${ext_mgr_path}/services/zidl/include/",
   ]
+
+  deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+  ]
+
+  relative_install_dir = "module/driver"
+
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
 }
