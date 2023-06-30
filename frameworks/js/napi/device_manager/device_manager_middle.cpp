@@ -167,7 +167,7 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
         sptr<AsyncData> data(reinterpret_cast<AsyncData*>(work->data));
         data->DecStrongRef(nullptr);
         delete work;
-        
+
         napi_value callback;
         NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->onDisconnect, &callback));
 
@@ -359,7 +359,7 @@ static napi_value QueryDevices(napi_env env, napi_callback_info info)
         napi_value element = ConvertDeviceToJsDevice(env, devices[index]);
         NAPI_CALL(env, napi_set_element(env, resultArray, index, element));
     }
-    EDM_LOGI(MODULE_DEV_MGR, "device count:%{public}" PRIu32, devices.size());
+    EDM_LOGI(MODULE_DEV_MGR, "query device finish");
 
     return resultArray;
 }
@@ -397,7 +397,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
         return nullptr;
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter bindDevice:%{public}016" PRIX64, deviceId);
- 
+
     if (!IsMatchType(env, argv[1], napi_function)) {
         ThrowErr(env, PARAMETER_ERROR, "onDisconnect param is error");
         return nullptr;
