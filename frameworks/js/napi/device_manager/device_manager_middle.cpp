@@ -189,14 +189,14 @@ void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
     EDM_LOGI(MODULE_DEV_MGR, "unbind device callback: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
-        EDM_LOGE(MODULE_DEV_MGR, "device: %{public}lu unbind map is null", deviceId);
+        EDM_LOGE(MODULE_DEV_MGR, "device unbind map is null");
         return;
     }
 
     auto asyncData = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
     if (asyncData->unbindCallback == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "device: %{public}lu unbind is null", deviceId);
+        EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
         return;
     }
     uv_loop_t* loop = nullptr;
@@ -359,7 +359,7 @@ static napi_value QueryDevices(napi_env env, napi_callback_info info)
         napi_value element = ConvertDeviceToJsDevice(env, devices[index]);
         NAPI_CALL(env, napi_set_element(env, resultArray, index, element));
     }
-    EDM_LOGI(MODULE_DEV_MGR, "device count:%{public}lu", devices.size());
+    EDM_LOGI(MODULE_DEV_MGR, "device count:%{public}" PRIu32, devices.size());
 
     return resultArray;
 }
