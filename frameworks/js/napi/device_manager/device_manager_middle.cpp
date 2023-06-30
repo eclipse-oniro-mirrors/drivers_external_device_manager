@@ -109,7 +109,7 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
     EDM_LOGE(MODULE_DEV_MGR, "bind device callback: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
-        EDM_LOGE(MODULE_DEV_MGR, "device: %{public}lu OnConnect is null", deviceId);
+        EDM_LOGE(MODULE_DEV_MGR, "device OnConnect is null");
         return;
     }
 
@@ -140,14 +140,14 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
     EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
-        EDM_LOGE(MODULE_DEV_MGR, "device: %{public}lu onDisconnect map is null", deviceId);
+        EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect map is null");
         return;
     }
 
     auto asyncData = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
     if (asyncData->onDisconnect == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "device: %{public}lu onDisconnect is null", deviceId);
+        EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect is null");
         return;
     }
     uv_loop_t* loop = nullptr;
