@@ -121,5 +121,6 @@ group("external_device_manager_ut") {
     ":driver_extension_manager_client_test",
     ":drivers_pkg_manager_test",
     "device_manager_test:device_manager_test",
+    "device_manager_js_test:DeviceManagerJsTest",
   ]
 }
