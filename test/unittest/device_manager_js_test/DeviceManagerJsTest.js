@@ -28,31 +28,19 @@ describe("DeviceManagerJsTest", function () {
     }
 
     beforeAll(function() {
-        /*
-         * @tc.setup: setup invoked before all testcases
-         */
-         console.info('beforeAll called')
+        console.info('beforeAll called')
     })
 
     afterAll(function() {
-        /*
-         * @tc.teardown: teardown invoked after all testcases
-         */
-         console.info('afterAll called')
+        console.info('afterAll called')
     })
 
     beforeEach(function() {
-        /*
-         * @tc.setup: setup invoked before each testcases
-         */
-         console.info('beforeEach called')
+        console.info('beforeEach called')
     })
 
     afterEach(function() {
-        /*
-         * @tc.teardown: teardown invoked after each testcases
-         */
-         console.info('afterEach called')
+        console.info('afterEach called')
     })
 
     const PARAMETER_ERROR_CODE = 401
