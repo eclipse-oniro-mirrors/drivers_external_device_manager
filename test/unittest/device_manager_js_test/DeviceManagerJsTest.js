@@ -66,10 +66,10 @@ describe("DeviceManagerJsTest", function () {
     it("DeviceManager_queryDevices_001", 0, function () {
         console.info('----------------------DeviceManager_queryDevices_001---------------------------');
         try {
-            var devices = deviceManager.queryDevice(deviceManager.BusType.USB);
+            var devices = deviceManager.queryDevices(deviceManager.BusType.USB);
             expect(devices != null).assertEqual(true);
         } catch (err) {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            expect(err.code).assertEqual(SERVICE_EXCEPTION_CODE);
         }
     })
 
@@ -81,10 +81,10 @@ describe("DeviceManagerJsTest", function () {
     it("DeviceManager_queryDevices_002", 0, function () {
         console.info('----------------------DeviceManager_queryDevices_002---------------------------');
         try {
-            var devices = deviceManager.queryDevice();
+            var devices = deviceManager.queryDevices();
             expect(devices != null).assertEqual(true);
         } catch (err) {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            expect(err.code).assertEqual(SERVICE_EXCEPTION_CODE);
         }
     })
 

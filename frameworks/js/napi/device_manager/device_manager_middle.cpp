@@ -282,8 +282,8 @@ static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errM
 
     auto msgString = GetNapiError(SERVICE_EXCEPTION);
     if (!msgString) {
-        EDM_LOGE(MODULE_DEV_MGR, "errCode is invalid");
-        return;
+        napi_get_undefined(env, &businessError);
+        return businessError;
     }
 
     napi_value code = nullptr;
