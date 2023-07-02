@@ -72,6 +72,39 @@ ohos_executable("bus_extension_core_mt") {
   install_enable = false
 }
 
+ohos_executable("ext_device_manager_mt") {
+  sources = [ "bus_extension_core_mt/ext_device_manager_mt.cpp" ]
+  include_dirs = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
+    "${ext_mgr_path}/interfaces/innerkits/",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",
+  ]
+  configs = [ "${utils_path}:utils_config" ]
+  deps = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_controller:driver_extension_controller",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
+  ]
+  external_deps = [
+    "ability_runtime:ability_manager",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  part_name = "external_device_manager"
+  install_enable = false
+}
+
 ohos_executable("drivers_pkg_manager_mt") {
   sources = [ "drivers_pkg_manager_mt/drivers_pkg_manager_mt.cpp" ]
   include_dirs = [
@@ -112,5 +145,6 @@ group("external_device_manager_mt") {
     ":bus_extension_usb_mt",
     ":driver_extension_controller_mt",
     ":drivers_pkg_manager_mt",
+    ":ext_device_manager_mt",
   ]
 }
