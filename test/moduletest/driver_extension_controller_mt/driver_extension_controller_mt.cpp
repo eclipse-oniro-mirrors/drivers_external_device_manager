@@ -41,7 +41,7 @@ TokenInfoParams g_sysInfoInstance = {
     .processName = "usb_manager",
     .aplStr = "system_basic",
 };
-static void SetTestCaseNative (TokenInfoParams *infoInstance)
+static void SetTestCaseNative(TokenInfoParams *infoInstance)
 {
     uint64_t tokenId = GetAccessTokenId(infoInstance);
     int ret = SetSelfTokenID(tokenId);
@@ -77,7 +77,7 @@ public:
             cout << "begin to stop extension ability" << endl;
             ret = drvExtCtrl.StopDriverExtension(bundleName, abilityName);
         } else if (action == "connect") {
-            connectAbilityTest(bundleName, abilityName);
+            ConnectAbilityTest(bundleName, abilityName);
         } else {
             cout << "wrong param! please check!" << endl;
             return 0;
@@ -95,7 +95,7 @@ public:
         return 0;
         }
 private:
-    void connectAbilityTest(const string bundleName, const string abilityName)
+    void ConnectAbilityTest(const string bundleName, const string abilityName)
     {
         auto &drvExtCtrl = DriverExtensionController::GetInstance();
         shared_ptr<ConCb> conCb = make_shared<ConCb>();
