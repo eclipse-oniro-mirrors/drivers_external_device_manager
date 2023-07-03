@@ -93,14 +93,14 @@ static int32_t ParseDescriptor(
 
     switch (descriptorType) {
         case USB_DDK_CONFIG_DESCRIPTOR_TYPE: {
-            struct UsbConfigDescriptor *desc = (struct UsbConfigDescriptor *)dest;
+            struct UsbConfigDescriptor *desc = reinterpret_cast<struct UsbConfigDescriptor *>(dest);
             desc->wTotalLength = Le16ToHost(desc->wTotalLength);
             break;
         }
         case USB_DDK_INTERFACE_DESCRIPTOR_TYPE:
             break;
         case USB_DDK_ENDPOINT_DESCRIPTOR_TYPE: {
-            UsbEndpointDescriptor *desc = (UsbEndpointDescriptor *)dest;
+            UsbEndpointDescriptor *desc = reinterpret_cast<UsbEndpointDescriptor *>(dest);
             desc->wMaxPacketSize = Le16ToHost(desc->wMaxPacketSize);
             break;
         }
@@ -113,11 +113,10 @@ static int32_t ParseDescriptor(
 
 static int32_t FindNextDescriptor(const uint8_t *buffer, int32_t size)
 {
-    UsbDescriptorHeader *header = nullptr;
     const uint8_t *buffer0 = buffer;
 
     while (size >= sizeof(UsbDescriptorHeader)) {
-        header = (UsbDescriptorHeader *)buffer;
+        auto header = reinterpret_cast<const UsbDescriptorHeader *>(buffer);
         if (header->bDescriptorType == USB_DDK_DT_INTERFACE || header->bDescriptorType == USB_DDK_DT_ENDPOINT) {
             break;
         }
@@ -142,7 +141,7 @@ static int32_t FillExtraDescriptor(
         EDM_LOGE(MODULE_USB_DDK, "new failed");
         return USB_DDK_MEMORY_ERROR;
     }
-    memset_s((void *)extraTmp, extraLenTmp, 0, extraLenTmp);
+    (void)memset_s(static_cast<void *>(extraTmp), extraLenTmp, 0, extraLenTmp);
 
     if (*extra != nullptr && *extraLength != 0) {
         if (memcpy_s(extraTmp, extraLenTmp, *extra, *extraLength) != EOK) {
@@ -170,7 +169,6 @@ static int32_t FillExtraDescriptor(
 static int32_t ParseEndpoint(UsbDdkEndpointDescriptor *endPoint, const uint8_t *buffer, int32_t size)
 {
     const uint8_t *buffer0 = buffer;
-    const UsbDescriptorHeader *header = nullptr;
     int32_t len;
     int32_t ret;
 
@@ -179,7 +177,7 @@ static int32_t ParseEndpoint(UsbDdkEndpointDescriptor *endPoint, const uint8_t *
         return USB_DDK_FAILED;
     }
 
-    header = (const UsbDescriptorHeader *)buffer;
+    auto header = reinterpret_cast<const UsbDescriptorHeader *>(buffer);
     if ((header->bDescriptorType != USB_DDK_DT_ENDPOINT) || (header->bLength > size)) {
         EDM_LOGE(MODULE_USB_DDK, "unexpected descriptor, type = 0x%{public}x, length = %{public}hhu",
             header->bDescriptorType, header->bLength);
@@ -189,7 +187,8 @@ static int32_t ParseEndpoint(UsbDdkEndpointDescriptor *endPoint, const uint8_t *
         return USB_DDK_FAILED;
     }
 
-    ParseDescriptor(USB_DDK_ENDPOINT_DESCRIPTOR_TYPE, (uint8_t *)endPoint, sizeof(UsbEndpointDescriptor), buffer, size);
+    ParseDescriptor(USB_DDK_ENDPOINT_DESCRIPTOR_TYPE, reinterpret_cast<uint8_t *>(endPoint),
+        sizeof(UsbEndpointDescriptor), buffer, size);
 
     buffer += header->bLength;
     size -= header->bLength;
@@ -242,7 +241,7 @@ static int32_t ParseInterfaceEndpoint(UsbDdkInterfaceDescriptor &ddkIntfDesc, co
             return ret;
         }
         auto len = ddkIntfDesc.interfaceDescriptor.bNumEndpoints * sizeof(UsbDdkEndpointDescriptor);
-        memset_s((void *)endPoint, len, 0, len);
+        (void)memset_s(static_cast<void *>(endPoint), len, 0, len);
 
         ddkIntfDesc.endPoint = endPoint;
         for (uint8_t i = 0; i < ddkIntfDesc.interfaceDescriptor.bNumEndpoints; i++) {
@@ -264,7 +263,7 @@ static int32_t ParseInterfaceEndpoint(UsbDdkInterfaceDescriptor &ddkIntfDesc, co
 static void GetInterfaceNumberDes(
     const UsbDescriptorHeader *header, std::vector<uint8_t> &interfaceNums, std::vector<uint8_t> &alternateSetting)
 {
-    UsbInterfaceDescriptor *desc = (UsbInterfaceDescriptor *)header;
+    auto desc = reinterpret_cast<const UsbInterfaceDescriptor *>(header);
     if (desc->bLength < USB_DDK_DT_INTERFACE_SIZE) {
         EDM_LOGW(MODULE_USB_DDK, "invalid interface descriptor length %{public}d, skipping", desc->bLength);
         return;
@@ -294,7 +293,7 @@ static void GetInterfaceNumberDes(
 static void GetInterfaceNumber(
     const uint8_t *buffer, int32_t size, std::vector<uint8_t> &interfaceNums, std::vector<uint8_t> &alternateSetting)
 {
-    UsbDescriptorHeader *header = nullptr;
+    const UsbDescriptorHeader *header = nullptr;
     const uint8_t *buffer2;
     int32_t size2;
 
@@ -303,7 +302,7 @@ static void GetInterfaceNumber(
             EDM_LOGW(MODULE_USB_DDK, "descriptor has %{public}d excess bytes", size2);
             break;
         }
-        header = (UsbDescriptorHeader *)buffer2;
+        header = reinterpret_cast<const UsbDescriptorHeader *>(buffer2);
         if ((header->bLength > size2) || (header->bLength < sizeof(UsbDescriptorHeader))) {
             EDM_LOGW(MODULE_USB_DDK, "invalid descriptor length %{public}hhu, skipping remainder", header->bLength);
             break;
@@ -362,7 +361,7 @@ static int32_t ParseInterface(UsbDdkInterface &usbInterface, const uint8_t *buff
             return ret;
         }
 
-        ifDesc = (const UsbInterfaceDescriptor *)buffer;
+        ifDesc = reinterpret_cast<const UsbInterfaceDescriptor *>(buffer);
         bool tempFlag = (size < USB_DDK_DT_INTERFACE_SIZE) || (ifDesc->bDescriptorType != USB_DDK_DT_INTERFACE) ||
             (ifDesc->bInterfaceNumber != interfaceNumber);
         if (tempFlag == true) {
@@ -383,7 +382,6 @@ static void ClearEndpoint(UsbDdkEndpointDescriptor *endPoint)
 
 static void ClearInterface(UsbDdkInterface &usbInterface)
 {
-    UsbDdkInterfaceDescriptor *infPtr = nullptr;
     uint8_t i;
     uint8_t j;
 
@@ -393,7 +391,7 @@ static void ClearInterface(UsbDdkInterface &usbInterface)
     }
 
     for (i = 0; i < usbInterface.numAltsetting; i++) {
-        infPtr = (UsbDdkInterfaceDescriptor *)(usbInterface.altsetting + i);
+        auto infPtr = reinterpret_cast<UsbDdkInterfaceDescriptor *>(usbInterface.altsetting + i);
         if (infPtr == nullptr) {
             EDM_LOGE(MODULE_USB_DDK, "altsetting is null");
             continue;
@@ -406,7 +404,7 @@ static void ClearInterface(UsbDdkInterface &usbInterface)
 
         if (infPtr->endPoint != nullptr) {
             for (j = 0; j < infPtr->interfaceDescriptor.bNumEndpoints; j++) {
-                ClearEndpoint((UsbDdkEndpointDescriptor *)infPtr->endPoint + j);
+                ClearEndpoint(reinterpret_cast<UsbDdkEndpointDescriptor *>(infPtr->endPoint + j));
             }
 
             delete[] (infPtr->endPoint);
@@ -435,10 +433,9 @@ void RawClearConfiguration(UsbDdkConfigDescriptor &config)
 static int32_t ParseConfigurationDes(
     UsbDdkConfigDescriptor &config, const uint8_t *buffer, int32_t size, std::vector<uint8_t> &interfaceNums)
 {
-    int32_t ret, len;
-    uint8_t i;
+    int32_t ret;
     while (size >= sizeof(UsbDescriptorHeader)) {
-        len = FindNextDescriptor(buffer, size);
+        int32_t len = FindNextDescriptor(buffer, size);
         if (len != 0) {
             ret = FillExtraDescriptor(&config.extra, &config.extraLength, buffer, len);
             if (ret != EDM_OK) {
@@ -452,12 +449,13 @@ static int32_t ParseConfigurationDes(
         if (size <= sizeof(UsbDescriptorHeader)) {
             break;
         }
-        UsbInterfaceDescriptor *ifDesc = (UsbInterfaceDescriptor *)buffer;
+        auto ifDesc = reinterpret_cast<const UsbInterfaceDescriptor *>(buffer);
         if (config.configDescriptor.bNumInterfaces >= USB_MAXINTERFACES) {
             EDM_LOGE(MODULE_USB_DDK, "%{public}d: bNumInterfaces overlong.", config.configDescriptor.bNumInterfaces);
             return USB_DDK_INVALID_PARAMETER;
         }
-        for (i = 0; i < config.configDescriptor.bNumInterfaces; ++i) {
+        uint8_t i = 0;
+        for (; i < config.configDescriptor.bNumInterfaces; ++i) {
             if (interfaceNums[i] == ifDesc->bInterfaceNumber) {
                 break;
             }
@@ -516,7 +514,8 @@ static int32_t ParseConfiguration(UsbDdkConfigDescriptor &config, const uint8_t 
         EDM_LOGE(MODULE_USB_DDK, "new UsbDdkInterface failed");
         return USB_DDK_MEMORY_ERROR;
     }
-    memset_s((void *)config.interface, sizeof(UsbDdkInterface) * intfNum, 0, sizeof(UsbDdkInterface) * intfNum);
+    (void)memset_s(
+        static_cast<void *>(config.interface), sizeof(UsbDdkInterface) * intfNum, 0, sizeof(UsbDdkInterface) * intfNum);
 
     for (size_t i = 0; i < intfNum; ++i) {
         uint8_t j = alternateSetting[i];
@@ -530,7 +529,7 @@ static int32_t ParseConfiguration(UsbDdkConfigDescriptor &config, const uint8_t 
             EDM_LOGE(MODULE_USB_DDK, "new UsbDdkInterfaceDescriptor failed");
             return USB_DDK_MEMORY_ERROR;
         }
-        memset_s((void *)config.interface[i].altsetting, sizeof(UsbDdkInterfaceDescriptor) * j, 0,
+        (void)memset_s(static_cast<void *>(config.interface[i].altsetting), sizeof(UsbDdkInterfaceDescriptor) * j, 0,
             sizeof(UsbDdkInterfaceDescriptor) * j);
     }
 
@@ -547,7 +546,7 @@ int32_t ParseUsbConfigDescriptor(const std::vector<uint8_t> &configBuffer, UsbDd
         EDM_LOGE(MODULE_USB_DDK, "new failed");
         return USB_DDK_MEMORY_ERROR;
     }
-    memset_s((void *)tmpConfig, sizeof(UsbDdkConfigDescriptor), 0, sizeof(UsbDdkConfigDescriptor));
+    (void)memset_s(static_cast<void *>(tmpConfig), sizeof(UsbDdkConfigDescriptor), 0, sizeof(UsbDdkConfigDescriptor));
 
     int32_t ret = ParseConfiguration(*tmpConfig, configBuffer.data(), configBuffer.size());
     if (ret < 0) {
