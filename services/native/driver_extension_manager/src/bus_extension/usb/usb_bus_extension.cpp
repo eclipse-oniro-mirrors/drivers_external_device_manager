@@ -39,7 +39,7 @@ UsbBusExtension::UsbBusExtension()
 
 UsbBusExtension::~UsbBusExtension()
 {
-    if (this->usbInterface_ != nullptr && this->subScriber_ != nullptr) {
+    if (this->usbInterface_ != nullptr && this->subScriber_ != nullptr && this->recipient_ != nullptr) {
         this->usbInterface_->UnbindUsbdSubscriber(this->subScriber_);
         sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<HDI::Usb::V1_0::IUsbInterface>(usbInterface_);
         remote->RemoveDeathRecipient(recipient_);
@@ -61,6 +61,12 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
             return EDM_ERR_INVALID_OBJECT;
         }
         EDM_LOGD(MODULE_BUS_USB,  "get usbInferface sucess");
+        recipient_ = new UsbdDeathRecipient();
+        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<HDI::Usb::V1_0::IUsbInterface>(usbInterface_);
+        if (!remote->AddDeathRecipient(recipient_)) {
+            EDM_LOGE(MODULE_BUS_USB, "add DeathRecipient failed");
+            return EDM_NOK;
+        }
     }
     if (this->subScriber_ == nullptr) {
         this->subScriber_ = new UsbDevSubscriber();
@@ -74,12 +80,6 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
     this->subScriber_->Init(devCallback, usbInterface_);
     this->usbInterface_->BindUsbdSubscriber(subScriber_);
 
-    recipient_ = new UsbdDeathRecipient();
-    sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<HDI::Usb::V1_0::IUsbInterface>(usbInterface_);
-    if (!remote->AddDeathRecipient(recipient_)) {
-        EDM_LOGE(MODULE_BUS_USB, "add DeathRecipient failed");
-        return EDM_NOK;
-    }
     return 0;
 };
 
