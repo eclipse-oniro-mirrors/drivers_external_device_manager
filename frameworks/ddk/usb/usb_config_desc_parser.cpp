@@ -63,7 +63,7 @@ static int32_t GetDescriptorLength(UsbDdkDescriptorType descriptorType)
         default:
             EDM_LOGE(MODULE_USB_DDK, "invalid descriptorType:%{public}d", descriptorType);
     }
-    return UINT32_MAX;
+    return INT32_MAX;
 }
 
 static int32_t ParseDescriptor(
@@ -76,7 +76,7 @@ static int32_t ParseDescriptor(
     }
 
     int32_t descriptorLen = GetDescriptorLength(descriptorType);
-    if (descriptorLen == UINT32_MAX) {
+    if (descriptorLen == INT32_MAX) {
         return USB_DDK_FAILED;
     }
 
@@ -115,7 +115,7 @@ static int32_t FindNextDescriptor(const uint8_t *buffer, int32_t size)
 {
     const uint8_t *buffer0 = buffer;
 
-    while (size >= sizeof(UsbDescriptorHeader)) {
+    while (size >= static_cast<int32_t>(sizeof(UsbDescriptorHeader))) {
         auto header = reinterpret_cast<const UsbDescriptorHeader *>(buffer);
         if (header->bDescriptorType == USB_DDK_DT_INTERFACE || header->bDescriptorType == USB_DDK_DT_ENDPOINT) {
             break;
@@ -135,7 +135,7 @@ static int32_t FillExtraDescriptor(
         return USB_DDK_FAILED;
     }
 
-    uint32_t extraLenTmp = *extraLength + bufferLen;
+    uint32_t extraLenTmp = *extraLength + static_cast<uint32_t>(bufferLen);
     unsigned char *extraTmp = new unsigned char[extraLenTmp];
     if (extraTmp == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "new failed");
@@ -298,7 +298,7 @@ static void GetInterfaceNumber(
     int32_t size2;
 
     for ((buffer2 = buffer, size2 = size); size2 > 0; (buffer2 += header->bLength, size2 -= header->bLength)) {
-        if (size2 < sizeof(UsbDescriptorHeader)) {
+        if (size2 < static_cast<int32_t>(sizeof(UsbDescriptorHeader))) {
             EDM_LOGW(MODULE_USB_DDK, "descriptor has %{public}d excess bytes", size2);
             break;
         }
@@ -434,7 +434,7 @@ static int32_t ParseConfigurationDes(
     UsbDdkConfigDescriptor &config, const uint8_t *buffer, int32_t size, std::vector<uint8_t> &interfaceNums)
 {
     int32_t ret;
-    while (size >= sizeof(UsbDescriptorHeader)) {
+    while (size >= static_cast<int32_t>(sizeof(UsbDescriptorHeader))) {
         int32_t len = FindNextDescriptor(buffer, size);
         if (len != 0) {
             ret = FillExtraDescriptor(&config.extra, &config.extraLength, buffer, len);
@@ -446,7 +446,7 @@ static int32_t ParseConfigurationDes(
             size -= len;
         }
 
-        if (size <= sizeof(UsbDescriptorHeader)) {
+        if (size <= static_cast<int32_t>(sizeof(UsbDescriptorHeader))) {
             break;
         }
         auto ifDesc = reinterpret_cast<const UsbInterfaceDescriptor *>(buffer);
