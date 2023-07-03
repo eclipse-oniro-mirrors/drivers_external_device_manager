@@ -33,9 +33,9 @@ constexpr int32_t PARAM_COUNT_3 = 3;
 constexpr uint64_t MAX_JS_NUMBER = 9007199254740991;
 
 static const std::map<int32_t, std::string> ERROR_MESSAGES = {
-    {SERVICE_EXCEPTION,  "Service exception."},
+    {SERVICE_EXCEPTION,  "ExternalDeviceManager service exception."},
     {PERMISSION_DENIED,  "Permission denied."},
-    {PARAMETER_ERROR,  "The parameter invalid."},
+    {PARAMETER_ERROR,  "The parameter check failed."},
 };
 
 static std::mutex mapMutex;
@@ -250,6 +250,15 @@ static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, cons
     return result;
 }
 
+static std::optional<std::string> GetNapiError(int32_t errorCode)
+{
+    auto iter = ERROR_MESSAGES.find(errorCode);
+    if (iter != ERROR_MESSAGES.end()) {
+        return iter->second;
+    }
+    return std::nullopt;
+}
+
 static napi_value CreateBusinessError(const napi_env &env, const int32_t errCode, const std::string &errMessage)
 {
     napi_value businessError = nullptr;
@@ -259,6 +268,7 @@ static napi_value CreateBusinessError(const napi_env &env, const int32_t errCode
     NAPI_CALL(env, napi_create_string_utf8(env, errMessage.c_str(), NAPI_AUTO_LENGTH, &msg));
     napi_create_error(env, nullptr, msg, &businessError);
     napi_set_named_property(env, businessError, "code", code);
+    napi_set_named_property(env, businessError, "message", msg);
     return businessError;
 }
 
@@ -270,12 +280,19 @@ static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errM
         return businessError;
     }
 
+    auto msgString = GetNapiError(SERVICE_EXCEPTION);
+    if (!msgString) {
+        napi_get_undefined(env, &businessError);
+        return businessError;
+    }
+
     napi_value code = nullptr;
     napi_value msg = nullptr;
     NAPI_CALL(env, napi_create_int32(env, SERVICE_EXCEPTION, &code));
-    NAPI_CALL(env, napi_create_string_utf8(env, errMsg.msg.c_str(), NAPI_AUTO_LENGTH, &msg));
+    NAPI_CALL(env, napi_create_string_utf8(env, msgString.value().c_str(), NAPI_AUTO_LENGTH, &msg));
     napi_create_error(env, nullptr, msg, &businessError);
     napi_set_named_property(env, businessError, "code", code);
+    napi_set_named_property(env, businessError, "message", msg);
     return businessError;
 }
 
@@ -288,15 +305,6 @@ static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId)
         NAPI_CALL(env, napi_create_int64(env, deviceId, &result));
     }
     return result;
-}
-
-static std::optional<std::string> GetNapiError(int32_t errorCode)
-{
-    auto iter = ERROR_MESSAGES.find(errorCode);
-    if (iter != ERROR_MESSAGES.end()) {
-        return iter->second;
-    }
-    return std::nullopt;
 }
 
 void ThrowErr(const napi_env &env, const int32_t errCode, const std::string &printMsg)
@@ -349,7 +357,7 @@ static napi_value QueryDevices(napi_env env, napi_callback_info info)
 
     std::vector<std::shared_ptr<DeviceData>> devices;
     if (g_edmClient.QueryDevice(busType, devices) != UsbErrCode::EDM_OK) {
-        ThrowErr(env, PARAMETER_ERROR, "Query device service fail");
+        ThrowErr(env, SERVICE_EXCEPTION, "Query device service fail");
         return nullptr;
     }
 
@@ -447,7 +455,7 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
-        ThrowErr(env, PARAMETER_ERROR, "unbind map is null");
+        ThrowErr(env, SERVICE_EXCEPTION, "unbind map is null");
         return nullptr;
     }
 
