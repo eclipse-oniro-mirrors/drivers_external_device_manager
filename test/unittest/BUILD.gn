@@ -110,6 +110,7 @@ ohos_unittest("driver_extension_manager_client_test") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 }
 
