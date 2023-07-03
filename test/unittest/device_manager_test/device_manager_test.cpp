@@ -22,6 +22,7 @@
 #include "ibus_extension.h"
 #include "usb_bus_extension.h"
 #include "bus_extension_core.h"
+#include "driver_pkg_manager.h"
 #undef private
 
 namespace OHOS {
@@ -51,6 +52,7 @@ HWTEST_F(DeviceManagerTest, BusExtensionRegisterTest, TestSize.Level1)
 
 HWTEST_F(DeviceManagerTest, InitTest, TestSize.Level1)
 {
+    DriverPkgManager::GetInstance().Init();
     int32_t ret = ExtDeviceManager::GetInstance().Init();
     ASSERT_EQ(ret, EDM_OK);
 }
