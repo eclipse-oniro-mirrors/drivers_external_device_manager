@@ -186,7 +186,6 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
     }
     EDM_LOGI(MODULE_EA_MGR, "DisconnectExtensionAbility success");
     return EDM_OK;
-    return 0;
 }
 }
 }

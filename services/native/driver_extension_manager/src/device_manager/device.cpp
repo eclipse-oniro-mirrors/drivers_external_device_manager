@@ -191,7 +191,6 @@ void Device::UnregisterDrvExtMgrCallback(const wptr<IRemoteObject> &object)
         std::find_if(callbacks_.begin(), callbacks_.end(), [&object](const sptr<IDriverExtMgrCallback> &element) {
             return element->AsObject() == object;
         });
-
     if (resIter != callbacks_.end()) {
         callbacks_.erase(resIter);
     }

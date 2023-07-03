@@ -335,7 +335,6 @@ void DrvBundleStateCallback::StorageHistoryDrvInfo(std::vector<BundleInfo> &bund
     while (!bundleInfos.empty()) {
         extensionInfos_.clear();
         extensionInfos_ = bundleInfos.back().extensionInfos;
-        string name = bundleInfos.back().name;
         bundleInfos.pop_back();
         if (extensionInfos_.empty()) {
             continue;

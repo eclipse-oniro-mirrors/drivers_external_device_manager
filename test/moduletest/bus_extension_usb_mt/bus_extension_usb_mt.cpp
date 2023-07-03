@@ -39,7 +39,7 @@ public:
 验证：运行 getenforce  应该打印Permissive
 2、修改 /etc/selinux/config文件中的SELINUX值改为disable。（开启为enforcing）
 */
-    int entry(void)
+    int Entry(void)
     {
         cout << HELP_TEXT << endl;
         auto usbExt = std::make_shared<UsbBusExtension>();
@@ -94,6 +94,6 @@ public:
 }
 int main(int argc, char **argv)
 {
-    int ret = OHOS::ExternalDeviceManager::BusExtensionUsbMt().entry();
+    int ret = OHOS::ExternalDeviceManager::BusExtensionUsbMt().Entry();
     return ret;
 }

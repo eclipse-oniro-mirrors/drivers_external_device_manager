@@ -89,7 +89,7 @@ TokenInfoParams g_sysInfoInstance = {
 
 class AccessTokenTest {
 public:
-    static void SetTestCaseNative (TokenInfoParams *infoInstance)
+    static void SetTestCaseNative(TokenInfoParams *infoInstance)
     {
         uint64_t tokenId = GetAccessTokenId(infoInstance);
         int ret = SetSelfTokenID(tokenId);
