@@ -48,9 +48,14 @@ void BusExtensionCore::LoadBusExtensionLibs()
                 continue;
         }
         libPath << HDI_SO_SUFFIX;
-        void *handler = dlopen(libPath.str().c_str(), RTLD_LAZY);
+        char realPath[PATH_MAX + 1] = {0};
+        if (realpath(libPath.str().c_str(), realPath) == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "invalid so path %{public}s", realPath);
+            continue;
+        }
+        void *handler = dlopen(realPath, RTLD_LAZY);
         if (handler == nullptr) {
-            EDM_LOGE(MODULE_DEV_MGR, "failed to dlopen  %{public}s, %{public}s", libPath.str().c_str(), dlerror());
+            EDM_LOGE(MODULE_DEV_MGR, "failed to dlopen  %{public}s, %{public}s", realPath, dlerror());
             continue;
         }
     }

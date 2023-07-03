@@ -210,6 +210,7 @@ void DriverExtMgrCallbackDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> 
     auto device = device_.lock();
     if (device == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "invalid device object");
+        return;
     }
 
     device->UnregisterDrvExtMgrCallback(remote);

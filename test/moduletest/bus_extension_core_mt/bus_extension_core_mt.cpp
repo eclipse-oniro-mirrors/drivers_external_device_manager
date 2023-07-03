@@ -33,9 +33,9 @@ static void PrintAllDevice()
 {
     ExtDeviceManager &devmgr = ExtDeviceManager::GetInstance();
     cout << "------------------" << endl;
-    std::unordered_map<uint64_t, std::shared_ptr<Device>> &map = devmgr.deviceMap_[BUS_TYPE_USB];
+    const std::unordered_map<uint64_t, std::shared_ptr<Device>> &map = devmgr.deviceMap_[BUS_TYPE_USB];
     cout << "usb device size: " << map.size() << endl;
-    for (auto &iter : map) {
+    for (const auto &iter : map) {
         std::shared_ptr<Device> device = iter.second;
         cout << device->GetDeviceInfo()->GetDeviceDescription().c_str() << endl;
     }
