@@ -85,7 +85,7 @@ int32_t DriverPkgManager::Init()
 
 shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo> devInfo)
 {
-    EDM_LOGE(MODULE_PKG_MGR, "Enter QueryMatchDriver");
+    EDM_LOGI(MODULE_PKG_MGR, "Enter QueryMatchDriver");
     shared_ptr<IBusExtension> extInstance = nullptr;
     auto ret = make_shared<BundleInfoNames>();
     ret->bundleName.clear();
@@ -122,17 +122,17 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
         } else {
             string drvInfoStr;
             val.Serialize(drvInfoStr);
-            EDM_LOGE(MODULE_PKG_MGR, "PKG Serialize:%{public}s", drvInfoStr.c_str());
+            EDM_LOGI(MODULE_PKG_MGR, "PKG Serialize:%{public}s", drvInfoStr.c_str());
         }
     }
 
-    EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver return null");
+    EDM_LOGI(MODULE_PKG_MGR, "QueryMatchDriver return null");
     return nullptr;
 }
 
 int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &callback)
 {
-    EDM_LOGE(MODULE_PKG_MGR, "RegisterCallback called");
+    EDM_LOGI(MODULE_PKG_MGR, "RegisterCallback called");
     if (bundleStateCallback_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
@@ -157,7 +157,7 @@ int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &ca
 
 int32_t DriverPkgManager::UnRegisterCallback()
 {
-    EDM_LOGE(MODULE_PKG_MGR, "UnRegisterCallback called");
+    EDM_LOGI(MODULE_PKG_MGR, "UnRegisterCallback called");
     if (bundleStateCallback_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "failed to unregister callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
