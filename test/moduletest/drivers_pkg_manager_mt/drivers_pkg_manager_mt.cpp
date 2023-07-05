@@ -54,6 +54,7 @@ int main(int argc, char **argv)
 {
     cout << START_TEXT << endl;
     std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    BusExtensionCore::GetInstance().LoadBusExtensionLibs();
     bool ret = BusExtensionCore::GetInstance().Init(callback);
     if (ret != EDM_OK) {
         cout << "BusExtensionCore init failed" << endl;
