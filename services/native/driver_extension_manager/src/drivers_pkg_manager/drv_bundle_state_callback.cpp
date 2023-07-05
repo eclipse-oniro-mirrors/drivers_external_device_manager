@@ -119,9 +119,7 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
 {
     EDM_LOGE(MODULE_PKG_MGR, "OnBundleRemoved");
     StartTrace(LABEL, "OnBundleRemoved");
-
     OnBundleDrvRemoved(bundleName);
-
     FinishTrace(LABEL);
 }
 
@@ -362,6 +360,11 @@ void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
 {
     for (auto iter = allDrvInfos_.begin(); iter != allDrvInfos_.end();) {
         if (iter->first.find(bundleName) != std::string::npos) {
+            if (m_pFun != nullptr) {
+                string abilityName = iter->first.substr(iter->first.find_last_of(GetStiching()) + 1);
+                EDM_LOGE(MODULE_PKG_MGR, "abilityName:%{public}s", abilityName.c_str());
+                m_pFun(BUNDLE_REMOVED, BusType::BUS_TYPE_USB, bundleName, abilityName);
+            }
             iter = allDrvInfos_.erase(iter);
         } else {
             ++iter;
