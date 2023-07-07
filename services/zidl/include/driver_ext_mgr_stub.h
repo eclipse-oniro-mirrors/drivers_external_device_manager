@@ -37,6 +37,9 @@ private:
     int32_t OnQueryDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
     int32_t OnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
     int32_t OnUnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    int32_t OnCreateDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    int32_t OnEmitEvent(MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    int32_t OnDestroyDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

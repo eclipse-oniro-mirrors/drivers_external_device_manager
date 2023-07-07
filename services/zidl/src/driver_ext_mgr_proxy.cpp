@@ -15,9 +15,10 @@
 
 #include "driver_ext_mgr_proxy.h"
 #include <cinttypes>
-#include <message_parcel.h>
-#include <securec.h>
+
 #include "hilog_wrapper.h"
+#include "message_parcel.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -139,6 +140,104 @@ UsbErrCode DriverExtMgrProxy::UnBindDevice(uint64_t deviceId)
         return static_cast<UsbErrCode>(ret);
     }
 
+    return UsbErrCode::EDM_OK;
+}
+
+UsbErrCode DriverExtMgrProxy::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
+        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (!data.WriteUint32(maxX)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write maxX");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (!data.WriteUint32(maxY)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write maxY");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (!data.WriteUint32(maxPressure)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write maxPressure");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    int32_t ret =
+        remote->SendRequest(static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_CREATE_DEVICE), data, reply, option);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
+        return static_cast<UsbErrCode>(ret);
+    }
+    return UsbErrCode::EDM_OK;
+}
+
+UsbErrCode DriverExtMgrProxy::EmitEvent(const std::vector<EmitItem> &items)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
+        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (!EmitItmeMarshalling(items, data)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to marshall EmitItem");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    int32_t ret =
+        remote->SendRequest(static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_EMIT_EVENT), data, reply, option);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
+        return static_cast<UsbErrCode>(ret);
+    }
+    return UsbErrCode::EDM_OK;
+}
+
+UsbErrCode DriverExtMgrProxy::DestroyDevice(void)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
+        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    int32_t ret = remote->SendRequest(
+        static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_DESTROY_DEVICE), data, reply, option);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
+        return static_cast<UsbErrCode>(ret);
+    }
     return UsbErrCode::EDM_OK;
 }
 } // namespace ExternalDeviceManager

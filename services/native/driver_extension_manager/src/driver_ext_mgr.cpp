@@ -14,16 +14,18 @@
  */
 
 #include "driver_ext_mgr.h"
+
 #include "bus_extension_core.h"
 #include "dev_change_callback.h"
+#include "driver_extension_controller.h"
 #include "driver_pkg_manager.h"
 #include "edm_errors.h"
+#include "emit_event_manager.h"
 #include "etx_device_mgr.h"
 #include "hilog_wrapper.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "usb_device_info.h"
-#include "driver_extension_controller.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -112,6 +114,24 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
     return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId));
+}
+
+UsbErrCode DriverExtMgr::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().CreateDevice(maxX, maxY, maxPressure));
+}
+
+UsbErrCode DriverExtMgr::EmitEvent(const std::vector<EmitItem> &items)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().EmitEvent(items));
+}
+
+UsbErrCode DriverExtMgr::DestroyDevice(void)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().DestroyDevice());
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

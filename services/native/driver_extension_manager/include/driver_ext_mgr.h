@@ -15,9 +15,9 @@
 
 #ifndef DRIVER_EXTENSION_MANAGER_H
 #define DRIVER_EXTENSION_MANAGER_H
-
 #include <singleton.h>
 #include <system_ability.h>
+
 #include "driver_ext_mgr_stub.h"
 
 namespace OHOS {
@@ -33,8 +33,11 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     UsbErrCode UnBindDevice(uint64_t deviceId) override;
-private:
+    UsbErrCode CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure) override;
+    UsbErrCode EmitEvent(const std::vector<EmitItem> &items) override;
+    UsbErrCode DestroyDevice(void) override;
 
+private:
     std::mutex connectCallbackMutex;
     std::map<uint64_t, std::vector<sptr<IDriverExtMgrCallback>>> connectCallbackMap;
 };

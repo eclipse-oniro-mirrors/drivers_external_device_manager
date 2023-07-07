@@ -16,8 +16,8 @@
 #ifndef DRIVER_EXTENSION_MANAGER_PROXY_H
 #define DRIVER_EXTENSION_MANAGER_PROXY_H
 
-#include <iremote_proxy.h>
 #include "idriver_ext_mgr.h"
+#include "iremote_proxy.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -29,6 +29,9 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     UsbErrCode UnBindDevice(uint64_t deviceId) override;
+    UsbErrCode CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure) override;
+    UsbErrCode EmitEvent(const std::vector<EmitItem> &items) override;
+    UsbErrCode DestroyDevice(void) override;
 
 private:
     static inline BrokerDelegator<DriverExtMgrProxy> delegator_;

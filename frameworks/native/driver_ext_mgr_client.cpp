@@ -17,8 +17,8 @@
 #include <if_system_ability_manager.h>
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
-#include "hilog_wrapper.h"
 
+#include "hilog_wrapper.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 DriverExtMgrClient::DriverExtMgrClient() {}
@@ -118,6 +118,30 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     return proxy_->UnBindDevice(deviceId);
+}
+
+UsbErrCode DriverExtMgrClient::EmitEvent(const std::vector<EmitItem> &items)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->EmitEvent(items);
+}
+
+UsbErrCode DriverExtMgrClient::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->CreateDevice(maxX, maxY, maxPressure);
+}
+
+UsbErrCode DriverExtMgrClient::DestroyDevice(void)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->DestroyDevice();
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

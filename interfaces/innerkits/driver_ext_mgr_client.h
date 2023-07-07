@@ -15,8 +15,8 @@
 
 #ifndef DRIVER_EXTENSION_MANAGER_CLIENT_H
 #define DRIVER_EXTENSION_MANAGER_CLIENT_H
-
 #include <singleton.h>
+
 #include "driver_ext_mgr_types.h"
 #include "idriver_ext_mgr.h"
 
@@ -30,6 +30,9 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices);
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
     UsbErrCode UnBindDevice(uint64_t deviceId);
+    UsbErrCode CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure);
+    UsbErrCode EmitEvent(const std::vector<EmitItem> &items);
+    UsbErrCode DestroyDevice(void);
 
 private:
     UsbErrCode Connect();

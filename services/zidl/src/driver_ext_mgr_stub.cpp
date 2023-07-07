@@ -15,8 +15,9 @@
 
 #include "driver_ext_mgr_stub.h"
 #include <cinttypes>
-#include <securec.h>
+
 #include "hilog_wrapper.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -35,6 +36,12 @@ int DriverExtMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
             return OnBindDevice(data, reply, option);
         case static_cast<uint32_t>(DriverExtMgrInterfaceCode::UNBIND_DEVICE):
             return OnUnBindDevice(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_CREATE_DEVICE):
+            return OnCreateDevice(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_EMIT_EVENT):
+            return OnEmitEvent(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_DESTROY_DEVICE):
+            return OnDestroyDevice(data, reply, option);
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -115,6 +122,63 @@ int32_t DriverExtMgrStub::OnUnBindDevice(MessageParcel &data, MessageParcel &rep
     UsbErrCode ret = UnBindDevice(deviceId);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to call UnBindDevice function:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnCreateDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    uint32_t maxX = 0;
+    if (!data.ReadUint32(maxX)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read maxX");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    uint32_t maxY = 0;
+    if (!data.ReadUint32(maxY)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read maxY");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    uint32_t maxPressure = 0;
+    if (!data.ReadUint32(maxPressure)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read maxPressure");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    UsbErrCode ret = CreateDevice(maxX, maxY, maxPressure);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call CreateDevice function:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnEmitEvent(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    auto items = EmitItmeUnMarshalling(data);
+    if (!items.has_value()) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read emit items");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    UsbErrCode ret = EmitEvent(items.value());
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call EmitEvent function:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnDestroyDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    UsbErrCode ret = DestroyDevice();
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call DestroyDevice function:%{public}d", static_cast<int32_t>(ret));
         return ret;
     }
 
