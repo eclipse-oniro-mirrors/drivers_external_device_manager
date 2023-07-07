@@ -95,14 +95,14 @@ private:
     bool initOnce = false;
 
     ErrCode QueryExtensionAbilityInfos(const std::string &bundleName, const int userId);
-    bool ParseBaseDriverInfo(int bundleStatus);
+    bool ParseBaseDriverInfo();
     void ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Metadata> &metadata);
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
     void StorageHistoryDrvInfo(std::vector<BundleInfo> &bundleInfos);
 
-    void OnBundleDrvAdded();
-    void OnBundleDrvUpdated();
+    void OnBundleDrvAdded(int bundleStatus);
+    void OnBundleDrvUpdated(int bundleStatus);
     void OnBundleDrvRemoved(const std::string &bundleName);
 };
 } // namespace

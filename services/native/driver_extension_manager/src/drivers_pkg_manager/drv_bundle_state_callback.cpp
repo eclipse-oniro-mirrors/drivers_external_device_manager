@@ -50,7 +50,7 @@ DrvBundleStateCallback::DrvBundleStateCallback()
 
     std::map<string, DriverInfo> drvInfos_;
     if (GetAllDriverInfos(drvInfos_)) {
-        EDM_LOGE(MODULE_PKG_MGR, "GetAllDriverInfos in DrvBundleStateCallback OK");
+        EDM_LOGI(MODULE_PKG_MGR, "GetAllDriverInfos in DrvBundleStateCallback OK");
     } else {
         EDM_LOGE(MODULE_PKG_MGR, "GetAllDriverInfos in DrvBundleStateCallback ERR");
     }
@@ -69,7 +69,7 @@ void DrvBundleStateCallback::PrintTest()
 void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, const int32_t resultCode,
     const std::string &resultMsg, const std::string &bundleName)
 {
-    EDM_LOGE(MODULE_PKG_MGR, "OnBundleStateChanged");
+    EDM_LOGI(MODULE_PKG_MGR, "OnBundleStateChanged");
     return;
 };
 
@@ -80,14 +80,14 @@ void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, con
     */
 void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const int userId)
 {
-    EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded");
+    EDM_LOGI(MODULE_PKG_MGR, "OnBundleAdded");
     StartTrace(LABEL, "OnBundleAdded");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
         return;
     }
 
-    if (ParseBaseDriverInfo(BUNDLE_ADDED)) {
-        OnBundleDrvAdded();
+    if (ParseBaseDriverInfo()) {
+        OnBundleDrvAdded(BUNDLE_ADDED);
     }
     FinishTrace(LABEL);
 }
@@ -98,14 +98,14 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
     */
 void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, const int userId)
 {
-    EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated");
+    EDM_LOGI(MODULE_PKG_MGR, "OnBundleUpdated");
     StartTrace(LABEL, "OnBundleUpdated");
     if (QueryExtensionAbilityInfos(bundleName, userId) != ERR_OK) {
         return;
     }
 
-    if (ParseBaseDriverInfo(BUNDLE_UPDATED)) {
-        OnBundleDrvUpdated();
+    if (ParseBaseDriverInfo()) {
+        OnBundleDrvUpdated(BUNDLE_UPDATED);
     }
     FinishTrace(LABEL);
 }
@@ -117,11 +117,9 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     */
 void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, const int userId)
 {
-    EDM_LOGE(MODULE_PKG_MGR, "OnBundleRemoved");
+    EDM_LOGI(MODULE_PKG_MGR, "OnBundleRemoved");
     StartTrace(LABEL, "OnBundleRemoved");
-
     OnBundleDrvRemoved(bundleName);
-
     FinishTrace(LABEL);
 }
 
@@ -231,7 +229,7 @@ void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Met
     }
 }
 
-bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
+bool DrvBundleStateCallback::ParseBaseDriverInfo()
 {
     shared_ptr<IBusExtension> extInstance = nullptr;
     DriverInfo tmpDrvInfo;
@@ -263,10 +261,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
 
         ChangeValue(tmpDrvInfo, metadata);
 
-        if (tmpDrvInfo.GetBusName() == "USB") {
-            extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName("USB");
-        }
-
+        extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(tmpDrvInfo.GetBusName());
         if (extInstance == nullptr) {
             EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetInstance at bus:%{public}s", tmpDrvInfo.bus_.c_str());
             continue;
@@ -276,10 +271,6 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo(int bundleStatus)
         if (tmpDrvInfo.driverInfoExt_ == nullptr) {
             EDM_LOGE(MODULE_PKG_MGR, "ParseDriverInfo null");
             continue;
-        }
-
-        if (m_pFun != nullptr) {
-            m_pFun(bundleStatus, BusType::BUS_TYPE_USB, bundleName, abilityName);
         }
 
         bundleName += stiching + abilityName;
@@ -340,28 +331,38 @@ void DrvBundleStateCallback::StorageHistoryDrvInfo(std::vector<BundleInfo> &bund
             continue;
         }
 
-        if (ParseBaseDriverInfo(BUNDLE_NULL)) {
-            OnBundleDrvAdded();
+        if (ParseBaseDriverInfo()) {
+            OnBundleDrvAdded(BUNDLE_ADDED);
         }
     }
 }
 
-void DrvBundleStateCallback::OnBundleDrvAdded()
+void DrvBundleStateCallback::OnBundleDrvAdded(int bundleStatus)
 {
     for (auto ele : innerDrvInfos_) {
         allDrvInfos_[ele.first] = innerDrvInfos_[ele.first];
+        if (m_pFun != nullptr) {
+            string bundleName = ele.first.substr(0, ele.first.find_first_of(GetStiching()));
+            string abilityName = ele.first.substr(ele.first.find_last_of(GetStiching()) + 1);
+            m_pFun(bundleStatus, BusType::BUS_TYPE_USB, bundleName, abilityName);
+        }
     }
 }
 
-void DrvBundleStateCallback::OnBundleDrvUpdated()
+void DrvBundleStateCallback::OnBundleDrvUpdated(int bundleStatus)
 {
-    OnBundleDrvAdded();
+    OnBundleDrvAdded(bundleStatus);
 }
 
 void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
 {
     for (auto iter = allDrvInfos_.begin(); iter != allDrvInfos_.end();) {
         if (iter->first.find(bundleName) != std::string::npos) {
+            if (m_pFun != nullptr) {
+                string abilityName = iter->first.substr(iter->first.find_last_of(GetStiching()) + 1);
+                EDM_LOGI(MODULE_PKG_MGR, "abilityName:%{public}s", abilityName.c_str());
+                m_pFun(BUNDLE_REMOVED, BusType::BUS_TYPE_USB, bundleName, abilityName);
+            }
             iter = allDrvInfos_.erase(iter);
         } else {
             ++iter;
