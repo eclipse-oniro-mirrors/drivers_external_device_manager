@@ -27,6 +27,7 @@ ohos_shared_library("devicemanager_napi") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_napi_common",
     "ipc:ipc_single",
     "napi:ace_napi",
   ]

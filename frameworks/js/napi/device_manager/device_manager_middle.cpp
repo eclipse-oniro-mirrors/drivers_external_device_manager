@@ -23,6 +23,7 @@
 #include <vector>
 #include <uv.h>
 
+#include "napi_remote_object.h"
 #include "device_manager_middle.h"
 
 namespace OHOS {
@@ -233,13 +234,8 @@ static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, cons
         EDM_LOGE(MODULE_DEV_MGR, "Remote obj is null.");
     } else {
         napi_create_object(env, &remoteObj);
-        drvExtObj->IncStrongRef(nullptr);
-        auto drvExtPtr = drvExtObj.GetRefPtr();
-        napi_wrap(env, remoteObj, drvExtPtr, [](napi_env env, void *data, void *hint) {
-            sptr<IRemoteObject> drvExt(reinterpret_cast<IRemoteObject*>(data));
-            drvExt->DecStrongRef(nullptr);
-        },
-        nullptr, nullptr);
+        EDM_LOGI(MODULE_DEV_MGR, "Remote obj create.");
+        remoteObj = NAPI_ohos_rpc_CreateJsRemoteObject(env, drvExtObj);
     }
 
     napi_value result;
