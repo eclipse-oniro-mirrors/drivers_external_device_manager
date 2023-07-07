@@ -23,6 +23,7 @@
 #include <vector>
 #include <uv.h>
 
+#include "napi_remote_object.h"
 #include "device_manager_middle.h"
 
 namespace OHOS {
@@ -94,7 +95,7 @@ static void UnbindDeviceWorkCb(uv_work_t *work, int status)
         napi_value callResult;
         napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
         EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
-    } else if (data->bindDeferred != nullptr) {
+    } else if (data->unbindDeferred != nullptr) {
         if (data->errMsg.IsOk()) {
             napi_resolve_deferred(data->env, data->unbindDeferred, result);
         } else {
@@ -195,7 +196,7 @@ void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 
     auto asyncData = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
-    if (asyncData->unbindCallback == nullptr) {
+    if (asyncData == nullptr || (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr)) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
         return;
     }
@@ -232,14 +233,8 @@ static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, cons
         napi_get_undefined(env, &remoteObj);
         EDM_LOGE(MODULE_DEV_MGR, "Remote obj is null.");
     } else {
-        napi_create_object(env, &remoteObj);
-        drvExtObj->IncStrongRef(nullptr);
-        auto drvExtPtr = drvExtObj.GetRefPtr();
-        napi_wrap(env, remoteObj, drvExtPtr, [](napi_env env, void *data, void *hint) {
-            sptr<IRemoteObject> drvExt(reinterpret_cast<IRemoteObject*>(data));
-            drvExt->DecStrongRef(nullptr);
-        },
-        nullptr, nullptr);
+        EDM_LOGI(MODULE_DEV_MGR, "Remote obj create.");
+        remoteObj = NAPI_ohos_rpc_CreateJsRemoteObject(env, drvExtObj);
     }
 
     napi_value result;
