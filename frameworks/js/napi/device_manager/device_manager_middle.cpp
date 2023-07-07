@@ -196,7 +196,7 @@ void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 
     auto asyncData = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
-    if (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr) {
+    if (asyncData == nullptr || (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr)) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
         return;
     }
