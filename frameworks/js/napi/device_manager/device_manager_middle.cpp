@@ -95,7 +95,7 @@ static void UnbindDeviceWorkCb(uv_work_t *work, int status)
         napi_value callResult;
         napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
         EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
-    } else if (data->bindDeferred != nullptr) {
+    } else if (data->unbindDeferred != nullptr) {
         if (data->errMsg.IsOk()) {
             napi_resolve_deferred(data->env, data->unbindDeferred, result);
         } else {
@@ -196,7 +196,7 @@ void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 
     auto asyncData = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
-    if (asyncData->unbindCallback == nullptr) {
+    if (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
         return;
     }
