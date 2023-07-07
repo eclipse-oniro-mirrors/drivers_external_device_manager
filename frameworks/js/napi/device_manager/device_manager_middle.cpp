@@ -233,7 +233,6 @@ static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, cons
         napi_get_undefined(env, &remoteObj);
         EDM_LOGE(MODULE_DEV_MGR, "Remote obj is null.");
     } else {
-        napi_create_object(env, &remoteObj);
         EDM_LOGI(MODULE_DEV_MGR, "Remote obj create.");
         remoteObj = NAPI_ohos_rpc_CreateJsRemoteObject(env, drvExtObj);
     }
