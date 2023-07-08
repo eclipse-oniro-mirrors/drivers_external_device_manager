@@ -18,8 +18,10 @@
 
 #include <memory>
 #include <string>
-#include <message_parcel.h>
+
+#include "emit_event_types.h"
 #include "ext_object.h"
+#include "message_parcel.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -62,6 +64,10 @@ public:
     uint16_t productId;
     uint16_t vendorId;
 };
+
+constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
+bool EmitItmeMarshalling(const std::vector<EmitItem> &items, MessageParcel &parcel);
+std::optional<std::vector<EmitItem>> EmitItmeUnMarshalling(MessageParcel &parcel);
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 #endif // DRIVER_EXTENSION_MANAGER_TYPES_H

@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
 #include "driver_ext_mgr_types.h"
 #include <sstream>
+
 #include "hilog_wrapper.h"
 
 namespace OHOS {
@@ -153,6 +153,77 @@ std::shared_ptr<DeviceData> USBDevice::UnMarshalling(MessageParcel &parcel)
     }
 
     return device;
+}
+
+bool EmitItmeMarshalling(const std::vector<EmitItem> &items, MessageParcel &parcel)
+{
+    if (!parcel.WriteUint32(static_cast<uint32_t>(items.size()))) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to write vector size");
+        return false;
+    }
+
+    for (auto &ele : items) {
+        if (!parcel.WriteInt32(ele.deviceId)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to write deviceId");
+            return false;
+        }
+
+        if (!parcel.WriteUint16(ele.type)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to write type");
+            return false;
+        }
+
+        if (!parcel.WriteUint16(ele.code)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to write code");
+            return false;
+        }
+        if (!parcel.WriteUint32(ele.value)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to write value");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+std::optional<std::vector<EmitItem>> EmitItmeUnMarshalling(MessageParcel &parcel)
+{
+    uint32_t size = 0;
+    if (!parcel.ReadUint32(size)) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to read size");
+        return std::nullopt;
+    }
+
+    if (size > MAX_EMIT_ITEM_NUM) {
+        EDM_LOGE(MODULE_DEV_MGR, "size out of range");
+        return std::nullopt;
+    }
+
+    std::vector<EmitItem> items;
+    EmitItem item;
+    for (uint32_t i = 0; i < size; ++i) {
+        if (!parcel.ReadInt32(item.deviceId)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to read deviceId");
+            return std::nullopt;
+        }
+
+        if (!parcel.ReadUint16(item.type)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to read type");
+            return std::nullopt;
+        }
+
+        if (!parcel.ReadUint16(item.code)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to read code");
+            return std::nullopt;
+        }
+
+        if (!parcel.ReadUint32(item.value)) {
+            EDM_LOGE(MODULE_DEV_MGR, "failed to read value");
+            return std::nullopt;
+        }
+        items.push_back(item);
+    }
+    return items;
 }
 
 std::string USBDevice::Dump()

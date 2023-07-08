@@ -23,6 +23,9 @@ enum class DriverExtMgrInterfaceCode : uint32_t {
     QUERY_DEVICE = 0,
     BIND_DEVICE,
     UNBIND_DEVICE,
+    INPUT_CREATE_DEVICE,
+    INPUT_EMIT_EVENT,
+    INPUT_DESTROY_DEVICE,
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

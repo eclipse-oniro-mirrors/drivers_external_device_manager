@@ -15,14 +15,14 @@
 
 #ifndef IDRIVER_EXTENSION_MANAGER_H
 #define IDRIVER_EXTENSION_MANAGER_H
-
 #include <vector>
-#include <iremote_broker.h>
+
 #include "driver_ext_mgr_types.h"
 #include "edm_errors.h"
 #include "ext_object.h"
 #include "hdf_ext_devmgr_interface_code.h"
 #include "idriver_ext_mgr_callback.h"
+#include "iremote_broker.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -34,6 +34,9 @@ public:
     virtual UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) = 0;
     virtual UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) = 0;
     virtual UsbErrCode UnBindDevice(uint64_t deviceId) = 0;
+    virtual UsbErrCode CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure) = 0;
+    virtual UsbErrCode EmitEvent(const std::vector<EmitItem> &items) = 0;
+    virtual UsbErrCode DestroyDevice(void) = 0;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

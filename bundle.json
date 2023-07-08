@@ -42,7 +42,8 @@
                 "napi",
                 "safwk",
                 "eventhandler",
-                "ace_engine"
+                "ace_engine",
+                "access_token"
             ],
             "third_party": [
                 "bounds_checking_function",
