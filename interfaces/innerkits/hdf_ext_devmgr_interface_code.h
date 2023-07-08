@@ -26,6 +26,7 @@ enum class DriverExtMgrInterfaceCode : uint32_t {
     INPUT_CREATE_DEVICE,
     INPUT_EMIT_EVENT,
     INPUT_DESTROY_DEVICE,
+    INVALID_CODE,
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
