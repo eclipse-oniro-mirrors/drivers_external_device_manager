@@ -62,7 +62,7 @@ public:
     virtual int32_t OnDisconnectDone(int resultCode) = 0;
     bool IsConnectDone();
     sptr<IRemoteObject> GetRemoteObj();
-private:
+protected:
     friend class DriverExtensionController;
     std::shared_ptr<DrvExtConnectionInfo> info_ = nullptr;
 };
