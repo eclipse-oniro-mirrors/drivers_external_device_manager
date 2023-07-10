@@ -29,12 +29,6 @@ public:
     VirtualTouchPad(const uint32_t maxX, const uint32_t maxY, const uint32_t maxPressure);
     DISALLOW_COPY_AND_MOVE(VirtualTouchPad);
     virtual ~VirtualTouchPad() {}
-
-protected:
-    virtual const std::vector<uint32_t> &GetEventTypes() const;
-    virtual const std::vector<uint32_t> &GetKeys() const;
-    virtual const std::vector<uint32_t> &GetProperties() const;
-    virtual const std::vector<uint32_t> &GetAbs() const;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
