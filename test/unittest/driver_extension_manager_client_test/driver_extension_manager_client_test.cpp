@@ -216,7 +216,7 @@ HWTEST_F(DrvExtMgrClientTest, InvalidCode001, TestSize.Level1)
     auto saObj = samgr->CheckSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
     ASSERT_NE(saObj, nullptr);
 
-    uint32_t invalid_code = static_cast<uint32_t>(DriverExtMgrInterfaceCode::UNBIND_DEVICE) + 1;
+    uint32_t invalid_code = static_cast<uint32_t>(DriverExtMgrInterfaceCode::INVALID_CODE);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
