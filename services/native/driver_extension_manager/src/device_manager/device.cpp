@@ -98,6 +98,10 @@ int32_t Device::Disconnect()
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
+    if (connectNofitier_ != nullptr && connectNofitier_->IsInvalidDrvExtConnectionInfo()) {
+        EDM_LOGI(MODULE_DEV_MGR, "driver extension has been disconnected");
+        return UsbErrCode::EDM_OK;
+    }
     uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
     std::string bundleInfo = GetBundleInfo();
     std::string bundleName = Device::GetBundleName(bundleInfo);
@@ -105,7 +109,7 @@ int32_t Device::Disconnect()
     int32_t ret = DriverExtensionController::GetInstance().DisconnectDriverExtension(
         bundleName, abilityName, connectNofitier_, busDevId);
     if (ret != UsbErrCode::EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
+        EDM_LOGE(MODULE_DEV_MGR, "failed to disconnect driver extension");
         return ret;
     }
 
@@ -137,6 +141,7 @@ void Device::OnDisconnect(int resultCode)
 
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     drvExtRemote_ = nullptr;
+    connectNofitier_->ClearDrvExtConnectionInfo();
     for (auto &callback : callbacks_) {
         callback->OnUnBind(GetDeviceInfo()->GetDeviceId(), {static_cast<UsbErrCode>(resultCode), ""});
     }

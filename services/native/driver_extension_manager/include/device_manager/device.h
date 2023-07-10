@@ -141,6 +141,14 @@ public:
     explicit DrvExtConnNotify(std::weak_ptr<Device> device) : device_(device) {}
     int32_t OnConnectDone(const sptr<IRemoteObject> &remote, int resultCode) override;
     int32_t OnDisconnectDone(int resultCode) override;
+    bool IsInvalidDrvExtConnectionInfo()
+    {
+        return info_ == nullptr;
+    }
+    void ClearDrvExtConnectionInfo()
+    {
+        info_ = nullptr;
+    }
 
 private:
     std::weak_ptr<Device> device_;

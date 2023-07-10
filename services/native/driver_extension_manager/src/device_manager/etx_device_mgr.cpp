@@ -163,6 +163,7 @@ int32_t ExtDeviceManager::RemoveAllDevIdOfBundleInfoMap(shared_ptr<Device> devic
 
 int32_t ExtDeviceManager::AddBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName)
 {
+    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     if (busType <= BUS_TYPE_INVALID || busType > BUS_TYPE_TEST) {
         EDM_LOGE(MODULE_DEV_MGR, "busType para invalid");
         return EDM_ERR_INVALID_PARAM;
@@ -213,6 +214,7 @@ int32_t ExtDeviceManager::AddBundleInfo(enum BusType busType, const string &bund
 
 int32_t ExtDeviceManager::RemoveBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName)
 {
+    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     if (busType <= BUS_TYPE_INVALID || busType >= BUS_TYPE_TEST) {
         EDM_LOGE(MODULE_DEV_MGR, "busType para invalid");
         return EDM_ERR_INVALID_PARAM;
@@ -238,8 +240,8 @@ int32_t ExtDeviceManager::RemoveBundleInfo(enum BusType busType, const string &b
 
         // iterate over device by bustype
         if (bundleInfo.compare(device->GetBundleInfo()) == 0) {
-            device->RemoveBundleInfo(); // update device
             int32_t ret = RemoveAllDevIdOfBundleInfoMap(device, bundleInfo);
+            device->RemoveBundleInfo(); // update device
             if (ret != EDM_OK) {
                 EDM_LOGE(MODULE_DEV_MGR,
                     "deviceId[%{public}016" PRIX64 "] stop driver extension ability[%{public}s] fail[%{public}d]",
@@ -252,6 +254,7 @@ int32_t ExtDeviceManager::RemoveBundleInfo(enum BusType busType, const string &b
 
 int32_t ExtDeviceManager::UpdateBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName)
 {
+    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     // stop ability of device and reset bundleInfo of device
     int32_t ret = RemoveBundleInfo(busType, bundleName, abilityName);
     if (ret != EDM_OK) {
@@ -299,7 +302,7 @@ int32_t ExtDeviceManager::UpdateBundleStatusCallback(
     // remove bundle
     ret = ExtDeviceManager::GetInstance().RemoveBundleInfo((enum BusType)busType, bundleName, abilityName);
     if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "callback update bundle info fail");
+        EDM_LOGE(MODULE_DEV_MGR, "callback remove bundle info fail");
     }
 
     return ret;
@@ -382,7 +385,7 @@ int32_t ExtDeviceManager::UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo)
     }
 
     if (bundleInfo.empty()) {
-        EDM_LOGD(MODULE_DEV_MGR, "deviceId %{public}016" PRIX64 " bundleInfo is empty", deviceId);
+        EDM_LOGI(MODULE_DEV_MGR, "deviceId %{public}016" PRIX64 " bundleInfo is empty", deviceId);
         return EDM_OK;
     }
 
