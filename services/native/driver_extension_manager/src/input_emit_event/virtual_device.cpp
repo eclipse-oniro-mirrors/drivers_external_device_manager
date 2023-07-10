@@ -14,6 +14,7 @@
  */
 
 #include "virtual_device.h"
+#include <map>
 
 #include <fcntl.h>
 #include <securec.h>
@@ -65,16 +66,21 @@ bool VirtualDevice::SetUp()
         return false;
     }
 
-    errno_t ret = strncpy_s(dev_.name, MAX_NAME_LENGTH, deviceName_, sizeof(dev_.name));
+    if (!CreateKey()) {
+        EDM_LOGE(MODULE_USB_DDK, "Failed to create uinput KeyValue");
+        return false;
+    }
+
+    errno_t ret = strncpy_s(uinputDev_.name, MAX_NAME_LENGTH, deviceName_, sizeof(uinputDev_.name));
     if (ret != EOK) {
         EDM_LOGE(MODULE_USB_DDK, "Failed to copy deviceName");
         return false;
     }
-    dev_.id.bustype = busType_;
-    dev_.id.vendor = vendorId_;
-    dev_.id.product = productId_;
-    dev_.id.version = version_;
-    if (write(fd_, &dev_, sizeof(dev_)) < 0) {
+    uinputDev_.id.bustype = busType_;
+    uinputDev_.id.vendor = vendorId_;
+    uinputDev_.id.product = productId_;
+    uinputDev_.id.version = version_;
+    if (write(fd_, &uinputDev_, sizeof(uinputDev_)) < 0) {
         EDM_LOGE(MODULE_USB_DDK, "Unable to set input device info");
         return false;
     }
@@ -139,32 +145,79 @@ bool VirtualDevice::EmitEvent(uint16_t type, uint16_t code, uint32_t value) cons
 
 const std::vector<uint32_t> &VirtualDevice::GetEventTypes() const
 {
-    static const std::vector<uint32_t> evtTypes {};
-    return evtTypes;
+    return eventTypes_;
 }
 
 const std::vector<uint32_t> &VirtualDevice::GetKeys() const
 {
-    static const std::vector<uint32_t> keys {};
-    return keys;
+    return keys_;
 }
 
 const std::vector<uint32_t> &VirtualDevice::GetProperties() const
 {
-    static const std::vector<uint32_t> properties {};
-    return properties;
+    return properties_;
 }
 
 const std::vector<uint32_t> &VirtualDevice::GetAbs() const
 {
-    static const std::vector<uint32_t> abs {};
-    return abs;
+    return abs_;
 }
 
 const std::vector<uint32_t> &VirtualDevice::GetRelBits() const
 {
-    static const std::vector<uint32_t> relBits {};
-    return relBits;
+    return relBits_;
+}
+
+const std::vector<uint32_t> &VirtualDevice::GetLeds() const
+{
+    return leds_;
+}
+
+const std::vector<uint32_t> &VirtualDevice::GetRepeats() const
+{
+    return repeats_;
+}
+
+const std::vector<uint32_t> &VirtualDevice::GetMiscellaneous() const
+{
+    return miscellaneous_;
+}
+
+const std::vector<uint32_t> &VirtualDevice::GetSwitches() const
+{
+    return switches_;
+}
+
+bool VirtualDevice::CreateKey()
+{
+    auto fun = [&](int32_t uiSet, const std::vector<uint32_t> &list) -> bool {
+        for (const auto &item : list) {
+            if (ioctl(fd_, uiSet, item) < 0) {
+                EDM_LOGE(
+                    MODULE_USB_DDK, "not setting event type: %{public}d, deviceName:%{public}s", item, deviceName_);
+                return false;
+            }
+        }
+        return true;
+    };
+    std::map<int32_t, std::vector<uint32_t>> uinputTypes;
+    uinputTypes[UI_SET_EVBIT] = GetEventTypes();
+    uinputTypes[UI_SET_KEYBIT] = GetKeys();
+    uinputTypes[UI_SET_PROPBIT] = GetProperties();
+    uinputTypes[UI_SET_ABSBIT] = GetAbs();
+    uinputTypes[UI_SET_RELBIT] = GetRelBits();
+
+    uinputTypes[UI_SET_MSCBIT] = GetMiscellaneous();
+    uinputTypes[UI_SET_LEDBIT] = GetLeds();
+    uinputTypes[UI_SET_SWBIT] = GetSwitches();
+    uinputTypes[UI_SET_FFBIT] = GetRepeats();
+
+    for (const auto &item : uinputTypes) {
+        if (!fun(item.first, item.second)) {
+            return false;
+        }
+    }
+    return true;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS
