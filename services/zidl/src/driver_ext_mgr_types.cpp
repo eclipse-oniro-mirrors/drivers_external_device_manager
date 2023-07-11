@@ -155,19 +155,19 @@ std::shared_ptr<DeviceData> USBDevice::UnMarshalling(MessageParcel &parcel)
     return device;
 }
 
-bool EmitItmeMarshalling(const std::vector<EmitItem> &items, MessageParcel &parcel)
+bool EmitItemMarshalling(int32_t deviceId, const std::vector<EmitItem> &items, MessageParcel &parcel)
 {
+    if (!parcel.WriteUint32(deviceId)) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to write device id");
+        return false;
+    }
+
     if (!parcel.WriteUint32(static_cast<uint32_t>(items.size()))) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to write vector size");
         return false;
     }
 
     for (auto &ele : items) {
-        if (!parcel.WriteInt32(ele.deviceId)) {
-            EDM_LOGE(MODULE_DEV_MGR, "failed to write deviceId");
-            return false;
-        }
-
         if (!parcel.WriteUint16(ele.type)) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to write type");
             return false;
@@ -186,8 +186,15 @@ bool EmitItmeMarshalling(const std::vector<EmitItem> &items, MessageParcel &parc
     return true;
 }
 
-std::optional<std::vector<EmitItem>> EmitItmeUnMarshalling(MessageParcel &parcel)
+std::optional<std::vector<EmitItem>> EmitItemUnMarshalling(MessageParcel &parcel, int32_t &deviceId)
 {
+    uint32_t id = 0;
+    if (!parcel.ReadUint32(id)) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to read device id");
+        return std::nullopt;
+    }
+    deviceId = static_cast<int32_t>(id);
+
     uint32_t size = 0;
     if (!parcel.ReadUint32(size)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read size");
@@ -202,11 +209,6 @@ std::optional<std::vector<EmitItem>> EmitItmeUnMarshalling(MessageParcel &parcel
     std::vector<EmitItem> items;
     EmitItem item;
     for (uint32_t i = 0; i < size; ++i) {
-        if (!parcel.ReadInt32(item.deviceId)) {
-            EDM_LOGE(MODULE_DEV_MGR, "failed to read deviceId");
-            return std::nullopt;
-        }
-
         if (!parcel.ReadUint16(item.type)) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to read type");
             return std::nullopt;

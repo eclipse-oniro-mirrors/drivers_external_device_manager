@@ -32,7 +32,7 @@ int32_t OH_Usb_CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
     return EDM_OK;
 }
 
-int32_t OH_Usb_EmitEvent(const EmitItem items[], uint32_t length)
+int32_t OH_Usb_EmitEvent(int32_t deviceId, const EmitItem items[], uint32_t length)
 {
     if (length > MAX_EMIT_ITEM_NUM) {
         EDM_LOGE(MODULE_DEV_MGR, "length out of range");
@@ -40,7 +40,7 @@ int32_t OH_Usb_EmitEvent(const EmitItem items[], uint32_t length)
     }
 
     std::vector<EmitItem> itemsTmp(items, items + length);
-    if (auto ret = g_edmClient.EmitEvent(itemsTmp); ret != UsbErrCode::EDM_OK) {
+    if (auto ret = g_edmClient.EmitEvent(deviceId, itemsTmp); ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_USB_DDK, "emit event failed:%{public}d", ret);
         return ret;
     }

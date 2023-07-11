@@ -122,10 +122,10 @@ UsbErrCode DriverExtMgr::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t max
     return static_cast<UsbErrCode>(EmitEventManager::GetInstance().CreateDevice(maxX, maxY, maxPressure));
 }
 
-UsbErrCode DriverExtMgr::EmitEvent(const std::vector<EmitItem> &items)
+UsbErrCode DriverExtMgr::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().EmitEvent(items));
+    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().EmitEvent(deviceId, items));
 }
 
 UsbErrCode DriverExtMgr::DestroyDevice(void)

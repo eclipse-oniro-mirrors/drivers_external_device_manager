@@ -54,21 +54,21 @@ HWTEST_F(EmitEventTest, EmitEvent001, TestSize.Level1)
         {0, 3, 1,     50 },
         {0, 0, 0,     0  }
     });
-    auto ret = edmClient.EmitEvent(items);
+    auto ret = edmClient.EmitEvent(0, items);
     ASSERT_EQ(ret, 0);
 }
 
 HWTEST_F(EmitEventTest, EmitEvent002, TestSize.Level1)
 {
     std::vector<EmitItem> items(21, {0, 1, 0x14a, 108});
-    auto ret = edmClient.EmitEvent(items);
+    auto ret = edmClient.EmitEvent(0, items);
     ASSERT_NE(ret, 0);
 }
 
 HWTEST_F(EmitEventTest, EmitEvent003, TestSize.Level1)
 {
     std::vector<EmitItem> items(20, {0, 1, 0x14a, 108});
-    auto ret = edmClient.EmitEvent(items);
+    auto ret = edmClient.EmitEvent(0, items);
     ASSERT_EQ(ret, 0);
 }
 } // namespace ExternalDeviceManager

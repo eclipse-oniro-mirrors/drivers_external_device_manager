@@ -120,12 +120,12 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
     return proxy_->UnBindDevice(deviceId);
 }
 
-UsbErrCode DriverExtMgrClient::EmitEvent(const std::vector<EmitItem> &items)
+UsbErrCode DriverExtMgrClient::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
 {
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
-    return proxy_->EmitEvent(items);
+    return proxy_->EmitEvent(deviceId, items);
 }
 
 UsbErrCode DriverExtMgrClient::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)

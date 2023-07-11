@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 #ifndef EMIT_EVENT_TYPES_H
+#define EMIT_EVENT_TYPES_H
 
 #include <stdint.h>
-#define EMIT_EVENT_TYPES_H
+
 struct EmitItem {
-    int32_t deviceId;
     uint16_t type;
     uint16_t code;
     uint32_t value;

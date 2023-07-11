@@ -30,7 +30,7 @@ public:
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     UsbErrCode UnBindDevice(uint64_t deviceId) override;
     UsbErrCode CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure) override;
-    UsbErrCode EmitEvent(const std::vector<EmitItem> &items) override;
+    UsbErrCode EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items) override;
     UsbErrCode DestroyDevice(void) override;
 
 private:

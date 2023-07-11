@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,40 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef INJECT_THREAD_H
-#define INJECT_THREAD_H
+#ifndef VIRTUAL_KEYBOARD_H
+#define VIRTUAL_KEYBOARD_H
 
 #include <cstdint>
-#include <memory>
-#include <mutex>
-#include <thread>
-#include <vector>
 
-#include "emit_event_types.h"
+#include "nocopyable.h"
 #include "virtual_device.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-class InjectThread {
+class VirtualKeyboard : public VirtualDevice {
 public:
-    InjectThread(std::shared_ptr<VirtualDevice> virtualDevice);
-    virtual ~InjectThread();
-    void WaitFunc(const std::vector<EmitItem> &items);
-    void Start();
-    void Stop();
-
-private:
-    static void RunThread(void *param);
-    void InjectFunc();
-
-private:
-    std::mutex mutex_;
-    std::condition_variable conditionVariable_;
-    bool threadRun_;
-    std::vector<EmitItem> injectQueue_;
-    std::thread thread_;
-    std::shared_ptr<VirtualDevice> virtualDevice_;
+    VirtualKeyboard();
+    DISALLOW_COPY_AND_MOVE(VirtualKeyboard);
+    ~VirtualKeyboard() = default;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
-#endif // INJECT_THREAD_H
+#endif // VIRTUAL_KEYBOARD_H

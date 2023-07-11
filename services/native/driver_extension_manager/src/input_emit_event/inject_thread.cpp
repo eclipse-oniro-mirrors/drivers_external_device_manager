@@ -20,46 +20,49 @@
 #include "hilog_wrapper.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-std::mutex InjectThread::mutex_;
-bool InjectThread::threadRun_ = true;
-std::condition_variable InjectThread::conditionVariable_;
-std::vector<InjectInputEvent> InjectThread::injectQueue_;
-std::unique_ptr<VirtualTouchPad> InjectThread::touchPad_ = nullptr;
-
-InjectThread::InjectThread(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+InjectThread::InjectThread(std::shared_ptr<VirtualDevice> virtualDevice)
 {
-    touchPad_ = std::make_unique<VirtualTouchPad>(maxX, maxY, maxPressure);
-    if (touchPad_ == nullptr) {
-        EDM_LOGE(MODULE_USB_DDK, "create touchpad failed");
-    }
-    touchPad_->SetUp();
+    virtualDevice_ = virtualDevice;
     threadRun_ = true;
 }
 
-void InjectThread::InjectFunc() const
+InjectThread::~InjectThread()
 {
-    prctl(PR_SET_NAME, "mmi-inject");
+    threadRun_ = false;
+    conditionVariable_.notify_all();
+}
+
+void InjectThread::Start()
+{
+    thread_ = std::thread(InjectThread::RunThread, this);
+    pthread_setname_np(thread_.native_handle(), "emitEvent");
+}
+
+void InjectThread::RunThread(void *param)
+{
+    InjectThread *thread = (InjectThread *)param;
+    thread->InjectFunc();
+}
+
+void InjectThread::InjectFunc()
+{
+    prctl(PR_SET_NAME, "ExternalDeviceManager-inject");
     std::unique_lock<std::mutex> uniqueLock(mutex_);
     while (threadRun_) {
         conditionVariable_.wait(uniqueLock, [this] {
             return (injectQueue_.size() > 0 || !threadRun_);
         });
-
-        while (injectQueue_.size() > 0) {
-            touchPad_->EmitEvent(injectQueue_[0].type, injectQueue_[0].code, injectQueue_[0].value);
-            injectQueue_.erase(injectQueue_.begin());
+        for (auto &event : injectQueue_) {
+            virtualDevice_->EmitEvent(event.type, event.code, event.value);
         }
+        injectQueue_.clear();
     }
 }
 
-void InjectThread::WaitFunc(const std::vector<EmitItem> &items) const
+void InjectThread::WaitFunc(const std::vector<EmitItem> &items)
 {
-    {
-        std::lock_guard<std::mutex> lockGuard(mutex_);
-        for (auto &ele : items) {
-            injectQueue_.push_back({ele.type, ele.code, ele.value});
-        }
-    }
+    std::lock_guard<std::mutex> lockGuard(mutex_);
+    injectQueue_.insert(injectQueue_.begin(), items.begin(), items.end());
     conditionVariable_.notify_one();
 }
 

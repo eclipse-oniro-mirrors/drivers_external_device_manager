@@ -19,6 +19,10 @@
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #include "ipc_skeleton.h"
+#include "virtual_keyboard.h"
+#include "virtual_touch_pad.h"
+
+static const int MAX_DEVICE_SIZE = 2;
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -32,39 +36,24 @@ int32_t EmitEventManager::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t ma
     }
 
     DestroyDevice();
-
-    injectThd_ = std::make_shared<InjectThread>(maxX, maxY, maxPressure);
-    if (injectThd_ == nullptr) {
-        EDM_LOGE(MODULE_USB_DDK, "crearte InjectThread failed");
-        return EDM_NOK;
-    }
-
-    thread_ = std::thread(&InjectThread::InjectFunc, injectThd_);
+    vitualDeviceList_.push_back(std::make_unique<VirtualDeviceInject>(std::make_shared<VirtualKeyboard>()));
+    vitualDeviceList_.push_back(std::make_unique<VirtualDeviceInject>
+        (std::make_shared<VirtualTouchPad>(maxX, maxY, maxPressure)));
     return EDM_OK;
 }
 
-int32_t EmitEventManager::EmitEvent(const std::vector<EmitItem> &items)
+int32_t EmitEventManager::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
 {
-    if (injectThd_ == nullptr) {
-        EDM_LOGE(MODULE_USB_DDK, "please CreateDevice first");
-        return EDM_ERR_INVALID_OBJECT;
+    if (deviceId < 0 || deviceId >= MAX_DEVICE_SIZE) {
+        EDM_LOGE(MODULE_USB_DDK, "error deviceId");
     }
-
-    injectThd_->WaitFunc(items);
+    vitualDeviceList_[deviceId]->EmitEvent(items);
     return EDM_OK;
 }
 
 int32_t EmitEventManager::DestroyDevice()
 {
-    if (injectThd_ == nullptr) {
-        return EDM_OK;
-    }
-
-    if (thread_.joinable()) {
-        injectThd_->Stop();
-        thread_.join();
-        injectThd_ = nullptr;
-    }
+    vitualDeviceList_.clear();
     return EDM_OK;
 }
 
