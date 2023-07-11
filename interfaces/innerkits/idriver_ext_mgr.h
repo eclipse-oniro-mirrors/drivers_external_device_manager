@@ -35,7 +35,7 @@ public:
     virtual UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) = 0;
     virtual UsbErrCode UnBindDevice(uint64_t deviceId) = 0;
     virtual UsbErrCode CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure) = 0;
-    virtual UsbErrCode EmitEvent(const std::vector<EmitItem> &items) = 0;
+    virtual UsbErrCode EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items) = 0;
     virtual UsbErrCode DestroyDevice(void) = 0;
 };
 } // namespace ExternalDeviceManager

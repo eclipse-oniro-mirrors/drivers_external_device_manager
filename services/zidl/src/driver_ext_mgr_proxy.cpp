@@ -184,7 +184,7 @@ UsbErrCode DriverExtMgrProxy::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_
     return UsbErrCode::EDM_OK;
 }
 
-UsbErrCode DriverExtMgrProxy::EmitEvent(const std::vector<EmitItem> &items)
+UsbErrCode DriverExtMgrProxy::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -201,7 +201,7 @@ UsbErrCode DriverExtMgrProxy::EmitEvent(const std::vector<EmitItem> &items)
         return UsbErrCode::EDM_ERR_INVALID_PARAM;
     }
 
-    if (!EmitItmeMarshalling(items, data)) {
+    if (!EmitItemMarshalling(deviceId, items, data)) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to marshall EmitItem");
         return UsbErrCode::EDM_ERR_INVALID_PARAM;
     }

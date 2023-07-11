@@ -133,6 +133,8 @@ bool VirtualDevice::EmitEvent(uint16_t type, uint16_t code, uint32_t value) cons
     event.type = type;
     event.code = code;
     event.value = value;
+    EDM_LOGW(MODULE_USB_DDK, "type:%{public}d code:%{public}d value:%{public}d",
+        event.type, event.code, event.value);
 #ifndef __MUSL__
     gettimeofday(&event.time, nullptr);
 #endif

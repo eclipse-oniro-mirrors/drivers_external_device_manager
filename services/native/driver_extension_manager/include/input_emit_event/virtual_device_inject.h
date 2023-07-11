@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,40 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef INJECT_THREAD_H
-#define INJECT_THREAD_H
+#ifndef VIRTUALDEVICE_INJECT_H
+#define VIRTUALDEVICE_INJECT_H
 
-#include <cstdint>
+#include <map>
 #include <memory>
-#include <mutex>
-#include <thread>
-#include <vector>
 
-#include "emit_event_types.h"
+#include "inject_thread.h"
 #include "virtual_device.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-class InjectThread {
+class VirtualDeviceInject {
 public:
-    InjectThread(std::shared_ptr<VirtualDevice> virtualDevice);
-    virtual ~InjectThread();
-    void WaitFunc(const std::vector<EmitItem> &items);
-    void Start();
-    void Stop();
-
+    VirtualDeviceInject(std::shared_ptr<VirtualDevice> virtualDevice);
+    DISALLOW_COPY_AND_MOVE(VirtualDeviceInject);
+    virtual ~VirtualDeviceInject();
+    void EmitEvent(const std::vector<EmitItem> &items);
 private:
-    static void RunThread(void *param);
-    void InjectFunc();
-
-private:
-    std::mutex mutex_;
-    std::condition_variable conditionVariable_;
-    bool threadRun_;
-    std::vector<EmitItem> injectQueue_;
-    std::thread thread_;
+    std::unique_ptr<InjectThread> injectThread_;
     std::shared_ptr<VirtualDevice> virtualDevice_;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
-#endif // INJECT_THREAD_H
+#endif // VIRTUALDEVICE_INJECT_H

@@ -159,13 +159,14 @@ int32_t DriverExtMgrStub::OnCreateDevice(MessageParcel &data, MessageParcel &rep
 
 int32_t DriverExtMgrStub::OnEmitEvent(MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    auto items = EmitItmeUnMarshalling(data);
+    int32_t deviceId = -1;
+    auto items = EmitItemUnMarshalling(data, deviceId);
     if (!items.has_value()) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to read emit items");
         return UsbErrCode::EDM_ERR_INVALID_PARAM;
     }
 
-    UsbErrCode ret = EmitEvent(items.value());
+    UsbErrCode ret = EmitEvent(deviceId, items.value());
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to call EmitEvent function:%{public}d", static_cast<int32_t>(ret));
         return ret;

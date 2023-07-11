@@ -19,6 +19,8 @@ ohos_shared_library("input_emit_event") {
     "emit_event_manager.cpp",
     "inject_thread.cpp",
     "virtual_device.cpp",
+    "virtual_device_inject.cpp",
+    "virtual_keyboard.cpp",
     "virtual_touch_pad.cpp",
   ]
 

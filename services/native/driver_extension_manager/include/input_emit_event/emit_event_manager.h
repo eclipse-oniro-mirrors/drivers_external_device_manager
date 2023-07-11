@@ -16,11 +16,10 @@
 #ifndef INPUT_EMIT_EVENT_EMIT_EVENT_MANAGER_H
 #define INPUT_EMIT_EVENT_EMIT_EVENT_MANAGER_H
 #include <inttypes.h>
-#include <thread>
 
 #include "emit_event_types.h"
-#include "inject_thread.h"
 #include "single_instance.h"
+#include "virtual_device_inject.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -29,15 +28,14 @@ class EmitEventManager final {
 
 public:
     int32_t CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure);
-    int32_t EmitEvent(const std::vector<EmitItem> &items);
+    int32_t EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items);
     int32_t DestroyDevice();
 
 private:
     EmitEventManager() = default;
     bool HasPermission(void);
     bool CheckHapPermission(uint32_t tokenId);
-    std::thread thread_;
-    std::shared_ptr<InjectThread> injectThd_ {nullptr};
+    std::vector<std::unique_ptr<VirtualDeviceInject>> vitualDeviceList_;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

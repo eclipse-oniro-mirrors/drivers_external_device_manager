@@ -66,8 +66,8 @@ public:
 };
 
 constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
-bool EmitItmeMarshalling(const std::vector<EmitItem> &items, MessageParcel &parcel);
-std::optional<std::vector<EmitItem>> EmitItmeUnMarshalling(MessageParcel &parcel);
+bool EmitItemMarshalling(int32_t deviceId, const std::vector<EmitItem> &items, MessageParcel &parcel);
+std::optional<std::vector<EmitItem>> EmitItemUnMarshalling(MessageParcel &parcel, int32_t &deviceId);
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 #endif // DRIVER_EXTENSION_MANAGER_TYPES_H
