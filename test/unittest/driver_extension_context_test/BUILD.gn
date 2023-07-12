@@ -65,6 +65,7 @@ ohos_unittest("driver_extension_context_test") {
     "hitrace:hitrace_meter",
     "init:libbeget_proxy",
     "ipc:ipc_core",
+    "napi:ace_napi",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
