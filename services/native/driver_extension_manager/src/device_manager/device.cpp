@@ -13,8 +13,11 @@
  * limitations under the License.
  */
 
-#include "device.h"
+#include <unistd.h>
+
+#include "ability_manager_errors.h"
 #include "hilog_wrapper.h"
+#include "device.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -51,6 +54,18 @@ int32_t Device::Connect()
     AddDrvExtConnNotify();
     int32_t ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
         bundleName, abilityName, connectNofitier_, busDevId);
+    // RESOLVE_ABILITY_ERR maybe due to bms is not ready in the boot process, sleep 100ms and try again
+    if (ret == AAFwk::RESOLVE_ABILITY_ERR) {
+        EDM_LOGW(MODULE_DEV_MGR, "%{public}s sleep 100ms to reconnect %{public}s %{public}s", __func__,
+            bundleName.c_str(), abilityName.c_str());
+        const int waitTimeMs = 100;
+        const int msToUs = 1000;
+        usleep(waitTimeMs * msToUs);
+        drvExtRemote_ = nullptr;
+        connectNofitier_->ClearDrvExtConnectionInfo();
+        ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
+            bundleName, abilityName, connectNofitier_, busDevId);
+    }
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
         return ret;
