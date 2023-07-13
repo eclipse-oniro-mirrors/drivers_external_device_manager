@@ -52,6 +52,7 @@ ohos_shared_library("driver_extension_device_manager") {
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [
+    "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
