@@ -11,16 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License
 
-import("//build/config/features.gni")
 import("//build/test.gni")
 
-group("fuzztest") {
+group("driver_extension_manager_fuzzer") {
   testonly = true
-  deps = []
-
-  deps += [
-    "bus_extension_fuzzer:bus_extension_fuzzer",
-    "driver_extension_manager_fuzzer:driver_extension_manager_fuzzer",
-    "drivers_pkg_manager_fuzzer:drivers_pkg_manager_fuzzer",
+  deps = [
+    "binddevice_fuzzer:BindDeviceFuzzTest",
+    "createdevice_fuzzer:CreateDeviceFuzzTest",
+    "destroydevice_fuzzer:DestroyDeviceFuzzTest",
+    "emitevent_fuzzer:EmitEventFuzzTest",
+    "querydevice_fuzzer:QueryDeviceFuzzTest",
+    "unbinddevice_fuzzer:UnBindDeviceFuzzTest",
   ]
 }

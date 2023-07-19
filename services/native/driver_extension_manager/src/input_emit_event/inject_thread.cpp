@@ -30,6 +30,9 @@ InjectThread::~InjectThread()
 {
     threadRun_ = false;
     conditionVariable_.notify_all();
+    if (thread_.joinable()) {
+        thread_.join();
+    }
 }
 
 void InjectThread::Start()
