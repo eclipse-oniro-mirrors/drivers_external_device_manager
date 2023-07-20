@@ -54,7 +54,7 @@ public:
         if (unbindCallback != nullptr) {
             napi_delete_reference(env, unbindCallback);
         }
-        
+
         drvExtObj = nullptr;
     }
 };
