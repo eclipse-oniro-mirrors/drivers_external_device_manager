@@ -22,8 +22,6 @@
 #include "virtual_keyboard.h"
 #include "virtual_touch_pad.h"
 
-static const int MAX_DEVICE_SIZE = 2;
-
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace Security::AccessToken;
@@ -44,9 +42,11 @@ int32_t EmitEventManager::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t ma
 
 int32_t EmitEventManager::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
 {
-    if (deviceId < 0 || deviceId >= MAX_DEVICE_SIZE) {
+    if (deviceId < 0 || deviceId >= vitualDeviceList_.size()) {
         EDM_LOGE(MODULE_USB_DDK, "error deviceId");
+        return EDM_NOK;
     }
+
     vitualDeviceList_[deviceId]->EmitEvent(items);
     return EDM_OK;
 }
