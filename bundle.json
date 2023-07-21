@@ -57,6 +57,7 @@
                 "//drivers/external_device_manager/services/native/driver_extension:driver_extension_module",
                 "//drivers/external_device_manager/sa_profile:ext_dev_mgr_sa",
                 "//drivers/external_device_manager/services:driver_extension_manager",
+                "//drivers/external_device_manager/services:driver_extension_manager_test",
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/driver_controller:driver_extension_controller",
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
