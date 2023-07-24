@@ -159,9 +159,9 @@ static int32_t FillExtraDescriptor(
 
     if (*extra != nullptr) {
         delete[] (*extra);
-        *extra = extraTmp;
-        *extraLength = extraLenTmp;
     }
+    *extra = extraTmp;
+    *extraLength = extraLenTmp;
 
     return EDM_OK;
 }
