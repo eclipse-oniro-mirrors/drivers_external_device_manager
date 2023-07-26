@@ -14,4 +14,10 @@
  */
 
 # any change to interfaces/innerkits/hdf_ext_devmgr_interface_code.h needs to be reviewed by @leonchan5
+frameworks/ @Danny_liuXu
+interfaces/ @Danny_liuXu
+sa_profile/ @Danny_liuXu
+services/ @Danny_liuXu
+test/ @Danny_liuXu
+utils/ @Danny_liuXu
 interfaces/innerkits/hdf_ext_devmgr_interface_code.h @leonchan5
