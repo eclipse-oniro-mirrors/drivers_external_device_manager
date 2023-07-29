@@ -33,7 +33,7 @@ VirtualTouchPad::VirtualTouchPad(const uint32_t maxX, const uint32_t maxY, const
 
     miscellaneous_ = {MSC_SCAN};
     eventTypes_ = {EV_ABS, EV_KEY, EV_SYN, EV_MSC};
-    keys_ = {BTN_TOOL_PEN, BTN_TOOL_RUBBER, BTN_TOUCH, BTN_STYLUS};
+    keys_ = {BTN_TOOL_PEN, BTN_TOOL_RUBBER, BTN_TOUCH, BTN_STYLUS, BTN_RIGHT};
     properties_ = {INPUT_PROP_DIRECT};
     abs_ = {ABS_X, ABS_Y, ABS_PRESSURE};
 }
