@@ -26,6 +26,8 @@ ohos_shared_library("drivers_pkg_manager") {
     "driver_info.cpp",
     "driver_pkg_manager.cpp",
     "drv_bundle_state_callback.cpp",
+    "pkg_database.cpp",
+    "pkg_db_helper.cpp",
   ]
   include_dirs = [
     "../../include/drivers_pkg_manager",
@@ -56,7 +58,18 @@ ohos_shared_library("drivers_pkg_manager") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+    "init:libbegetutil",
   ]
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+}
+
+ohos_prebuilt_etc("pkg_db.init") {
+  source = "pkg_db.cfg"
+  relative_install_dir = "init"
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }

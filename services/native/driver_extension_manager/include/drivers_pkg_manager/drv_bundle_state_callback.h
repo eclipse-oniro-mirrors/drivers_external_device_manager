@@ -78,7 +78,7 @@ public:
     
     virtual sptr<IRemoteObject> AsObject() override;
 
-    bool GetAllDriverInfos(std::map<string, DriverInfo> &driverInfos);
+    bool GetAllDriverInfos();
 
     bool CheckBundleMgrProxyPermission();
 
