@@ -24,6 +24,7 @@
 #include "common_event_subscribe_info.h"
 #include "bus_extension_core.h"
 #include "driver_pkg_manager.h"
+#include  "pkg_db_helper.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -55,6 +56,7 @@ void DriverPkgManager::PrintTest()
 
 int32_t DriverPkgManager::Init()
 {
+    EDM_LOGE(MODULE_PKG_MGR, "begin Init 111111111");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
@@ -74,8 +76,7 @@ int32_t DriverPkgManager::Init()
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    std::map<string, DriverInfo> drvInfos_;
-    if (!bundleStateCallback_->GetAllDriverInfos(drvInfos_)) {
+    if (!bundleStateCallback_->GetAllDriverInfos()) {
         EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ GetAllDriverInfos Err");
         return EDM_ERR_NOT_SUPPORT;
     }
@@ -90,39 +91,42 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
     auto ret = make_shared<BundleInfoNames>();
     ret->bundleName.clear();
     ret->abilityName.clear();
-
     if (bundleStateCallback_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver bundleStateCallback_ null");
         return nullptr;
     }
 
-    std::map<string, DriverInfo> drvInfos_;
-    if (!bundleStateCallback_->GetAllDriverInfos(drvInfos_)) {
+    if (!bundleStateCallback_->GetAllDriverInfos()) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetAllDriverInfos Err");
         return nullptr;
     }
 
-    if (drvInfos_.empty()) {
-        EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver drvInfos_ Empty");
+    std::vector<std::string> apps;
+    std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
+    int32_t retRdb = helper->QueryAllBundleInfoNames("uid", apps);
+    if (retRdb <= 0) {
+        /* error or empty record */
         return nullptr;
     }
-
-    for (auto [key, val] : drvInfos_) {
-        extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(val.GetBusName());
+    int32_t totalApps = static_cast<int32_t>(apps.size());
+    EDM_LOGE(MODULE_PKG_MGR, "totalApps: %{public}d", totalApps);
+    for (int32_t i = 0; i < totalApps; i++) {
+        std::string app = apps.at(i);
+        DriverInfo driverInfo;
+        driverInfo.UnSerialize(app);
+        
+        extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(driverInfo.GetBusName());
         if (extInstance == nullptr) {
-            EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetInstance at bus:%{public}s", val.GetBusName().c_str());
-            continue;
+            return nullptr;
         }
 
-        if (extInstance->MatchDriver(val, *devInfo)) {
-            string bundleName = key;
+        if (extInstance->MatchDriver(driverInfo, *devInfo)) {
+            std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
+
+            string bundleName = helper->QueryBundleInfoNames(app);
             ret->bundleName = bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
             ret->abilityName = bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
             return ret;
-        } else {
-            string drvInfoStr;
-            val.Serialize(drvInfoStr);
-            EDM_LOGI(MODULE_PKG_MGR, "PKG Serialize:%{public}s", drvInfoStr.c_str());
         }
     }
 
