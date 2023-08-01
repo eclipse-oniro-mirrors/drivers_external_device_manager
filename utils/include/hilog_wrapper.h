@@ -73,6 +73,17 @@ enum UsbMgrDomainId {
     EDM_BUTT,
 };
 
+enum PkgErrCode {
+    PKG_OK = 0,
+    PKG_FAILURE = -1,
+    PKG_RDB_EXECUTE_FAILTURE = -2,
+    PKG_RDB_NO_INIT = -3,
+    PKG_RDB_EMPTY = -4,
+    PKG_PERMISSION_DENIED = -5,
+    PKG_NOP = -6,
+    PKG_OVERFLOW = -7,
+};
+
 constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
     {LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmFwk"      },
     {LOG_CORE, EDM_SERVICE_DOMAIN,   "EdmService"  },
