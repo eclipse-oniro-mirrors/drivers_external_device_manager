@@ -21,7 +21,7 @@ group("HatsDriverExtensionTest") {
     testonly = true
   }
   if (is_standard_system) {
-    if (xts_hats_rich == false) {
+    if (hats_rich == false) {
       deps = [ "extension:HatsHdfExtensionTest" ]
     } else {
     }
