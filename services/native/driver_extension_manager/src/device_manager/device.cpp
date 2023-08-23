@@ -85,6 +85,7 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback)
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
             return ret;
         }
+        return ret;
     }
 
     int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
