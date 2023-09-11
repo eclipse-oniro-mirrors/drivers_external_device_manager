@@ -29,7 +29,7 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 
-static std::string PKG_DB_PATH = "/test/";
+static std::string PKG_DB_PATH = "/data/service/el1/public/pkg_service/";
 
 constexpr const char *PKG_DB_NAME = "pkg.db";
 constexpr const char *PKG_TABLE_NAME = "pkgInfoTable";

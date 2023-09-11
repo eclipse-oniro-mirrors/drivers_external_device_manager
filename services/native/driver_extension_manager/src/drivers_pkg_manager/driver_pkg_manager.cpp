@@ -56,7 +56,6 @@ void DriverPkgManager::PrintTest()
 
 int32_t DriverPkgManager::Init()
 {
-    EDM_LOGE(MODULE_PKG_MGR, "begin Init 111111111");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);

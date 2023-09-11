@@ -66,10 +66,3 @@ ohos_shared_library("drivers_pkg_manager") {
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
-
-ohos_prebuilt_etc("pkg_db.init") {
-  source = "pkg_db.cfg"
-  relative_install_dir = "init"
-  subsystem_name = "hdf"
-  part_name = "external_device_manager"
-}
