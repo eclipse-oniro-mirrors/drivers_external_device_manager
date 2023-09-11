@@ -232,6 +232,13 @@ void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Met
     }
 }
 
+void ClearDriverInfo(DriverInfo &tmpDrvInfo) {
+    tmpDrvInfo.bus_.clear();
+    tmpDrvInfo.vendor_.clear();
+    tmpDrvInfo.version_.clear();
+    tmpDrvInfo.driverInfoExt_ = nullptr;
+}
+
 bool DrvBundleStateCallback::ParseBaseDriverInfo()
 {
     shared_ptr<IBusExtension> extInstance = nullptr;
@@ -244,10 +251,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo()
 
     // parase infos to innerDrvInfos_
     while (!extensionInfos_.empty()) {
-        tmpDrvInfo.bus_.clear();
-        tmpDrvInfo.vendor_.clear();
-        tmpDrvInfo.version_.clear();
-        tmpDrvInfo.driverInfoExt_ = nullptr;
+        ClearDriverInfo(tmpDrvInfo);
 
         type = extensionInfos_.back().type;
         metadata = extensionInfos_.back().metadata;

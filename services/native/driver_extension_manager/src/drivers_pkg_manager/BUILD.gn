@@ -55,13 +55,13 @@ ohos_shared_library("drivers_pkg_manager") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
-    "samgr:samgr_proxy",
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
-    "init:libbegetutil",
+    "samgr:samgr_proxy",
   ]
   subsystem_name = "hdf"
   part_name = "external_device_manager"
