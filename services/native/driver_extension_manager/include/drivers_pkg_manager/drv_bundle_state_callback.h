@@ -78,7 +78,7 @@ public:
     
     virtual sptr<IRemoteObject> AsObject() override;
 
-    bool GetAllDriverInfos(std::map<string, DriverInfo> &driverInfos);
+    bool GetAllDriverInfos();
 
     bool CheckBundleMgrProxyPermission();
 
@@ -97,6 +97,9 @@ private:
     ErrCode QueryExtensionAbilityInfos(const std::string &bundleName, const int userId);
     bool ParseBaseDriverInfo();
     void ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Metadata> &metadata);
+    void ClearDriverInfo(DriverInfo &tmpDrvInfo);
+    void ParseExtensionInfos(ExtensionAbilityType &type,
+        string &bundleName, string &abilityName);
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
     void StorageHistoryDrvInfo(std::vector<BundleInfo> &bundleInfos);

@@ -43,7 +43,8 @@
                 "safwk",
                 "eventhandler",
                 "ace_engine",
-                "access_token"
+                "access_token",
+                "relational_store"
             ],
             "third_party": [
                 "bounds_checking_function",

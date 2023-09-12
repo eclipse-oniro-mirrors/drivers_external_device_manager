@@ -26,6 +26,8 @@ ohos_shared_library("drivers_pkg_manager") {
     "driver_info.cpp",
     "driver_pkg_manager.cpp",
     "drv_bundle_state_callback.cpp",
+    "pkg_database.cpp",
+    "pkg_db_helper.cpp",
   ]
   include_dirs = [
     "../../include/drivers_pkg_manager",
@@ -53,8 +55,12 @@ ohos_shared_library("drivers_pkg_manager") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
   subsystem_name = "hdf"
