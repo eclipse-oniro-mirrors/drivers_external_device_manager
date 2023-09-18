@@ -55,16 +55,20 @@ int32_t Device::Connect()
     int32_t ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
         bundleName, abilityName, connectNofitier_, busDevId);
     // RESOLVE_ABILITY_ERR maybe due to bms is not ready in the boot process, sleep 100ms and try again
-    if (ret == AAFwk::RESOLVE_ABILITY_ERR) {
-        EDM_LOGW(MODULE_DEV_MGR, "%{public}s sleep 100ms to reconnect %{public}s %{public}s", __func__,
-            bundleName.c_str(), abilityName.c_str());
-        const int waitTimeMs = 100;
-        const int msToUs = 1000;
+    int retry = 0;
+    const int retryTimes = 30;
+    const int waitTimeMs = 100;
+    const int msToUs = 1000;
+    while (ret != UsbErrCode::EDM_OK && retry < retryTimes) {
+        EDM_LOGW(MODULE_DEV_MGR,
+            "%{public}s sleep 100ms to reconnect %{public}s %{public}s, ret %{public}d, retry %{public}d",
+            __func__, bundleName.c_str(), abilityName.c_str(), ret, retry);
         usleep(waitTimeMs * msToUs);
         drvExtRemote_ = nullptr;
         connectNofitier_->ClearDrvExtConnectionInfo();
         ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
             bundleName, abilityName, connectNofitier_, busDevId);
+        retry++;
     }
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
