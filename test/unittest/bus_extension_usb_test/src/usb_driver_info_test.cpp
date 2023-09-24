@@ -14,7 +14,7 @@
  */
 
 #include <gtest/gtest.h>
-#include "json.h"
+#include "json/json.h"
 #include "hilog_wrapper.h"
 #define private public
 #include "ibus_extension.h"

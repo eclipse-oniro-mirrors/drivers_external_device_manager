@@ -14,7 +14,7 @@
  */
 
 #include "string_ex.h"
-#include "json.h"
+#include "json/json.h"
 #include "hilog_wrapper.h"
 #include "ibus_extension.h"
 #include "bus_extension_core.h"

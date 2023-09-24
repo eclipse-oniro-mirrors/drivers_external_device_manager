@@ -18,7 +18,6 @@ ohos_shared_library("driver_extension_usb_bus") {
     "usb_driver_info.cpp",
   ]
   include_dirs = [
-    "//third_party/jsoncpp/include/json",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
   ]
