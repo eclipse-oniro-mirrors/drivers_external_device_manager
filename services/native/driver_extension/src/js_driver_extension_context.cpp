@@ -47,69 +47,72 @@ public:
     explicit JsDriverExtensionContext(const std::shared_ptr<DriverExtensionContext>& context) : context_(context) {}
     ~JsDriverExtensionContext() = default;
 
-    static void Finalizer(NativeEngine* engine, void* data, void* hint)
+    static void Finalizer(napi_env env, void* data, void* hint)
     {
         HILOG_INFO("JsAbilityContext::Finalizer is called");
         std::unique_ptr<JsDriverExtensionContext>(static_cast<JsDriverExtensionContext*>(data));
     }
 
-    static NativeValue* UpdateDriverState(NativeEngine* engine, NativeCallbackInfo* info)
+    static napi_value UpdateDriverState(napi_env env, napi_callback_info info)
     {
-        JsDriverExtensionContext* me = CheckParamsAndGetThis<JsDriverExtensionContext>(engine, info);
-        return (me != nullptr) ? me->OnUpdateDriverState(*engine, *info) : nullptr;
+        JsDriverExtensionContext* me = CheckParamsAndGetThis<JsDriverExtensionContext>(env, info);
+        return (me != nullptr) ? me->OnUpdateDriverState(env, info) : nullptr;
     }
 
 private:
     std::weak_ptr<DriverExtensionContext> context_;
     sptr<JsFreeInstallObserver> freeInstallObserver_ = nullptr;
 
-    NativeValue* OnUpdateDriverState(NativeEngine& engine, NativeCallbackInfo& info)
+    napi_value OnUpdateDriverState(napi_env env, napi_callback_info info)
     {
         HILOG_INFO("OnUpdateDriverState is called");
         
-        AsyncTask::CompleteCallback complete =
-            [weak = context_](NativeEngine& engine, AsyncTask& task, int32_t status) {
+        NapiAsyncTask::CompleteCallback complete =
+            [weak = context_](napi_env env, NapiAsyncTask& task, int32_t status) {
                 HILOG_INFO("UpdateDriverState begin");
                 auto context = weak.lock();
                 if (!context) {
                     HILOG_WARN("context is released");
-                    task.Reject(engine, CreateJsError(engine, ERROR_CODE_ONE, "Context is released"));
+                    task.Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context is released"));
                     return;
                 }
 
                 ErrCode innerErrorCode = context->UpdateDriverState();
                 if (innerErrorCode == 0) {
-                    task.Resolve(engine, engine.CreateUndefined());
+                    napi_value result = nullptr;
+                    napi_get_undefined(env, &result);
+                    task.Resolve(env, result);
                 } else {
-                    task.Reject(engine, CreateJsErrorByNativeErr(engine, innerErrorCode));
+                    task.Reject(env, CreateJsErrorByNativeErr(env, innerErrorCode));
                 }
             };
+        size_t argc = 1;
+        napi_value argv[1] = {nullptr};
+        napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+        napi_value lastParam = (argc > ARGC_ZERO) ? argv[INDEX_ZERO] : nullptr;
 
-        NativeValue* lastParam = (info.argc == ARGC_ZERO) ? nullptr : info.argv[INDEX_ZERO];
-        NativeValue* result = nullptr;
-        AsyncTask::Schedule("JSDriverExtensionContext::OnUpdateDriverState",
-            engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        napi_value result = nullptr;
+        NapiAsyncTask::Schedule("JSDriverExtensionContext::OnUpdateDriverState",
+            env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
         return result;
     }
 };
 } // namespace
 
-NativeValue* CreateJsDriverExtensionContext(NativeEngine& engine, std::shared_ptr<DriverExtensionContext> context)
+napi_value CreateJsDriverExtensionContext(napi_env env, std::shared_ptr<DriverExtensionContext> context)
 {
     HILOG_INFO("CreateJsDriverExtensionContext begin");
     std::shared_ptr<OHOS::AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     if (context) {
         abilityInfo = context->GetAbilityInfo();
     }
-    NativeValue* objValue = CreateJsExtensionContext(engine, context, abilityInfo);
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
+    napi_value objValue = CreateJsExtensionContext(env, context, abilityInfo);
 
     std::unique_ptr<JsDriverExtensionContext> jsContext = std::make_unique<JsDriverExtensionContext>(context);
-    object->SetNativePointer(jsContext.release(), JsDriverExtensionContext::Finalizer, nullptr);
+    napi_wrap(env, objValue, jsContext.release(), JsDriverExtensionContext::Finalizer, nullptr, nullptr);
 
     const char *moduleName = "JsDriverExtensionContext";
-    BindNativeFunction(engine, *object, "updateDriverState", moduleName, JsDriverExtensionContext::UpdateDriverState);
-
+    BindNativeFunction(env, objValue, "updateDriverState", moduleName, JsDriverExtensionContext::UpdateDriverState);
     return objValue;
 }
 }  // namespace AbilityRuntime

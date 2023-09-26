@@ -124,19 +124,19 @@ public:
     virtual void Dump(const std::vector<std::string> &params, std::vector<std::string> &info) override;
 
 private:
-    NativeValue* CallObjectMethod(const char* name, NativeValue* const *argv = nullptr, size_t argc = 0);
+    napi_value CallObjectMethod(napi_env env, const char *name, const napi_value *argv = nullptr, size_t argc = 0);
 
-    void BindContext(NativeEngine& engine, NativeObject* obj);
+    void BindContext(napi_env env, napi_value obj);
 
     void GetSrcPath(std::string &srcPath);
 
-    NativeValue *CallOnConnect(const AAFwk::Want &want);
+    napi_value CallOnConnect(const AAFwk::Want &want);
 
-    NativeValue *CallOnDisconnect(const AAFwk::Want &want, bool withResult = false);
+    napi_value CallOnDisconnect(const AAFwk::Want &want, bool withResult = false);
 
-    bool CheckPromise(NativeValue *result);
+    bool CheckPromise(napi_value result);
 
-    bool CallPromise(NativeValue *result, AppExecFwk::AbilityTransactionCallbackInfo<> *callbackInfo);
+    bool CallPromise(napi_value result, AppExecFwk::AbilityTransactionCallbackInfo<> *callbackInfo);
 
     JsRuntime& jsRuntime_;
     std::unique_ptr<NativeReference> jsObj_;

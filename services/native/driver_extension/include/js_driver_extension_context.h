@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace AbilityRuntime {
-NativeValue* CreateJsDriverExtensionContext(NativeEngine& engine, std::shared_ptr<DriverExtensionContext> context);
+napi_value CreateJsDriverExtensionContext(napi_env env, std::shared_ptr<DriverExtensionContext> context);
 }  // namespace AbilityRuntime
 }  // namespace OHOS
 #endif  // OHOS_ABILITY_RUNTIME_JS_DRIVER_EXTENSION_CONTEXT_H
