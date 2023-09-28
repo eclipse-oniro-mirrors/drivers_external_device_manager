@@ -17,7 +17,7 @@ import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 
 ohos_fuzztest("DestroyDeviceFuzzTest") {
-  module_out_path = "external_device_manager/fuzztest"
+  module_out_path = "external_device_manager/external_device_manager"
 
   fuzz_config_file = "${ext_mgr_path}/test/fuzztest/driver_extension_manager_fuzzer/destroydevice_fuzzer"
 
