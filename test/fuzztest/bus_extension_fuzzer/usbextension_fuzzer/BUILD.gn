@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 
-module_output_path = "external_device_manager/fuzztest"
+module_output_path = "external_device_manager/external_device_manager"
 usb_bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
 ohos_fuzztest("UsbExtensionFuzzTest") {
   module_out_path = module_output_path

@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
 
-module_output_path = "external_device_manager/fuzztest"
+module_output_path = "external_device_manager/external_device_manager"
 ohos_fuzztest("DriversPkgManagerFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = "${ext_mgr_path}/test/fuzztest/drivers_pkg_manager_fuzzer/driverpkgmanager_fuzzer"
