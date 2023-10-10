@@ -23,6 +23,7 @@
 #include "iservice_registry.h"
 #include "bundle_constants.h"
 #include "os_account_manager.h"
+#include  "pkg_db_helper.h"
 
 #include "hdf_log.h"
 #include "edm_errors.h"
@@ -44,12 +45,10 @@ const string DRV_INFO_VERSION = "version";
 
 DrvBundleStateCallback::DrvBundleStateCallback()
 {
-    allDrvInfos_.clear();
     stiching.clear();
     stiching += "########";
 
-    std::map<string, DriverInfo> drvInfos_;
-    if (GetAllDriverInfos(drvInfos_)) {
+    if (GetAllDriverInfos()) {
         EDM_LOGI(MODULE_PKG_MGR, "GetAllDriverInfos in DrvBundleStateCallback OK");
     } else {
         EDM_LOGE(MODULE_PKG_MGR, "GetAllDriverInfos in DrvBundleStateCallback ERR");
@@ -63,7 +62,14 @@ DrvBundleStateCallback::~DrvBundleStateCallback()
 
 void DrvBundleStateCallback::PrintTest()
 {
-    cout << "allDrvInfos_ size = " << allDrvInfos_.size() << endl;
+    std::vector<std::string> allBundleAbilityNames;
+    std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
+    int32_t ret = helper->QueryAllSize(allBundleAbilityNames);
+    if (ret <= 0) {
+        EDM_LOGE(MODULE_PKG_MGR, "QueryAllSize failed");
+        return;
+    }
+    cout << "allBundleAbilityNames_ size = " << allBundleAbilityNames.size() << endl;
 }
 
 void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, const int32_t resultCode,
@@ -87,7 +93,7 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
     }
 
     if (ParseBaseDriverInfo()) {
-        OnBundleDrvAdded(BUNDLE_ADDED);
+        EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded error");
     }
     FinishTrace(LABEL);
 }
@@ -105,7 +111,7 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     }
 
     if (ParseBaseDriverInfo()) {
-        OnBundleDrvUpdated(BUNDLE_UPDATED);
+        EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated error");
     }
     FinishTrace(LABEL);
 }
@@ -128,10 +134,9 @@ sptr<IRemoteObject> DrvBundleStateCallback::AsObject()
     return nullptr;
 }
 
-bool DrvBundleStateCallback::GetAllDriverInfos(std::map<string, DriverInfo> &driverInfos)
+bool DrvBundleStateCallback::GetAllDriverInfos()
 {
     if (initOnce) {
-        driverInfos = allDrvInfos_;
         return true;
     }
 
@@ -139,7 +144,6 @@ bool DrvBundleStateCallback::GetAllDriverInfos(std::map<string, DriverInfo> &dri
     auto iBundleMgr = GetBundleMgrProxy();
     if (iBundleMgr == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "Can not get iBundleMgr");
-        driverInfos = allDrvInfos_;
         return false;
     }
     std::vector<BundleInfo> bundleInfos;
@@ -149,7 +153,6 @@ bool DrvBundleStateCallback::GetAllDriverInfos(std::map<string, DriverInfo> &dri
                     static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
     if (!(iBundleMgr->GetBundleInfos(flags, bundleInfos, userId))) {
         EDM_LOGE(MODULE_PKG_MGR, "GetBundleInfos err");
-        driverInfos = allDrvInfos_;
         return false;
     }
 
@@ -229,6 +232,22 @@ void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Met
     }
 }
 
+void DrvBundleStateCallback::ClearDriverInfo(DriverInfo &tmpDrvInfo)
+{
+    tmpDrvInfo.bus_.clear();
+    tmpDrvInfo.vendor_.clear();
+    tmpDrvInfo.version_.clear();
+    tmpDrvInfo.driverInfoExt_ = nullptr;
+}
+
+void DrvBundleStateCallback::ParseExtensionInfos(ExtensionAbilityType &type,
+    string &bundleName, string &abilityName)
+{
+    type = extensionInfos_.back().type;
+    bundleName = extensionInfos_.back().bundleName;
+    abilityName = extensionInfos_.back().name;
+}
+
 bool DrvBundleStateCallback::ParseBaseDriverInfo()
 {
     shared_ptr<IBusExtension> extInstance = nullptr;
@@ -239,20 +258,12 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo()
     string abilityName;
     bool ret = false;
 
-    // clear DriverInfos vector
-    innerDrvInfos_.clear();
-
     // parase infos to innerDrvInfos_
     while (!extensionInfos_.empty()) {
-        tmpDrvInfo.bus_.clear();
-        tmpDrvInfo.vendor_.clear();
-        tmpDrvInfo.version_.clear();
-        tmpDrvInfo.driverInfoExt_ = nullptr;
+        ClearDriverInfo(tmpDrvInfo);
+        ParseExtensionInfos(type, bundleName, abilityName);
 
-        type = extensionInfos_.back().type;
         metadata = extensionInfos_.back().metadata;
-        bundleName = extensionInfos_.back().bundleName;
-        abilityName = extensionInfos_.back().name;
         extensionInfos_.pop_back();
 
         if ((type != ExtensionAbilityType::DRIVER) || metadata.empty()) {
@@ -272,9 +283,29 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo()
             EDM_LOGE(MODULE_PKG_MGR, "ParseDriverInfo null");
             continue;
         }
+        string driverInfo;
+        tmpDrvInfo.Serialize(driverInfo);
 
+        string tempbundleName = bundleName;
         bundleName += stiching + abilityName;
-        innerDrvInfos_[bundleName] = tmpDrvInfo;
+
+        std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
+        bool flag = true;
+        helper->CheckIfNeedUpdateEx(flag, bundleName);
+        int32_t addOrUpdate = helper->AddOrUpdateRightRecord(tempbundleName, bundleName, driverInfo);
+        if (addOrUpdate < 0) {
+            EDM_LOGE(MODULE_PKG_MGR, "add or update failed: %{public}s, addOrUpdate=%{public}d",
+                bundleName.c_str(), addOrUpdate);
+            continue;
+        }
+
+        if (m_pFun != nullptr) {
+            if (flag) {
+                m_pFun(BUNDLE_UPDATED, BusType::BUS_TYPE_USB, tempbundleName, abilityName);
+            } else {
+                m_pFun(BUNDLE_ADDED, BusType::BUS_TYPE_USB, tempbundleName, abilityName);
+            }
+        }
         ret = true;
     }
     return ret;
@@ -322,7 +353,6 @@ sptr<OHOS::AppExecFwk::IBundleMgr> DrvBundleStateCallback::GetBundleMgrProxy()
 
 void DrvBundleStateCallback::StorageHistoryDrvInfo(std::vector<BundleInfo> &bundleInfos)
 {
-    allDrvInfos_.clear();
     while (!bundleInfos.empty()) {
         extensionInfos_.clear();
         extensionInfos_ = bundleInfos.back().extensionInfos;
@@ -332,41 +362,37 @@ void DrvBundleStateCallback::StorageHistoryDrvInfo(std::vector<BundleInfo> &bund
         }
 
         if (ParseBaseDriverInfo()) {
-            OnBundleDrvAdded(BUNDLE_ADDED);
+            EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded error");
         }
     }
-}
-
-void DrvBundleStateCallback::OnBundleDrvAdded(int bundleStatus)
-{
-    for (auto ele : innerDrvInfos_) {
-        allDrvInfos_[ele.first] = innerDrvInfos_[ele.first];
-        if (m_pFun != nullptr) {
-            string bundleName = ele.first.substr(0, ele.first.find_first_of(GetStiching()));
-            string abilityName = ele.first.substr(ele.first.find_last_of(GetStiching()) + 1);
-            m_pFun(bundleStatus, BusType::BUS_TYPE_USB, bundleName, abilityName);
-        }
-    }
-}
-
-void DrvBundleStateCallback::OnBundleDrvUpdated(int bundleStatus)
-{
-    OnBundleDrvAdded(bundleStatus);
 }
 
 void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
 {
-    for (auto iter = allDrvInfos_.begin(); iter != allDrvInfos_.end();) {
-        if (iter->first.find(bundleName) != std::string::npos) {
-            if (m_pFun != nullptr) {
-                string abilityName = iter->first.substr(iter->first.find_last_of(GetStiching()) + 1);
-                EDM_LOGI(MODULE_PKG_MGR, "abilityName:%{public}s", abilityName.c_str());
-                m_pFun(BUNDLE_REMOVED, BusType::BUS_TYPE_USB, bundleName, abilityName);
-            }
-            iter = allDrvInfos_.erase(iter);
-        } else {
-            ++iter;
+    std::vector<std::string> bundleAbilityNames;
+    std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
+    int32_t retRdb = helper->QueryAllBundleAbilityNames(bundleName, bundleAbilityNames);
+    if (retRdb <= 0) {
+        EDM_LOGE(MODULE_PKG_MGR, "QueryAllBundleAbilityNames failed: %{public}s", bundleName.c_str());
+        return;
+    }
+    int32_t totalNames = static_cast<int32_t>(bundleAbilityNames.size());
+    EDM_LOGE(MODULE_PKG_MGR, "totalbundleAbilityNames: %{public}d", totalNames);
+    for (int32_t i = 0; i < totalNames; i++) {
+        if (m_pFun != nullptr) {
+            std::string bundleAbilityName = bundleAbilityNames.at(i);
+            std::string bundleName = bundleAbilityName.substr(0, bundleAbilityName.find_first_of(GetStiching()));
+            std::string abilityName = bundleAbilityName.substr(bundleAbilityName.find_last_of(GetStiching()) + 1);
+            EDM_LOGI(MODULE_PKG_MGR, "bundleName: %{public}s abilityName: %{public}s",
+                bundleName.c_str(), abilityName.c_str());
+            m_pFun(BUNDLE_REMOVED, BusType::BUS_TYPE_USB, bundleName, abilityName);
         }
+    }
+
+    int32_t ret = helper->DeleteRightRecord(bundleName);
+    if (ret < 0) {
+        EDM_LOGE(MODULE_PKG_MGR, "delete failed: %{public}s", bundleName.c_str());
+        return;
     }
 }
 }

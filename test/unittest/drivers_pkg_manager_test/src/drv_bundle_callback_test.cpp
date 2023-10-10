@@ -44,8 +44,7 @@ HWTEST_F(DrvBundleStateCallbackTest, DrvBundleCallback_CheckPermissio_Test, Test
 
 HWTEST_F(DrvBundleStateCallbackTest, DrvBundleCallback_GetAllInfos_Test, TestSize.Level1)
 {
-    std::map<string, DriverInfo> drvInfos_;
-    bool ret = drvbundleInstance.GetAllDriverInfos(drvInfos_);
+    bool ret = drvbundleInstance.GetAllDriverInfos();
     EXPECT_EQ(true, ret);
     cout << "Ptr DrvBundleCallback_GetAllInfos_Test" << endl;
 }
