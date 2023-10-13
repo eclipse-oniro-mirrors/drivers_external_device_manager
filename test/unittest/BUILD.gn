@@ -24,7 +24,6 @@ ohos_unittest("bus_extension_usb_test") {
     "bus_extension_usb_test/src/usb_subscriber_test.cpp",
   ]
   include_dirs = [
-    "//third_party/jsoncpp/include/json",
     "bus_extension_usb_test/include",
     "${usb_bus_extension_include_path}",
   ]

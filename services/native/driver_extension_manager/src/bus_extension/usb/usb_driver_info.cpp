@@ -14,7 +14,7 @@
  */
 
 #include "iostream"
-#include "json.h"
+#include "json/json.h"
 #include "hilog_wrapper.h"
 #include "edm_errors.h"
 #include "usb_driver_info.h"

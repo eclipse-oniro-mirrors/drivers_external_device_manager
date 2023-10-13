@@ -16,9 +16,6 @@ import("../../../../../extdevmgr.gni")
 config("drvext_manager_public_config") {
   include_dirs = [ "../../include/bus_extension/usb" ]
 }
-config("drvext_manager_private_config") {
-  include_dirs = [ "//third_party/jsoncpp/include/json" ]
-}
 
 ohos_shared_library("drivers_pkg_manager") {
   install_enable = true
@@ -35,7 +32,6 @@ ohos_shared_library("drivers_pkg_manager") {
   ]
   configs = [
     ":drvext_manager_public_config",
-    ":drvext_manager_private_config",
     "${utils_path}:utils_config",
   ]
   public_configs = [ ":drvext_manager_public_config" ]

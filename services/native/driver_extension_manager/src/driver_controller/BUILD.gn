@@ -17,9 +17,7 @@ import("//drivers/external_device_manager/extdevmgr.gni")
 config("driver_extension_controller_public_config") {
   include_dirs = [ "../../include/driver_controller" ]
 }
-config("driver_extension_controller_private_config") {
-  include_dirs = [ "//third_party/jsoncpp/include/json" ]
-}
+
 ohos_shared_library("driver_extension_controller") {
   sources = [ "driver_extension_controller.cpp" ]
   include_dirs = []
@@ -29,7 +27,6 @@ ohos_shared_library("driver_extension_controller") {
   ldflags = []
   configs = [
     ":driver_extension_controller_public_config",
-    ":driver_extension_controller_private_config",
     "${utils_path}:coverage_flags",
     "${utils_path}:utils_config",
   ]
