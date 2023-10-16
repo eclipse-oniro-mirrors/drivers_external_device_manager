@@ -43,7 +43,7 @@ public:
     int32_t QueryAllBundleInfoNames(const std::string &bundleAbility, std::vector<std::string> &bundleInfoNames);
     /* add or update (user, device, app) record */
     int32_t AddOrUpdateRightRecord(
-        const std::string & bundleName, const std::string & bundleAbility, const std::string &driverInfo);
+        const std::string &bundleName, const std::string &bundleAbility, const std::string &driverInfo);
     std::string QueryBundleInfoNames(const std::string &driverInfo);
     int32_t QueryAllBundleAbilityNames(const std::string &bundleName, std::vector<std::string> &bundleAbilityNames);
     /* delete (user, device, app) record */
@@ -66,8 +66,8 @@ public:
 private:
     PkgDbHelper();
     DISALLOW_COPY_AND_MOVE(PkgDbHelper);
-    int32_t AddOrUpdateRightRecordEx(bool isUpdate, const std::string & bundleName,
-        const std::string & bundleAbility, const std::string &driverInfo);
+    int32_t AddOrUpdateRightRecordEx(bool isUpdate, const std::string &bundleName,
+        const std::string &bundleAbility, const std::string &driverInfo);
     int32_t QueryRightRecordCount(void);
     int32_t QueryAndGetResultColumnValues(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
         const std::vector<std::string> &columns, const std::string &columnName, std::vector<std::string> &columnValues);

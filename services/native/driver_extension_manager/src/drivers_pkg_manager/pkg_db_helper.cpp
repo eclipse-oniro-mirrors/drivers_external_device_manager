@@ -249,8 +249,17 @@ std::string PkgDbHelper::QueryBundleInfoNames(const std::string &driverInfo)
         (void)rightDatabase_->RollBack();
         return nullptr;
     }
+    ret = resultSet->GoToRow(0);
+    if (ret != E_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "GoToRow 0 error: %{public}d", ret);
+        return nullptr;
+    }
     std::string s;
-    resultSet->GetString(0, s);
+    ret = resultSet->GetString(0, s);
+    if (ret != E_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "get value error: %{public}d", ret);
+        return nullptr;
+    }
     return s;
 }
 } // namespace USB
