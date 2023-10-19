@@ -40,7 +40,7 @@ public:
     int32_t QueryRightRecordApps(int32_t uid, std::vector<std::string> &apps);
 
     /* update (user, device, app) record */
-    int32_t QueryAllBundleInfoNames(const std::string &bundleAbility, std::vector<std::string> &bundleInfoNames);
+    int32_t QueryAllDriverInfos(std::vector<std::string> &driverInfos);
     /* add or update (user, device, app) record */
     int32_t AddOrUpdateRightRecord(
         const std::string &bundleName, const std::string &bundleAbility, const std::string &driverInfo);

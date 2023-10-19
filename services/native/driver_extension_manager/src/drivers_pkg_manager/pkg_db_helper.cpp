@@ -153,13 +153,12 @@ int32_t PkgDbHelper::AddOrUpdateRightRecordEx(bool isUpdate,
     return ret;
 }
 
-int32_t PkgDbHelper::QueryAllBundleInfoNames(const std::string &bundleAbility,
-    std::vector<std::string> &bundleInfoNames)
+int32_t PkgDbHelper::QueryAllDriverInfos(std::vector<std::string> &driverInfos)
 {
     std::lock_guard<std::mutex> guard(databaseMutex_);
     std::vector<std::string> columns = {"driverInfo"};
     RdbPredicates rdbPredicates(PKG_TABLE_NAME);
-    return QueryAndGetResultColumnValues(rdbPredicates, columns, "driverInfo", bundleInfoNames);
+    return QueryAndGetResultColumnValues(rdbPredicates, columns, "driverInfo", driverInfos);
 }
 
 int32_t PkgDbHelper::QueryAllBundleAbilityNames(const std::string &bundleName,
@@ -235,30 +234,36 @@ std::string PkgDbHelper::QueryBundleInfoNames(const std::string &driverInfo)
     int32_t ret = rightDatabase_->BeginTransaction();
     if (ret < PKG_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "BeginTransaction error: %{public}d", ret);
-        return nullptr;
+        return "";
     }
     auto resultSet = rightDatabase_->Query(rdbPredicates, columns);
     if (resultSet == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "Query error");
         (void)rightDatabase_->RollBack();
-        return nullptr;
+        return "";
     }
     ret = rightDatabase_->Commit();
     if (ret < PKG_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "Commit error: %{public}d", ret);
         (void)rightDatabase_->RollBack();
-        return nullptr;
+        return "";
+    }
+    int32_t rowCount = 0;
+    ret = resultSet->GetRowCount(rowCount);
+    if (ret != E_OK || rowCount == 0) {
+        EDM_LOGE(MODULE_PKG_MGR, "Query data error: %{public}d, count: %{public}d", ret, rowCount);
+        return "";
     }
     ret = resultSet->GoToRow(0);
     if (ret != E_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "GoToRow 0 error: %{public}d", ret);
-        return nullptr;
+        return "";
     }
     std::string s;
     ret = resultSet->GetString(0, s);
     if (ret != E_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "get value error: %{public}d", ret);
-        return nullptr;
+        return "";
     }
     return s;
 }
