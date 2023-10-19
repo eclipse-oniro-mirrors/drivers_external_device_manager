@@ -70,6 +70,7 @@ ohos_unittest("drivers_pkg_manager_test") {
   sources = [
     "drivers_pkg_manager_test/src/driver_pkg_manager_test.cpp",
     "drivers_pkg_manager_test/src/drv_bundle_callback_test.cpp",
+    "drivers_pkg_manager_test/src/pkg_db_helper_test.cpp",
   ]
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
@@ -89,8 +90,12 @@ ohos_unittest("drivers_pkg_manager_test") {
     "common_event_service:cesfwk_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
   configs = [ "${utils_path}:utils_config" ]

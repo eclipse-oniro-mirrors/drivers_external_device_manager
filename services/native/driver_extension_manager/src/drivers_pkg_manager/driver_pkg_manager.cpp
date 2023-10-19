@@ -102,7 +102,7 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
 
     std::vector<std::string> apps;
     std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
-    int32_t retRdb = helper->QueryAllBundleInfoNames("uid", apps);
+    int32_t retRdb = helper->QueryAllDriverInfos(apps);
     if (retRdb <= 0) {
         /* error or empty record */
         return nullptr;
