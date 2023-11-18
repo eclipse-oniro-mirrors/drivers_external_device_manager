@@ -23,7 +23,6 @@ ohos_shared_library("usb_ndk") {
   ]
 
   sources = [
-    "input_emit_event.cpp",
     "usb_config_desc_parser.cpp",
     "usb_ddk_api.cpp",
   ]

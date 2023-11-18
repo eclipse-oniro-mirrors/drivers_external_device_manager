@@ -26,35 +26,60 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace Security::AccessToken;
 IMPLEMENT_SINGLE_INSTANCE(EmitEventManager);
-int32_t EmitEventManager::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+const uint16_t MAX_VIRTUAL_DEVICE_NUM = 200;
+int32_t EmitEventManager::CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
     if (!HasPermission()) {
-        EDM_LOGE(MODULE_USB_DDK, "permission denied");
-        return EDM_ERR_NO_PERM;
+        EDM_LOGE(MODULE_HID_DDK, "permission denied");
+        return HID_DDK_NO_PERM;
     }
-
-    DestroyDevice();
-    vitualDeviceList_.push_back(std::make_unique<VirtualDeviceInject>(std::make_shared<VirtualKeyboard>()));
-    vitualDeviceList_.push_back(std::make_unique<VirtualDeviceInject>
-        (std::make_shared<VirtualTouchPad>(maxX, maxY, maxPressure)));
-    return EDM_OK;
+    // check device number
+    if (virtualDeviceMap_.size() >= MAX_VIRTUAL_DEVICE_NUM) {
+        EDM_LOGE(MODULE_HID_DDK, "device num exceeds maximum %{public}d", MAX_VIRTUAL_DEVICE_NUM);
+        return HID_DDK_FAILURE;
+    }
+    // get device id
+    int32_t id = GetCurDeviceId();
+    if (id < 0) {
+        EDM_LOGE(MODULE_HID_DDK, "faild to generate device id");
+        return HID_DDK_FAILURE;
+    }
+    // create device
+    virtualDeviceMap_[id] =
+        std::make_unique<VirtualDeviceInject>(std::make_shared<VirtualDevice>(hidDevice, hidEventProperties));
+    return id;
 }
 
-int32_t EmitEventManager::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
+int32_t EmitEventManager::EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items)
 {
-    if (deviceId < 0 || deviceId >= vitualDeviceList_.size()) {
-        EDM_LOGE(MODULE_USB_DDK, "error deviceId");
-        return EDM_NOK;
+    if (deviceId < 0) {
+        EDM_LOGE(MODULE_HID_DDK, "error deviceId");
+        return HID_DDK_FAILURE;
     }
 
-    vitualDeviceList_[deviceId]->EmitEvent(items);
-    return EDM_OK;
+    if (virtualDeviceMap_.count(deviceId) == 0) {
+        EDM_LOGE(MODULE_HID_DDK, "device is not exit");
+        return HID_DDK_FAILURE;
+    }
+
+    virtualDeviceMap_[deviceId]->EmitEvent(items);
+    return HID_DDK_SUCCESS;
 }
 
-int32_t EmitEventManager::DestroyDevice()
+int32_t EmitEventManager::DestroyDevice(int32_t deviceId)
 {
-    vitualDeviceList_.clear();
-    return EDM_OK;
+    if (deviceId < 0) {
+        EDM_LOGE(MODULE_HID_DDK, "error deviceId");
+        return HID_DDK_FAILURE;
+    }
+
+    if (virtualDeviceMap_.count(deviceId) == 0) {
+        EDM_LOGE(MODULE_HID_DDK, "device is not exit");
+        return HID_DDK_FAILURE;
+    }
+    virtualDeviceMap_.erase(deviceId);
+    lastDeviceId_ = deviceId;
+    return HID_DDK_SUCCESS;
 }
 
 bool EmitEventManager::CheckHapPermission(uint32_t tokenId)
@@ -82,6 +107,18 @@ bool EmitEventManager::HasPermission(void)
         return true;
     }
     return false;
+}
+
+int32_t EmitEventManager::GetCurDeviceId(void)
+{
+    if (virtualDeviceMap_.count(lastDeviceId_) == 0) {
+        return lastDeviceId_;
+    }
+    int32_t id = virtualDeviceMap_.size();
+    while (virtualDeviceMap_.count(id) != 0 && virtualDeviceMap_.size() < MAX_VIRTUAL_DEVICE_NUM) {
+        id++;
+    }
+    return virtualDeviceMap_.size() < MAX_VIRTUAL_DEVICE_NUM ? id : -1;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

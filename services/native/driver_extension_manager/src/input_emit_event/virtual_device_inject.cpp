@@ -19,9 +19,8 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 VirtualDeviceInject::VirtualDeviceInject(std::shared_ptr<VirtualDevice> virtualDevice)
 {
-    virtualDevice_ = virtualDevice;
-    virtualDevice_->SetUp();
-    injectThread_ = std::make_unique<InjectThread>(virtualDevice_);
+    virtualDevice->SetUp();
+    injectThread_ = std::make_unique<InjectThread>(virtualDevice);
     injectThread_->Start();
 }
 
@@ -30,7 +29,7 @@ VirtualDeviceInject::~VirtualDeviceInject()
     injectThread_->Stop();
 }
 
-void VirtualDeviceInject::EmitEvent(const std::vector<EmitItem> &items)
+void VirtualDeviceInject::EmitEvent(const std::vector<Hid_EmitItem> &items)
 {
     injectThread_->WaitFunc(items);
 }

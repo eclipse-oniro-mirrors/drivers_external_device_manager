@@ -22,7 +22,7 @@
 #include <thread>
 #include <vector>
 
-#include "emit_event_types.h"
+#include "hid_ddk_types.h"
 #include "virtual_device.h"
 
 namespace OHOS {
@@ -31,7 +31,7 @@ class InjectThread {
 public:
     InjectThread(std::shared_ptr<VirtualDevice> virtualDevice);
     virtual ~InjectThread();
-    void WaitFunc(const std::vector<EmitItem> &items);
+    void WaitFunc(const std::vector<Hid_EmitItem> &items);
     void Start();
     void Stop();
 
@@ -43,7 +43,7 @@ private:
     std::mutex mutex_;
     std::condition_variable conditionVariable_;
     bool threadRun_;
-    std::vector<EmitItem> injectQueue_;
+    std::vector<Hid_EmitItem> injectQueue_;
     std::thread thread_;
     std::shared_ptr<VirtualDevice> virtualDevice_;
 };

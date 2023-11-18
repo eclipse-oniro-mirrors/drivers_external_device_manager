@@ -34,9 +34,9 @@ public:
     virtual UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) = 0;
     virtual UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) = 0;
     virtual UsbErrCode UnBindDevice(uint64_t deviceId) = 0;
-    virtual UsbErrCode CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure) = 0;
-    virtual UsbErrCode EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items) = 0;
-    virtual UsbErrCode DestroyDevice(void) = 0;
+    virtual int32_t CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties) = 0;
+    virtual int32_t EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items) = 0;
+    virtual int32_t DestroyDevice(int32_t deviceId) = 0;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

@@ -130,31 +130,31 @@ int32_t DriverExtMgrStub::OnUnBindDevice(MessageParcel &data, MessageParcel &rep
 
 int32_t DriverExtMgrStub::OnCreateDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    uint32_t maxX = 0;
-    if (!data.ReadUint32(maxX)) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to read maxX");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    auto hidDevice = HidDeviceUnMarshalling(data);
+    if (!hidDevice.has_value()) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read hidDevice");
+        return HID_DDK_INVALID_PARAMETER;
     }
 
-    uint32_t maxY = 0;
-    if (!data.ReadUint32(maxY)) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to read maxY");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    auto hidEventProperties = HidEventPropertiesUnMarshalling(data);
+    if (!hidEventProperties.has_value()) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read hidEventProperties");
+        return HID_DDK_INVALID_PARAMETER;
     }
 
-    uint32_t maxPressure = 0;
-    if (!data.ReadUint32(maxPressure)) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to read maxPressure");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    auto device = &(hidDevice.value());
+    auto eventProperties = &(hidEventProperties.value());
+    int32_t ret = CreateDevice(device, eventProperties);
+    delete device->properties;
+    delete eventProperties->hidEventTypes.hidEventType;
+    delete eventProperties->hidKeys.hidKeyCode;
+    delete eventProperties->hidAbs.hidAbsAxes;
+    delete eventProperties->hidRelBits.hidRelAxes;
+    delete eventProperties->hidMiscellaneous.hidMscEvent;
+    if (ret < HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call CreateDevice function:%{public}d", ret);
     }
-
-    UsbErrCode ret = CreateDevice(maxX, maxY, maxPressure);
-    if (ret != UsbErrCode::EDM_OK) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call CreateDevice function:%{public}d", static_cast<int32_t>(ret));
-        return ret;
-    }
-
-    return UsbErrCode::EDM_OK;
+    return ret;
 }
 
 int32_t DriverExtMgrStub::OnEmitEvent(MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -163,27 +163,33 @@ int32_t DriverExtMgrStub::OnEmitEvent(MessageParcel &data, MessageParcel &reply,
     auto items = EmitItemUnMarshalling(data, deviceId);
     if (!items.has_value()) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to read emit items");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        return HID_DDK_INVALID_PARAMETER;
     }
 
-    UsbErrCode ret = EmitEvent(deviceId, items.value());
-    if (ret != UsbErrCode::EDM_OK) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call EmitEvent function:%{public}d", static_cast<int32_t>(ret));
+    int32_t ret = EmitEvent(deviceId, items.value());
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call EmitEvent function:%{public}d", ret);
         return ret;
     }
 
-    return UsbErrCode::EDM_OK;
+    return HID_DDK_SUCCESS;
 }
 
 int32_t DriverExtMgrStub::OnDestroyDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
-    UsbErrCode ret = DestroyDevice();
-    if (ret != UsbErrCode::EDM_OK) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call DestroyDevice function:%{public}d", static_cast<int32_t>(ret));
+    uint32_t deviceId = 0;
+    if (!data.ReadUint32(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceId");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    int32_t ret = DestroyDevice(static_cast<int32_t>(deviceId));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call DestroyDevice function:%{public}d", ret);
         return ret;
     }
 
-    return UsbErrCode::EDM_OK;
+    return HID_DDK_SUCCESS;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

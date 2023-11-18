@@ -44,6 +44,31 @@ VirtualDevice::VirtualDevice(const char *deviceName, uint16_t productId)
 {
 }
 
+VirtualDevice::VirtualDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
+    : deviceName_(hidDevice->deviceName),
+    busType_(hidDevice->bustype),
+    vendorId_(hidDevice->vendorId),
+    productId_(hidDevice->productId),
+    version_(hidDevice->version)
+{
+    properties_ = std::vector<uint32_t>(hidDevice->properties, hidDevice->properties + hidDevice->propLength);
+    eventTypes_ = std::vector<uint32_t>(hidEventProperties->hidEventTypes.hidEventType,
+        hidEventProperties->hidEventTypes.hidEventType + hidEventProperties->hidEventTypes.length);
+    keys_ = std::vector<uint32_t>(hidEventProperties->hidKeys.hidKeyCode,
+        hidEventProperties->hidKeys.hidKeyCode + hidEventProperties->hidKeys.length);
+    abs_ = std::vector<uint32_t>(hidEventProperties->hidAbs.hidAbsAxes,
+        hidEventProperties->hidAbs.hidAbsAxes + hidEventProperties->hidAbs.length);
+    relBits_ = std::vector<uint32_t>(hidEventProperties->hidRelBits.hidRelAxes,
+        hidEventProperties->hidRelBits.hidRelAxes + hidEventProperties->hidRelBits.length);
+    miscellaneous_ = std::vector<uint32_t>(hidEventProperties->hidMiscellaneous.hidMscEvent,
+        hidEventProperties->hidMiscellaneous.hidMscEvent + hidEventProperties->hidMiscellaneous.length);
+    const int absLength = 64;
+    std::copy(hidEventProperties->hidAbsMax, hidEventProperties->hidAbsMax + absLength, uinputDev_.absmax);
+    std::copy(hidEventProperties->hidAbsMin, hidEventProperties->hidAbsMin + absLength, uinputDev_.absmin);
+    std::copy(hidEventProperties->hidAbsFuzz, hidEventProperties->hidAbsFuzz + absLength, uinputDev_.absfuzz);
+    std::copy(hidEventProperties->hidAbsFlat, hidEventProperties->hidAbsFlat + absLength, uinputDev_.absflat);
+}
+
 VirtualDevice::~VirtualDevice()
 {
     if (fd_ >= 0) {
