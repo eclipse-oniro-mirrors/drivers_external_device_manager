@@ -143,12 +143,12 @@ UsbErrCode DriverExtMgrProxy::UnBindDevice(uint64_t deviceId)
     return UsbErrCode::EDM_OK;
 }
 
-UsbErrCode DriverExtMgrProxy::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+int32_t DriverExtMgrProxy::CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
-        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+        return HID_DDK_FAILURE;
     }
 
     MessageParcel data;
@@ -157,39 +157,33 @@ UsbErrCode DriverExtMgrProxy::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        return HID_DDK_INVALID_PARAMETER;
     }
 
-    if (!data.WriteUint32(maxX)) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to write maxX");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    if (!HidDeviceMarshalling(hidDevice, data)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to marshall HidDevice");
+        return HID_DDK_INVALID_PARAMETER;
     }
 
-    if (!data.WriteUint32(maxY)) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to write maxY");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
-    }
-
-    if (!data.WriteUint32(maxPressure)) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to write maxPressure");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    if (!HidEventPropertiesMarshalling(hidEventProperties, data)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to marshall HidEventProperties");
+        return HID_DDK_INVALID_PARAMETER;
     }
 
     int32_t ret =
         remote->SendRequest(static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_CREATE_DEVICE), data, reply, option);
-    if (ret != UsbErrCode::EDM_OK) {
+    if (ret < HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
-        return static_cast<UsbErrCode>(ret);
     }
-    return UsbErrCode::EDM_OK;
+    return ret;
 }
 
-UsbErrCode DriverExtMgrProxy::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
+int32_t DriverExtMgrProxy::EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
-        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+        return HID_DDK_FAILURE;
     }
 
     MessageParcel data;
@@ -198,29 +192,29 @@ UsbErrCode DriverExtMgrProxy::EmitEvent(int32_t deviceId, const std::vector<Emit
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        return HID_DDK_INVALID_PARAMETER;
     }
 
     if (!EmitItemMarshalling(deviceId, items, data)) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to marshall EmitItem");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        return HID_DDK_INVALID_PARAMETER;
     }
 
     int32_t ret =
         remote->SendRequest(static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_EMIT_EVENT), data, reply, option);
-    if (ret != UsbErrCode::EDM_OK) {
+    if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
-        return static_cast<UsbErrCode>(ret);
+        return ret;
     }
-    return UsbErrCode::EDM_OK;
+    return HID_DDK_SUCCESS;
 }
 
-UsbErrCode DriverExtMgrProxy::DestroyDevice(void)
+int32_t DriverExtMgrProxy::DestroyDevice(int32_t deviceId)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
-        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+        return HID_DDK_FAILURE;
     }
 
     MessageParcel data;
@@ -229,16 +223,21 @@ UsbErrCode DriverExtMgrProxy::DestroyDevice(void)
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    if (!data.WriteUint32(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write device id");
+        return HID_DDK_INVALID_PARAMETER;
     }
 
     int32_t ret = remote->SendRequest(
         static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_DESTROY_DEVICE), data, reply, option);
-    if (ret != UsbErrCode::EDM_OK) {
+    if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
-        return static_cast<UsbErrCode>(ret);
+        return ret;
     }
-    return UsbErrCode::EDM_OK;
+    return HID_DDK_SUCCESS;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

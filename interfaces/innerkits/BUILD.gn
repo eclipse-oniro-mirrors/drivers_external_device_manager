@@ -23,6 +23,7 @@ config("ext_dvc_mgr_public_config") {
 
 ohos_shared_library("driver_ext_mgr_client") {
   include_dirs = [
+    "${ext_mgr_path}/interfaces/ddk/hid",
     "${ext_mgr_path}/services/zidl/include",
     "${ext_mgr_path}/utils/include",
   ]

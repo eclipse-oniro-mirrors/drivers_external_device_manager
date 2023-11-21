@@ -62,7 +62,7 @@ void InjectThread::InjectFunc()
     }
 }
 
-void InjectThread::WaitFunc(const std::vector<EmitItem> &items)
+void InjectThread::WaitFunc(const std::vector<Hid_EmitItem> &items)
 {
     std::lock_guard<std::mutex> lockGuard(mutex_);
     injectQueue_.insert(injectQueue_.begin(), items.begin(), items.end());

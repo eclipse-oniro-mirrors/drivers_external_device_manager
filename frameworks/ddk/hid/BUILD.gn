@@ -11,9 +11,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("ddk") {
-  deps = [
-    "hid:hid_ndk",
-    "usb:usb_ndk",
+import("../../../extdevmgr.gni")
+
+ohos_shared_library("hid_ndk") {
+  include_dirs = [
+    "${ext_mgr_path}/interfaces/ddk/hid/",
+    "${utils_path}/include/",
+    "./",
+    "${ext_mgr_path}/interfaces/innerkits/",
+    "${ext_mgr_path}/services/zidl/include/",
   ]
+
+  sources = [ "input_emit_event.cpp" ]
+
+  deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_ddk_proxy_1.0",
+    "hilog:libhilog",
+  ]
+  install_enable = true
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
 }

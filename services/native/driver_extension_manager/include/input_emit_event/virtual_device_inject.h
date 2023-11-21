@@ -29,10 +29,9 @@ public:
     VirtualDeviceInject(std::shared_ptr<VirtualDevice> virtualDevice);
     DISALLOW_COPY_AND_MOVE(VirtualDeviceInject);
     virtual ~VirtualDeviceInject();
-    void EmitEvent(const std::vector<EmitItem> &items);
+    void EmitEvent(const std::vector<Hid_EmitItem> &items);
 private:
     std::unique_ptr<InjectThread> injectThread_;
-    std::shared_ptr<VirtualDevice> virtualDevice_;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

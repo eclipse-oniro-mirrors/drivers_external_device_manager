@@ -22,12 +22,14 @@
 #include <linux/uinput.h>
 
 #include "nocopyable.h"
+#include "hid_ddk_types.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 class VirtualDevice {
 public:
     VirtualDevice(const char *deviceName, uint16_t productId);
+    VirtualDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties);
     DISALLOW_COPY_AND_MOVE(VirtualDevice);
     virtual ~VirtualDevice();
     bool EmitEvent(uint16_t type, uint16_t code, uint32_t value) const;

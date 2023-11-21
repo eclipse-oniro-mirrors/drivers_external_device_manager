@@ -120,28 +120,28 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
     return proxy_->UnBindDevice(deviceId);
 }
 
-UsbErrCode DriverExtMgrClient::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
+int32_t DriverExtMgrClient::EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items)
 {
     if (Connect() != UsbErrCode::EDM_OK) {
-        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+        return HID_DDK_FAILURE;
     }
     return proxy_->EmitEvent(deviceId, items);
 }
 
-UsbErrCode DriverExtMgrClient::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+int32_t DriverExtMgrClient::CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
     if (Connect() != UsbErrCode::EDM_OK) {
-        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+        return HID_DDK_FAILURE;
     }
-    return proxy_->CreateDevice(maxX, maxY, maxPressure);
+    return proxy_->CreateDevice(hidDevice, hidEventProperties);
 }
 
-UsbErrCode DriverExtMgrClient::DestroyDevice(void)
+int32_t DriverExtMgrClient::DestroyDevice(int32_t deviceId)
 {
     if (Connect() != UsbErrCode::EDM_OK) {
-        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+        return HID_DDK_FAILURE;
     }
-    return proxy_->DestroyDevice();
+    return proxy_->DestroyDevice(deviceId);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

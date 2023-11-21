@@ -17,7 +17,7 @@
 #define INPUT_EMIT_EVENT_EMIT_EVENT_MANAGER_H
 #include <inttypes.h>
 
-#include "emit_event_types.h"
+#include "hid_ddk_types.h"
 #include "single_instance.h"
 #include "virtual_device_inject.h"
 
@@ -27,15 +27,17 @@ class EmitEventManager final {
     DECLARE_SINGLE_INSTANCE_BASE(EmitEventManager);
 
 public:
-    int32_t CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure);
-    int32_t EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items);
-    int32_t DestroyDevice();
+    int32_t CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties);
+    int32_t EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items);
+    int32_t DestroyDevice(int32_t deviceId);
+    int32_t GetCurDeviceId();
 
 private:
     EmitEventManager() = default;
     bool HasPermission(void);
     bool CheckHapPermission(uint32_t tokenId);
-    std::vector<std::unique_ptr<VirtualDeviceInject>> vitualDeviceList_;
+    std::map<int32_t, std::unique_ptr<VirtualDeviceInject>> virtualDeviceMap_;
+    int32_t lastDeviceId_ = 0;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

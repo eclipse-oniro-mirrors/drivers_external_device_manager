@@ -24,6 +24,7 @@ ohos_shared_library("driver_extension_manager") {
 
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include",
+    "${ext_mgr_path}/interfaces/ddk/hid/",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
@@ -61,6 +62,7 @@ ohos_shared_library("driver_extension_manager") {
 config("driver_extension_manager_test_public_config") {
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include",
+    "${ext_mgr_path}/interfaces/ddk/hid/",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
     "${ext_mgr_path}/utils/include/",

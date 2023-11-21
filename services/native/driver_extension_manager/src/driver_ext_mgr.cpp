@@ -116,22 +116,22 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
     return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId));
 }
 
-UsbErrCode DriverExtMgr::CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+int32_t DriverExtMgr::CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().CreateDevice(maxX, maxY, maxPressure));
+    return EmitEventManager::GetInstance().CreateDevice(hidDevice, hidEventProperties);
 }
 
-UsbErrCode DriverExtMgr::EmitEvent(int32_t deviceId, const std::vector<EmitItem> &items)
+int32_t DriverExtMgr::EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().EmitEvent(deviceId, items));
+    return EmitEventManager::GetInstance().EmitEvent(deviceId, items);
 }
 
-UsbErrCode DriverExtMgr::DestroyDevice(void)
+int32_t DriverExtMgr::DestroyDevice(int32_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    return static_cast<UsbErrCode>(EmitEventManager::GetInstance().DestroyDevice());
+    return EmitEventManager::GetInstance().DestroyDevice(deviceId);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

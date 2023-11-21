@@ -1,0 +1,11 @@
+[
+    {
+        "name": "OH_Hid_CreateDevice"
+    },
+    {
+        "name": "OH_Hid_EmitEvent"
+    },
+    {
+        "name": "OH_Hid_DestroyDevice"
+    }
+]

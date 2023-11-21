@@ -11,9 +11,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("ddk") {
-  deps = [
-    "hid:hid_ndk",
-    "usb:usb_ndk",
+import("//build/ohos.gni")
+
+ohos_ndk_headers("hid_header") {
+  dest_dir = "$ndk_headers_out_dir/hid/"
+  sources = [
+    "hid_ddk_api.h",
+    "hid_ddk_types.h",
+  ]
+}
+
+ohos_ndk_library("libhid_ndk") {
+  ndk_description_file = "./libhid.ndk.json"
+  min_compact_version = "9"
+  output_name = "hid_ndk"
+  system_capability = "SystemCapability.Driver.HID.Extension"
+  system_capability_headers = [
+    "hid/hid_ddk_api.h",
+    "hid/hid_ddk_types.h",
   ]
 }

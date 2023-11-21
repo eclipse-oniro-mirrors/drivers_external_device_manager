@@ -14,7 +14,7 @@
  */
 #include "driver_ext_mgr_client.h"
 #include "hilog_wrapper.h"
-#include "usb_ddk_api.h"
+#include "hid_ddk_api.h"
 
 using namespace OHOS::ExternalDeviceManager;
 namespace {
@@ -23,37 +23,52 @@ static DriverExtMgrClient &g_edmClient = DriverExtMgrClient::GetInstance();
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-int32_t OH_Usb_CreateDevice(uint32_t maxX, uint32_t maxY, uint32_t maxPressure)
+int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
-    if (auto ret = g_edmClient.CreateDevice(maxX, maxY, maxPressure); ret != UsbErrCode::EDM_OK) {
-        EDM_LOGE(MODULE_USB_DDK, "create device failed:%{public}d", ret);
-        return ret;
+    if (hidDevice == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "hidDevice is null");
+        return HID_DDK_INVALID_PARAMETER;
     }
-    return EDM_OK;
+
+    if (hidEventProperties == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "hidEventProperties is null");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    auto ret = g_edmClient.CreateDevice(hidDevice, hidEventProperties);
+    if (ret < 0) {
+        EDM_LOGE(MODULE_HID_DDK, "create device failed:%{public}d", ret);
+    }
+    return ret;
 }
 
-int32_t OH_Usb_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint32_t length)
+int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
     if (length > MAX_EMIT_ITEM_NUM) {
-        EDM_LOGE(MODULE_DEV_MGR, "length out of range");
-        return EDM_ERR_INVALID_PARAM;
+        EDM_LOGE(MODULE_HID_DDK, "length out of range");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    if (items == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "items is null");
+        return HID_DDK_INVALID_PARAMETER;
     }
 
     std::vector<Hid_EmitItem> itemsTmp(items, items + length);
-    if (auto ret = g_edmClient.EmitEvent(deviceId, itemsTmp); ret != UsbErrCode::EDM_OK) {
+    if (auto ret = g_edmClient.EmitEvent(deviceId, itemsTmp); ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "emit event failed:%{public}d", ret);
         return ret;
     }
-    return EDM_OK;
+    return HID_DDK_SUCCESS;
 }
 
-int32_t OH_Usb_DestroyDevice(int32_t deviceId)
+int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
-    if (auto ret = g_edmClient.DestroyDevice(); ret != UsbErrCode::EDM_OK) {
+    if (auto ret = g_edmClient.DestroyDevice(deviceId); ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "destroy device failed:%{public}d", ret);
         return ret;
     }
-    return EDM_OK;
+    return HID_DDK_SUCCESS;
 }
 #ifdef __cplusplus
 }
