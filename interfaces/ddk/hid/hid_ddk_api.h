@@ -63,10 +63,10 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
  *
  * @permission ohos.permission.ACCESS_DDK_HID
  * @param deviceId ID of the device, to which the event list is sent.
- * @param items List of events to sent. The event information includes the event type (<b>HidEventType</b>),
- * event code (<b>HidSynEvent</b> for a synchronization event code, <b>HidKeyCode</b> for a key code, <b>HidBtnCode</b>
- * for a button code, <b>HidAbsAxes</b> for an absolute coordinate code, <b>HidRelAxes</b>
- * for a relative coordinate event, and <b>HidMscEvent</b> for other input event code), and value input by the device.
+ * @param items List of events to sent. The event information includes the event type (<b>Hid_EventType</b>),
+ * event code (<b>Hid_SynEvent</b> for a synchronization event code, <b>Hid_KeyCode</b> for a key code,
+ * <b>Hid_AbsAxes</b> for an absolute coordinate code, <b>Hid_RelAxes</b> for a relative coordinate event,
+ * and <b>Hid_MscEvent</b> for other input event code), and value input by the device.
  * @param length Length of the event list (number of events sent at a time).
  * @return Returns <b>0</b> if the operation is successful; returns a negative number otherwise.
  * @since 11

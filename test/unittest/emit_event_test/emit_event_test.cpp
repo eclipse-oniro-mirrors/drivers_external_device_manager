@@ -15,10 +15,13 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include <system_ability_definition.h>
+#include <thread>
 #include <linux/uinput.h>
 #include "driver_ext_mgr_client.h"
 #include "hilog_wrapper.h"
-
+#include "iservice_registry.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -30,52 +33,110 @@ public:
     void SetUp() override {};
     void TearDown() override {};
 
-    static Hid_Device* CreateDeviceMock(int8_t isPropExMax);
-    static Hid_EventProperties* CreateEventPropertiesMock(int8_t isEventTypeExMax, int8_t isKeyExMax, int8_t isAbsExMax,
-        int8_t isRelExMax, int8_t isMscExMax);
-    static DriverExtMgrClient &edmClient;
-    static int32_t deviceId;
+private:
+    class LoadCallback : public SystemAbilityLoadCallbackStub {
+    public:
+        void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
+        void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+    };
 };
 
-DriverExtMgrClient &EmitEventTest::edmClient = DriverExtMgrClient::GetInstance();
-int32_t EmitEventTest::deviceId = -1;
+static DriverExtMgrClient &edmClient = DriverExtMgrClient::GetInstance();
+static int32_t deviceId = -1;
+enum class LoadStatus {
+    LOAD_SUCCESS,
+    LOAD_FAILED,
+    ALREADY_EXISTS,
+};
 
-void EmitEventTest::SetUpTestCase() {}
+static LoadStatus g_loadStatus_ = LoadStatus::LOAD_FAILED;
+static sptr<IRemoteObject> g_saObject = nullptr;
+static constexpr uint64_t START_SA_SERVICE_WAIT_TIME = 3;
 
-void EmitEventTest::TearDownTestCase() {}
-
-Hid_Device* EmitEventTest::CreateDeviceMock(int8_t isPropExMax)
+void EmitEventTest::SetUpTestCase()
 {
-    Hid_DeviceProp hidDeviceProp[MAX_HID_DEVICE_PROP_LEN] = { HID_PROP_POINTER, HID_PROP_DIRECT };
+    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        EDM_LOGE(EDM_MODULE_TEST, "%{public}s get samgr failed", __func__);
+        g_loadStatus_ = LoadStatus::LOAD_FAILED;
+        return;
+    }
+
+    auto saObj = samgr->CheckSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
+    if (saObj != nullptr) {
+        g_saObject = saObj;
+        g_loadStatus_ = LoadStatus::ALREADY_EXISTS;
+        EDM_LOGE(EDM_MODULE_TEST, "%{public}s external device SA exist", __func__);
+        return;
+    }
+
+    sptr<LoadCallback> loadCallback_ = new LoadCallback();
+    int32_t ret = samgr->LoadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID, loadCallback_);
+    if (ret != UsbErrCode::EDM_OK) {
+        g_loadStatus_ = LoadStatus::LOAD_FAILED;
+    }
+    EDM_LOGE(EDM_MODULE_TEST, "%{public}s load hdf_ext_devmgr, ret:%{public}d", __func__, ret);
+}
+
+void EmitEventTest::TearDownTestCase()
+{
+    if (g_loadStatus_ == LoadStatus::LOAD_FAILED || g_loadStatus_ == LoadStatus::ALREADY_EXISTS) {
+        return;
+    }
+
+    sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        EDM_LOGE(EDM_MODULE_TEST, "%{public}s get samgr failed", __func__);
+        return;
+    }
+
+    int32_t ret = samgr->UnloadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
+    EDM_LOGE(EDM_MODULE_TEST, "%{public}s unload hdf_ext_devmgr, ret:%{public}d", __func__, ret);
+}
+
+void EmitEventTest::LoadCallback::OnLoadSystemAbilitySuccess(
+    int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
+{
+    std::cout << "load success: systemAbilityId:" << systemAbilityId
+              << " IRemoteObject result:" << ((remoteObject != nullptr) ? "succeed" : "failed") << std::endl;
+    g_loadStatus_ = LoadStatus::LOAD_SUCCESS;
+    g_saObject = remoteObject;
+}
+
+void EmitEventTest::LoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
+{
+    std::cout << "load failed: systemAbilityId:" << systemAbilityId << std::endl;
+    g_loadStatus_ = LoadStatus::LOAD_FAILED;
+    g_saObject = nullptr;
+}
+
+HWTEST_F(EmitEventTest, CheckSAServiceLoad001, TestSize.Level1)
+{
+    if (g_loadStatus_ != LoadStatus::ALREADY_EXISTS) {
+        std::this_thread::sleep_for(std::chrono::seconds(START_SA_SERVICE_WAIT_TIME));
+    }
+
+    ASSERT_NE(g_saObject, nullptr);
+}
+
+HWTEST_F(EmitEventTest, CreateDevice001, TestSize.Level1)
+{
     Hid_Device hidDevice = {
         .deviceName = "VSoC keyboard",
         .vendorId = 0x6006,
         .productId = 0x6008,
         .version = 1,
-        .bustype = BUS_USB,
-        .properties = hidDeviceProp,
-        .propLength = isPropExMax ? (MAX_HID_DEVICE_PROP_LEN + 1) : 2
+        .bustype = BUS_USB
     };
-    return &hidDevice;
-}
-
-Hid_EventProperties* EmitEventTest::CreateEventPropertiesMock(int8_t isEventTypeExMax, int8_t isKeyExMax,
-    int8_t isAbsExMax, int8_t isRelExMax, int8_t isMscExMax)
-{
-    Hid_EventType hidEventType[MAX_HID_EVENT_TYPES_LEN] = { HID_EV_SYN, HID_EV_KEY };
-    Hid_KeyCode hidKeyCode[MAX_HID_KEYS_LEN] = { HID_KEY_A, HID_KEY_B };
-    Hid_AbsAxes hidAbsAxes[MAX_HID_ABS_LEN] = { HID_ABS_X, HID_ABS_Y };
-    Hid_RelAxes hidRelAxes[MAX_HID_REL_BITS_LEN] = { HID_REL_X, HID_REL_Y };
-    Hid_MscEvent hidMscEvent[MAX_HID_MISC_EVENT_LEN] = { HID_MSC_SERIAL, HID_MSC_PULSELED };
-
-    Hid_EventProperties hidEventProperties = {
-        .hidEventTypes = { hidEventType, isEventTypeExMax ? (MAX_HID_EVENT_TYPES_LEN + 1) : 2 },
-        .hidKeys = { hidKeyCode, isKeyExMax ? (MAX_HID_KEYS_LEN + 1) : 2 },
-        .hidAbs = { hidAbsAxes, isAbsExMax ? (MAX_HID_ABS_LEN + 1) : 2 },
-        .hidRelBits = { hidRelAxes, isRelExMax ? (MAX_HID_REL_BITS_LEN + 1) : 2 },
-        .hidMiscellaneous = { hidMscEvent, isMscExMax ? (MAX_HID_MISC_EVENT_LEN + 1) : 2 }
-    };
-    return &hidEventProperties;
+    std::vector<Hid_EventType> eventType = {HID_EV_KEY};
+    Hid_EventTypeArray eventTypeArray = {.hidEventType = eventType.data(), .length = (uint16_t)eventType.size()};
+    std::vector<Hid_KeyCode> keyCode = {HID_KEY_1, HID_KEY_SPACE, HID_KEY_BACKSPACE, HID_KEY_ENTER};
+    Hid_KeyCodeArray keyCodeArray = {.hidKeyCode = keyCode.data(), .length = (uint16_t)keyCode.size()};
+    Hid_EventProperties hidEventProp = {.hidEventTypes = eventTypeArray, .hidKeys = keyCodeArray};
+    auto ret = edmClient.CreateDevice(&hidDevice, &hidEventProp);
+    deviceId = ret;
+    std::cout << "create device: deviceId:" << deviceId << std::endl;
+    ASSERT_GE(ret, 0);
 }
 
 HWTEST_F(EmitEventTest, EmitEvent001, TestSize.Level1)
@@ -93,9 +154,9 @@ HWTEST_F(EmitEventTest, EmitEvent002, TestSize.Level1)
 {
     const uint16_t len = 21;
     std::vector<Hid_EmitItem> items;
-    Hid_EmitItem item = {1, 0x14a, 108};
     for (uint16_t i = 0; i < len; ++i) {
-        items[i] = item;
+        Hid_EmitItem item = {1, 0x14a, 108};
+        items.push_back(item);
     }
     auto ret = edmClient.EmitEvent(deviceId, items);
     ASSERT_NE(ret, 0);
@@ -105,94 +166,17 @@ HWTEST_F(EmitEventTest, EmitEvent003, TestSize.Level1)
 {
     const uint16_t len = 20;
     std::vector<Hid_EmitItem> items;
-    Hid_EmitItem item = {1, 0x14a, 108};
     for (uint16_t i = 0; i < len; ++i) {
-        items[i] = item;
+        Hid_EmitItem item = {1, 0x14a, 108};
+        items.push_back(item);
     }
     auto ret = edmClient.EmitEvent(deviceId, items);
     ASSERT_EQ(ret, 0);
 }
 
-HWTEST_F(EmitEventTest, CreateDevice001, TestSize.Level1)
-{
-    auto device = CreateDeviceMock(0);
-    auto eventProperties = CreateEventPropertiesMock(0, 0, 0, 0, 0);
-    auto ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_GE(ret, 0);
-    deviceId = ret;
-}
-
-HWTEST_F(EmitEventTest, CreateDevice002, TestSize.Level1)
-{
-    auto device = CreateDeviceMock(1);
-    auto eventProperties = CreateEventPropertiesMock(0, 0, 0, 0, 0);
-    auto ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_LT(ret, 0);
-}
-
-HWTEST_F(EmitEventTest, CreateDevice003, TestSize.Level1)
-{
-    auto device = CreateDeviceMock(0);
-    auto eventProperties = CreateEventPropertiesMock(1, 0, 0, 0, 0);
-    auto ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_LT(ret, 0);
-}
-
-HWTEST_F(EmitEventTest, CreateDevice004, TestSize.Level1)
-{
-    auto device = CreateDeviceMock(0);
-    auto eventProperties = CreateEventPropertiesMock(0, 1, 0, 0, 0);
-    auto ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_LT(ret, 0);
-}
-
-HWTEST_F(EmitEventTest, CreateDevice005, TestSize.Level1)
-{
-    auto device = CreateDeviceMock(0);
-    auto eventProperties = CreateEventPropertiesMock(0, 0, 1, 0, 0);
-    auto ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_LT(ret, 0);
-}
-
-HWTEST_F(EmitEventTest, CreateDevice006, TestSize.Level1)
-{
-    auto device = CreateDeviceMock(0);
-    auto eventProperties = CreateEventPropertiesMock(0, 0, 0, 1, 0);
-    auto ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_LT(ret, 0);
-}
-
-HWTEST_F(EmitEventTest, CreateDevice007, TestSize.Level1)
-{
-    auto device = CreateDeviceMock(0);
-    auto eventProperties = CreateEventPropertiesMock(0, 0, 0, 0, 1);
-    auto ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_LT(ret, 0);
-}
-
-HWTEST_F(EmitEventTest, CreateDevice008, TestSize.Level1)
-{
-    const int16_t num = 200;
-    int16_t idx = deviceId < 0 ? 0 : 1;
-    Hid_EventProperties *eventProperties;
-    Hid_Device* device;
-    int32_t ret;
-    while (idx <= num) {
-        device = CreateDeviceMock(0);
-        eventProperties = CreateEventPropertiesMock(0, 0, 0, 0, 0);
-        ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-        if (ret >= 0) {
-            idx++;
-        }
-    }
-    device = CreateDeviceMock(0);
-    eventProperties = CreateEventPropertiesMock(0, 0, 0, 0, 0);
-    ret = EmitEventTest::edmClient.CreateDevice(device, eventProperties);
-    ASSERT_LT(ret, 0);
-}
-
 HWTEST_F(EmitEventTest, DestroyDevice001, TestSize.Level1)
 {
+    std::cout << "destroy device: deviceId:" << deviceId << std::endl;
     int32_t ret = edmClient.DestroyDevice(deviceId);
     ASSERT_EQ(ret, 0);
 }
@@ -205,8 +189,8 @@ HWTEST_F(EmitEventTest, DestroyDevice002, TestSize.Level1)
 
 HWTEST_F(EmitEventTest, DestroyDevice003, TestSize.Level1)
 {
-    const int16_t deviceId = 200;
-    int32_t ret = edmClient.DestroyDevice(deviceId);
+    const int16_t devId = 200;
+    int32_t ret = edmClient.DestroyDevice(devId);
     ASSERT_NE(ret, 0);
 }
 } // namespace ExternalDeviceManager

@@ -347,7 +347,7 @@ typedef enum {
     /** Lens */
     HID_BTN_TOOL_LENS = 0x147,
     /** Five-finger touch */
-    HID_BTN_TOOL_QUINTTAP = 0x148,
+    HID_BTN_TOOL_QUINT_TAP = 0x148,
     /** Stylus 3 */
     HID_BTN_STYLUS3 = 0x149,
     /** Touch */
@@ -357,11 +357,11 @@ typedef enum {
     /** Stylus 2 */
     HID_BTN_STYLUS2 = 0x14c,
     /** Two-finger touch */
-    HID_BTN_TOOL_DOUBLETAP = 0x14d,
+    HID_BTN_TOOL_DOUBLE_TAP = 0x14d,
     /** Three-finger touch */
-    HID_BTN_TOOL_TRIPLETAP = 0x14e,
+    HID_BTN_TOOL_TRIPLE_TAP = 0x14e,
     /** Four-finger touch */
-    HID_BTN_TOOL_QUADTAP = 0x14f,
+    HID_BTN_TOOL_QUAD_TAP = 0x14f,
     /** Scroll wheel */
     HID_BTN_WHEEL = 0x150
 } Hid_KeyCode;
@@ -472,7 +472,7 @@ typedef enum {
     /** Serial number */
     HID_MSC_SERIAL = 0x00,
     /** Pulse */
-    HID_MSC_PULSELED = 0x01,
+    HID_MSC_PULSE_LED = 0x01,
     /** Gesture */
     HID_MSC_GESTURE = 0x02,
     /** Start event */
