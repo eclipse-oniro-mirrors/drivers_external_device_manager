@@ -121,10 +121,43 @@ ohos_unittest("driver_extension_manager_client_test") {
   ]
 }
 
+ohos_unittest("ddk_permission_test") {
+  module_out_path = "${module_output_path}"
+
+  sources = [
+    "${ext_mgr_path}/frameworks/ddk/usb/usb_config_desc_parser.cpp",
+    "${ext_mgr_path}/frameworks/ddk/usb/usb_ddk_api.cpp",
+    "ddk_permission_test/ddk_permission_test.cpp",
+  ]
+
+  include_dirs = [
+    "${ext_mgr_path}/frameworks/ddk/usb",
+    "${ext_mgr_path}/interfaces/ddk/usb",
+    "${ext_mgr_path}/interfaces/innerkits/",
+    "${ext_mgr_path}/services/zidl/include/",
+    "${utils_path}/include/",
+  ]
+
+  deps = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_permission:driver_permission_manager",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "drivers_interface_usb:libusb_ddk_proxy_1.0",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+  ]
+}
+
 group("external_device_manager_ut") {
   testonly = true
   deps = [
     ":bus_extension_usb_test",
+    ":ddk_permission_test",
     ":driver_extension_controller_test",
     ":driver_extension_manager_client_test",
     ":drivers_pkg_manager_test",

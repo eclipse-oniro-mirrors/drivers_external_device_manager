@@ -18,16 +18,22 @@ ohos_shared_library("devicemanager_napi") {
 
   include_dirs = [
     "${utils_path}/include/",
-    "${ext_mgr_path}/interfaces/ddk/hid/",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
+    "${ext_mgr_path}/interfaces/ddk/hid/",
   ]
 
-  deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
+  deps = [
+    "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_permission:driver_permission_manager",
+  ]
 
   external_deps = [
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_core",
     "ipc:ipc_napi_common",
     "ipc:ipc_single",
     "napi:ace_napi",

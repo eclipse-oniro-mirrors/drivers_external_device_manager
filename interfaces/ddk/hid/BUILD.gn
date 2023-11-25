@@ -21,10 +21,10 @@ ohos_ndk_headers("hid_header") {
   ]
 }
 
-ohos_ndk_library("libhid_ndk") {
+ohos_ndk_library("libhid") {
   ndk_description_file = "./libhid.ndk.json"
-  min_compact_version = "9"
-  output_name = "hid_ndk"
+  min_compact_version = "11"
+  output_name = "hid"
   system_capability = "SystemCapability.Driver.HID.Extension"
   system_capability_headers = [
     "hid/hid_ddk_api.h",

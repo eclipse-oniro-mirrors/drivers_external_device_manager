@@ -13,7 +13,7 @@
 
 group("ddk") {
   deps = [
-    "hid:hid_ndk",
+    "hid:hid",
     "usb:usb_ndk",
   ]
 }
