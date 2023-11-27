@@ -13,6 +13,18 @@
     },
     "deviceConfig": {},
     "module": {
+      "reqPermissions": [
+        {
+          "name": "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER",
+          "reason": "$string:app_name",
+          "usedScene": {
+            "ability": [
+              ".MainAbility"
+            ],
+            "when": "inuse"
+          }
+        }
+      ],
       "package": "com.example.myapplication",
       "name": ".MyApplication",
       "deviceType": [

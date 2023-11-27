@@ -15,6 +15,7 @@
 #include "driver_ext_mgr_client.h"
 #include "hilog_wrapper.h"
 #include "hid_ddk_api.h"
+#include "ext_permission_manager.h"
 
 using namespace OHOS::ExternalDeviceManager;
 namespace {
@@ -23,8 +24,13 @@ static DriverExtMgrClient &g_edmClient = DriverExtMgrClient::GetInstance();
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_DDK_HID";
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
+    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_USB_DDK, "no permission");
+        return HID_DDK_FAILURE;
+    }
     if (hidDevice == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "hidDevice is null");
         return HID_DDK_INVALID_PARAMETER;
@@ -44,6 +50,10 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
 
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
+    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_USB_DDK, "no permission");
+        return HID_DDK_FAILURE;
+    }
     if (length > MAX_EMIT_ITEM_NUM) {
         EDM_LOGE(MODULE_HID_DDK, "length out of range");
         return HID_DDK_INVALID_PARAMETER;
@@ -64,6 +74,10 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
 
 int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
+    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_USB_DDK, "no permission");
+        return HID_DDK_FAILURE;
+    }
     if (auto ret = g_edmClient.DestroyDevice(deviceId); ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "destroy device failed:%{public}d", ret);
         return ret;
