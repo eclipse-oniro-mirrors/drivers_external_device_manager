@@ -274,12 +274,12 @@ bool HidDeviceMarshalling(Hid_Device *hidDevice, MessageParcel &parcel)
 std::optional<Hid_Device> HidDeviceUnMarshalling(MessageParcel &parcel)
 {
     Hid_Device hidDevice;
-    std::string str;
-    if (!parcel.ReadString(str)) {
+    std::string* str = new std::string();
+    if (!parcel.ReadString(*str)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read deviceName");
         return std::nullopt;
     }
-    hidDevice.deviceName = (char *)str.c_str();
+    hidDevice.deviceName = (char *)str->c_str();
 
     if (!parcel.ReadUint16(hidDevice.vendorId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read vendorId");
