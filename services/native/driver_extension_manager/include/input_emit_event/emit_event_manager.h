@@ -34,8 +34,6 @@ public:
 
 private:
     EmitEventManager() = default;
-    bool HasPermission(void);
-    bool CheckHapPermission(uint32_t tokenId);
     std::map<int32_t, std::unique_ptr<VirtualDeviceInject>> virtualDeviceMap_;
     int32_t lastDeviceId_ = 0;
 };

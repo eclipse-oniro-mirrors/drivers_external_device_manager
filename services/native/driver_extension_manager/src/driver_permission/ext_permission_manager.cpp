@@ -19,7 +19,6 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "accesstoken_kit.h"
-#include "privacy_kit.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -79,10 +78,6 @@ bool ExtPermissionManager::HasPermission(std::string permissionName)
     
     AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int result = AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
-    if (PrivacyKit::AddPermissionUsedRecord(callerToken, permissionName, static_cast<int32_t>(1 + result),
-        static_cast<int32_t>(-result)) != 0) {
-        EDM_LOGE(MODULE_DEV_MGR, "AddPermissionUsedRecord failed.");
-    }
     if (result != PERMISSION_GRANTED) {
         EDM_LOGE(MODULE_DEV_MGR, "usb_ddk_api:  No permission.");
         return false;

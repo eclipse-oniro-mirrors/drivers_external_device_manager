@@ -279,7 +279,7 @@ std::optional<Hid_Device> HidDeviceUnMarshalling(MessageParcel &parcel)
         EDM_LOGE(MODULE_DEV_MGR, "failed to read deviceName");
         return std::nullopt;
     }
-    hidDevice.deviceName = (char *)str->c_str();
+    hidDevice.deviceName = str->c_str();
 
     if (!parcel.ReadUint16(hidDevice.vendorId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read vendorId");
