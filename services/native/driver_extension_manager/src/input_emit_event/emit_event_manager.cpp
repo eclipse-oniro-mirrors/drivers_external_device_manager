@@ -29,10 +29,6 @@ IMPLEMENT_SINGLE_INSTANCE(EmitEventManager);
 const uint16_t MAX_VIRTUAL_DEVICE_NUM = 200;
 int32_t EmitEventManager::CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
-    if (!HasPermission()) {
-        EDM_LOGE(MODULE_HID_DDK, "permission denied");
-        return HID_DDK_NO_PERM;
-    }
     // check device number
     if (virtualDeviceMap_.size() >= MAX_VIRTUAL_DEVICE_NUM) {
         EDM_LOGE(MODULE_HID_DDK, "device num exceeds maximum %{public}d", MAX_VIRTUAL_DEVICE_NUM);
@@ -80,33 +76,6 @@ int32_t EmitEventManager::DestroyDevice(int32_t deviceId)
     virtualDeviceMap_.erase(deviceId);
     lastDeviceId_ = deviceId;
     return HID_DDK_SUCCESS;
-}
-
-bool EmitEventManager::CheckHapPermission(uint32_t tokenId)
-{
-    OHOS::Security::AccessToken::HapTokenInfo findInfo;
-    if (OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenInfo(tokenId, findInfo) != 0) {
-        EDM_LOGE(MODULE_USB_DDK, "GetHapTokenInfo failed");
-        return false;
-    }
-    if ((findInfo.apl == ATokenAplEnum::APL_SYSTEM_CORE) || (findInfo.apl == ATokenAplEnum::APL_SYSTEM_BASIC)) {
-        return true;
-    }
-    return false;
-}
-
-bool EmitEventManager::HasPermission(void)
-{
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenType == OHOS::Security::AccessToken::TOKEN_HAP) {
-        return CheckHapPermission(tokenId);
-    } else if (tokenType == OHOS::Security::AccessToken::TOKEN_NATIVE) {
-        return true;
-    } else if (tokenType == OHOS::Security::AccessToken::TOKEN_SHELL) {
-        return true;
-    }
-    return false;
 }
 
 int32_t EmitEventManager::GetCurDeviceId(void)

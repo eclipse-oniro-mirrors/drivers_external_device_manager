@@ -145,6 +145,7 @@ int32_t DriverExtMgrStub::OnCreateDevice(MessageParcel &data, MessageParcel &rep
     auto device = &(hidDevice.value());
     auto eventProperties = &(hidEventProperties.value());
     int32_t ret = CreateDevice(device, eventProperties);
+    delete[] device->deviceName;
     delete device->properties;
     delete eventProperties->hidEventTypes.hidEventType;
     delete eventProperties->hidKeys.hidKeyCode;
