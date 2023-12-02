@@ -95,7 +95,7 @@ public:
     MOCK_METHOD3(BulkRead, int32_t(const UsbDev &dev, const UsbPipe &pipe, const sptr<Ashmem> &ashmem));
     MOCK_METHOD3(BulkWrite, int32_t(const UsbDev &dev, const UsbPipe &pipe, const sptr<Ashmem> &ashmem));
     MOCK_METHOD2(BulkCancel, int32_t(const UsbDev &dev, const UsbPipe &pipe));
-
+    MOCK_METHOD3(ManageInterface, int32_t(const UsbDev &dev, uint8_t interfaceid, bool disable));
 private:
     sptr<IUsbdSubscriber> subscriber_ = nullptr;
 };
