@@ -49,7 +49,7 @@ ohos_shared_library("driver_extension") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
-    "ipc:ipc_napi_common",
+    "ipc:ipc_napi",
     "napi:ace_napi",
   ]
 
