@@ -26,7 +26,7 @@ std::shared_ptr<PkgDbHelper> PkgDbHelper::instance_;
 bool g_dbInitSucc = false;
 
 PkgDbHelper::PkgDbHelper()
-{ 
+{
     rightDatabase_ = PkgDataBase::GetInstance();
     g_dbInitSucc = rightDatabase_->InitDB();
 }
