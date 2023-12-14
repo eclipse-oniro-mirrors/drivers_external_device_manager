@@ -64,14 +64,14 @@ static size_t g_expect_size = 1;
 static LoadStatus g_loadStatus = LoadStatus::LOAD_FAILED;
 static sptr<IRemoteObject> g_saObject = nullptr;
 static constexpr uint64_t START_SA_SERVICE_WAIT_TIME = 3;
-bool loadSaServiceSucc = false;
-bool unLoadSaServiceSucc = false;
+bool g_loadSaServiceSucc = false;
+bool g_unLoadSaServiceSucc = false;
 
 void PkgDbHelperTest::SetUpTestCase()
 {
     int32_t ret = 0;
-    loadSaServiceSucc = LoadSaService();
-    if (loadSaServiceSucc) {
+    g_loadSaServiceSucc = LoadSaService();
+    if (g_loadSaServiceSucc) {
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s load hdf_ext_devmgr successlfully", __func__);
     } else {
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s load hdf_ext_devmgr failed", __func__);
@@ -102,8 +102,8 @@ void PkgDbHelperTest::TearDownTestCase()
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s delete pkg from db fail", __func__);
     }
 
-    unLoadSaServiceSucc = UnLoadSaService();
-    if (unLoadSaServiceSucc) {
+    g_unLoadSaServiceSucc = UnLoadSaService();
+    if (g_unLoadSaServiceSucc) {
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s unload hdf_ext_devmgr successlfully", __func__);
     } else {
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s unload hdf_ext_devmgr failed", __func__);

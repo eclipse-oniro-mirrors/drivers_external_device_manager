@@ -22,7 +22,6 @@ std::shared_ptr<PkgDataBase> PkgDataBase::instance_ = nullptr;
 
 PkgDataBase::PkgDataBase()
 {
-
 }
 
 bool PkgDataBase::InitDB()
