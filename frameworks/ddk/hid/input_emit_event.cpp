@@ -12,61 +12,200 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "driver_ext_mgr_client.h"
-#include "hilog_wrapper.h"
+
+#include <vector>
+#include <algorithm>
 #include "hid_ddk_api.h"
+#include "v1_0/ihid_ddk.h"
+#include "hilog_wrapper.h"
 #include "ext_permission_manager.h"
 
 using namespace OHOS::ExternalDeviceManager;
 namespace {
-static DriverExtMgrClient &g_edmClient = DriverExtMgrClient::GetInstance();
+static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_0::IHidDdk> g_ddk = nullptr;
+constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
+constexpr uint32_t MAX_HID_DEVICE_PROP_LEN = 7;
+constexpr uint32_t MAX_HID_EVENT_TYPES_LEN = 5;
+constexpr uint32_t MAX_HID_KEYS_LEN = 100;
+constexpr uint32_t MAX_HID_ABS_LEN = 26;
+constexpr uint32_t MAX_HID_REL_BITS_LEN = 13;
+constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
 }
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_DDK_HID";
+
+static int32_t Connect()
+{
+    if (g_ddk != nullptr) {
+        return HID_DDK_SUCCESS;
+    }
+
+    g_ddk = OHOS::HDI::Input::Ddk::V1_0::IHidDdk::Get();
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
+        return HID_DDK_FAILURE;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+static OHOS::HDI::Input::Ddk::V1_0::Hid_Device ParseHidDevice(Hid_Device *hidDevice)
+{
+    OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevice = {
+        .deviceName = hidDevice->deviceName,
+        .vendorId = hidDevice->vendorId,
+        .productId = hidDevice->productId,
+        .version = hidDevice->version,
+        .bustype = hidDevice->bustype
+    };
+
+    std::transform(hidDevice->properties, hidDevice->properties + hidDevice->propLength,
+        std::back_inserter(tempDevice.properties), [](uint32_t n) {
+            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_DeviceProp>(n);
+        });
+
+    return tempDevice;
+}
+
+static OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties ParseHidEventProperties(Hid_EventProperties *hidEventProperties)
+{
+    const uint16_t absLength = 64;
+    OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties tempProperties = {
+        .hidAbsMax = std::vector<int32_t>(hidEventProperties->hidAbsMax, hidEventProperties->hidAbsMax + absLength),
+        .hidAbsMin = std::vector<int32_t>(hidEventProperties->hidAbsMin, hidEventProperties->hidAbsMin + absLength),
+        .hidAbsFuzz = std::vector<int32_t>(hidEventProperties->hidAbsFuzz, hidEventProperties->hidAbsFuzz + absLength),
+        .hidAbsFlat = std::vector<int32_t>(hidEventProperties->hidAbsFlat, hidEventProperties->hidAbsFlat + absLength)
+    };
+
+    std::transform(hidEventProperties->hidEventTypes.hidEventType,
+        hidEventProperties->hidEventTypes.hidEventType + hidEventProperties->hidEventTypes.length,
+        std::back_inserter(tempProperties.hidEventTypes), [](uint32_t n) {
+            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EventType>(n);
+        });
+
+    std::transform(hidEventProperties->hidKeys.hidKeyCode,
+        hidEventProperties->hidKeys.hidKeyCode + hidEventProperties->hidKeys.length,
+        std::back_inserter(tempProperties.hidKeys), [](uint32_t n) {
+            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_KeyCode>(n);
+        });
+    std::transform(hidEventProperties->hidAbs.hidAbsAxes,
+        hidEventProperties->hidAbs.hidAbsAxes + hidEventProperties->hidAbs.length,
+        std::back_inserter(tempProperties.hidAbs), [](uint32_t n) {
+            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_AbsAxes>(n);
+        });
+    std::transform(hidEventProperties->hidRelBits.hidRelAxes,
+        hidEventProperties->hidRelBits.hidRelAxes + hidEventProperties->hidRelBits.length,
+        std::back_inserter(tempProperties.hidRelBits), [](uint32_t n) {
+            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_RelAxes>(n);
+        });
+    std::transform(hidEventProperties->hidMiscellaneous.hidMscEvent,
+        hidEventProperties->hidMiscellaneous.hidMscEvent + hidEventProperties->hidMiscellaneous.length,
+        std::back_inserter(tempProperties.hidMiscellaneous), [](uint32_t n) {
+            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_MscEvent>(n);
+        });
+
+    return tempProperties;
+}
+
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
     if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
+        EDM_LOGE(MODULE_HID_DDK, "no permission");
         return HID_DDK_FAILURE;
     }
+
+    if (Connect() != HID_DDK_SUCCESS) {
+        return HID_DDK_INVALID_OPERATION;
+    }
+
     if (hidDevice == nullptr) {
-        EDM_LOGE(MODULE_USB_DDK, "hidDevice is null");
+        EDM_LOGE(MODULE_HID_DDK, "hidDevice is null");
         return HID_DDK_INVALID_PARAMETER;
     }
 
     if (hidEventProperties == nullptr) {
-        EDM_LOGE(MODULE_USB_DDK, "hidEventProperties is null");
+        EDM_LOGE(MODULE_HID_DDK, "hidEventProperties is null");
         return HID_DDK_INVALID_PARAMETER;
     }
 
-    auto ret = g_edmClient.CreateDevice(hidDevice, hidEventProperties);
-    if (ret < 0) {
-        EDM_LOGE(MODULE_HID_DDK, "create device failed:%{public}d", ret);
+    if (hidDevice->propLength > MAX_HID_DEVICE_PROP_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "properties length is out of range");
+        return HID_DDK_INVALID_PARAMETER;
     }
-    return ret;
+
+    if (hidEventProperties->hidEventTypes.length > MAX_HID_EVENT_TYPES_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "hidEventTypes length is out of range");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    if (hidEventProperties->hidKeys.length > MAX_HID_KEYS_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "hidKeys length is out of range");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    if (hidEventProperties->hidAbs.length > MAX_HID_ABS_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "hidAbs length is out of range");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    if (hidEventProperties->hidRelBits.length > MAX_HID_REL_BITS_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "hidRelBits length is out of range");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    if (hidEventProperties->hidMiscellaneous.length > MAX_HID_MISC_EVENT_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "hidMiscellaneous length is out of range");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    auto tempDevice = ParseHidDevice(hidDevice);
+    auto tempEventProperties = ParseHidEventProperties(hidEventProperties);
+
+    uint32_t deviceId = 0;
+    auto ret = g_ddk->CreateDevice(tempDevice, tempEventProperties, deviceId);
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "create device failed:%{public}d", ret);
+        return ret;
+    }
+    return static_cast<int32_t>(deviceId);
 }
 
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
     if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
+        EDM_LOGE(MODULE_HID_DDK, "no permission");
         return HID_DDK_FAILURE;
     }
+
+    if (Connect() != HID_DDK_SUCCESS) {
+        return HID_DDK_INVALID_OPERATION;
+    }
+
+    if (deviceId < 0) {
+        EDM_LOGE(MODULE_HID_DDK, "device id is invaild");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
     if (length > MAX_EMIT_ITEM_NUM) {
-        EDM_LOGE(MODULE_HID_DDK, "length out of range");
+        EDM_LOGE(MODULE_HID_DDK, "items length is out of range");
         return HID_DDK_INVALID_PARAMETER;
     }
 
     if (items == nullptr) {
-        EDM_LOGE(MODULE_USB_DDK, "items is null");
+        EDM_LOGE(MODULE_HID_DDK, "items is null");
         return HID_DDK_INVALID_PARAMETER;
     }
 
-    std::vector<Hid_EmitItem> itemsTmp(items, items + length);
-    if (auto ret = g_edmClient.EmitEvent(deviceId, itemsTmp); ret != HID_DDK_SUCCESS) {
-        EDM_LOGE(MODULE_USB_DDK, "emit event failed:%{public}d", ret);
+    std::vector<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem> itemsTemp;
+    std::transform(items, items + length, std::back_inserter(itemsTemp), [](Hid_EmitItem item) {
+        return *reinterpret_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem *>(&item);
+    });
+
+    auto ret = g_ddk->EmitEvent(deviceId, itemsTemp);
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "emit event failed:%{public}d", ret);
         return ret;
     }
     return HID_DDK_SUCCESS;
@@ -75,13 +214,20 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
 int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
     if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
+        EDM_LOGE(MODULE_HID_DDK, "no permission");
         return HID_DDK_FAILURE;
     }
-    if (auto ret = g_edmClient.DestroyDevice(deviceId); ret != HID_DDK_SUCCESS) {
-        EDM_LOGE(MODULE_USB_DDK, "destroy device failed:%{public}d", ret);
+
+    if (Connect() != HID_DDK_SUCCESS) {
+        return HID_DDK_INVALID_OPERATION;
+    }
+
+    auto ret = g_ddk->DestroyDevice(deviceId);
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "destroy device failed:%{public}d", ret);
         return ret;
     }
+
     return HID_DDK_SUCCESS;
 }
 #ifdef __cplusplus

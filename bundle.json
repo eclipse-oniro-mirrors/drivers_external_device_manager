@@ -44,7 +44,8 @@
                 "eventhandler",
                 "ace_engine",
                 "access_token",
-                "relational_store"
+                "relational_store",
+                "drivers_interface_input"
             ],
             "third_party": [
                 "bounds_checking_function",
