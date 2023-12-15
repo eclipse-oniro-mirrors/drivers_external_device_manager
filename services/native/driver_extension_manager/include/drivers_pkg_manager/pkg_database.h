@@ -56,6 +56,7 @@ public:
     int32_t BeginTransaction();
     int32_t Commit();
     int32_t RollBack();
+    bool InitDB();
 
 private:
     PkgDataBase();

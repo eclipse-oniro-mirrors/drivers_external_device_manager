@@ -23,17 +23,19 @@ using namespace OHOS::NativeRdb;
 namespace OHOS {
 namespace ExternalDeviceManager {
 std::shared_ptr<PkgDbHelper> PkgDbHelper::instance_;
+bool g_dbInitSucc = false;
 
 PkgDbHelper::PkgDbHelper()
 {
     rightDatabase_ = PkgDataBase::GetInstance();
+    g_dbInitSucc = rightDatabase_->InitDB();
 }
 
 std::shared_ptr<PkgDbHelper> PkgDbHelper::GetInstance()
 {
     static std::mutex instanceMutex;
     std::lock_guard<std::mutex> guard(instanceMutex);
-    if (instance_ == nullptr) {
+    if (instance_ == nullptr || !g_dbInitSucc) {
         EDM_LOGE(MODULE_PKG_MGR, "PkgDbHelper reset to new instance");
         instance_.reset(new PkgDbHelper());
     }

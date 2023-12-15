@@ -22,6 +22,10 @@ std::shared_ptr<PkgDataBase> PkgDataBase::instance_ = nullptr;
 
 PkgDataBase::PkgDataBase()
 {
+}
+
+bool PkgDataBase::InitDB()
+{
     std::string rightDatabaseName = PKG_DB_PATH + "pkg.db";
     int32_t errCode = OHOS::NativeRdb::E_OK;
     OHOS::NativeRdb::RdbStoreConfig config(rightDatabaseName);
@@ -30,8 +34,10 @@ PkgDataBase::PkgDataBase()
     store_ = OHOS::NativeRdb::RdbHelper::GetRdbStore(config, DATABASE_OPEN_VERSION, sqliteOpenHelperCallback, errCode);
     if (errCode != OHOS::NativeRdb::E_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "GetRdbStore errCode :%{public}d", errCode);
+        return false;
     } else {
         EDM_LOGE(MODULE_PKG_MGR, "GetRdbStore success :%{public}d", errCode);
+        return true;
     }
 }
 
