@@ -45,7 +45,6 @@ DriverPkgManager::~DriverPkgManager()
     if (UnRegisterCallback() == 0) {
         EDM_LOGE(MODULE_PKG_MGR, "~DriverPkgManager UnRegisterCallback Fail");
     }
-    delete bundleStateCallback_;
     bundleStateCallback_ = nullptr;
 }
 
