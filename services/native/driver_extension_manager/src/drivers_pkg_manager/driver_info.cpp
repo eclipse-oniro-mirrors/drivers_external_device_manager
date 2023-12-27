@@ -40,19 +40,33 @@ int32_t DriverInfo::Serialize(string &str)
     EDM_LOGI(MODULE_COMMON, "DriverInfo Serialize Done, %{public}s", str.c_str());
     return EDM_OK;
 }
-static bool IsJsonObjValid(const Json::Value &jsonObj, const string &member, uint32_t type)
+static bool IsJsonObjValid(const Json::Value &jsonObj, const string &member)
 {
     if (!jsonObj.isMember(member)) {
         EDM_LOGE(MODULE_COMMON, "the json obj do not has menber :%{public}s", member.c_str());
         return false;
     }
     auto realType = jsonObj[member].type();
-    if (realType != type) {
+    if (realType != Json::stringValue) {
         EDM_LOGE(MODULE_COMMON, "the json obj member[%{public}s] type error, need:%{public}d, which is:%{public}d",
-            member.c_str(), type, realType);
+            member.c_str(), Json::stringValue, realType);
         return false;
     }
     return true;
+}
+
+static int32_t checkJsonObj(const Json::Value &jsonObj)
+{
+    if (jsonObj.size() == 0) {
+        EDM_LOGE(MODULE_COMMON, "JsonObj size is 0");
+        return EDM_ERR_JSON_PARSE_FAIL;
+    }
+    if (!IsJsonObjValid(jsonObj, "bus") || !IsJsonObjValid(jsonObj, "vendor") || IsJsonObjValid(jsonObj, "version")
+        || !IsJsonObjValid(jsonObj, "ext_info")) {
+        EDM_LOGE(MODULE_COMMON, "json member or member type error");
+        return EDM_ERR_JSON_OBJ_ERR;
+    }
+    return EDM_OK;
 }
 
 int32_t DriverInfo::UnSerialize(const string &str)
@@ -61,31 +75,20 @@ int32_t DriverInfo::UnSerialize(const string &str)
     const unique_ptr<Json::CharReader> reader(builder.newCharReader());
     JSONCPP_STRING err;
     Json::Value jsonObj;
-    string extInfo;
     auto rawJsonLength = static_cast<int32_t>(str.length());
     EDM_LOGD(MODULE_COMMON, "UnSeiralize, input str is : [%{public}s], length = %{public}d", \
         str.c_str(), rawJsonLength);
-    bool ret = reader->parse(str.c_str(), \
-                             str.c_str() + rawJsonLength, \
-                             &jsonObj,\
-                             &err);
+    bool ret = reader->parse(str.c_str(), str.c_str() + rawJsonLength, &jsonObj, &err);
     if (ret == false) {
         EDM_LOGE(MODULE_COMMON, "UnSeiralize error, parse json string error, ret = %{public}d, str is : %{public}s", \
             ret, str.c_str());
         EDM_LOGE(MODULE_COMMON, "JsonErr:%{public}s", err.c_str());
         return EDM_ERR_JSON_PARSE_FAIL;
     }
-    if (jsonObj.size() == 0) {
-        EDM_LOGE(MODULE_COMMON, "JsonObj size is 0");
-        return EDM_ERR_JSON_PARSE_FAIL;
+    int32_t retCode = checkJsonObj(jsonObj);
+    if (retCode != EDM_OK) {
+        return retCode;
     }
-    if (!IsJsonObjValid(jsonObj, "bus", Json::stringValue)\
-        ||!IsJsonObjValid(jsonObj, "vendor", Json::stringValue)\
-        ||!IsJsonObjValid(jsonObj, "version", Json::stringValue)\
-        ||!IsJsonObjValid(jsonObj, "ext_info", Json::stringValue)) {
-            EDM_LOGE(MODULE_COMMON, "json member or member type error");
-            return EDM_ERR_JSON_OBJ_ERR;
-        }
     auto busType = jsonObj["bus"].asString();
     auto busExt = BusExtensionCore::GetInstance().GetBusExtensionByName(LowerStr(busType));
     if (busExt == nullptr) {
@@ -98,7 +101,7 @@ int32_t DriverInfo::UnSerialize(const string &str)
         return EDM_EER_MALLOC_FAIL;
     }
 
-    extInfo = jsonObj["ext_info"].asString();
+    string extInfo = jsonObj["ext_info"].asString();
     ret = this->driverInfoExt_->UnSerialize(extInfo);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_COMMON, "parse ext_info error");
