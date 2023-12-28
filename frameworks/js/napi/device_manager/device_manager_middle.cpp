@@ -516,6 +516,7 @@ static napi_value ExtDeviceManagerInit(napi_env env, napi_value exports)
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryDevices", QueryDevices),
         DECLARE_NAPI_FUNCTION("bindDevice", BindDevice),
+        DECLARE_NAPI_FUNCTION("bindDeviceDriver", BindDevice),
         DECLARE_NAPI_FUNCTION("unbindDevice", UnbindDevice),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
