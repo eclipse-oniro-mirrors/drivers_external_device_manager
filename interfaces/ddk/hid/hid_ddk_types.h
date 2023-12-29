@@ -284,6 +284,8 @@ typedef enum {
     HID_KEY_NUMPAD_DOT = 83,
     /** Key Print Screen */
     HID_KEY_SYSRQ = 99,
+    /** Key Delete */
+    HID_KEY_DELETE = 111,
     /** Key Mute */
     HID_KEY_MUTE = 113,
     /** Key for volume down */
