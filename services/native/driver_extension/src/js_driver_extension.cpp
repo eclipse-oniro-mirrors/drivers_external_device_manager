@@ -309,7 +309,6 @@ napi_value JsDriverExtension::CallObjectMethod(napi_env env, const char* name, c
         HILOG_WARN("Not found DriverExtension.js");
         return nullptr;
     }
-    HandleScope handleScope(jsRuntime_);
     napi_value obj = jsObj_->GetNapiValue();
 
     napi_value method = nullptr;

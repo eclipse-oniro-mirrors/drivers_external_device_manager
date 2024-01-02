@@ -61,7 +61,7 @@ static int32_t checkJsonObj(const Json::Value &jsonObj)
         EDM_LOGE(MODULE_COMMON, "JsonObj size is 0");
         return EDM_ERR_JSON_PARSE_FAIL;
     }
-    if (!IsJsonObjValid(jsonObj, "bus") || !IsJsonObjValid(jsonObj, "vendor") || IsJsonObjValid(jsonObj, "version")
+    if (!IsJsonObjValid(jsonObj, "bus") || !IsJsonObjValid(jsonObj, "vendor") || !IsJsonObjValid(jsonObj, "version")
         || !IsJsonObjValid(jsonObj, "ext_info")) {
         EDM_LOGE(MODULE_COMMON, "json member or member type error");
         return EDM_ERR_JSON_OBJ_ERR;
