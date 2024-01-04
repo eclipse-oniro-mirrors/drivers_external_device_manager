@@ -42,7 +42,8 @@ public:
         int32_t bundleStatus, int32_t busType, const string &bundleName, const string &abilityName);
     int32_t ConnectDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
     int32_t DisConnectDevice(uint64_t deviceId);
-
+    void RemoveDeviceOfDeviceMap(shared_ptr<Device> device);
+    void UnLoadSA(void);
 private:
     ExtDeviceManager() = default;
     void PrintMatchDriverMap();

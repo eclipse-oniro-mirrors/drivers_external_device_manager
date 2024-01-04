@@ -18,6 +18,7 @@
 #include "ability_manager_errors.h"
 #include "hilog_wrapper.h"
 #include "device.h"
+#include "etx_device_mgr.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -164,8 +165,13 @@ void Device::OnDisconnect(int resultCode)
     connectNofitier_->ClearDrvExtConnectionInfo();
     for (auto &callback : callbacks_) {
         callback->OnUnBind(GetDeviceInfo()->GetDeviceId(), {static_cast<UsbErrCode>(resultCode), ""});
+        callback->OnDisconnect(GetDeviceInfo()->GetDeviceId(), {static_cast<UsbErrCode>(resultCode), ""});
     }
     callbacks_.clear();
+    if (IsUnRegisted()) {
+        ExtDeviceManager::GetInstance().RemoveDeviceOfDeviceMap(shared_from_this());
+    }
+    ExtDeviceManager::GetInstance().UnLoadSA();
 }
 
 void Device::UpdateDrvExtConnNotify()

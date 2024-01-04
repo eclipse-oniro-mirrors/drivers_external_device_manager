@@ -41,22 +41,23 @@ public:
     napi_deferred unbindDeferred;
     sptr<IRemoteObject> drvExtObj;
     ErrMsg errMsg;
+    ErrMsg unBindErrMsg;
+
+    void DeleteNapiRef();
 
     ~AsyncData()
     {
         EDM_LOGE(MODULE_DEV_MGR, "Release callback data: %{public}016" PRIX64, deviceId);
-        if (bindCallback != nullptr) {
-            napi_delete_reference(env, bindCallback);
-        }
-        if (onDisconnect != nullptr) {
-            napi_delete_reference(env, onDisconnect);
-        }
-        if (unbindCallback != nullptr) {
-            napi_delete_reference(env, unbindCallback);
-        }
-
+        DeleteNapiRef();
         drvExtObj = nullptr;
     }
+};
+
+struct AsyncDataWorker {
+    napi_env env = nullptr;
+    napi_ref bindCallback = nullptr;
+    napi_ref onDisconnect = nullptr;
+    napi_ref unbindCallback = nullptr;
 };
 
 class DeviceManagerCallback : public DriverExtMgrCallbackStub {
