@@ -123,31 +123,37 @@ describe("DeviceManagerJsTest", function () {
     })
 
     /*
-     * @tc.name:DeviceManager_bindDevices_005
-     * @tc.desc:verify bindDevice invalid param count
+     * @tc.name:DeviceManager_bindDeviceDriver_005
+     * @tc.desc:verify bindDeviceDriver any device
      * @tc.type: FUNC
      */
-    it("DeviceManager_bindDevices_005", 0, async function (done) {
-        console.info('----------------------DeviceManager_bindDevices_005---------------------------');
+    it("DeviceManager_bindDeviceDriver_005", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDeviceDriver_005---------------------------');
         try {
-            deviceManager.bindDevice();
+            deviceManager.bindDeviceDriver(12345, (error, data) => {
+                expect(false).assertTrue();
+                done();
+            }, (error, data) => {
+                expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+                done();
+            });
             expect(false).assertTrue();
             done();
         } catch (error) {
-            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
             done();
         }
     })
 
     /*
      * @tc.name:DeviceManager_bindDevices_006
-     * @tc.desc:verify bindDevice invalid param
+     * @tc.desc:verify bindDevice invalid param count
      * @tc.type: FUNC
      */
     it("DeviceManager_bindDevices_006", 0, async function (done) {
         console.info('----------------------DeviceManager_bindDevices_006---------------------------');
         try {
-            deviceManager.bindDevice(12345);
+            deviceManager.bindDevice();
             expect(false).assertTrue();
             done();
         } catch (error) {
@@ -164,7 +170,7 @@ describe("DeviceManagerJsTest", function () {
     it("DeviceManager_bindDevices_007", 0, async function (done) {
         console.info('----------------------DeviceManager_bindDevices_007---------------------------');
         try {
-            deviceManager.bindDevice(12345, 23456);
+            deviceManager.bindDevice(12345);
             expect(false).assertTrue();
             done();
         } catch (error) {
@@ -175,11 +181,28 @@ describe("DeviceManagerJsTest", function () {
 
     /*
      * @tc.name:DeviceManager_bindDevices_008
-     * @tc.desc:verify bindDevice promise
+     * @tc.desc:verify bindDevice invalid param
      * @tc.type: FUNC
      */
     it("DeviceManager_bindDevices_008", 0, async function (done) {
         console.info('----------------------DeviceManager_bindDevices_008---------------------------');
+        try {
+            deviceManager.bindDevice(12345, 23456);
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_bindDevices_009
+     * @tc.desc:verify bindDevice promise
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_bindDevices_009", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDevices_009---------------------------');
         try {
             deviceManager.bindDevice('fakeid', (error, data) => {
                 expect(false).assertTrue();
@@ -200,12 +223,12 @@ describe("DeviceManagerJsTest", function () {
     })
 
     /*
-     * @tc.name:DeviceManager_bindDevices_009
+     * @tc.name:DeviceManager_bindDevices_010
      * @tc.desc:verify bindDevice promise
      * @tc.type: FUNC
      */
-    it("DeviceManager_bindDevices_009", 0, async function (done) {
-        console.info('----------------------DeviceManager_bindDevices_009---------------------------');
+    it("DeviceManager_bindDevices_010", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDevices_010---------------------------');
         try {
             deviceManager.bindDevice(12345, (error, data) => {
                 expect(false).assertTrue();
@@ -226,12 +249,38 @@ describe("DeviceManagerJsTest", function () {
     })
 
     /*
-     * @tc.name:DeviceManager_unbindDevices_010
+     * @tc.name:DeviceManager_bindDeviceDriver_011
+     * @tc.desc:verify bindDeviceDriver promise
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_bindDeviceDriver_011", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDeviceDriver_011---------------------------');
+        try {
+            deviceManager.bindDeviceDriver(12345, (error, data) => {
+                expect(false).assertTrue();
+                done();
+            }).then(data => {
+                expect(false).assertTrue();
+                done();
+            }, error => {
+                expect(false).assertTrue();
+                done();
+            });
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_unbindDevices_012
      * @tc.desc:verify unbindDevice any device
      * @tc.type: FUNC
      */
-    it("DeviceManager_unbindDevices_010", 0, async function (done) {
-        console.info('----------------------DeviceManager_unbindDevices_010---------------------------');
+    it("DeviceManager_unbindDevices_012", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDevices_012---------------------------');
         try {
             deviceManager.unbindDevice('fakeid', (error, data) => {
                 expect(false).assertTrue();
@@ -246,12 +295,12 @@ describe("DeviceManagerJsTest", function () {
     })
 
     /*
-     * @tc.name:DeviceManager_unbindDevices_011
+     * @tc.name:DeviceManager_unbindDevices_013
      * @tc.desc:verify unbindDevice any device
      * @tc.type: FUNC
      */
-    it("DeviceManager_unbindDevices_011", 0, async function (done) {
-        console.info('----------------------DeviceManager_unbindDevices_011---------------------------');
+    it("DeviceManager_unbindDevices_013", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDevices_013---------------------------');
         try {
             deviceManager.unbindDevice(12345, (error, data) => {
                 expect(false).assertTrue();
@@ -266,12 +315,12 @@ describe("DeviceManagerJsTest", function () {
     })
 
     /*
-     * @tc.name:DeviceManager_unbindDevices_012
+     * @tc.name:DeviceManager_unbindDevices_014
      * @tc.desc:verify unbindDevice invalid param
      * @tc.type: FUNC
      */
-    it("DeviceManager_unbindDevices_012", 0, async function (done) {
-        console.info('----------------------DeviceManager_unbindDevices_012---------------------------');
+    it("DeviceManager_unbindDevices_014", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDevices_014---------------------------');
         try {
             deviceManager.unbindDevice();
             expect(false).assertTrue();
@@ -283,12 +332,12 @@ describe("DeviceManagerJsTest", function () {
     })
 
     /*
-     * @tc.name:DeviceManager_unbindDevices_013
+     * @tc.name:DeviceManager_unbindDevices_015
      * @tc.desc:verify unbindDevice promise
      * @tc.type: FUNC
      */
-    it("DeviceManager_unbindDevices_013", 0, async function (done) {
-        console.info('----------------------DeviceManager_unbindDevices_013---------------------------');
+    it("DeviceManager_unbindDevices_015", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDevices_015---------------------------');
         try {
             deviceManager.unbindDevice(12345).then(data => {
                 expect(false).assertTrue();
