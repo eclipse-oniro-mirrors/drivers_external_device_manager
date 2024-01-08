@@ -15,14 +15,7 @@
     "module": {
       "reqPermissions": [
         {
-          "name": "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER",
-          "reason": "$string:app_name",
-          "usedScene": {
-            "ability": [
-              ".MainAbility"
-            ],
-            "when": "inuse"
-          }
+          "name": "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER"
         }
       ],
       "package": "com.example.myapplication",
