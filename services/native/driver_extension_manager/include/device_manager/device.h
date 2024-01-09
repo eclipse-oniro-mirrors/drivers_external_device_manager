@@ -87,6 +87,16 @@ public:
         connectNofitier_ = nullptr;
     }
 
+    bool IsUnRegisted()
+    {
+        return isUnRegisted;
+    }
+
+    void UnRegist()
+    {
+        isUnRegisted = true;
+    }
+
     static std::string GetBundleName(const std::string &bundleInfo);
     static std::string GetAbilityName(const std::string &bundleInfo);
 
@@ -123,6 +133,7 @@ private:
     sptr<IRemoteObject> drvExtRemote_;
     std::set<sptr<IDriverExtMgrCallback>, DrvExtMgrCallbackCompare> callbacks_;
     std::shared_ptr<DrvExtConnNotify> connectNofitier_;
+    bool isUnRegisted = false;
 };
 
 class DriverExtMgrCallbackDeathRecipient : public IRemoteObject::DeathRecipient {

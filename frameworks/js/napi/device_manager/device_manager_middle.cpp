@@ -78,34 +78,66 @@ static void BindDeviceWorkCb(uv_work_t *work, int status)
     }
 }
 
-static void UnbindDeviceWorkCb(uv_work_t *work, int status)
+void UvDeleteRef(uv_work_t *work, int status)
 {
     if (work == nullptr) {
         return;
     }
-    sptr<AsyncData> data(reinterpret_cast<AsyncData *>(work->data));
-    data->DecStrongRef(nullptr);
-    delete work;
-
-    napi_value err = ConvertToBusinessError(data->env, data->errMsg);
-    napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
+    AsyncDataWorker *data = static_cast<AsyncDataWorker *>(work->data);
+    if (data == nullptr) {
+        delete work;
+        work = nullptr;
+        return;
+    }
+    if (data->bindCallback != nullptr) {
+        napi_delete_reference(data->env, data->bindCallback);
+    }
+    if (data->onDisconnect != nullptr) {
+        napi_delete_reference(data->env, data->onDisconnect);
+    }
     if (data->unbindCallback != nullptr) {
-        napi_value callback;
-        NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->unbindCallback, &callback));
+        napi_delete_reference(data->env, data->unbindCallback);
+    }
+    delete data;
+    data = nullptr;
+    delete work;
+}
 
-        napi_value argv[PARAM_COUNT_2] = {err, result};
-        napi_value callResult;
-        napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
-        EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
-    } else if (data->unbindDeferred != nullptr) {
-        if (data->errMsg.IsOk()) {
-            napi_resolve_deferred(data->env, data->unbindDeferred, result);
-        } else {
-            napi_reject_deferred(data->env, data->unbindDeferred, err);
-        }
-        EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
+void AsyncData::DeleteNapiRef()
+{
+    if (env == nullptr) {
+        return;
+    }
+    uv_loop_t* loop = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_get_uv_event_loop(env, &loop));
+    AsyncDataWorker *data = new (std::nothrow) AsyncDataWorker();
+    if (data == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "new AsyncDataWorker fail");
+        return;
+    }
+    data->env = env;
+    data->bindCallback = bindCallback;
+    data->onDisconnect = onDisconnect;
+    data->unbindCallback = unbindCallback;
+
+    uv_work_t *work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "new work fail");
+        delete data;
+        data = nullptr;
+        return;
+    }
+    work->data = static_cast<void *>(data);
+    auto ret = uv_queue_work(
+        loop, work, [](uv_work_t *work) {}, UvDeleteRef);
+    if (ret != 0) {
+        delete data;
+        data = nullptr;
+        delete work;
+        work = nullptr;
     }
 }
+
 
 void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
@@ -138,19 +170,60 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
     }
 }
 
+static void DisConnectWorkCb(uv_work_t *work, int status)
+{
+    if (work == nullptr) {
+            return;
+        }
+        sptr<AsyncData> data(reinterpret_cast<AsyncData*>(work->data));
+        data->DecStrongRef(nullptr);
+        delete work;
+
+        napi_value disConnCallback;
+        napi_status napiSatus = napi_get_reference_value(data->env, data->onDisconnect, &disConnCallback);
+        if (napiSatus == napi_ok) {
+            napi_value err = ConvertToBusinessError(data->env, data->errMsg);
+            napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
+            napi_value argv[PARAM_COUNT_2] = {err, result};
+            napi_value callResult;
+            napi_call_function(data->env, nullptr, disConnCallback, PARAM_COUNT_2, argv, &callResult);
+            EDM_LOGI(MODULE_DEV_MGR, "onDisconnect callback finish.");
+        }
+
+        napi_value err = ConvertToBusinessError(data->env, data->unBindErrMsg);
+        napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
+        if (data->unbindCallback != nullptr) {
+            napi_value callback;
+            NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->unbindCallback, &callback));
+
+            napi_value argv[PARAM_COUNT_2] = {err, result};
+            napi_value callResult;
+            napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
+            EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
+        } else if (data->unbindDeferred != nullptr) {
+            if (data->unBindErrMsg.IsOk()) {
+                napi_resolve_deferred(data->env, data->unbindDeferred, result);
+            } else {
+                napi_reject_deferred(data->env, data->unbindDeferred, err);
+            }
+            EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
+        }
+}
+
 void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
-        EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect map is null");
+        EDM_LOGE(MODULE_DEV_MGR, "device callback map is null");
         return;
     }
 
     auto asyncData = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
-    if (asyncData->onDisconnect == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect is null");
+    if (asyncData == nullptr || (asyncData->onDisconnect == nullptr && asyncData->unbindCallback == nullptr
+        && asyncData->unbindDeferred == nullptr)) {
+        EDM_LOGE(MODULE_DEV_MGR, "device callback is null");
         return;
     }
     uv_loop_t* loop = nullptr;
@@ -163,24 +236,7 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
     asyncData->errMsg = errMsg;
     asyncData->IncStrongRef(nullptr);
     work->data = asyncData.GetRefPtr();
-    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        if (work == nullptr) {
-            return;
-        }
-        sptr<AsyncData> data(reinterpret_cast<AsyncData*>(work->data));
-        data->DecStrongRef(nullptr);
-        delete work;
-
-        napi_value callback;
-        NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->onDisconnect, &callback));
-
-        napi_value err = ConvertToBusinessError(data->env, data->errMsg);
-        napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
-        napi_value argv[PARAM_COUNT_2] = {err, result};
-        napi_value callResult;
-        napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
-        EDM_LOGI(MODULE_DEV_MGR, "onDisconnect callback finish.");
-    });
+    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, DisConnectWorkCb);
     if (ret != 0) {
         delete work;
         asyncData->DecStrongRef(nullptr);
@@ -197,26 +253,11 @@ void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
     }
 
     auto asyncData = g_callbackMap[deviceId];
-    g_callbackMap.erase(deviceId);
     if (asyncData == nullptr || (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr)) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
         return;
     }
-    uv_loop_t* loop = nullptr;
-    NAPI_CALL_RETURN_VOID(asyncData->env, napi_get_uv_event_loop(asyncData->env, &loop));
-    uv_work_t* work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "new work fail");
-        return;
-    }
-    asyncData->errMsg = errMsg;
-    asyncData->IncStrongRef(nullptr);
-    work->data = asyncData.GetRefPtr();
-    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, UnbindDeviceWorkCb);
-    if (ret != 0) {
-        delete work;
-        asyncData->DecStrongRef(nullptr);
-    }
+    asyncData->unBindErrMsg = errMsg;
 }
 
 static bool IsMatchType(const napi_env &env, const napi_value &value, const napi_valuetype &type)

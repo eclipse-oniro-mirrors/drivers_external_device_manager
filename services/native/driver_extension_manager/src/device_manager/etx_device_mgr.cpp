@@ -161,6 +161,27 @@ int32_t ExtDeviceManager::RemoveAllDevIdOfBundleInfoMap(shared_ptr<Device> devic
     return EDM_OK;
 }
 
+void ExtDeviceManager::RemoveDeviceOfDeviceMap(shared_ptr<Device> device)
+{
+    EDM_LOGI(MODULE_DEV_MGR, "RemoveDeviceOfDeviceMap enter");
+    shared_ptr<DeviceInfo> deviceInfo = device->GetDeviceInfo();
+    if (deviceInfo == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "device info is null");
+        return;
+    }
+    BusType type = deviceInfo->GetBusType();
+    uint64_t deviceId = deviceInfo->GetDeviceId();
+
+    lock_guard<mutex> lock(deviceMapMutex_);
+    if (deviceMap_.find(type) != deviceMap_.end()) {
+        unordered_map<uint64_t, shared_ptr<Device>> &map = deviceMap_[type];
+        if (map.find(deviceId) != map.end()) {
+            map.erase(deviceId);
+            EDM_LOGI(MODULE_DEV_MGR, "success RemoveDeviceOfDeviceMap, deviceId:%{public}016" PRIx64 "", deviceId);
+        }
+    }
+}
+
 int32_t ExtDeviceManager::AddBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
@@ -378,7 +399,9 @@ int32_t ExtDeviceManager::UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo)
         if (map.find(deviceId) != map.end()) {
             device = map[deviceId];
             bundleInfo = map[deviceId]->GetBundleInfo();
-            map.erase(deviceId);
+            if (device != nullptr) {
+                device->UnRegist();
+            }
             EDM_LOGI(MODULE_DEV_MGR, "successfully unregistered device, deviceId is %{public}016" PRIx64 "", deviceId);
             UnLoadSelf();
         }
@@ -425,11 +448,40 @@ size_t ExtDeviceManager::GetTotalDeviceNum(void) const
 {
     // Please do not add lock. This will be called in the UnRegisterDevice.
     size_t totalNum = 0;
-    for (auto &[_, device] : deviceMap_) {
-        totalNum += device.size();
+    for (auto &m : deviceMap_) {
+        for (auto &[_, device] : m.second) {
+            if (!device->IsUnRegisted()) {
+                totalNum++;
+            }
+        }
     }
     EDM_LOGD(MODULE_DEV_MGR, "total device num is %{public}zu", totalNum);
     return totalNum;
+}
+
+void ExtDeviceManager::UnLoadSA(void)
+{
+    EDM_LOGI(MODULE_DEV_MGR, "UnLoadSA enter");
+    if (GetTotalDeviceNum() != 0) {
+        EDM_LOGI(MODULE_DEV_MGR, "not need unload");
+        return;
+    }
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "get samgr failed");
+        return;
+    }
+
+    auto saObj = samgrProxy->CheckSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
+    if (saObj == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "sa has unloaded");
+        return;
+    }
+
+    auto ret = samgrProxy->UnloadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_DEV_MGR, "unload failed");
+    }
 }
 
 void ExtDeviceManager::UnLoadSelf(void)
@@ -450,6 +502,12 @@ void ExtDeviceManager::UnLoadSelf(void)
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             EDM_LOGE(MODULE_DEV_MGR, "get samgr failed");
+            return;
+        }
+
+        auto saObj = samgrProxy->CheckSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
+        if (saObj == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "sa has unloaded");
             return;
         }
 
