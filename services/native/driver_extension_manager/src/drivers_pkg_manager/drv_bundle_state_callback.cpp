@@ -300,11 +300,7 @@ bool DrvBundleStateCallback::ParseBaseDriverInfo()
         }
 
         if (m_pFun != nullptr) {
-            if (flag) {
-                m_pFun(BUNDLE_UPDATED, BusType::BUS_TYPE_USB, tempbundleName, abilityName);
-            } else {
-                m_pFun(BUNDLE_ADDED, BusType::BUS_TYPE_USB, tempbundleName, abilityName);
-            }
+            m_pFun(flag ? BUNDLE_UPDATED : BUNDLE_ADDED, BusType::BUS_TYPE_USB, tempbundleName, abilityName);
         }
         ret = true;
     }
