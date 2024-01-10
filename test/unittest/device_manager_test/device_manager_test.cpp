@@ -42,6 +42,23 @@ public:
     }
 };
 
+static void clearDeviceMap(ExtDeviceManager &instance)
+{
+    unordered_map<BusType, unordered_map<uint64_t, shared_ptr<Device>>> map;
+    instance.deviceMap_ = map;
+}
+
+static size_t getDeviceNum(unordered_map<uint64_t, shared_ptr<Device>> map)
+{
+    size_t num = 0;
+    for (auto &[_, device] : map) {
+        if (!device->IsUnRegisted()) {
+            num++;
+        }
+    }
+    return num;
+}
+
 HWTEST_F(DeviceManagerTest, BusExtensionRegisterTest, TestSize.Level1)
 {
     BusExtensionCore &core = BusExtensionCore::GetInstance();
@@ -60,22 +77,25 @@ HWTEST_F(DeviceManagerTest, InitTest, TestSize.Level1)
 // test OnDeviceAdd and OnDeviceRemove
 HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest001, TestSize.Level1)
 {
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
     std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
     std::shared_ptr<DeviceInfo> device = std::make_shared<DeviceInfo>(0);
     device->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
     device->devInfo_.devBusInfo.busDeviceId = 1;
     int32_t ret = callback->OnDeviceAdd(device);
     ASSERT_EQ(ret, EDM_OK);
-    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 1);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
     ret = callback->OnDeviceRemove(device);
     ASSERT_EQ(ret, EDM_OK);
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 0);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 0);
 }
 
 // test adding device repeatedly
 HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest002, TestSize.Level1)
 {
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
     std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
     std::shared_ptr<DeviceInfo> device = std::make_shared<DeviceInfo>(0);
     device->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
@@ -84,17 +104,18 @@ HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest002, TestSize.Level1)
     ASSERT_EQ(ret, EDM_OK);
     ret = callback->OnDeviceAdd(device);
     ASSERT_EQ(ret, EDM_OK);
-    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 1);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
     ret = callback->OnDeviceRemove(device);
     ASSERT_EQ(ret, EDM_OK);
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 0);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 0);
     ret = callback->OnDeviceRemove(device);
     ASSERT_EQ(ret, EDM_OK);
 }
 
 HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest003, TestSize.Level1)
 {
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
     std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
     std::shared_ptr<DeviceInfo> device0 = std::make_shared<DeviceInfo>(0);
     device0->devInfo_.devBusInfo.busType = BusType::BUS_TYPE_TEST;
@@ -106,19 +127,19 @@ HWTEST_F(DeviceManagerTest, OnDeviceAddRemoveTest003, TestSize.Level1)
     device1->devInfo_.devBusInfo.busDeviceId = 2;
     ret = callback->OnDeviceAdd(device1);
     ASSERT_EQ(ret, EDM_OK);
-    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 2);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 2);
     ret = callback->OnDeviceRemove(device1);
     ASSERT_EQ(ret, EDM_OK);
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 1);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
     ret = callback->OnDeviceRemove(device0);
     ASSERT_EQ(ret, EDM_OK);
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 0);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 0);
 }
 
 HWTEST_F(DeviceManagerTest, QueryDeviceTest, TestSize.Level1)
 {
     ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
     std::vector<std::shared_ptr<DeviceInfo>> devVec = extMgr.QueryDevice(BUS_TYPE_TEST);
     ASSERT_EQ(devVec.size(), 0);
     std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
@@ -136,7 +157,7 @@ HWTEST_F(DeviceManagerTest, QueryDeviceTest, TestSize.Level1)
     ASSERT_EQ(devVec.size(), 2);
     ret = callback->OnDeviceRemove(device0);
     ret = callback->OnDeviceRemove(device1);
-    ASSERT_EQ(extMgr.deviceMap_[BusType::BUS_TYPE_TEST].size(), 0);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 0);
 }
 
 HWTEST_F(DeviceManagerTest, GetBusExtensionByNameTest, TestSize.Level1)
