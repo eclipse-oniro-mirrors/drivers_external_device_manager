@@ -171,6 +171,10 @@ void Device::OnDisconnect(int resultCode)
     if (IsUnRegisted()) {
         ExtDeviceManager::GetInstance().RemoveDeviceOfDeviceMap(shared_from_this());
     }
+    std::string bundleInfo = GetBundleInfo();
+    std::string bundleName = Device::GetBundleName(bundleInfo);
+    std::string abilityName = Device::GetAbilityName(bundleInfo);
+    DriverExtensionController::GetInstance().StopDriverExtension(bundleName, abilityName);
     ExtDeviceManager::GetInstance().UnLoadSA();
 }
 
