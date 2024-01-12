@@ -175,10 +175,8 @@ void ExtDeviceManager::RemoveDeviceOfDeviceMap(shared_ptr<Device> device)
     lock_guard<mutex> lock(deviceMapMutex_);
     if (deviceMap_.find(type) != deviceMap_.end()) {
         unordered_map<uint64_t, shared_ptr<Device>> &map = deviceMap_[type];
-        if (map.find(deviceId) != map.end()) {
-            map.erase(deviceId);
-            EDM_LOGI(MODULE_DEV_MGR, "success RemoveDeviceOfDeviceMap, deviceId:%{public}016" PRIx64 "", deviceId);
-        }
+        map.erase(deviceId);
+        EDM_LOGI(MODULE_DEV_MGR, "success RemoveDeviceOfDeviceMap, deviceId:%{public}016" PRIx64 "", deviceId);
     }
 }
 
