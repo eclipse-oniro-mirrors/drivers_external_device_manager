@@ -71,19 +71,25 @@ DDK_PERMISSION ExtPermissionManager::NeedCheckPermission()
 
 bool ExtPermissionManager::HasPermission(std::string permissionName)
 {
-    DDK_PERMISSION needCheck = NeedCheckPermission();
-    if (needCheck != DDK_PERMISSION::CHECK) {
-        return needCheck == DDK_PERMISSION::ERROR ? false : true;
-    }
-    
     AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int result = AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
-    if (result != PERMISSION_GRANTED) {
-        EDM_LOGE(MODULE_DEV_MGR, "usb_ddk_api:  No permission.");
-        return false;
+    std::string rightTag = std::to_string(callerToken) + "#" + permissionName;
+    if (rightsMap_.find(rightTag) != rightsMap_.end()) {
+        EDM_LOGI(MODULE_DEV_MGR, "find right from rightsMap isPass: %{public}d", rightsMap_[rightTag]);
+        return rightsMap_[rightTag];
     }
-    EDM_LOGI(MODULE_DEV_MGR, "usb_ddk_api: Check permission succeeded.");
-    return true;
+    DDK_PERMISSION needCheck = NeedCheckPermission();
+    bool ret = false;
+    if (needCheck != DDK_PERMISSION::CHECK) {
+        ret = (needCheck != DDK_PERMISSION::ERROR);
+        rightsMap_[rightTag] = ret;
+        return ret;
+    }
+
+    int result = AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
+
+    ret = (result == PERMISSION_GRANTED);
+    rightsMap_[rightTag] = ret;
+    return ret;
 }
 
 sptr<OHOS::AppExecFwk::IBundleMgr> ExtPermissionManager::GetBundleMgrProxy()
