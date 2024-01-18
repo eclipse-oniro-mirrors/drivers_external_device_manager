@@ -51,6 +51,7 @@ private:
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
     ExtPermissionManager();
+    std::map<std::string, bool> rightsMap_;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
