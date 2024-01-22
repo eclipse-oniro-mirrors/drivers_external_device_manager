@@ -29,7 +29,6 @@
                 "init",
                 "ipc",
                 "samgr",
-                "selinux_adapter",
                 "ability_base",
                 "common_event_service",
                 "c_utils",
@@ -48,7 +47,6 @@
                 "drivers_interface_input"
             ],
             "third_party": [
-                "bounds_checking_function",
                 "jsoncpp"
             ]
         },
