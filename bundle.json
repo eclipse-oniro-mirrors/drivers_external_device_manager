@@ -47,7 +47,7 @@
                 "drivers_interface_input"
             ],
             "third_party": [
-                "jsoncpp"
+                "cJSON"
             ]
         },
         "build": {
