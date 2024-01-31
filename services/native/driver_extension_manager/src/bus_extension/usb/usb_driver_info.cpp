@@ -91,7 +91,7 @@ int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
     }
     if (jsonVids->type != cJSON_Array || jsonPids->type != cJSON_Array) {
         EDM_LOGE(MODULE_BUS_USB,  "json member type error, pids type is : %{public}d, vids type is %{public}d", \
-            jsonVids->type, jsonPids->type );
+            jsonPids->type, jsonVids->type );
         return EDM_ERR_JSON_OBJ_ERR;
     }
     EDM_LOGD(MODULE_BUS_USB,  "menber type check sucess");
