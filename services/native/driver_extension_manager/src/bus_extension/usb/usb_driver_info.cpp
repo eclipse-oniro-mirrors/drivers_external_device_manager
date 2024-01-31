@@ -85,13 +85,13 @@ int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
     EDM_LOGD(MODULE_BUS_USB,  "parse json sucess");
     cJSON* jsonVids = cJSON_GetObjectItem(jsonObj, "vids");
     cJSON* jsonPids = cJSON_GetObjectItem(jsonObj, "pids");
-    if (!jsonVids || !jsonPids ) {
+    if (!jsonVids || !jsonPids) {
         EDM_LOGE(MODULE_BUS_USB,  "json member error, need menbers: vids, pids");
         return EDM_ERR_JSON_OBJ_ERR;
     }
     if (jsonVids->type != cJSON_Array || jsonPids->type != cJSON_Array) {
         EDM_LOGE(MODULE_BUS_USB,  "json member type error, pids type is : %{public}d, vids type is %{public}d", \
-            jsonPids->type, jsonVids->type );
+            jsonPids->type, jsonVids->type);
         return EDM_ERR_JSON_OBJ_ERR;
     }
     EDM_LOGD(MODULE_BUS_USB,  "menber type check sucess");

@@ -31,10 +31,10 @@ ohos_shared_library("driver_extension_controller") {
     "${utils_path}:utils_config",
   ]
   public_configs = [ ":driver_extension_controller_public_config" ]
-  deps = [ "//third_party/cJSON:cjson" ]
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "cJSON:cjson",
     "c_utils:utilsbase",
     "hilog:libhilog",
     "ipc:ipc_core",
