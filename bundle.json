@@ -44,10 +44,8 @@
                 "ace_engine",
                 "access_token",
                 "relational_store",
-                "drivers_interface_input"
-            ],
-            "third_party": [
-                "jsoncpp"
+                "drivers_interface_input",
+                "cJSON"
             ]
         },
         "build": {

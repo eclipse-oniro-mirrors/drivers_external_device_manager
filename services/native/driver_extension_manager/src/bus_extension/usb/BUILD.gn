@@ -25,12 +25,10 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${utils_path}:coverage_flags",
     "${utils_path}:utils_config",
   ]
-  deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "//third_party/jsoncpp:jsoncpp",
-  ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
+    "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
