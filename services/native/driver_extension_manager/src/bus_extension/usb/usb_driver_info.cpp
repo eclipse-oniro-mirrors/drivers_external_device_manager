@@ -62,10 +62,12 @@ int32_t UsbDriverInfo::Serialize(string &driverStr)
             break;
         }
         driverStr = cJSON_PrintUnformatted(jsonRoot);
+        cJSON_Delete(jsonRoot);
+        return EDM_OK;
     } while (0);
 
     cJSON_Delete(jsonRoot);
-    return EDM_OK;
+    return EDM_NOK;
 }
 
 int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
@@ -107,7 +109,7 @@ int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
     }
     for (int i = 0; i < cJSON_GetArraySize(jsonPids); i++) {
         cJSON* pid =  cJSON_GetArrayItem(jsonPids, i);
-        if (pid->type !=  cJSON_Number) {
+        if (pid->type != cJSON_Number) {
             EDM_LOGE(MODULE_BUS_USB,  "json pid type error, %{public}d", pid->type);
             return EDM_ERR_JSON_OBJ_ERR;
         }
