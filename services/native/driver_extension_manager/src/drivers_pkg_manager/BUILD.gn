@@ -37,7 +37,7 @@ ohos_shared_library("drivers_pkg_manager") {
   public_configs = [ ":drvext_manager_public_config" ]
 
   # Component internal dependencies
-  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core" ]                                                                                                                     
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core" ]
 
   external_deps = [
     "ability_base:want",
