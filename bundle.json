@@ -14,7 +14,7 @@
         "subsystem": "hdf",
         "syscap": [
             "SystemCapability.Driver.HID.Extension",
-            "SystemCapability.Driver.DeviceManager.Extension",
+            "SystemCapability.Driver.ExternalDevice",
             "SystemCapability.Driver.USB.Extension"
         ],
         "features": [],
