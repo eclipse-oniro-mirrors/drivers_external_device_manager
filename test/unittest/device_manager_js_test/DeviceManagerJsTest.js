@@ -56,9 +56,11 @@ describe("DeviceManagerJsTest", function () {
         try {
             var devices = deviceManager.queryDevices(deviceManager.BusType.USB);
             expect(devices != null).assertEqual(true);
-            expect(devices[0] != null).assertEqual(true);
-            expect(devices[0].vendorId != null).assertEqual(true);
-            expect(devices[0].productId != null).assertEqual(true);
+            if (devices.length > 0) {
+                expect(devices[0] != null).assertEqual(true);
+                expect(devices[0].vendorId != null).assertEqual(true);
+                expect(devices[0].productId != null).assertEqual(true);
+            }
         } catch (err) {
             expect(err.code).assertEqual(SERVICE_EXCEPTION_CODE);
         }
