@@ -345,6 +345,9 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
             // device has been registered and need to connect
             EDM_LOGI(MODULE_DEV_MGR, "device has been registered, deviceId is %{public}016" PRIx64 "", deviceId);
         }
+    } else {
+        EDM_LOGI(MODULE_DEV_MGR, "emplace Type of deviceMap_");
+        deviceMap_.emplace(type, unordered_map<uint64_t, shared_ptr<Device>>());
     }
     EDM_LOGD(MODULE_DEV_MGR, "begin to register device, deviceId is %{public}016" PRIx64 "", deviceId);
     // device need to register
