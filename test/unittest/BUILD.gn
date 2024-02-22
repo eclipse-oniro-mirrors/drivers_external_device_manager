@@ -32,10 +32,10 @@ ohos_unittest("bus_extension_usb_test") {
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
+    "//third_party/jsoncpp:jsoncpp",
   ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
-    "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
