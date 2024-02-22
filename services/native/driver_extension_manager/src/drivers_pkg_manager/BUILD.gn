@@ -35,10 +35,12 @@ ohos_shared_library("drivers_pkg_manager") {
     "${utils_path}:utils_config",
   ]
   public_configs = [ ":drvext_manager_public_config" ]
-  deps = [
+
+  # Component internal dependencies
+  deps = [ 
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "//third_party/jsoncpp:jsoncpp",
-  ]  # Component internal dependencies
+    "//third_party/cJSON:cjson",
+  ]
 
   external_deps = [
     "ability_base:want",
