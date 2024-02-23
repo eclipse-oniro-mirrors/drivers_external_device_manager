@@ -65,7 +65,7 @@ int32_t UsbDriverInfo::Serialize(string &driverStr)
     } while (0);
 
     cJSON_Delete(jsonRoot);
-    return EDM_NOK;
+    return EDM_OK;
 }
 
 int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
