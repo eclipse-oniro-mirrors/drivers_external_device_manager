@@ -30,9 +30,9 @@ ohos_unittest("bus_extension_usb_test") {
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
+    "//third_party/cJSON:cjson",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
-    "//third_party/cJSON:cjson",
   ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
