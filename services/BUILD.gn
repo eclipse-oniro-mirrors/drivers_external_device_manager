@@ -70,7 +70,7 @@ config("driver_extension_manager_test_public_config") {
   ]
 }
 
-ohos_shared_library("driver_extension_manager_test") {
+ohos_static_library("driver_extension_manager_test") {
   sources = [
     "native/driver_extension_manager/src/driver_ext_mgr.cpp",
     "zidl/src/driver_ext_mgr_callback_proxy.cpp",
