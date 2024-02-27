@@ -17,12 +17,16 @@
 #define USB_DRIVER_INFO_H
 #include <vector>
 #include "ibus_extension.h"
+#include "cJSON.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 class UsbDriverInfo : public DriverInfoExt {
 public:
     int32_t Serialize(string &metaData)  override;
     int32_t UnSerialize(const string &metaData) override;
+    bool ArrayHandle(cJSON *root, cJSON *array, const string key);
+    int32_t ArrayInit(const string key, cJSON *root);
+    int32_t FillArray(const string key, vector<uint16_t> &array, cJSON* jsonObj);
 private:
     friend class UsbBusExtension;
     std::vector<uint16_t> pids_;

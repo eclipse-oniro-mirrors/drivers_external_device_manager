@@ -14,79 +14,128 @@
  */
 
 #include "iostream"
-#include "json/json.h"
 #include "hilog_wrapper.h"
 #include "edm_errors.h"
 #include "usb_driver_info.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
+
+bool UsbDriverInfo::ArrayHandle(cJSON *root, cJSON *array, const string key)
+{
+    for (auto it : (key == "vids" ? vids_ : pids_)) {
+        if (!cJSON_AddItemToArray(array, cJSON_CreateNumber(static_cast<double>(it)))) {
+            EDM_LOGE(MODULE_BUS_USB,  "Additem to %{public}s error, it = %{public}d", key.c_str(), it);
+            return false;
+        }
+    };
+
+    if (!cJSON_AddItemToObject(root, key.c_str(), array)) {
+        EDM_LOGE(MODULE_BUS_USB,  "Add %{public}s to jsonRoot error", key.c_str());
+        return false;
+    }
+    return true;
+}
+
+int32_t UsbDriverInfo::ArrayInit(const string key, cJSON *root)
+{
+    cJSON* array = cJSON_CreateArray();
+    if (!array) {
+        EDM_LOGE(MODULE_BUS_USB,  "Create %{public}s error", key.c_str());
+        return EDM_ERR_JSON_OBJ_ERR;
+    }
+    if (!ArrayHandle(root, array, key)) {
+        cJSON_Delete(array);
+        return EDM_NOK;
+    }
+    return EDM_OK;
+}
+
 int32_t UsbDriverInfo::Serialize(string &driverStr)
 {
-    Json::Value valueRoot;
-    Json::Value valueVids;
-    Json::Value valuePids;
-    for (auto vid : vids_) {
-        valueVids.append(Json::Value(vid));
-    };
-    for (auto pid : pids_) {
-        valuePids.append(Json::Value(pid));
-    };
-    valueRoot["vids"] = valueVids;
-    valueRoot["pids"] = valuePids;
-    Json::StreamWriterBuilder builder;
-    builder["indentation"] = "";
-    driverStr = Json::writeString(builder, valueRoot);
+    cJSON* jsonRoot = cJSON_CreateObject();
+    if (!jsonRoot) {
+        EDM_LOGE(MODULE_BUS_USB,  "Create jsonRoot error");
+        return EDM_ERR_JSON_OBJ_ERR;
+    }
+
+    int32_t ret = 0;
+    vector<string> keys = {"vids", "pids"};
+    for (auto key : keys) {
+        ret = ArrayInit(key, jsonRoot);
+        if (ret != EDM_OK) {
+            break;
+        }
+    }
+
+    if (ret == EDM_OK) {
+        driverStr = cJSON_PrintUnformatted(jsonRoot);
+    }
+
+    cJSON_Delete(jsonRoot);
+    return ret;
+}
+
+int32_t UsbDriverInfo::FillArray(const string key, vector<uint16_t> &array, cJSON *jsonObj)
+{
+    EDM_LOGI(MODULE_BUS_USB,  "Enter FillArray");
+    cJSON* item = cJSON_GetObjectItem(jsonObj, key.c_str());
+    if (!item) {
+        EDM_LOGE(MODULE_BUS_USB,  "json member error, need menbers: %{public}s", key.c_str());
+        return EDM_ERR_JSON_OBJ_ERR;
+    }
+    if (item->type != cJSON_Array) {
+        EDM_LOGE(MODULE_BUS_USB,  "json member type error, %{public}s type is : %{public}d", \
+            key.c_str(), item->type);
+        return EDM_ERR_JSON_OBJ_ERR;
+    }
+    EDM_LOGI(MODULE_BUS_USB,  "arraysize:%{public}d", cJSON_GetArraySize(item));
+    for (int i = 0; i < cJSON_GetArraySize(item); i++) {
+        cJSON* it =  cJSON_GetArrayItem(item, i);
+        if (it->type != cJSON_Number || !it) {
+            EDM_LOGE(MODULE_BUS_USB,  "GetArrayItem fail or json %{public}s type error: %{public}d", \
+                key.c_str(), it->type);
+            return EDM_ERR_JSON_OBJ_ERR;
+        }
+        array.push_back(static_cast<uint16_t>(it->valuedouble));
+    }
     return EDM_OK;
 }
 
 int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
 {
     EDM_LOGD(MODULE_BUS_USB,  "UsbDrvInfo UnSerialize begin");
-    Json::CharReaderBuilder builder;
-    unique_ptr<Json::CharReader> const reader(builder.newCharReader());
-    JSONCPP_STRING err;
-    Json::Value jsonObj;
-    bool ret = reader->parse(driverStr.c_str(), driverStr.c_str() + driverStr.length(), &jsonObj, &err);
-    if (ret == false) {
-        EDM_LOGE(MODULE_BUS_USB,  "UnSeiralize error, parse json string error, ret = %{public}d, str is : %{public}s",\
-            ret, driverStr.c_str());
-        EDM_LOGE(MODULE_BUS_USB,  "JsonErr:%{public}s", err.c_str());
+    cJSON* jsonObj = cJSON_Parse(driverStr.c_str());
+    if (!jsonObj) {
+        EDM_LOGE(MODULE_BUS_USB,  "UnSeiralize error, parse json string error, str is : %{public}s",\
+            driverStr.c_str());
+        EDM_LOGE(MODULE_BUS_USB,  "JsonErr:%{public}s", cJSON_GetErrorPtr());
         return EDM_ERR_JSON_PARSE_FAIL;
     }
-    if (jsonObj.size() == 0) {
+    if (cJSON_GetArraySize(jsonObj) == 0) {
         EDM_LOGE(MODULE_BUS_USB,  "Json size error");
         return EDM_ERR_JSON_PARSE_FAIL;
     }
     EDM_LOGD(MODULE_BUS_USB,  "parse json sucess");
-    if (!jsonObj.isMember("vids") || !jsonObj.isMember("pids")) {
-        EDM_LOGE(MODULE_BUS_USB,  "json member error, need menbers: vids, pids");
-        return EDM_ERR_JSON_OBJ_ERR;
-    }
-    if (jsonObj["pids"].type() != Json::arrayValue || jsonObj["vids"].type() != Json::arrayValue) {
-        EDM_LOGE(MODULE_BUS_USB,  "json member type error, pids type is : %{public}d, vids type is %{public}d", \
-            jsonObj["pids"].type(), jsonObj["vids"].type());
-        return EDM_ERR_JSON_OBJ_ERR;
-    }
-    EDM_LOGD(MODULE_BUS_USB,  "menber type check sucess");
+
     vector<uint16_t> vids_;
     vector<uint16_t> pids_;
-    for (auto vid : jsonObj["vids"]) {
-        if (vid.type() != Json::intValue) {
-            EDM_LOGE(MODULE_BUS_USB,  "json vids type error, %{public}d", vid.type());
-            return EDM_ERR_JSON_OBJ_ERR;
-        }
-        vids_.push_back(vid.asUInt());
+    int32_t ret = 0;
+
+    ret = FillArray("vids", vids_, jsonObj);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_BUS_USB,  "Fill vids_ error");
+        return ret;
     }
-    for (auto pid : jsonObj["pids"]) {
-        if (pid.type() != Json::intValue) {
-            EDM_LOGE(MODULE_BUS_USB,  "json pid type error, %{public}d", pid.type());
-            return EDM_ERR_JSON_OBJ_ERR;
-        }
-        pids_.push_back(pid.asUInt());
+    ret = FillArray("pids", pids_, jsonObj);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_BUS_USB,  "Fill pids_ error");
+        return ret;
     }
+
+    EDM_LOGD(MODULE_BUS_USB,  "member type check sucess");
     this->pids_ = pids_;
     this->vids_ = vids_;
-    return EDM_OK;
+    return ret;
 }
 }
 }
