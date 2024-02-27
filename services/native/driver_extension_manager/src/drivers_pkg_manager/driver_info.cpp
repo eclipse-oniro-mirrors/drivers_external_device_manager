@@ -32,6 +32,7 @@ int32_t DriverInfo::Serialize(string &str)
     cJSON* root = cJSON_CreateObject();
     if (!root) {
         EDM_LOGE(MODULE_COMMON, "Create jsonRoot error");
+        return EDM_ERR_JSON_OBJ_ERR;
     }
     cJSON_AddStringToObject(root, "bus", this->bus_.c_str());
     cJSON_AddStringToObject(root, "vendor", this->vendor_.c_str());
