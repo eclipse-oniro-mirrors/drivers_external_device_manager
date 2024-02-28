@@ -400,8 +400,10 @@ int32_t ExtDeviceManager::UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo)
         if (map.find(deviceId) != map.end()) {
             device = map[deviceId];
             bundleInfo = map[deviceId]->GetBundleInfo();
-            if (device != nullptr) {
+            if (device != nullptr && device->HasDriver()) {
                 device->UnRegist();
+            } else {
+                map.erase(deviceId);
             }
             EDM_LOGI(MODULE_DEV_MGR, "successfully unregistered device, deviceId is %{public}016" PRIx64 "", deviceId);
             UnLoadSelf();
@@ -437,8 +439,10 @@ vector<shared_ptr<DeviceInfo>> ExtDeviceManager::QueryDevice(const BusType busTy
     }
 
     unordered_map<uint64_t, shared_ptr<Device>> map = deviceMap_[busType];
-    for (auto device : map) {
-        devInfoVec.emplace_back(device.second->GetDeviceInfo());
+    for (auto &[_, device] : map) {
+        if (device != nullptr && !device->IsUnRegisted()) {
+            devInfoVec.emplace_back(device->GetDeviceInfo());
+        }
     }
     EDM_LOGD(MODULE_DEV_MGR, "find %{public}zu device of busType %{public}d", devInfoVec.size(), busType);
 
