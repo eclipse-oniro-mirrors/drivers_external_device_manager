@@ -21,7 +21,8 @@
 #include "hilog/log.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
-#define FORMATED_EDM(fmt, ...) "[%{public}s]" fmt, __FUNCTION__, ##__VA_ARGS__
+#define FORMATED_EDM(module, fmt, ...) "%{pubilic}s: [%{public}s]" fmt, \
+                        EDM_MGR_LABEL[module], __FUNCTION__, ##__VA_ARGS__
 
 #ifdef EDM_LOGF
 #undef EDM_LOGF
@@ -43,6 +44,18 @@ namespace ExternalDeviceManager {
 #undef EDM_LOGD
 #endif
 
+#ifdef LOG_DOMAIN
+#undef LOG_DOMAIN
+#endif
+#define LOG_DOMAIN 0xD002550
+
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
+#define LOG_TAG "EDM"
+
+#define TAG_LENGTH 20
+
 // param of log interface, such as EDM_LOGF.
 enum UsbMgrSubModule {
     MODULE_FRAMEWORK = 0,
@@ -58,23 +71,6 @@ enum UsbMgrSubModule {
     EDM_MODULE_BUTT,
 };
 
-// 0xD002550: part:ExternalDeviceManager module:Edm.
-constexpr unsigned int BASE_EDM_DOMAIN_ID = 0xD002550;
-
-enum UsbMgrDomainId {
-    EDM_FRAMEWORK_DOMAIN = BASE_EDM_DOMAIN_ID + MODULE_FRAMEWORK,
-    EDM_SERVICE_DOMAIN,
-    EDM_DEV_MGR_DOMAIN,
-    EDM_PKG_MGR_DOMAIN,
-    EDM_EA_MGR_DOMAIN,
-    EDM_BUS_USB_DOMAIN,
-    EDM_COMMON_DOMAIN,
-    EDM_USB_DDK_DOMAIN,
-    EDM_TEST,
-    EDM_HID_DDK_DOMAIN,
-    EDM_BUTT,
-};
-
 enum PkgErrCode {
     PKG_OK = 0,
     PKG_FAILURE = -1,
@@ -86,25 +82,25 @@ enum PkgErrCode {
     PKG_OVERFLOW = -7,
 };
 
-constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
-    {LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmFwk"      },
-    {LOG_CORE, EDM_SERVICE_DOMAIN,   "EdmService"  },
-    {LOG_CORE, EDM_DEV_MGR_DOMAIN,   "EdmDevMgr"   },
-    {LOG_CORE, EDM_PKG_MGR_DOMAIN,   "EdmPkgMgr"   },
-    {LOG_CORE, EDM_EA_MGR_DOMAIN,    "EdmEaMgr"    },
-    {LOG_CORE, EDM_BUS_USB_DOMAIN,   "EdmBusUsbMgr"},
-    {LOG_CORE, EDM_COMMON_DOMAIN,    "EdmCommon"   },
-    {LOG_CORE, EDM_USB_DDK_DOMAIN,   "EdmUsbDdk"   },
-    {LOG_CORE, EDM_TEST,             "EdmTest"     },
-    {LOG_CORE, EDM_HID_DDK_DOMAIN,   "EdmHidDdk"   },
+constexpr char EDM_MGR_LABEL[EDM_MODULE_BUTT][TAG_LENGTH] = {
+    "EdmFwk",
+    "EdmService",
+    "EdmDevMgr",
+    "EdmPkgMgr",
+    "EdmEaMgr",
+    "EdmBusUsbMgr",
+    "EdmCommon",
+    "EdmUsbDdk",
+    "EdmTest",
+    "EdmHidDdk",
 };
 
 // In order to improve performance, do not check the module range, module should less than EDM_MODULE_BUTT.
-#define EDM_LOGF(module, ...) (void)OHOS::HiviewDFX::HiLog::Fatal(EDM_MGR_LABEL[module], FORMATED_EDM(__VA_ARGS__))
-#define EDM_LOGE(module, ...) (void)OHOS::HiviewDFX::HiLog::Error(EDM_MGR_LABEL[module], FORMATED_EDM(__VA_ARGS__))
-#define EDM_LOGW(module, ...) (void)OHOS::HiviewDFX::HiLog::Warn(EDM_MGR_LABEL[module], FORMATED_EDM(__VA_ARGS__))
-#define EDM_LOGI(module, ...) (void)OHOS::HiviewDFX::HiLog::Info(EDM_MGR_LABEL[module], FORMATED_EDM(__VA_ARGS__))
-#define EDM_LOGD(module, ...) (void)OHOS::HiviewDFX::HiLog::Debug(EDM_MGR_LABEL[module], FORMATED_EDM(__VA_ARGS__))
+#define EDM_LOGF(module, ...) HILOG_FATAL(LOG_CORE, FORMATED_EDM(module, __VA_ARGS__))
+#define EDM_LOGE(module, ...) HILOG_ERROR(LOG_CORE, FORMATED_EDM(module, __VA_ARGS__))
+#define EDM_LOGW(module, ...) HILOG_WARN(LOG_CORE, FORMATED_EDM(module, __VA_ARGS__))
+#define EDM_LOGI(module, ...) HILOG_INFO(LOG_CORE, FORMATED_EDM(module, __VA_ARGS__))
+#define EDM_LOGD(module, ...) HILOG_DEBUG(LOG_CORE, FORMATED_EDM(module, __VA_ARGS__))
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 
