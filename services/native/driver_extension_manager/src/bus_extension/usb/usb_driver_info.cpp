@@ -77,7 +77,7 @@ int32_t UsbDriverInfo::Serialize(string &driverStr)
 
 int32_t UsbDriverInfo::FillArray(const string key, vector<uint16_t> &array, cJSON *jsonObj)
 {
-    EDM_LOGI(MODULE_BUS_USB,  "Enter FillArray");
+    EDM_LOGD(MODULE_BUS_USB,  "Enter FillArray");
     cJSON* item = cJSON_GetObjectItem(jsonObj, key.c_str());
     if (!item) {
         EDM_LOGE(MODULE_BUS_USB,  "json member error, need menbers: %{public}s", key.c_str());
@@ -88,11 +88,15 @@ int32_t UsbDriverInfo::FillArray(const string key, vector<uint16_t> &array, cJSO
             key.c_str(), item->type);
         return EDM_ERR_JSON_OBJ_ERR;
     }
-    EDM_LOGI(MODULE_BUS_USB,  "arraysize:%{public}d", cJSON_GetArraySize(item));
+    EDM_LOGD(MODULE_BUS_USB,  "arraysize:%{public}d", cJSON_GetArraySize(item));
     for (int i = 0; i < cJSON_GetArraySize(item); i++) {
         cJSON* it =  cJSON_GetArrayItem(item, i);
-        if (it->type != cJSON_Number || !it) {
-            EDM_LOGE(MODULE_BUS_USB,  "GetArrayItem fail or json %{public}s type error: %{public}d", \
+        if (!it) {
+            EDM_LOGE(MODULE_BUS_USB,  "GetArrayItem fail");
+            return EDM_ERR_JSON_OBJ_ERR;
+        }
+        if (it->type != cJSON_Number) {
+            EDM_LOGE(MODULE_BUS_USB,  "json %{public}s type error, error type is: %{public}d", \
                 key.c_str(), it->type);
             return EDM_ERR_JSON_OBJ_ERR;
         }
