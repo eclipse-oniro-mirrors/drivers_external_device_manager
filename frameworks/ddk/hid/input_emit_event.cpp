@@ -15,14 +15,17 @@
 
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 #include "hid_ddk_api.h"
 #include "v1_0/ihid_ddk.h"
 #include "hilog_wrapper.h"
+#include <iproxy_broker.h>
 #include "ext_permission_manager.h"
 
 using namespace OHOS::ExternalDeviceManager;
 namespace {
 static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_0::IHidDdk> g_ddk = nullptr;
+static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
 constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
 constexpr uint32_t MAX_HID_DEVICE_PROP_LEN = 7;
 constexpr uint32_t MAX_HID_EVENT_TYPES_LEN = 5;
@@ -35,19 +38,61 @@ constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
 extern "C" {
 #endif /* __cplusplus */
 static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_DDK_HID";
+static std::unordered_map<int32_t, std::shared_ptr<struct TempDevice>> g_deviceMap;
+
+struct TempDevice {
+    OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevice;
+    OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties tempProperties;
+    uint32_t realId;
+};
+
+class HidDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+        void OnRemoteDied(const wptr<IRemoteObject> &object) override;
+};
+
+void HidDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    EDM_LOGI(MODULE_HID_DDK, "hid_ddk remote died");
+    if (g_ddk != nullptr) {
+        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_0::IHidDdk>(g_ddk);
+        remote->RemoveDeathRecipient(recipient_);
+        recipient_.clear();
+        g_ddk = nullptr;
+        EDM_LOGI(MODULE_HID_DDK, "remove death recipient success");
+    }
+}
+
+static uint32_t GetRealDeviceId(int32_t deviceId)
+{
+    if (g_deviceMap.find(deviceId) != g_deviceMap.end()) {
+        if (g_deviceMap[deviceId] != nullptr) {
+            return g_deviceMap[deviceId]->realId;
+        }
+    }
+    return static_cast<uint32_t>(deviceId);
+}
 
 static int32_t Connect()
 {
-    if (g_ddk != nullptr) {
-        return HID_DDK_SUCCESS;
-    }
-
-    g_ddk = OHOS::HDI::Input::Ddk::V1_0::IHidDdk::Get();
     if (g_ddk == nullptr) {
-        EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
-        return HID_DDK_FAILURE;
+        g_ddk = OHOS::HDI::Input::Ddk::V1_0::IHidDdk::Get();
+        if (g_ddk == nullptr) {
+            EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
+            return HID_DDK_FAILURE;
+        }
+        if (g_deviceMap.size() > 0) {
+            for (const auto &[_, value] : g_deviceMap) {
+                (void)g_ddk->CreateDevice(value->tempDevice, value->tempProperties, value->realId);
+            }
+        }
+        recipient_ = new HidDeathRecipient();
+        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_0::IHidDdk>(g_ddk);
+        if (!remote->AddDeathRecipient(recipient_)) {
+            EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
+            return HID_DDK_FAILURE;
+        }
     }
-
     return HID_DDK_SUCCESS;
 }
 
@@ -107,6 +152,19 @@ static OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties ParseHidEventProperties(
         });
 
     return tempProperties;
+}
+
+static int32_t CacheDeviceInfor(OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevice,
+    OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties tempProperties, uint32_t deviceId)
+{
+    EDM_LOGD(MODULE_HID_DDK, "enter CacheDeviceInfor");
+    int32_t id = static_cast<int32_t>(deviceId);
+    std::shared_ptr<struct TempDevice> device = std::make_shared<struct TempDevice>();
+    device->tempDevice = tempDevice;
+    device->tempProperties = tempProperties;
+    device->realId = deviceId;
+    g_deviceMap[id] = device;
+    return id;
 }
 
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
@@ -169,7 +227,7 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
         EDM_LOGE(MODULE_HID_DDK, "create device failed:%{public}d", ret);
         return ret;
     }
-    return static_cast<int32_t>(deviceId);
+    return CacheDeviceInfor(tempDevice, tempEventProperties, deviceId);
 }
 
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
@@ -203,7 +261,7 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
         return *reinterpret_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem *>(&item);
     });
 
-    auto ret = g_ddk->EmitEvent(deviceId, itemsTemp);
+    auto ret = g_ddk->EmitEvent(GetRealDeviceId(deviceId), itemsTemp);
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "emit event failed:%{public}d", ret);
         return ret;
@@ -222,11 +280,12 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
         return HID_DDK_INVALID_OPERATION;
     }
 
-    auto ret = g_ddk->DestroyDevice(deviceId);
+    auto ret = g_ddk->DestroyDevice(GetRealDeviceId(deviceId));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "destroy device failed:%{public}d", ret);
         return ret;
     }
+    g_deviceMap.erase(deviceId);
 
     return HID_DDK_SUCCESS;
 }
