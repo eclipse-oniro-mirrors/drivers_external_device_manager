@@ -65,7 +65,6 @@ void HidDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 
 static uint32_t GetRealDeviceId(int32_t deviceId)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (g_deviceMap.find(deviceId) != g_deviceMap.end()) {
         if (g_deviceMap[deviceId] != nullptr) {
             return g_deviceMap[deviceId]->realId;
@@ -265,6 +264,7 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
         return *reinterpret_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem *>(&item);
     });
 
+    std::lock_guard<std::mutex> lock(mutex_);
     auto ret = g_ddk->EmitEvent(GetRealDeviceId(deviceId), itemsTemp);
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "emit event failed:%{public}d", ret);
@@ -284,13 +284,13 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
         return HID_DDK_INVALID_OPERATION;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     auto ret = g_ddk->DestroyDevice(GetRealDeviceId(deviceId));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "destroy device failed:%{public}d", ret);
         return ret;
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
     g_deviceMap.erase(deviceId);
     return HID_DDK_SUCCESS;
 }
