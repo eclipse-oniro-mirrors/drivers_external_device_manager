@@ -65,6 +65,7 @@ void HidDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 
 static uint32_t GetRealDeviceId(int32_t deviceId)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (g_deviceMap.find(deviceId) != g_deviceMap.end()) {
         if (g_deviceMap[deviceId] != nullptr) {
             return g_deviceMap[deviceId]->realId;
@@ -81,6 +82,7 @@ static int32_t Connect()
             EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
             return HID_DDK_FAILURE;
         }
+        std::lock_guard<std::mutex> lock(mutex_);
         if (g_deviceMap.size() > 0) {
             for (const auto &[_, value] : g_deviceMap) {
                 (void)g_ddk->CreateDevice(value->tempDevice, value->tempProperties, value->realId);
@@ -163,6 +165,8 @@ static int32_t CacheDeviceInfor(OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevi
     device->tempDevice = tempDevice;
     device->tempProperties = tempProperties;
     device->realId = deviceId;
+
+    std::lock_guard<std::mutex> lock(mutex_);
     g_deviceMap[id] = device;
     return id;
 }
@@ -285,8 +289,9 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
         EDM_LOGE(MODULE_HID_DDK, "destroy device failed:%{public}d", ret);
         return ret;
     }
-    g_deviceMap.erase(deviceId);
 
+    std::lock_guard<std::mutex> lock(mutex_);
+    g_deviceMap.erase(deviceId);
     return HID_DDK_SUCCESS;
 }
 #ifdef __cplusplus
