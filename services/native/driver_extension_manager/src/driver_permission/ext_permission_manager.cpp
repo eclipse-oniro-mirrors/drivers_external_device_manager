@@ -49,17 +49,9 @@ DDK_PERMISSION ExtPermissionManager::NeedCheckPermission()
         EDM_LOGE(MODULE_DEV_MGR, "Can not get iBundleMgr");
         return DDK_PERMISSION::ERROR;
     }
-    int uid = IPCSkeleton::GetCallingUid();
-    std::string bundleName;
-    if (!iBundleMgr->GetBundleNameForUid(uid, bundleName)) {
-        EDM_LOGE(MODULE_DEV_MGR, "GetBundleNameForUid err");
-        return DDK_PERMISSION::ERROR;
-    }
-    EDM_LOGD(MODULE_DEV_MGR, "GetBundleNameForUid bundleName:%{public}s", bundleName.c_str());
-    int32_t userId = GetCurrentActiveUserId();
     BundleInfo bundleInfo;
-    if (!iBundleMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId)) {
-        EDM_LOGE(MODULE_DEV_MGR, "GetBundleNameForUid err");
+    if (iBundleMgr->GetBundleInfoForSelf(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo) != ERR_OK) {
+        EDM_LOGE(MODULE_DEV_MGR, "GetBundleInfoForSelf err");
         return DDK_PERMISSION::ERROR;
     }
     EDM_LOGD(MODULE_DEV_MGR, "GetBundleInfo bundleInfo targetVersion:%{public}d", bundleInfo.targetVersion);
