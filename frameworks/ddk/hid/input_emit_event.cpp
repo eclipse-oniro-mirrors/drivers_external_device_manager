@@ -26,6 +26,7 @@ using namespace OHOS::ExternalDeviceManager;
 namespace {
 static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_0::IHidDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
+std::mutex g_mutex;
 constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
 constexpr uint32_t MAX_HID_DEVICE_PROP_LEN = 7;
 constexpr uint32_t MAX_HID_EVENT_TYPES_LEN = 5;
@@ -81,6 +82,7 @@ static int32_t Connect()
             EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
             return HID_DDK_FAILURE;
         }
+        std::lock_guard<std::mutex> lock(g_mutex);
         if (g_deviceMap.size() > 0) {
             for (const auto &[_, value] : g_deviceMap) {
                 (void)g_ddk->CreateDevice(value->tempDevice, value->tempProperties, value->realId);
@@ -163,6 +165,8 @@ static int32_t CacheDeviceInfor(OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevi
     device->tempDevice = tempDevice;
     device->tempProperties = tempProperties;
     device->realId = deviceId;
+
+    std::lock_guard<std::mutex> lock(g_mutex);
     g_deviceMap[id] = device;
     return id;
 }
@@ -261,6 +265,7 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
         return *reinterpret_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem *>(&item);
     });
 
+    std::lock_guard<std::mutex> lock(g_mutex);
     auto ret = g_ddk->EmitEvent(GetRealDeviceId(deviceId), itemsTemp);
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "emit event failed:%{public}d", ret);
@@ -280,13 +285,14 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
         return HID_DDK_INVALID_OPERATION;
     }
 
+    std::lock_guard<std::mutex> lock(g_mutex);
     auto ret = g_ddk->DestroyDevice(GetRealDeviceId(deviceId));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "destroy device failed:%{public}d", ret);
         return ret;
     }
-    g_deviceMap.erase(deviceId);
 
+    g_deviceMap.erase(deviceId);
     return HID_DDK_SUCCESS;
 }
 #ifdef __cplusplus
