@@ -120,28 +120,5 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
     return proxy_->UnBindDevice(deviceId);
 }
 
-int32_t DriverExtMgrClient::EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items)
-{
-    if (Connect() != UsbErrCode::EDM_OK) {
-        return HID_DDK_FAILURE;
-    }
-    return proxy_->EmitEvent(deviceId, items);
-}
-
-int32_t DriverExtMgrClient::CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
-{
-    if (Connect() != UsbErrCode::EDM_OK) {
-        return HID_DDK_FAILURE;
-    }
-    return proxy_->CreateDevice(hidDevice, hidEventProperties);
-}
-
-int32_t DriverExtMgrClient::DestroyDevice(int32_t deviceId)
-{
-    if (Connect() != UsbErrCode::EDM_OK) {
-        return HID_DDK_FAILURE;
-    }
-    return proxy_->DestroyDevice(deviceId);
-}
 } // namespace ExternalDeviceManager
 } // namespace OHOS

@@ -30,9 +30,6 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices);
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
     UsbErrCode UnBindDevice(uint64_t deviceId);
-    int32_t CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties);
-    int32_t EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items);
-    int32_t DestroyDevice(int32_t deviceId);
 
 private:
     UsbErrCode Connect();

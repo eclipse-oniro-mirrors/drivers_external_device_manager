@@ -65,24 +65,6 @@ public:
     uint16_t vendorId;
 };
 
-constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
-constexpr uint32_t MAX_HID_DEVICE_PROP_LEN = 7;
-constexpr uint32_t MAX_HID_EVENT_TYPES_LEN = 5;
-constexpr uint32_t MAX_HID_KEYS_LEN = 100;
-constexpr uint32_t MAX_HID_ABS_LEN = 26;
-constexpr uint32_t MAX_HID_REL_BITS_LEN = 13;
-constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
-bool EmitItemMarshalling(int32_t deviceId, const std::vector<Hid_EmitItem> &items, MessageParcel &parcel);
-std::optional<std::vector<Hid_EmitItem>> EmitItemUnMarshalling(MessageParcel &parcel, int32_t &deviceId);
-bool HidDeviceMarshalling(Hid_Device *hidDevice, MessageParcel &parcel);
-std::optional<Hid_Device> HidDeviceUnMarshalling(MessageParcel &parcel);
-bool HidEventPropertiesMarshalling(Hid_EventProperties *hidEventProperties, MessageParcel &parcel);
-bool HidKeysOrAxisPropertiesMarshalling(Hid_EventProperties *hidEventProperties, MessageParcel &parcel);
-bool HidAbsValueMarshalling(Hid_EventProperties *hidEventProperties, MessageParcel &parcel);
-std::optional<Hid_EventProperties> HidEventPropertiesUnMarshalling(MessageParcel &parcel);
-bool HidEventTypeOrKeysPropertiesUnMarshalling(MessageParcel &parcel, Hid_EventProperties &hidEventProperties);
-bool HidAxisPropertiesUnMarshalling(MessageParcel &parcel, Hid_EventProperties &hidEventProperties);
-bool HidAbsValueUnMarshalling(MessageParcel &parcel, Hid_EventProperties &hidEventProperties);
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 #endif // DRIVER_EXTENSION_MANAGER_TYPES_H

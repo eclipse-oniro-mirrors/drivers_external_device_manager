@@ -36,12 +36,6 @@ int DriverExtMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
             return OnBindDevice(data, reply, option);
         case static_cast<uint32_t>(DriverExtMgrInterfaceCode::UNBIND_DEVICE):
             return OnUnBindDevice(data, reply, option);
-        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_CREATE_DEVICE):
-            return OnCreateDevice(data, reply, option);
-        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_EMIT_EVENT):
-            return OnEmitEvent(data, reply, option);
-        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::INPUT_DESTROY_DEVICE):
-            return OnDestroyDevice(data, reply, option);
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -126,71 +120,6 @@ int32_t DriverExtMgrStub::OnUnBindDevice(MessageParcel &data, MessageParcel &rep
     }
 
     return UsbErrCode::EDM_OK;
-}
-
-int32_t DriverExtMgrStub::OnCreateDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
-{
-    auto hidDevice = HidDeviceUnMarshalling(data);
-    if (!hidDevice.has_value()) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to read hidDevice");
-        return HID_DDK_INVALID_PARAMETER;
-    }
-
-    auto hidEventProperties = HidEventPropertiesUnMarshalling(data);
-    if (!hidEventProperties.has_value()) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to read hidEventProperties");
-        return HID_DDK_INVALID_PARAMETER;
-    }
-
-    auto device = &(hidDevice.value());
-    auto eventProperties = &(hidEventProperties.value());
-    int32_t ret = CreateDevice(device, eventProperties);
-    delete[] device->deviceName;
-    delete device->properties;
-    delete eventProperties->hidEventTypes.hidEventType;
-    delete eventProperties->hidKeys.hidKeyCode;
-    delete eventProperties->hidAbs.hidAbsAxes;
-    delete eventProperties->hidRelBits.hidRelAxes;
-    delete eventProperties->hidMiscellaneous.hidMscEvent;
-    if (ret < HID_DDK_SUCCESS) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call CreateDevice function:%{public}d", ret);
-    }
-    return ret;
-}
-
-int32_t DriverExtMgrStub::OnEmitEvent(MessageParcel &data, MessageParcel &reply, MessageOption &option)
-{
-    int32_t deviceId = -1;
-    auto items = EmitItemUnMarshalling(data, deviceId);
-    if (!items.has_value()) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to read emit items");
-        return HID_DDK_INVALID_PARAMETER;
-    }
-
-    int32_t ret = EmitEvent(deviceId, items.value());
-    if (ret != HID_DDK_SUCCESS) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call EmitEvent function:%{public}d", ret);
-        return ret;
-    }
-
-    return HID_DDK_SUCCESS;
-}
-
-int32_t DriverExtMgrStub::OnDestroyDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option)
-{
-    uint32_t deviceId = 0;
-    if (!data.ReadUint32(deviceId)) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceId");
-        return HID_DDK_INVALID_PARAMETER;
-    }
-
-    int32_t ret = DestroyDevice(static_cast<int32_t>(deviceId));
-    if (ret != HID_DDK_SUCCESS) {
-        EDM_LOGE(MODULE_FRAMEWORK, "failed to call DestroyDevice function:%{public}d", ret);
-        return ret;
-    }
-
-    return HID_DDK_SUCCESS;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

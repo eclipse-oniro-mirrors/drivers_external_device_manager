@@ -17,9 +17,6 @@ group("driver_extension_manager_fuzzer") {
   testonly = true
   deps = [
     "binddevice_fuzzer:BindDeviceFuzzTest",
-    "createdevice_fuzzer:CreateDeviceFuzzTest",
-    "destroydevice_fuzzer:DestroyDeviceFuzzTest",
-    "emitevent_fuzzer:EmitEventFuzzTest",
     "querydevice_fuzzer:QueryDeviceFuzzTest",
     "unbinddevice_fuzzer:UnBindDeviceFuzzTest",
   ]
