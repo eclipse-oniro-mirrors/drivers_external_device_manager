@@ -29,9 +29,6 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     UsbErrCode UnBindDevice(uint64_t deviceId) override;
-    int32_t CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties) override;
-    int32_t EmitEvent(int32_t deviceId, const std::vector<Hid_EmitItem> &items) override;
-    int32_t DestroyDevice(int32_t deviceId) override;
 
 private:
     static inline BrokerDelegator<DriverExtMgrProxy> delegator_;
