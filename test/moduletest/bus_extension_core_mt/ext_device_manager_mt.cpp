@@ -35,12 +35,11 @@ static void PrintAllDevice()
 {
     ExtDeviceManager &devmgr = ExtDeviceManager::GetInstance();
     cout << "------------------" << endl;
-    std::unordered_map<uint64_t, std::shared_ptr<Device>> &map = devmgr.deviceMap_[BUS_TYPE_USB];
-    cout << "usb device size: " << map.size() << endl;
-    for (auto &iter : map) {
-        std::shared_ptr<Device> device = iter.second;
-        cout << "description: " << device->GetDeviceInfo()->GetDeviceDescription().c_str() << endl;
-        cout << "deviceId: " << std::hex << device->GetDeviceInfo()->GetDeviceId() << endl;
+    std::vector<shared_ptr<DeviceInfo>> devicesInfo = devmgr.QueryDevice(BUS_TYPE_USB);
+    cout << "usb device size: " << devicesInfo.size() << endl;
+    for (auto &iter :devicesInfo) {
+        cout << "description: " << iter->GetDeviceDescription().c_str() << endl;
+        cout << "deviceId: " << std::hex << iter->GetDeviceId() << endl;
     }
     std::unordered_map<string, unordered_set<uint64_t>> &bundleMatchMap = devmgr.bundleMatchMap_;
     cout << "bundleMatchMap size:" << bundleMatchMap.size() << endl;
