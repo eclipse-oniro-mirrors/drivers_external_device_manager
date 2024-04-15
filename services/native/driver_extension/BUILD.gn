@@ -17,6 +17,7 @@ import("//foundation/ability/ability_runtime/ability_runtime.gni")
 config("ability_config") {
   visibility = [ ":*" ]
   include_dirs = [
+    "${ability_runtime_path}/interfaces/inner_api/ability_manager/include",
     "${ability_runtime_path}/interfaces/kits/native/ability/native",
     "${ability_runtime_services_path}/common/include",
   ]
