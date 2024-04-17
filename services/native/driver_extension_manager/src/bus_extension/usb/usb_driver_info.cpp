@@ -117,6 +117,7 @@ int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
     }
     if (cJSON_GetArraySize(jsonObj) == 0) {
         EDM_LOGE(MODULE_BUS_USB,  "Json size error");
+        cJSON_Delete(jsonObj);
         return EDM_ERR_JSON_PARSE_FAIL;
     }
     EDM_LOGD(MODULE_BUS_USB,  "parse json sucess");
@@ -128,17 +129,20 @@ int32_t UsbDriverInfo::UnSerialize(const string &driverStr)
     ret = FillArray("vids", vids_, jsonObj);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB,  "Fill vids_ error");
+        cJSON_Delete(jsonObj);
         return ret;
     }
     ret = FillArray("pids", pids_, jsonObj);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB,  "Fill pids_ error");
+        cJSON_Delete(jsonObj);
         return ret;
     }
 
     EDM_LOGD(MODULE_BUS_USB,  "member type check sucess");
     this->pids_ = pids_;
     this->vids_ = vids_;
+    cJSON_Delete(jsonObj);
     return ret;
 }
 }
