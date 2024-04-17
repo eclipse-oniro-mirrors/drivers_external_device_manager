@@ -87,6 +87,7 @@ int32_t DriverInfo::UnSerialize(const string &str)
     }
     int32_t retCode = checkJsonObj(jsonObj);
     if (retCode != EDM_OK) {
+        cJSON_Delete(jsonObj);
         return retCode;
     }
     cJSON* jsonBus = cJSON_GetObjectItem(jsonObj, "bus");
@@ -97,22 +98,26 @@ int32_t DriverInfo::UnSerialize(const string &str)
     auto busExt = BusExtensionCore::GetInstance().GetBusExtensionByName(LowerStr(busType));
     if (busExt == nullptr) {
         EDM_LOGE(MODULE_COMMON, "unknow bus type. %{public}s", busType.c_str());
+        cJSON_Delete(jsonObj);
         return EDM_ERR_NOT_SUPPORT;
     }
     this->driverInfoExt_ = busExt->GetNewDriverInfoExtObject();
     if (this->driverInfoExt_ == nullptr) {
         EDM_LOGE(MODULE_COMMON, "error, this->driverInfoExt_ is nullptr");
+        cJSON_Delete(jsonObj);
         return EDM_EER_MALLOC_FAIL;
     }
     string extInfo = jsonExtInfo->valuestring;
     int32_t ret = this->driverInfoExt_->UnSerialize(extInfo);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_COMMON, "parse ext_info error");
+        cJSON_Delete(jsonObj);
         return ret;
     }
     this->bus_ = jsonBus->valuestring;
     this->vendor_ = jsonVendor->valuestring;
     this->version_ = jsonVersion->valuestring;
+    cJSON_Delete(jsonObj);
     return EDM_OK;
 }
 }
