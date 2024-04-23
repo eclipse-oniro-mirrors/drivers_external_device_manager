@@ -65,6 +65,70 @@ public:
     uint16_t vendorId;
 };
 
+class DeviceInfoData {
+public:
+    virtual ~DeviceInfoData() = default;
+    virtual bool Marshalling(MessageParcel &parcel) const;
+    static std::shared_ptr<DeviceInfoData> UnMarshalling(MessageParcel &parcel);
+    static bool DeviceInfosUnMarshalling(MessageParcel &parcel,
+        std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos);
+    static BusType GetBusTypeByDeviceId(uint64_t deviceId);
+
+    uint64_t deviceId;
+    bool isDriverMatched = false;
+    std::string driverUid = "";
+};
+
+class USBInterfaceDesc {
+public:
+    virtual ~USBInterfaceDesc() = default;
+
+    bool Marshalling(MessageParcel &parcel) const;
+    static std::shared_ptr<USBInterfaceDesc> UnMarshalling(MessageParcel &parcel);
+
+    uint8_t bInterfaceNumber;
+    uint8_t bClass;
+    uint8_t bSubClass;
+    uint8_t bProtocal;
+};
+
+class USBDeviceInfoData : public DeviceInfoData {
+public:
+    virtual ~USBDeviceInfoData() = default;
+
+    bool Marshalling(MessageParcel &parcel) const override;
+    static std::shared_ptr<USBDeviceInfoData> UnMarshalling(MessageParcel &parcel);
+  
+    uint16_t productId;
+    uint16_t vendorId;
+    std::vector<std::shared_ptr<USBInterfaceDesc>> interfaceDescList;
+};
+
+class DriverInfoData {
+public:
+    virtual ~DriverInfoData() = default;
+    virtual bool Marshalling(MessageParcel &parcel) const;
+    static std::shared_ptr<DriverInfoData> UnMarshalling(MessageParcel &parcel);
+    static bool DriverInfosUnMarshalling(MessageParcel &parcel,
+        std::vector<std::shared_ptr<DriverInfoData>> &driverInfos);
+    
+    BusType busType;
+    std::string driverUid;
+    std::string driverName;
+    std::string bundleSize;
+    std::string version;
+    std::string description;
+};
+
+class USBDriverInfoData : public DriverInfoData {
+public:
+    virtual ~USBDriverInfoData() = default;
+
+    bool Marshalling(MessageParcel &parcel) const override;
+    static std::shared_ptr<USBDriverInfoData> UnMarshalling(MessageParcel &parcel);
+    std::vector<uint16_t> pids;
+    std::vector<uint16_t> vids;
+};
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 #endif // DRIVER_EXTENSION_MANAGER_TYPES_H

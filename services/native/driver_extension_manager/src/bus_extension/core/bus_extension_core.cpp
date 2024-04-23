@@ -34,6 +34,10 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 IMPLEMENT_SINGLE_INSTANCE(BusExtensionCore);
 
+std::unordered_map<std::string, BusType> BusExtensionCore::busTypeMap_ = {
+    {"usb", BusType::BUS_TYPE_USB}
+};
+
 void BusExtensionCore::LoadBusExtensionLibs()
 {
     for (BusType i = BUS_TYPE_USB; i < BUS_TYPE_MAX; i = (BusType)(i + 1)) {
@@ -89,17 +93,22 @@ int32_t BusExtensionCore::Register(BusType busType, std::shared_ptr<IBusExtensio
     return EDM_OK;
 }
 
+BusType BusExtensionCore::GetBusTypeByName(const std::string &busName)
+{
+    auto iterMap = busTypeMap_.find(LowerStr(busName));
+    if (iterMap == busTypeMap_.end()) {
+        EDM_LOGE(MODULE_DEV_MGR, "invalid bus name: %{public}s", busName.c_str());
+        return BusType::BUS_TYPE_INVALID;
+    }
+    return iterMap->second;
+}
+
 std::shared_ptr<IBusExtension> BusExtensionCore::GetBusExtensionByName(std::string busName)
 {
-    static std::unordered_map<std::string, BusType> busTypeMap = {
-        {"usb", BusType::BUS_TYPE_USB}
-    };
-    auto iterMap = busTypeMap.find(LowerStr(busName));
-    if (iterMap == busTypeMap.end()) {
-        EDM_LOGE(MODULE_DEV_MGR, "invalid bus name: %{public}s", busName.c_str());
+    BusType busType = GetBusTypeByName(busName);
+    if (busType <= BusType::BUS_TYPE_INVALID || busType >= BusType::BUS_TYPE_MAX) {
         return nullptr;
     }
-    BusType busType = iterMap->second;
     auto iterExtension = busExtensions_.find(busType);
     if (iterExtension == busExtensions_.end()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s bus extension not found", busName.c_str());

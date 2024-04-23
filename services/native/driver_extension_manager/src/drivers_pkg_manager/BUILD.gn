@@ -44,6 +44,7 @@ ohos_shared_library("drivers_pkg_manager") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",

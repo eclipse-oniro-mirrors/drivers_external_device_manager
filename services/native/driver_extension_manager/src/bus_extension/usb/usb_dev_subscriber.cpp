@@ -25,6 +25,7 @@ constexpr uint32_t MAX_DEV_ID_SIZE = 100;
 constexpr uint32_t ACT_DEVUP       = 0;
 constexpr uint32_t ACT_DEVDOWN     = 1;
 constexpr uint32_t SHIFT_16        = 16;
+constexpr uint32_t SHIFT_32        = 32;
 constexpr uint32_t USB_DEV_DESC_SIZE = 0x12;
 struct UsbDevDescLite {
     uint8_t bLength;
@@ -56,15 +57,68 @@ static uint32_t ToBusDeivceId(const UsbDev& usbDev)
     return devId;
 }
 
+static uint64_t ToDdkDeviceId(const UsbDev& usbDev)
+{
+    return ((uint64_t)usbDev.busNum << SHIFT_32) + usbDev.devAddr;
+}
 
-void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb)
+
+void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb, sptr<IUsbDdk> iUsbDdk)
 {
     this->iusb_ = iusb;
     this->callback_ = callback;
+    this->iUsbDdk_ = iUsbDdk;
 };
+
+int32_t UsbDevSubscriber::GetInterfaceDescriptor(const UsbDev &usbDev,
+    std::vector<UsbInterfaceDescriptor> &interfaceList)
+{
+    int32_t ret = EDM_NOK;
+    if (this->iusb_ == nullptr || this->iUsbDdk_ == nullptr) {
+        return EDM_ERR_INVALID_OBJECT;
+    }
+    uint8_t configIndex;
+    ret = this->iusb_->GetConfig(usbDev, configIndex);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_BUS_USB,  "GetConfig fail, ret = %{public}d", ret);
+        return ret;
+    }
+
+    uint64_t ddkDeviceId = ToDdkDeviceId(usbDev);
+    std::vector<uint8_t> descriptor;
+    ret = this->iUsbDdk_->GetConfigDescriptor(ddkDeviceId, configIndex, descriptor);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_BUS_USB, "GetConfigDescriptor fail, ret = %{public}d", ret);
+        return ret;
+    }
+    UsbDdkConfigDescriptor *config = nullptr;
+    ret = ParseUsbConfigDescriptor(descriptor, &config);
+    if (ret != EDM_OK || config == nullptr) {
+        FreeUsbConfigDescriptor(config);
+        EDM_LOGE(MODULE_BUS_USB, "ParseUsbConfigDescriptor fail, ret = %{public}d", ret);
+        return ret;
+    }
+    if (config->interface == nullptr) {
+        FreeUsbConfigDescriptor(config);
+        EDM_LOGE(MODULE_BUS_USB,  "UsbDdkInterface is null");
+        return EDM_ERR_INVALID_OBJECT;
+    }
+    for (uint8_t i = 0; i < config->configDescriptor.bNumInterfaces; i++) {
+        UsbDdkInterfaceDescriptor *interfaceDesc = config->interface[i].altsetting;
+        if (interfaceDesc == nullptr) {
+            FreeUsbConfigDescriptor(config);
+            EDM_LOGE(MODULE_BUS_USB,  "UsbDdkInterfaceDescriptor is null");
+            return EDM_ERR_INVALID_OBJECT;
+        }
+        interfaceList.push_back(interfaceDesc->interfaceDescriptor);
+    }
+    FreeUsbConfigDescriptor(config);
+    return EDM_OK;
+}
 
 int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
 {
+    EDM_LOGD(MODULE_BUS_USB,  "OnDeviceConnect enter");
     int32_t ret = 0;
     if (this->iusb_ == nullptr) {
         return EDM_ERR_INVALID_OBJECT;
@@ -96,6 +150,12 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     usbDevInfo->idVendor_ = deviceDescriptor.idVendor;
     usbDevInfo->deviceClass_ = deviceDescriptor.bDeviceClass;
 
+    ret = GetInterfaceDescriptor(usbDev, usbDevInfo->interfaceDescList_);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_BUS_USB,  "GetInterfaceDescriptor fail, ret = %{public}d", ret);
+        return ret;
+    }
+
     this->deviceInfos_[busDevId] = usbDevInfo;
     if (this->callback_ != nullptr) {
         this->callback_->OnDeviceAdd(usbDevInfo);
@@ -107,6 +167,7 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
 
 int32_t UsbDevSubscriber::OnDeviceDisconnect(const UsbDev &usbDev)
 {
+    EDM_LOGD(MODULE_BUS_USB,  "OnDeviceDisconnect enter");
     uint32_t busDevId = ToBusDeivceId(usbDev);
     if (this->callback_ != nullptr) {
         auto deviceInfo = this->deviceInfos_[busDevId];
@@ -122,6 +183,7 @@ int32_t UsbDevSubscriber::OnDeviceDisconnect(const UsbDev &usbDev)
 
 int32_t UsbDevSubscriber::DeviceEvent(const USBDeviceInfo &usbDevInfo)
 {
+    EDM_LOGD(MODULE_BUS_USB,  "DeviceEvent enter");
     UsbDev usbDev = {usbDevInfo.busNum, usbDevInfo.devNum};
     int32_t ret = 0;
     if (usbDevInfo.status == ACT_DEVUP) {

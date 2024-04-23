@@ -142,5 +142,97 @@ UsbErrCode DriverExtMgrProxy::UnBindDevice(uint64_t deviceId)
 
     return UsbErrCode::EDM_OK;
 }
+
+UsbErrCode DriverExtMgrProxy::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos,
+    bool isByDeviceId, const uint64_t deviceId)
+{
+    EDM_LOGD(MODULE_FRAMEWORK, "proxy QueryDeviceInfo start");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
+        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (!data.WriteBool(isByDeviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write isByDeviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (isByDeviceId && !data.WriteUint64(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write deviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    int32_t ret =
+        remote->SendRequest(static_cast<uint32_t>(DriverExtMgrInterfaceCode::QUERY_DEVICE_INFO), data, reply, option);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
+        return static_cast<UsbErrCode>(ret);
+    }
+
+    if (!DeviceInfoData::DeviceInfosUnMarshalling(reply, deviceInfos)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceInfos");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    EDM_LOGD(MODULE_FRAMEWORK, "proxy QueryDeviceInfo end");
+
+    return UsbErrCode::EDM_OK;
+}
+
+UsbErrCode DriverExtMgrProxy::QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
+    bool isByDriverUid, const std::string &driverUid)
+{
+    EDM_LOGD(MODULE_FRAMEWORK, "proxy QueryDriverInfo start");
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "remote is nullptr");
+        return UsbErrCode::EDM_ERR_INVALID_OBJECT;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write interface token");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (!data.WriteBool(isByDriverUid)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write isByDriverUid");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    if (isByDriverUid && !data.WriteString(driverUid)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write driverUid");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    int32_t ret =
+        remote->SendRequest(static_cast<uint32_t>(DriverExtMgrInterfaceCode::QUERY_DRIVER_INFO), data, reply, option);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "SendRequest is failed, ret: %{public}d", ret);
+        return static_cast<UsbErrCode>(ret);
+    }
+
+    if (!DriverInfoData::DriverInfosUnMarshalling(reply, driverInfos)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write driverInfos");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    EDM_LOGD(MODULE_FRAMEWORK, "proxy QueryDriverInfo end");
+
+    return UsbErrCode::EDM_OK;
+}
 } // namespace ExternalDeviceManager
 } // namespace OHOS

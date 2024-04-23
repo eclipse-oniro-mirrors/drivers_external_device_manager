@@ -120,5 +120,39 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
     return proxy_->UnBindDevice(deviceId);
 }
 
+UsbErrCode DriverExtMgrClient::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->QueryDeviceInfo(deviceInfos);
+}
+
+UsbErrCode DriverExtMgrClient::QueryDeviceInfo(const uint64_t deviceId,
+    std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->QueryDeviceInfo(deviceInfos, true, deviceId);
+}
+
+UsbErrCode DriverExtMgrClient::QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->QueryDriverInfo(driverInfos);
+}
+
+UsbErrCode DriverExtMgrClient::QueryDriverInfo(const std::string &driverUid,
+    std::vector<std::shared_ptr<DriverInfoData>> &driverInfos)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->QueryDriverInfo(driverInfos, true, driverUid);
+}
+
 } // namespace ExternalDeviceManager
 } // namespace OHOS

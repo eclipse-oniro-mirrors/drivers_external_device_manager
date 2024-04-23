@@ -18,6 +18,8 @@ ohos_shared_library("driver_extension_usb_bus") {
     "usb_driver_info.cpp",
   ]
   include_dirs = [
+    "${ext_mgr_path}/frameworks/ddk/usb",
+    "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
   ]
@@ -25,11 +27,15 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${utils_path}:coverage_flags",
     "${utils_path}:utils_config",
   ]
-  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core" ]
+  deps = [
+    "${ext_mgr_path}/frameworks/ddk/usb:usb_ndk",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
+  ]
   public_deps = [ "//third_party/cJSON:cjson" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
     "ipc:ipc_core",

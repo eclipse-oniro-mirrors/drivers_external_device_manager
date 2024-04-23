@@ -42,7 +42,9 @@ class ExtPermissionManager {
 
 public:
     bool HasPermission(std::string permissionName);
-    
+
+    static bool IsSystemApp();
+
     ~ExtPermissionManager();
 private:
     sptr<IBundleMgr> bundleMgr_ = nullptr;

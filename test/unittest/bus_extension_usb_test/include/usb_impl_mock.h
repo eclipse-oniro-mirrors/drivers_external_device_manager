@@ -57,12 +57,12 @@ public:
     int32_t GetStringDescriptor(const UsbDev &dev, uint8_t descId, std::vector<uint8_t> &decriptor) override;
     int32_t QueryPort(int32_t &portId, int32_t &powerRole, int32_t &dataRole, int32_t &mode) override;
     int32_t SetPortRole(int32_t portId, int32_t powerRole, int32_t dataRole) override;
+    int32_t GetConfig(const UsbDev &dev, uint8_t &configIndex) override;
     MOCK_METHOD1(OpenDevice, int32_t(const UsbDev &dev));
     MOCK_METHOD1(CloseDevice, int32_t(const UsbDev &dev));
     MOCK_METHOD3(GetConfigDescriptor, int32_t(const UsbDev &dev, uint8_t descId, std::vector<uint8_t> &decriptor));
     MOCK_METHOD2(GetFileDescriptor, int32_t(const UsbDev &dev, int32_t &fd));
     MOCK_METHOD2(SetConfig, int32_t(const UsbDev &dev, uint8_t configIndex));
-    MOCK_METHOD2(GetConfig, int32_t(const UsbDev &dev, uint8_t &configIndex));
     MOCK_METHOD3(ClaimInterface, int32_t(const UsbDev &dev, uint8_t interfaceid, uint8_t force));
     MOCK_METHOD2(ReleaseInterface, int32_t(const UsbDev &dev, uint8_t interfaceid));
     MOCK_METHOD3(SetInterface, int32_t(const UsbDev &dev, uint8_t interfaceid, uint8_t altIndex));

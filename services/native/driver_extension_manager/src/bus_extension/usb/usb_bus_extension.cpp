@@ -52,6 +52,16 @@ void UsbBusExtension::SetUsbInferface(sptr<IUsbInterface> iusb)
     this->usbInterface_ = iusb;
 }
 
+void UsbBusExtension::SetUsbDdk(sptr<IUsbDdk> iUsbDdk)
+{
+    this->iUsbDdk_ = iUsbDdk;
+}
+
+BusType UsbBusExtension::GetBusType()
+{
+    return BusType::BUS_TYPE_USB;
+}
+
 int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> devCallback)
 {
     if (this->usbInterface_ == nullptr) {
@@ -68,6 +78,15 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
             return EDM_NOK;
         }
     }
+
+    if (this->iUsbDdk_ == nullptr) {
+        this->iUsbDdk_ = IUsbDdk::Get();
+        if (this->iUsbDdk_ == nullptr) {
+            EDM_LOGE(MODULE_BUS_USB,  "get IUsbDdk error");
+            return EDM_ERR_INVALID_OBJECT;
+        }
+    }
+
     if (this->subScriber_ == nullptr) {
         this->subScriber_ = new UsbDevSubscriber();
         if (this->subScriber_ == nullptr) {
@@ -77,7 +96,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
         EDM_LOGD(MODULE_BUS_USB,  "get subScriber_ sucess");
     }
 
-    this->subScriber_->Init(devCallback, usbInterface_);
+    this->subScriber_->Init(devCallback, usbInterface_, iUsbDdk_);
     this->usbInterface_->BindUsbdSubscriber(subScriber_);
 
     return 0;

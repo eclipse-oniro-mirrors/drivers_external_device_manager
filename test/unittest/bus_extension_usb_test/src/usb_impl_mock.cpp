@@ -110,5 +110,11 @@ int32_t UsbImplMock::SubscriberDeviceEvent(const USBDeviceInfo &info)
     auto ret = subscriber_->DeviceEvent(info);
     return ret;
 }
+int32_t UsbImplMock::GetConfig(const UsbDev &dev, uint8_t &configIndex)
+{
+    (void)dev;
+    configIndex = 1;
+    return HDF_SUCCESS;
+}
 } // namespace USB
 } // namespace OHOS

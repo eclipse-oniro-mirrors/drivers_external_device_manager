@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,31 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef USB_DRIVER_INFO_H
-#define USB_DRIVER_INFO_H
-#include <vector>
-#include "ibus_extension.h"
+#ifndef PKG_TABLES_H
+#define PKG_TABLES_H
 
+#include <string>
 namespace OHOS {
 namespace ExternalDeviceManager {
-class UsbDriverInfo : public DriverInfoExt {
-public:
-    int32_t Serialize(string &metaData) override;
-    int32_t UnSerialize(const string &metaData) override;
-    std::vector<uint16_t> GetProductIds() const
-    {
-        return pids_;
-    }
-    std::vector<uint16_t> GetVendorIds() const
-    {
-        return vids_;
-    }
-
-private:
-    friend class UsbBusExtension;
-    std::vector<uint16_t> pids_;
-    std::vector<uint16_t> vids_;
-};
+typedef struct PkgInfoTable {
+    std::string driverUid;
+    std::string bundleAbility;
+    int64_t userId;
+    int64_t appIndex;
+    std::string bundleName;
+    std::string driverName;
+    std::string driverInfo;
+} PkgInfoTable;
 }
 }
-#endif
+#endif // PKG_TABLES_H

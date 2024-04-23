@@ -39,6 +39,7 @@ enum {
 struct BundleInfoNames {
     string bundleName;
     string abilityName;
+    string driverUid;
 };
 
 class DriverPkgManager {
@@ -54,7 +55,10 @@ public:
      */
     int32_t Init();
     shared_ptr<BundleInfoNames> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo);
+    int32_t QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driverInfos,
+        bool isByDriverUid = false, const std::string &driverUid = "");
     int32_t RegisterOnBundleUpdate(PCALLBACKFUN pFun);
+    int32_t RegisterOnBundleUpdate(ONBUNDLESUPDATE pFun);
     int32_t UnRegisterOnBundleUpdate();
     ~DriverPkgManager();
 private:

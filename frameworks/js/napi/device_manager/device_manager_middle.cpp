@@ -29,6 +29,7 @@
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+constexpr int32_t PARAM_COUNT_0 = 0;
 constexpr int32_t PARAM_COUNT_1 = 1;
 constexpr int32_t PARAM_COUNT_2 = 2;
 constexpr int32_t PARAM_COUNT_3 = 3;
@@ -37,7 +38,9 @@ constexpr uint64_t MAX_JS_NUMBER = 9007199254740991;
 static const std::map<int32_t, std::string> ERROR_MESSAGES = {
     {SERVICE_EXCEPTION,  "ExternalDeviceManager service exception."},
     {PERMISSION_DENIED,  "Permission denied."},
+    {PERMISSION_DENIED,  "Permission denied. A non-system application cannot call a system API."},
     {PARAMETER_ERROR,  "The parameter check failed."},
+    {SERVICE_EXCEPTION_NEW, "ExternalDeviceManager service exception."}
 };
 
 static std::mutex mapMutex;
@@ -137,7 +140,6 @@ void AsyncData::DeleteNapiRef()
         work = nullptr;
     }
 }
-
 
 void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
@@ -380,6 +382,105 @@ static napi_value ConvertDeviceToJsDevice(napi_env& env, std::shared_ptr<DeviceD
     return object;
 }
 
+static napi_value ConvertToJsUSBInterfaceDesc(napi_env& env, std::shared_ptr<USBInterfaceDesc> desc)
+{
+    if (desc == nullptr) {
+        return nullptr;
+    }
+    napi_value object;
+    napi_value value;
+    NAPI_CALL(env, napi_create_object(env, &object));
+    NAPI_CALL(env, napi_create_uint32(env, desc->bInterfaceNumber, &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "bInterfaceNumber", value));
+    NAPI_CALL(env, napi_create_uint32(env, desc->bClass, &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "bClass", value));
+    NAPI_CALL(env, napi_create_uint32(env, desc->bSubClass, &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "bSubClass", value));
+    NAPI_CALL(env, napi_create_uint32(env, desc->bProtocal, &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "bProtocal", value));
+    return object;
+}
+
+static napi_value ConvertToJsDeviceInfo(napi_env& env, std::shared_ptr<DeviceInfoData> deviceInfo)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "ConvertToJsDeviceInfo start");
+    if (deviceInfo == nullptr) {
+        return nullptr;
+    }
+    napi_value object;
+    napi_value value;
+    NAPI_CALL(env, napi_create_object(env, &object));
+    value = ConvertToJsDeviceId(env, deviceInfo->deviceId);
+    NAPI_CALL(env, napi_set_named_property(env, object, "deviceId", value));
+    NAPI_CALL(env, napi_get_boolean(env, deviceInfo->isDriverMatched, &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "isDriverMatched", value));
+    if (deviceInfo->isDriverMatched) {
+        NAPI_CALL(env, napi_create_string_utf8(env, deviceInfo->driverUid.c_str(),
+            deviceInfo->driverUid.size(), &value));
+        NAPI_CALL(env, napi_set_named_property(env, object, "driverUid", value));
+    }
+    BusType busType = DeviceInfoData::GetBusTypeByDeviceId(deviceInfo->deviceId);
+    if (busType == BusType::BUS_TYPE_USB) {
+        std::shared_ptr<USBDeviceInfoData> usbDeviceInfo = std::static_pointer_cast<USBDeviceInfoData>(deviceInfo);
+        NAPI_CALL(env, napi_create_uint32(env, usbDeviceInfo->vendorId, &value));
+        NAPI_CALL(env, napi_set_named_property(env, object, "vendorId", value));
+        NAPI_CALL(env, napi_create_uint32(env, usbDeviceInfo->productId, &value));
+        NAPI_CALL(env, napi_set_named_property(env, object, "productId", value));
+
+        napi_value interfaceDescList;
+        NAPI_CALL(env, napi_create_array(env, &interfaceDescList));
+        EDM_LOGD(MODULE_DEV_MGR, "interfaceDescList size = %{public}zu", usbDeviceInfo->interfaceDescList.size());
+        for (size_t i = 0; i < usbDeviceInfo->interfaceDescList.size(); i++) {
+            napi_value element = ConvertToJsUSBInterfaceDesc(env, usbDeviceInfo->interfaceDescList[i]);
+            NAPI_CALL(env, napi_set_element(env, interfaceDescList, i, element));
+        }
+        NAPI_CALL(env, napi_set_named_property(env, object, "interfaceDescList", interfaceDescList));
+    }
+    EDM_LOGD(MODULE_DEV_MGR, "ConvertToJsDeviceInfo end");
+    return object;
+}
+
+static napi_value ConvertToJsDriverInfo(napi_env& env, std::shared_ptr<DriverInfoData> driverInfo)
+{
+    if (driverInfo == nullptr) {
+        return nullptr;
+    }
+    napi_value object;
+    napi_value value;
+    NAPI_CALL(env, napi_create_object(env, &object));
+    NAPI_CALL(env, napi_create_int32(env, driverInfo->busType, &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "busType", value));
+    NAPI_CALL(env, napi_create_string_utf8(env, driverInfo->driverUid.c_str(), driverInfo->driverUid.size(), &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "driverUid", value));
+    NAPI_CALL(env, napi_create_string_utf8(env, driverInfo->driverName.c_str(), driverInfo->driverName.size(), &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "driverName", value));
+    NAPI_CALL(env, napi_create_string_utf8(env, driverInfo->bundleSize.c_str(), driverInfo->bundleSize.size(), &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "driverSize", value));
+    NAPI_CALL(env, napi_create_string_utf8(env, driverInfo->version.c_str(), driverInfo->version.size(), &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "driverVersion", value));
+    NAPI_CALL(env, napi_create_string_utf8(env, driverInfo->description.c_str(),
+        driverInfo->description.size(), &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "description", value));
+    if (driverInfo->busType == BusType::BUS_TYPE_USB) {
+        std::shared_ptr<USBDriverInfoData> usbDriverInfo = std::static_pointer_cast<USBDriverInfoData>(driverInfo);
+        napi_value pids;
+        NAPI_CALL(env, napi_create_array(env, &pids));
+        for (size_t i = 0; i < usbDriverInfo->pids.size(); i++) {
+            NAPI_CALL(env, napi_create_uint32(env, usbDriverInfo->pids[i], &value));
+            NAPI_CALL(env, napi_set_element(env, pids, i, value));
+        }
+        NAPI_CALL(env, napi_set_named_property(env, object, "productIdList", pids));
+        napi_value vids;
+        NAPI_CALL(env, napi_create_array(env, &vids));
+        for (size_t i = 0; i < usbDriverInfo->vids.size(); i++) {
+            NAPI_CALL(env, napi_create_uint32(env, usbDriverInfo->vids[i], &value));
+            NAPI_CALL(env, napi_set_element(env, vids, i, value));
+        }
+        NAPI_CALL(env, napi_set_named_property(env, object, "vendorIdList", vids));
+    }
+    return object;
+}
+
 static napi_value QueryDevices(napi_env env, napi_callback_info info)
 {
     if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
@@ -524,6 +625,97 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
     return promise;
 }
 
+static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
+{
+    if (!ExtPermissionManager::IsSystemApp()) {
+        ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDeviceInfo: none system app");
+        return nullptr;
+    }
+
+    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
+        ThrowErr(env, PERMISSION_DENIED, "queryDeviceInfo: no permission");
+        return nullptr;
+    }
+
+    size_t argc = PARAM_COUNT_1;
+    napi_value argv[PARAM_COUNT_1] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+
+    uint64_t deviceId = 0;
+    if (argc > PARAM_COUNT_0 && !ParseDeviceId(env, argv[0], &deviceId)) {
+        ThrowErr(env, PARAMETER_ERROR, "deviceId type error");
+        return nullptr;
+    }
+    std::vector<std::shared_ptr<DeviceInfoData>> deviceInfos;
+    int32_t ret = UsbErrCode::EDM_NOK;
+    if (argc > PARAM_COUNT_0) {
+        ret = g_edmClient.QueryDeviceInfo(deviceId, deviceInfos);
+    } else {
+        ret = g_edmClient.QueryDeviceInfo(deviceInfos);
+    }
+    if (ret != UsbErrCode::EDM_OK) {
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query device info service fail");
+        return nullptr;
+    }
+
+    napi_value resultArray;
+    NAPI_CALL(env, napi_create_array(env, &resultArray));
+    for (size_t i = 0; i < deviceInfos.size(); i++) {
+        napi_value element = ConvertToJsDeviceInfo(env, deviceInfos[i]);
+        NAPI_CALL(env, napi_set_element(env, resultArray, i, element));
+    }
+
+    return resultArray;
+}
+
+static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
+{
+    if (!ExtPermissionManager::IsSystemApp()) {
+        ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDriverInfo: none system app");
+        return nullptr;
+    }
+
+    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
+        ThrowErr(env, PERMISSION_DENIED, "queryDriverInfo: no permission");
+        return nullptr;
+    }
+
+    size_t argc = PARAM_COUNT_1;
+    napi_value argv[PARAM_COUNT_1] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    if (argc > PARAM_COUNT_0 && !IsMatchType(env, argv[0], napi_string)) {
+        ThrowErr(env, PARAMETER_ERROR, "driverUid type is invalid");
+        return nullptr;
+    }
+
+    std::vector<std::shared_ptr<DriverInfoData>> driverInfos;
+    int32_t ret = UsbErrCode::EDM_NOK;
+    if (argc > PARAM_COUNT_0) {
+        size_t len;
+        NAPI_CALL(env, napi_get_value_string_utf8(env, argv[0], nullptr, 0, &len));
+        std::string driverUid;
+        driverUid.resize(len);
+        NAPI_CALL(env, napi_get_value_string_utf8(env, argv[0], &driverUid[0], len + 1, &len));
+        ret = g_edmClient.QueryDriverInfo(driverUid, driverInfos);
+    } else {
+        ret = g_edmClient.QueryDriverInfo(driverInfos);
+    }
+
+    if (ret != UsbErrCode::EDM_OK) {
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query driver info service fail");
+        return nullptr;
+    }
+
+    napi_value resultArray;
+    NAPI_CALL(env, napi_create_array(env, &resultArray));
+    for (size_t index = 0; index < driverInfos.size(); index++) {
+        napi_value element = ConvertToJsDriverInfo(env, driverInfos[index]);
+        NAPI_CALL(env, napi_set_element(env, resultArray, index, element));
+    }
+
+    return resultArray;
+}
+
 static napi_value EnumBusTypeConstructor(napi_env env, napi_callback_info info)
 {
     napi_value thisArg = nullptr;
@@ -559,6 +751,8 @@ static napi_value ExtDeviceManagerInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("bindDevice", BindDevice),
         DECLARE_NAPI_FUNCTION("bindDeviceDriver", BindDevice),
         DECLARE_NAPI_FUNCTION("unbindDevice", UnbindDevice),
+        DECLARE_NAPI_FUNCTION("queryDeviceInfo", QueryDeviceInfo),
+        DECLARE_NAPI_FUNCTION("queryDriverInfo", QueryDriverInfo),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 

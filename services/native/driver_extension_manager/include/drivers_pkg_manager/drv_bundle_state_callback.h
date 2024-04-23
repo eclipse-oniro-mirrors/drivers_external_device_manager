@@ -24,8 +24,8 @@
 #include "bundle_info.h"
 #include "bundle_mgr_proxy.h"
 #include "extension_ability_info.h"
-
 #include "ibus_extension.h"
+#include "pkg_tables.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -46,6 +46,7 @@ enum ON_BUNDLE_STATUS {
 };
 
 typedef int32_t(*PCALLBACKFUN)(int, int, const string &, const string &);
+typedef void(*ONBUNDLESUPDATE)(const string &);
 
 class DrvBundleStateCallback : public IBundleStatusCallback {
 public:
@@ -85,24 +86,24 @@ public:
     string GetStiching();
 
     PCALLBACKFUN m_pFun = nullptr;
+    ONBUNDLESUPDATE onBundlesUpdate = nullptr;
+
 private:
-    std::vector<ExtensionAbilityInfo> extensionInfos_;
-    std::map<string, DriverInfo> innerDrvInfos_;
-    std::map<string, DriverInfo> allDrvInfos_;
     std::mutex bundleMgrMutex_;
     sptr<IBundleMgr> bundleMgr_ = nullptr;
     string stiching = "This is used for Name Stiching";
     bool initOnce = false;
 
-    ErrCode QueryExtensionAbilityInfos(const std::string &bundleName, const int userId);
-    bool ParseBaseDriverInfo();
-    void ChangeValue(DriverInfo &tmpDrvInfo, std::vector<Metadata> &metadata);
+    bool QueryDriverInfos(const std::string &bundleName, const int userId,
+        std::vector<ExtensionAbilityInfo> &driverInfos);
+    bool UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName = "");
     void ClearDriverInfo(DriverInfo &tmpDrvInfo);
-    void ParseExtensionInfos(ExtensionAbilityType &type,
-        string &bundleName, string &abilityName);
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
-    void StorageHistoryDrvInfo(std::vector<BundleInfo> &bundleInfos);
+    void ChangeValue(DriverInfo &tmpDrvInfo, const std::vector<Metadata> &metadata);
+    std::string GetBundleSize(const std::string &bundleName);
+    void ParseToPkgInfoTables(
+        const std::vector<ExtensionAbilityInfo> &driverInfos, std::vector<PkgInfoTable> &pkgInfoTables);
 
     void OnBundleDrvAdded(int bundleStatus);
     void OnBundleDrvUpdated(int bundleStatus);

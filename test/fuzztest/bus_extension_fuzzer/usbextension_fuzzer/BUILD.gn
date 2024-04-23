@@ -23,11 +23,16 @@ ohos_fuzztest("UsbExtensionFuzzTest") {
       "${ext_mgr_path}/test/fuzztest/bus_extension_fuzzer/usbextension_fuzzer"
 
   sources = [ "usbextension_fuzzer.cpp" ]
-  include_dirs = [ "${usb_bus_extension_include_path}" ]
+  include_dirs = [
+    "${ext_mgr_path}/frameworks/ddk/usb",
+    "${ext_mgr_path}/interfaces/ddk/usb",
+    "${usb_bus_extension_include_path}",
+  ]
   deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
   ]
