@@ -19,7 +19,6 @@
 #include "hdf_log.h"
 #include "hilog_wrapper.h"
 #include "matching_skills.h"
-#include "usb_bus_extension.h"
 #include "common_event_support.h"
 #include "common_event_subscribe_info.h"
 #include "bus_extension_core.h"
@@ -99,37 +98,60 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
         return nullptr;
     }
 
-    std::vector<std::string> apps;
+    std::vector<PkgInfoTable> pkgInfos;
     std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
-    int32_t retRdb = helper->QueryAllDriverInfos(apps);
+    int32_t retRdb = helper->QueryPkgInfos(pkgInfos);
     if (retRdb <= 0) {
         /* error or empty record */
         return nullptr;
     }
-    int32_t totalApps = static_cast<int32_t>(apps.size());
-    EDM_LOGE(MODULE_PKG_MGR, "totalApps: %{public}d", totalApps);
-    for (int32_t i = 0; i < totalApps; i++) {
-        std::string app = apps.at(i);
+    EDM_LOGD(MODULE_PKG_MGR, "total driverInfos number: %{public}zu", pkgInfos.size());
+    for (const auto &pkgInfo : pkgInfos) {
         DriverInfo driverInfo;
-        driverInfo.UnSerialize(app);
-        
+        driverInfo.UnSerialize(pkgInfo.driverInfo);
         extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(driverInfo.GetBusName());
-        if (extInstance == nullptr) {
-            return nullptr;
-        }
-
-        if (extInstance->MatchDriver(driverInfo, *devInfo)) {
-            std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
-
-            string bundleName = helper->QueryBundleInfoNames(app);
-            ret->bundleName = bundleName.substr(0, bundleName.find_first_of(bundleStateCallback_->GetStiching()));
-            ret->abilityName = bundleName.substr(bundleName.find_last_of(bundleStateCallback_->GetStiching()) + 1);
+        if (extInstance != nullptr && extInstance->MatchDriver(driverInfo, *devInfo)) {
+            ret->bundleName = pkgInfo.bundleName;
+            ret->abilityName = pkgInfo.driverName;
+            ret->driverUid = pkgInfo.driverUid;
             return ret;
         }
     }
-
     EDM_LOGI(MODULE_PKG_MGR, "QueryMatchDriver return null");
     return nullptr;
+}
+
+int32_t DriverPkgManager::QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driverInfos,
+    bool isByDriverUid, const std::string &driverUid)
+{
+    EDM_LOGD(MODULE_PKG_MGR, "DriverPkgManager::QueryDriverInfo enter");
+    if (bundleStateCallback_ == nullptr) {
+        EDM_LOGE(MODULE_PKG_MGR, "QueryDriverInfo bundleStateCallback_ null");
+        return EDM_NOK;
+    }
+
+    if (!bundleStateCallback_->GetAllDriverInfos()) {
+        EDM_LOGE(MODULE_PKG_MGR, "QueryDriverInfo GetAllDriverInfos Err");
+        return EDM_NOK;
+    }
+
+    std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
+    std::vector<PkgInfoTable> pkgInfos;
+    EDM_LOGD(MODULE_PKG_MGR, "pkg QueryDriverInfo driverUid: %{public}s", driverUid.c_str());
+    int32_t pkgSize = helper->QueryPkgInfos(pkgInfos, isByDriverUid, driverUid);
+    if (pkgSize < 0) {
+        return EDM_NOK;
+    }
+    for (const auto &pkgInfo : pkgInfos) {
+        std::shared_ptr<DriverInfo> driverInfo
+            = std::make_shared<DriverInfo>(pkgInfo.bundleName, pkgInfo.driverName, pkgInfo.driverUid);
+        if (driverInfo->UnSerialize(pkgInfo.driverInfo) != EDM_OK) {
+            return EDM_NOK;
+        }
+        driverInfos.push_back(driverInfo);
+    }
+    EDM_LOGD(MODULE_PKG_MGR, "DriverPkgManager::QueryDriverInfo driverInfos size:%{public}zu", driverInfos.size());
+    return EDM_OK;
 }
 
 int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &callback)
@@ -196,6 +218,20 @@ int32_t DriverPkgManager::RegisterOnBundleUpdate(PCALLBACKFUN pFun)
     return EDM_OK;
 }
 
+int32_t DriverPkgManager::RegisterOnBundleUpdate(ONBUNDLESUPDATE pFun)
+{
+    if (pFun == nullptr) {
+        return EDM_ERR_INVALID_OBJECT;
+    }
+
+    if (bundleStateCallback_ == nullptr) {
+        EDM_LOGE(MODULE_PKG_MGR, "failed to register onBundlesUpdate, bundleStateCallback_ is null");
+        return EDM_ERR_INVALID_OBJECT;
+    }
+    bundleStateCallback_->onBundlesUpdate = pFun;
+    return EDM_OK;
+}
+
 int32_t DriverPkgManager::UnRegisterOnBundleUpdate()
 {
     if (bundleStateCallback_ == nullptr) {
@@ -203,6 +239,7 @@ int32_t DriverPkgManager::UnRegisterOnBundleUpdate()
         return EDM_ERR_INVALID_OBJECT;
     }
     bundleStateCallback_->m_pFun = nullptr;
+    bundleStateCallback_->onBundlesUpdate = nullptr;
     return EDM_OK;
 }
 } // namespace ExternalDeviceManager

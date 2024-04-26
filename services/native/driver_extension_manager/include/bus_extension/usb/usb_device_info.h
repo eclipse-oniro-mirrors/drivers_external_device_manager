@@ -16,6 +16,7 @@
 #ifndef USB_DEVICE_INFO_H
 #define USB_DEVICE_INFO_H
 #include "ibus_extension.h"
+#include "usb_ddk_types.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 class UsbDeviceInfo : public DeviceInfo {
@@ -33,6 +34,8 @@ public:
     {
         return idProduct_;
     }
+
+    std::vector<UsbInterfaceDescriptor> interfaceDescList_;
 
 private:
     friend class UsbBusExtension;

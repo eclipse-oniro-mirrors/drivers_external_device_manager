@@ -37,8 +37,12 @@ constexpr int32_t DATABASE_NEW_VERSION = 2;
 
 constexpr const char *CREATE_PKG_TABLE = "CREATE TABLE IF NOT EXISTS [pkgInfoTable]("
                                                "[id] INTEGER PRIMARY KEY AUTOINCREMENT, "
-                                               "[bundleName] TEXT,"
+                                               "[driverUid] TEXT,"
+                                               "[userId] INTEGER,"
+                                               "[appIndex] INTEGER,"
                                                "[bundleAbility] TEXT,"
+                                               "[bundleName] TEXT,"
+                                               "[driverName] TEXT,"
                                                "[driverInfo] TEXT );";
 
 class PkgDataBase {

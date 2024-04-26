@@ -77,6 +77,54 @@ int32_t PkgDbHelper::DeleteRightRecord(const std::string &bundleName)
     return ret;
 }
 
+int32_t PkgDbHelper::AddOrUpdatePkgInfo(const std::vector<PkgInfoTable> &pkgInfos, const std::string &bundleName)
+{
+    std::lock_guard<std::mutex> guard(databaseMutex_);
+    int32_t ret = rightDatabase_->BeginTransaction();
+    if (ret < PKG_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "BeginTransaction error: %{public}d", ret);
+        return ret;
+    }
+
+    int32_t changedRows = 0;
+    std::string whereClause = "";
+    std::vector<std::string> whereArgs;
+    if (!bundleName.empty()) {
+        whereClause.append("bundleName = ?");
+        whereArgs.emplace_back(bundleName);
+    }
+    ret = rightDatabase_->Delete(changedRows, whereClause, whereArgs);
+    if (ret < PKG_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "delete error: %{public}d", ret);
+        (void)rightDatabase_->RollBack();
+        return ret;
+    }
+
+    ValuesBucket values;
+    for (const auto &pkgInfo: pkgInfos) {
+        values.Clear();
+        values.PutString("driverUid", pkgInfo.driverUid);
+        values.PutLong("userId", pkgInfo.userId);
+        values.PutLong("appIndex", pkgInfo.appIndex);
+        values.PutString("bundleAbility", pkgInfo.bundleAbility);
+        values.PutString("bundleName", pkgInfo.bundleName);
+        values.PutString("driverName", pkgInfo.driverName);
+        values.PutString("driverInfo", pkgInfo.driverInfo);
+        ret = rightDatabase_->Insert(values);
+        if (ret < PKG_OK) {
+            EDM_LOGE(MODULE_PKG_MGR, "Insert error: %{public}d", ret);
+            (void)rightDatabase_->RollBack();
+            return ret;
+        }
+    }
+    ret = rightDatabase_->Commit();
+    if (ret < PKG_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "Commit error: %{public}d", ret);
+        (void)rightDatabase_->RollBack();
+    }
+    return ret;
+}
+
 int32_t PkgDbHelper::AddOrUpdateRightRecord(
     const std::string & bundleName, const std::string & bundleAbility, const std::string &driverInfo)
 {
@@ -171,6 +219,80 @@ int32_t PkgDbHelper::QueryAllBundleAbilityNames(const std::string &bundleName,
     RdbPredicates rdbPredicates(PKG_TABLE_NAME);
     rdbPredicates.EqualTo("bundleName", bundleName)->Distinct();
     return QueryAndGetResultColumnValues(rdbPredicates, columns, "bundleAbility", bundleAbilityNames);
+}
+
+static bool ParseToPkgInfos(const std::shared_ptr<ResultSet> &resultSet, std::vector<PkgInfoTable> &pkgInfos)
+{
+    if (resultSet == nullptr) {
+        EDM_LOGE(MODULE_PKG_MGR, "resultSet is nullptr");
+        return false;
+    }
+    int32_t rowCount = 0;
+    int32_t driverUidIndex = 0;
+    int32_t bundleNameIndex = 0;
+    int32_t driverNameIndex = 0;
+    int32_t driverInfoIndex = 0;
+    if (resultSet->GetRowCount(rowCount) != E_OK
+        || resultSet->GetColumnIndex("driverUid", driverUidIndex) != E_OK
+        || resultSet->GetColumnIndex("bundleName", bundleNameIndex) != E_OK
+        || resultSet->GetColumnIndex("driverName", driverNameIndex) != E_OK
+        || resultSet->GetColumnIndex("driverInfo", driverInfoIndex) != E_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "get table info failed");
+        return false;
+    }
+    EDM_LOGD(MODULE_PKG_MGR, "rowCount=%{public}d", rowCount);
+    bool endFlag = false;
+    for (int32_t i = 0; i < rowCount && !endFlag; i++, resultSet->IsEnded(endFlag)) {
+        if (resultSet->GoToRow(i) != E_OK) {
+            EDM_LOGE(MODULE_PKG_MGR, "GoToRow %{public}d", i);
+            return false;
+        }
+        
+        PkgInfoTable pkgInfo;
+        if (resultSet->GetString(driverUidIndex, pkgInfo.driverUid) != E_OK
+            || resultSet->GetString(bundleNameIndex, pkgInfo.bundleName) != E_OK
+            || resultSet->GetString(driverNameIndex, pkgInfo.driverName) != E_OK
+            || resultSet->GetString(driverInfoIndex, pkgInfo.driverInfo) != E_OK) {
+            EDM_LOGE(MODULE_PKG_MGR, "GetString failed");
+            return false;
+        }
+        pkgInfos.push_back(pkgInfo);
+    }
+    return true;
+}
+
+int32_t PkgDbHelper::QueryPkgInfos(std::vector<PkgInfoTable> &pkgInfos,
+    bool isByDriverUid, const std::string &driverUid)
+{
+    std::lock_guard<std::mutex> guard(databaseMutex_);
+    std::vector<std::string> columns = { "driverUid", "bundleName", "driverName", "driverInfo" };
+    RdbPredicates rdbPredicates(PKG_TABLE_NAME);
+    if (isByDriverUid) {
+        rdbPredicates.EqualTo("driverUid", driverUid);
+    }
+    int32_t ret = rightDatabase_->BeginTransaction();
+    if (ret < PKG_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "BeginTransaction error: %{public}d", ret);
+        return ret;
+    }
+    auto resultSet = rightDatabase_->Query(rdbPredicates, columns);
+    if (resultSet == nullptr) {
+        EDM_LOGE(MODULE_PKG_MGR, "Query error");
+        (void)rightDatabase_->RollBack();
+        return PKG_RDB_EXECUTE_FAILTURE;
+    }
+    ret = rightDatabase_->Commit();
+    if (ret < PKG_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "Commit error: %{public}d", ret);
+        (void)rightDatabase_->RollBack();
+        return ret;
+    }
+    if (!ParseToPkgInfos(resultSet, pkgInfos)) {
+        EDM_LOGE(MODULE_PKG_MGR, "ParseToPkgInfos failed");
+        return PKG_FAILURE;
+    }
+
+    return static_cast<int32_t>(pkgInfos.size());
 }
 
 int32_t PkgDbHelper::QueryAllSize(std::vector<std::string> &allBundleAbility)

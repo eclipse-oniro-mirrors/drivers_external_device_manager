@@ -19,12 +19,15 @@ ohos_unittest("bus_extension_usb_test") {
   module_out_path = "${module_output_path}"
   sources = [
     "bus_extension_usb_test/src/usb_bus_extension_test.cpp",
+    "bus_extension_usb_test/src/usb_ddk_service_mock.cpp",
     "bus_extension_usb_test/src/usb_driver_info_test.cpp",
     "bus_extension_usb_test/src/usb_impl_mock.cpp",
     "bus_extension_usb_test/src/usb_subscriber_test.cpp",
   ]
   include_dirs = [
     "bus_extension_usb_test/include",
+    "${ext_mgr_path}/frameworks/ddk/usb/",
+    "${ext_mgr_path}/interfaces/ddk/usb/",
     "${usb_bus_extension_include_path}",
   ]
   deps = [
@@ -37,6 +40,7 @@ ohos_unittest("bus_extension_usb_test") {
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
     "samgr:samgr_proxy",
@@ -76,6 +80,7 @@ ohos_unittest("drivers_pkg_manager_test") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
     "${usb_bus_extension_include_path}",
     "${ext_mgr_path}/interfaces/ddk/hid",
+    "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/services/zidl/include",
   ]
   deps = [

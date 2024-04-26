@@ -19,6 +19,7 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "accesstoken_kit.h"
+#include "tokenid_kit.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -82,6 +83,17 @@ bool ExtPermissionManager::HasPermission(std::string permissionName)
     ret = (result == PERMISSION_GRANTED);
     rightsMap_[rightTag] = ret;
     return ret;
+}
+
+bool ExtPermissionManager::IsSystemApp()
+{
+    uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
+    if (TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
+        return true;
+    }
+    AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
+    return tokenType != ATokenTypeEnum::TOKEN_HAP;
 }
 
 sptr<OHOS::AppExecFwk::IBundleMgr> ExtPermissionManager::GetBundleMgrProxy()

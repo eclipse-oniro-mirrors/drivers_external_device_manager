@@ -22,11 +22,13 @@
 #include "usb_dev_subscriber.h"
 #include "usb_device_info.h"
 #include "v1_0/iusb_interface.h"
+#include "v1_0/iusb_ddk.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
 using namespace OHOS::HDI::Usb::V1_0;
+using namespace OHOS::HDI::Usb::Ddk::V1_0;
 class UsbBusExtension : public IBusExtension {
 public:
     UsbBusExtension();
@@ -36,6 +38,8 @@ public:
     shared_ptr<DriverInfoExt> ParseDriverInfo(const vector<Metadata> &metadata) override;
     shared_ptr<DriverInfoExt> GetNewDriverInfoExtObject() override;
     void SetUsbInferface(sptr<IUsbInterface> iusb);
+    void SetUsbDdk(sptr<IUsbDdk> iUsbDdk);
+    BusType GetBusType() override;
 
 private:
     class UsbdDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -44,6 +48,7 @@ private:
     };
     sptr<UsbDevSubscriber> subScriber_ = nullptr;
     sptr<IUsbInterface> usbInterface_ = nullptr; // in usb HDI;
+    sptr<IUsbDdk> iUsbDdk_ = nullptr;
     vector<uint16_t> ParseCommaStrToVectorUint16(const string &str);
     sptr<IRemoteObject::DeathRecipient> recipient_;
 };

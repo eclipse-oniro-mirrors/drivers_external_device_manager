@@ -36,6 +36,10 @@ int DriverExtMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
             return OnBindDevice(data, reply, option);
         case static_cast<uint32_t>(DriverExtMgrInterfaceCode::UNBIND_DEVICE):
             return OnUnBindDevice(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::QUERY_DEVICE_INFO):
+            return OnQueryDeviceInfo(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::QUERY_DRIVER_INFO):
+            return OnQueryDriverInfo(data, reply, option);
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -118,6 +122,97 @@ int32_t DriverExtMgrStub::OnUnBindDevice(MessageParcel &data, MessageParcel &rep
         EDM_LOGE(MODULE_FRAMEWORK, "failed to call UnBindDevice function:%{public}d", static_cast<int32_t>(ret));
         return ret;
     }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnQueryDeviceInfo(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    EDM_LOGD(MODULE_FRAMEWORK, "OnQueryDeviceInfo start");
+    bool isByDeviceId = false;
+    if (!data.ReadBool(isByDeviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read isByDeviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    uint64_t deviceId = 0;
+    if (isByDeviceId && !data.ReadUint64(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    std::vector<std::shared_ptr<DeviceInfoData>> deviceInfos;
+    int32_t ret = QueryDeviceInfo(deviceInfos, isByDeviceId, deviceId);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call QueryDeviceInfo");
+        return ret;
+    }
+
+    uint64_t deviceInfoSize = static_cast<uint64_t>(deviceInfos.size());
+    if (!reply.WriteUint64(deviceInfoSize)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write size of deviceInfos");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    for (uint64_t i = 0; i < deviceInfoSize; i++) {
+        if (deviceInfos[i] == nullptr) {
+            EDM_LOGE(MODULE_FRAMEWORK, "invalid deviceInfo, index: %{public}" PRIu64, i);
+            return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        }
+
+        if (!deviceInfos[i]->Marshalling(reply)) {
+            EDM_LOGE(MODULE_FRAMEWORK, "failed to write deviceInfo, index: %{public}" PRIu64, i);
+            return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        }
+    }
+
+    EDM_LOGD(MODULE_FRAMEWORK, "OnQueryDeviceInfo end");
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnQueryDriverInfo(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    EDM_LOGD(MODULE_FRAMEWORK, "OnQueryDriverInfo start");
+
+    bool isByDriverUid = false;
+    if (!data.ReadBool(isByDriverUid)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read isByDriverUid");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    std::string driverUid = "";
+    if (isByDriverUid && !data.ReadString(driverUid)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read driverUid");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    std::vector<std::shared_ptr<DriverInfoData>> driverInfos;
+    int32_t ret = QueryDriverInfo(driverInfos, isByDriverUid, driverUid);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call QueryDriverInfo");
+        return ret;
+    }
+
+    uint64_t driverInfoSize = static_cast<uint64_t>(driverInfos.size());
+    if (!reply.WriteUint64(driverInfoSize)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to write size of driverInfos");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    for (uint64_t i = 0; i < driverInfoSize; i++) {
+        if (driverInfos[i] == nullptr) {
+            EDM_LOGE(MODULE_FRAMEWORK, "invalid driverInfo, index: %{public}" PRIu64, i);
+            return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        }
+
+        if (!driverInfos[i]->Marshalling(reply)) {
+            EDM_LOGE(MODULE_FRAMEWORK, "failed to write driverInfo, index: %{public}" PRIu64, i);
+            return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        }
+    }
+
+    EDM_LOGD(MODULE_FRAMEWORK, "OnQueryDriverInfo end");
 
     return UsbErrCode::EDM_OK;
 }

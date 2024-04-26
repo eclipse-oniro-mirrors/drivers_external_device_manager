@@ -17,6 +17,7 @@
 #include "map"
 #include "gmock/gmock.h"
 #include "usb_impl_mock.h"
+#include "usb_ddk_service_mock.h"
 #define private public
 #include "ibus_extension.h"
 #include "usb_bus_extension.h"
@@ -37,16 +38,20 @@ public:
         busExt = make_shared<UsbBusExtension>();
         usbBusExt = static_cast<UsbBusExtension*>(busExt.get());
         mockUsb = sptr<UsbImplMock>(new UsbImplMock());
+        mockUsbDdk = sptr<UsbDdkServiceMock>(new UsbDdkServiceMock());
         usbBusExt->SetUsbInferface(mockUsb);
+        usbBusExt->SetUsbDdk(mockUsbDdk);
     }
     void TearDown() override
     {
         cout << "UsbSubscriberTest TearDown" << endl;
         mockUsb = nullptr;
+        mockUsbDdk = nullptr;
     }
 
     shared_ptr<IBusExtension> busExt;
     sptr<UsbImplMock> mockUsb;
+    sptr<UsbDdkServiceMock> mockUsbDdk;
     UsbBusExtension *usbBusExt;
 };
 

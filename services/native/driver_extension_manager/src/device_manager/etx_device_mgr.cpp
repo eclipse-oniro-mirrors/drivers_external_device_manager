@@ -26,7 +26,7 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 constexpr uint32_t UNLOAD_SA_TIMER_INTERVAL = 30 * 1000;
-std::string Device::stiching_ = "_stiching_";
+std::string Device::stiching_ = "-";
 IMPLEMENT_SINGLE_INSTANCE(ExtDeviceManager);
 
 ExtDeviceManager::~ExtDeviceManager()
@@ -53,7 +53,7 @@ void ExtDeviceManager::PrintMatchDriverMap()
 int32_t ExtDeviceManager::Init()
 {
     EDM_LOGD(MODULE_DEV_MGR, "ExtDeviceManager Init success");
-    int32_t ret = DriverPkgManager::GetInstance().RegisterOnBundleUpdate(UpdateBundleStatusCallback);
+    int32_t ret = DriverPkgManager::GetInstance().RegisterOnBundleUpdate(OnBundlesUpdated);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "register bundle status callback fail");
         return EDM_NOK;
@@ -327,6 +327,62 @@ int32_t ExtDeviceManager::UpdateBundleStatusCallback(
     return ret;
 }
 
+std::unordered_set<uint64_t> ExtDeviceManager::DeleteBundlesOfBundleInfoMap(const std::string &bundleName)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "DeleteBundlesOfBundleInfoMap enter");
+    std::unordered_set<uint64_t> deviceIds;
+    lock_guard<mutex> lock(bundleMatchMapMutex_);
+    if (bundleName.empty()) {
+        bundleMatchMap_.clear();
+    } else {
+        std::string startStr = bundleName + Device::GetStiching();
+        for (auto iter = bundleMatchMap_.begin(); iter != bundleMatchMap_.end();) {
+            if (startStr.compare(iter->first.substr(0, startStr.size())) == 0) {
+                deviceIds.insert(iter->second.begin(), iter->second.end());
+                iter = bundleMatchMap_.erase(iter);
+            } else {
+                iter++;
+            }
+        }
+    }
+    return deviceIds;
+}
+
+void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "MatchDriverInfos enter");
+    lock_guard<mutex> lock(deviceMapMutex_);
+    for (auto &m : deviceMap_) {
+        for (auto &[deviceId, device] : m.second) {
+            if (deviceIds.find(deviceId) != deviceIds.end()) {
+                device->RemoveBundleInfo();
+            }
+            if (device->IsUnRegisted() || device->GetDrvExtRemote() != nullptr) {
+                continue;
+            }
+            auto bundleInfoNames = DriverPkgManager::GetInstance().QueryMatchDriver(device->GetDeviceInfo());
+            if (bundleInfoNames == nullptr) {
+                EDM_LOGD(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "], not find driver", deviceId);
+                continue;
+            }
+            std::string bundleInfo = bundleInfoNames->bundleName + Device::GetStiching() + bundleInfoNames->abilityName;
+            device->AddBundleInfo(bundleInfo, bundleInfoNames->driverUid);
+            int32_t ret = AddDevIdOfBundleInfoMap(device, bundleInfo);
+            if (ret != EDM_OK) {
+                EDM_LOGD(MODULE_DEV_MGR,
+                    "deviceId[%{public}016" PRIX64 "] AddDevIdOfBundleInfoMap failed, ret=%{public}d", deviceId, ret);
+            }
+        }
+    }
+}
+
+void ExtDeviceManager::OnBundlesUpdated(const std::string &bundleName)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "OnBundlesUpdated enter");
+    auto deviceIds = ExtDeviceManager::GetInstance().DeleteBundlesOfBundleInfoMap(bundleName);
+    ExtDeviceManager::GetInstance().MatchDriverInfos(deviceIds);
+}
+
 int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
 {
     BusType type = devInfo->GetBusType();
@@ -363,7 +419,7 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
         auto bundleInfoNames = DriverPkgManager::GetInstance().QueryMatchDriver(devInfo);
         if (bundleInfoNames != nullptr) {
             bundleInfo = bundleInfoNames->bundleName + Device::GetStiching() + bundleInfoNames->abilityName;
-            device->AddBundleInfo(bundleInfo);
+            device->AddBundleInfo(bundleInfo, bundleInfoNames->driverUid);
         }
     }
     unloadSelftimer_.Unregister(unloadSelftimerId_);
@@ -400,7 +456,7 @@ int32_t ExtDeviceManager::UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo)
         if (map.find(deviceId) != map.end()) {
             device = map[deviceId];
             bundleInfo = map[deviceId]->GetBundleInfo();
-            if (device != nullptr && device->HasDriver()) {
+            if (device != nullptr && device->GetDrvExtRemote() != nullptr) {
                 device->UnRegist();
             } else {
                 map.erase(deviceId);
@@ -448,6 +504,39 @@ vector<shared_ptr<DeviceInfo>> ExtDeviceManager::QueryDevice(const BusType busTy
 
     return devInfoVec;
 }
+
+vector<shared_ptr<Device>> ExtDeviceManager::QueryAllDevices()
+{
+    vector<shared_ptr<Device>> devices;
+    lock_guard<mutex> lock(deviceMapMutex_);
+
+    for (auto &m : deviceMap_) {
+        for (auto &[_, device] : m.second) {
+            if (device != nullptr && !device->IsUnRegisted()) {
+                devices.emplace_back(device);
+            }
+        }
+    }
+
+    return devices;
+}
+
+vector<shared_ptr<Device>> ExtDeviceManager::QueryDevicesById(const uint64_t deviceId)
+{
+    vector<shared_ptr<Device>> devices;
+    lock_guard<mutex> lock(deviceMapMutex_);
+
+    for (auto &m : deviceMap_) {
+        for (auto &[id, device] : m.second) {
+            if (deviceId == id && device != nullptr && !device->IsUnRegisted()) {
+                devices.emplace_back(device);
+            }
+        }
+    }
+
+    return devices;
+}
+
 
 size_t ExtDeviceManager::GetTotalDeviceNum(void) const
 {

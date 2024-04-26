@@ -33,6 +33,10 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     UsbErrCode UnBindDevice(uint64_t deviceId) override;
+    UsbErrCode QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos,
+        bool isByDeviceId = false, const uint64_t deviceId = 0) override;
+    UsbErrCode QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
+        bool isByDriverUid = false, const std::string &driverUid = "") override;
 
 private:
     std::mutex connectCallbackMutex;

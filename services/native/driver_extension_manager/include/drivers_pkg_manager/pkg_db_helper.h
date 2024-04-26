@@ -25,22 +25,19 @@
 #include "result_set.h"
 #include "pkg_database.h"
 #include "value_object.h"
+#include "pkg_tables.h"
+#include <unordered_set>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 class PkgDbHelper {
 public:
     static std::shared_ptr<PkgDbHelper> GetInstance();
-    /* query (user) record */
-    /* query (user, device) record */
-    /* query (user, device, app) record */
-    /* query users */
-    int32_t QueryRightRecordUids(std::vector<std::string> &uids);
-    /* query apps */
-    int32_t QueryRightRecordApps(int32_t uid, std::vector<std::string> &apps);
 
     /* update (user, device, app) record */
     int32_t QueryAllDriverInfos(std::vector<std::string> &driverInfos);
+    int32_t QueryPkgInfos(std::vector<PkgInfoTable> &pkgInfos,
+        bool isByDriverUid = false, const std::string &driverUid = "");
     /* add or update (user, device, app) record */
     int32_t AddOrUpdateRightRecord(
         const std::string &bundleName, const std::string &bundleAbility, const std::string &driverInfo);
@@ -48,31 +45,20 @@ public:
     int32_t QueryAllBundleAbilityNames(const std::string &bundleName, std::vector<std::string> &bundleAbilityNames);
     /* delete (user, device, app) record */
     int32_t DeleteRightRecord(const std::string &bundleName);
-    /* delete (user, device) record */
-    int32_t DeleteDeviceRightRecord(int32_t uid, const std::string &deviceName);
-    /* delete (user, app) record */
-    int32_t DeleteAppRightRecord(int32_t uid, const std::string &bundleName);
-    /* delete (user, apps) record */
-    int32_t DeleteAppsRightRecord(int32_t uid, const std::vector<std::string> &bundleNames);
-    /* delete (user) record */
-    int32_t DeleteUidRightRecord(int32_t uid);
-    /* delete (user, time) expired record */
-    int32_t DeleteNormalExpiredRightRecord(int32_t uid, uint64_t expiredTime);
-    /* delete (validTime, device) record */
-    int32_t DeleteValidPeriodRightRecord(long validPeriod, const std::string &deviceName);
+    
     int32_t CheckIfNeedUpdateEx(
         bool &isUpdate, const std::string &bundleName);
     int32_t QueryAllSize(std::vector<std::string> &allBundleAbility);
+    int32_t AddOrUpdatePkgInfo(const std::vector<PkgInfoTable> &pkgInfos, const std::string &bundleName = "");
+
 private:
     PkgDbHelper();
     DISALLOW_COPY_AND_MOVE(PkgDbHelper);
     int32_t AddOrUpdateRightRecordEx(bool isUpdate, const std::string &bundleName,
         const std::string &bundleAbility, const std::string &driverInfo);
-    int32_t QueryRightRecordCount(void);
     int32_t QueryAndGetResultColumnValues(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
         const std::vector<std::string> &columns, const std::string &columnName, std::vector<std::string> &columnValues);
     int32_t DeleteAndNoOtherOperation(const std::string &whereClause, const std::vector<std::string> &whereArgs);
-    int32_t DeleteAndNoOtherOperation(const OHOS::NativeRdb::RdbPredicates &rdbPredicates);
 
     static std::shared_ptr<PkgDbHelper> instance_;
     std::mutex databaseMutex_;

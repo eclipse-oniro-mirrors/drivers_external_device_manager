@@ -37,11 +37,49 @@ public:
 
 class DriverInfo : public DriverInfoExt {
 public:
+    DriverInfo() = default;
+    DriverInfo(const std::string &bundleName, const std::string &driverName, const std::string &driverUid = "")
+        : bundleName_(bundleName), driverName_(driverName)
+    {
+        if (driverUid.empty()) {
+            driverUid_ = bundleName + "-" + driverName;
+        } else {
+            driverUid_ = driverUid;
+        }
+    }
     int32_t Serialize(std::string &str) override;
     int32_t UnSerialize(const std::string &str) override;
     std::string GetBusName() const
     {
         return bus_;
+    }
+    BusType GetBusType() const
+    {
+        return busType_;
+    }
+    std::string GetDriverUid() const
+    {
+        return driverUid_;
+    }
+    std::string GetBundleName() const
+    {
+        return bundleName_;
+    }
+    std::string GetDriverName() const
+    {
+        return driverName_;
+    }
+    std::string GetVersion() const
+    {
+        return version_;
+    }
+    std::string GetDescription() const
+    {
+        return description_;
+    }
+    std::string GetDriverSize() const
+    {
+        return driverSize_;
     }
     std::shared_ptr<DriverInfoExt> GetInfoExt() const
     {
@@ -50,8 +88,14 @@ public:
 private:
     friend class DrvBundleStateCallback;
     std::string bus_;
+    BusType busType_;
+    std::string driverUid_;
+    std::string bundleName_;
+    std::string driverName_;
     std::string vendor_;
     std::string version_;
+    std::string description_;
+    std::string driverSize_;
     std::shared_ptr<DriverInfoExt> driverInfoExt_;
 };
 

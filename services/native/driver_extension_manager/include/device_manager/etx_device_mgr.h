@@ -38,12 +38,18 @@ public:
     int32_t RegisterDevice(shared_ptr<DeviceInfo> devInfo);
     int32_t UnRegisterDevice(const shared_ptr<DeviceInfo> devInfo);
     vector<shared_ptr<DeviceInfo>> QueryDevice(const BusType busType);
+    vector<shared_ptr<Device>> QueryAllDevices();
+    vector<shared_ptr<Device>> QueryDevicesById(const uint64_t deviceId);
     static int32_t UpdateBundleStatusCallback(
         int32_t bundleStatus, int32_t busType, const string &bundleName, const string &abilityName);
+    static void OnBundlesUpdated(const string &bundleName = "");
     int32_t ConnectDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
     int32_t DisConnectDevice(uint64_t deviceId);
     void RemoveDeviceOfDeviceMap(shared_ptr<Device> device);
     void UnLoadSA(void);
+    std::unordered_set<uint64_t> DeleteBundlesOfBundleInfoMap(const std::string &bundleName = "");
+    void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds);
+
 private:
     ExtDeviceManager() = default;
     void PrintMatchDriverMap();

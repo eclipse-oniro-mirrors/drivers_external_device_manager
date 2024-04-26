@@ -26,8 +26,10 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 enum ErrorCode : int32_t {
     PERMISSION_DENIED = 201, // Use this error code when permission is denied.
+    PERMISSION_NOT_SYSTEM_APP = 202,
     PARAMETER_ERROR = 401, // Use this error code when the input parameter type or range does not match.
-    SERVICE_EXCEPTION = 22900001 // Use this error code when the service is exception.
+    SERVICE_EXCEPTION = 22900001, // Use this error code when the service is exception.
+    SERVICE_EXCEPTION_NEW = 26300001
 };
 
 class AsyncData : public RefBase {

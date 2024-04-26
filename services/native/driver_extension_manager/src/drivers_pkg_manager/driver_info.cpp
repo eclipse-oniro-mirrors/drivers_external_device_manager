@@ -37,6 +37,8 @@ int32_t DriverInfo::Serialize(string &str)
     cJSON_AddStringToObject(root, "bus", this->bus_.c_str());
     cJSON_AddStringToObject(root, "vendor", this->vendor_.c_str());
     cJSON_AddStringToObject(root, "version", this->version_.c_str());
+    cJSON_AddStringToObject(root, "size", this->driverSize_.c_str());
+    cJSON_AddStringToObject(root, "description", this->description_.c_str());
     cJSON_AddStringToObject(root, "ext_info", extInfo.c_str());
     str = cJSON_PrintUnformatted(root);
     EDM_LOGI(MODULE_COMMON, "DriverInfo Serialize Done, %{public}s", str.c_str());
@@ -73,6 +75,16 @@ static int32_t checkJsonObj(const cJSON *jsonObj)
     return EDM_OK;
 }
 
+static std::string GetStringValue(const cJSON *jsonObj, const std::string &key)
+{
+    cJSON* jsonItem = cJSON_GetObjectItem(jsonObj, key.c_str());
+    if (jsonItem == nullptr || !cJSON_IsString(jsonItem)) {
+        EDM_LOGE(MODULE_COMMON, "value is not string, key:%{public}s", key.c_str());
+        return "";
+    }
+    return jsonItem->valuestring;
+}
+
 int32_t DriverInfo::UnSerialize(const string &str)
 {
     auto rawJsonLength = static_cast<int32_t>(str.length());
@@ -90,11 +102,8 @@ int32_t DriverInfo::UnSerialize(const string &str)
         cJSON_Delete(jsonObj);
         return retCode;
     }
-    cJSON* jsonBus = cJSON_GetObjectItem(jsonObj, "bus");
-    cJSON* jsonVendor = cJSON_GetObjectItem(jsonObj, "vendor");
-    cJSON* jsonVersion = cJSON_GetObjectItem(jsonObj, "version");
-    cJSON* jsonExtInfo = cJSON_GetObjectItem(jsonObj, "ext_info");
-    string busType = jsonBus->valuestring;
+
+    string busType = GetStringValue(jsonObj, "bus");
     auto busExt = BusExtensionCore::GetInstance().GetBusExtensionByName(LowerStr(busType));
     if (busExt == nullptr) {
         EDM_LOGE(MODULE_COMMON, "unknow bus type. %{public}s", busType.c_str());
@@ -107,16 +116,19 @@ int32_t DriverInfo::UnSerialize(const string &str)
         cJSON_Delete(jsonObj);
         return EDM_EER_MALLOC_FAIL;
     }
-    string extInfo = jsonExtInfo->valuestring;
+    string extInfo = GetStringValue(jsonObj, "ext_info");
     int32_t ret = this->driverInfoExt_->UnSerialize(extInfo);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_COMMON, "parse ext_info error");
         cJSON_Delete(jsonObj);
         return ret;
     }
-    this->bus_ = jsonBus->valuestring;
-    this->vendor_ = jsonVendor->valuestring;
-    this->version_ = jsonVersion->valuestring;
+    this->bus_ = busType;
+    this->busType_ = BusExtensionCore::GetBusTypeByName(busType);
+    this->vendor_ = GetStringValue(jsonObj, "vendor");
+    this->version_ = GetStringValue(jsonObj, "version");
+    this->driverSize_ = GetStringValue(jsonObj, "size");
+    this->description_ = GetStringValue(jsonObj, "description");
     cJSON_Delete(jsonObj);
     return EDM_OK;
 }

@@ -45,9 +45,15 @@ public:
         return info_;
     }
 
-    void AddBundleInfo(const std::string &bundleInfo)
+    void AddBundleInfo(const std::string &bundleInfo, const std::string &driverUid = "")
     {
         bundleInfo_ = bundleInfo;
+        driverUid_ = driverUid;
+    }
+
+    std::string GetDriverUid()
+    {
+        return driverUid_;
     }
 
     void RemoveBundleInfo()
@@ -126,6 +132,7 @@ private:
     friend class DrvExtConnNotify;
     static std::string stiching_;
     std::string bundleInfo_;
+    std::string driverUid_;
     std::shared_ptr<DriverInfo> driver_;
     std::shared_ptr<DeviceInfo> info_;
 
