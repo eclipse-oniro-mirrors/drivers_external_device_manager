@@ -59,6 +59,7 @@ enum UsbMgrSubModule {
     MODULE_USB_DDK,
     EDM_MODULE_TEST,
     MODULE_HID_DDK,
+    MODULE_BASE_DDK,
     EDM_MODULE_BUTT,
 };
 
@@ -76,6 +77,7 @@ enum UsbMgrDomainId {
     EDM_USB_DDK_DOMAIN,
     EDM_TEST,
     EDM_HID_DDK_DOMAIN,
+    EDM_BASE_DDK_DOMAIN,
     EDM_BUTT,
 };
 
@@ -101,6 +103,7 @@ static const EdmLable EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
     {EDM_USB_DDK_DOMAIN,   "EdmUsbDdk"   },
     {EDM_TEST,             "EdmTest"     },
     {EDM_HID_DDK_DOMAIN,   "EdmHidDdk"   },
+    {EDM_BASE_DDK_DOMAIN,  "EdmBaseDdk"  },
 };
 
 // In order to improve performance, do not check the module range, module should less than EDM_MODULE_BUTT.

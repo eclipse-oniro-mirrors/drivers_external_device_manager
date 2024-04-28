@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,33 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("../../../extdevmgr.gni")
+import("//drivers/external_device_manager/extdevmgr.gni")
 
-ohos_shared_library("usb_ndk") {
+ohos_shared_library("ddk_base") {
   include_dirs = [
     "${ext_mgr_path}/interfaces/ddk/base/",
-    "${ext_mgr_path}/interfaces/ddk/usb/",
     "${utils_path}/include/",
-    "./",
-    "${ext_mgr_path}/interfaces/innerkits/",
-    "${ext_mgr_path}/services/zidl/include/",
   ]
 
-  sources = [
-    "usb_config_desc_parser.cpp",
-    "usb_ddk_api.cpp",
-  ]
-
-  deps = [
-    "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_permission:driver_permission_manager",
-  ]
+  sources = [ "ddk_api.cpp" ]
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]

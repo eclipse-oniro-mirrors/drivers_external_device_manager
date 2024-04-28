@@ -140,6 +140,7 @@ ohos_unittest("ddk_permission_test") {
   ]
 
   include_dirs = [
+    "${ext_mgr_path}/interfaces/ddk/base",
     "${ext_mgr_path}/frameworks/ddk/usb",
     "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/interfaces/innerkits/",

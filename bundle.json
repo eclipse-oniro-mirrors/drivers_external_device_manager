@@ -15,7 +15,8 @@
         "syscap": [
             "SystemCapability.Driver.HID.Extension",
             "SystemCapability.Driver.ExternalDevice",
-            "SystemCapability.Driver.USB.Extension"
+            "SystemCapability.Driver.USB.Extension",
+            "SystemCapability.Driver.DDK.Extension"
         ],
         "features": [],
         "adapted_system_type": [
