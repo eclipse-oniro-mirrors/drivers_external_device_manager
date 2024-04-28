@@ -396,8 +396,8 @@ static napi_value ConvertToJsUSBInterfaceDesc(napi_env& env, std::shared_ptr<USB
     NAPI_CALL(env, napi_set_named_property(env, object, "bClass", value));
     NAPI_CALL(env, napi_create_uint32(env, desc->bSubClass, &value));
     NAPI_CALL(env, napi_set_named_property(env, object, "bSubClass", value));
-    NAPI_CALL(env, napi_create_uint32(env, desc->bProtocal, &value));
-    NAPI_CALL(env, napi_set_named_property(env, object, "bProtocal", value));
+    NAPI_CALL(env, napi_create_uint32(env, desc->bProtocol, &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "bProtocol", value));
     return object;
 }
 

@@ -89,7 +89,7 @@ public:
     uint8_t bInterfaceNumber;
     uint8_t bClass;
     uint8_t bSubClass;
-    uint8_t bProtocal;
+    uint8_t bProtocol;
 };
 
 class USBDeviceInfoData : public DeviceInfoData {

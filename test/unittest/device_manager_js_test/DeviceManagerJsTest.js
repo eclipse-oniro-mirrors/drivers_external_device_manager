@@ -45,6 +45,7 @@ describe("DeviceManagerJsTest", function () {
 
     const PARAMETER_ERROR_CODE = 401
     const SERVICE_EXCEPTION_CODE = 22900001
+    const SERVICE_EXCEPTION_CODE_NEW = 26300001
 
     /*
      * @tc.name:DeviceManager_queryDevices_001
@@ -359,6 +360,179 @@ describe("DeviceManagerJsTest", function () {
         } catch (error) {
             expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
             done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_queryDeviceInfo_001
+     * @tc.desc:verify queryDeviceInfo invalid param
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_queryDeviceInfo_001", 0, async function () {
+        console.info('----------------------DeviceManager_queryDeviceInfo_001---------------------------');
+        try {
+            deviceManager.queryDeviceInfo('invalidDeviceId');
+            expect(false).assertTrue();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+        }
+    })
+
+    function isUsbDevice(deviceId) {
+        return (deviceId & 0x00000000FFFFFFFF) === deviceManager.BusType.USB;
+    }
+
+    function assertInterfaceDesc(interfaceDesc) {
+        expect(Object.prototype.toString.call(interfaceDesc)).assertEqual('[object Object]');
+        console.log('interfaceDesc.bInterfaceNumber:' + interfaceDesc.bInterfaceNumber);
+        expect(typeof(interfaceDesc.bInterfaceNumber)).assertEqual('number');
+        console.log('interfaceDesc.bClass:' + interfaceDesc.bClass);
+        expect(typeof(interfaceDesc.bClass)).assertEqual('number');
+        console.log('interfaceDesc.bSubClass:' + interfaceDesc.bSubClass);
+        expect(typeof(interfaceDesc.bSubClass)).assertEqual('number');
+        console.log('interfaceDesc.bProtocol:' + interfaceDesc.bProtocol);
+        expect(typeof(interfaceDesc.bProtocol)).assertEqual('number');
+    }
+
+    function assertUsbDeviceInfoExt(usbDeviceInfo) {
+        expect(Object.prototype.toString.call(usbDeviceInfo)).assertEqual('[object Object]');
+        console.log('usbDeviceInfo.vendorId:' + usbDeviceInfo.vendorId);
+        expect(typeof(usbDeviceInfo.vendorId)).assertEqual('number');
+        console.log('usbDeviceInfo.productId:' + usbDeviceInfo.productId);
+        expect(typeof(usbDeviceInfo.productId)).assertEqual('number');
+        expect(Array.isArray(usbDeviceInfo.interfaceDescList)).assertTrue();
+        for (const desc of usbDeviceInfo.interfaceDescList) {
+            assertInterfaceDesc(desc);
+        }
+    }
+
+    function assertDeviceInfo(deviceInfo) {
+        expect(Object.prototype.toString.call(deviceInfo)).assertEqual('[object Object]');
+        console.log('deviceInfo.deviceId:' + deviceInfo.deviceId);
+        expect(typeof(deviceInfo.deviceId)).assertEqual('number');
+        console.log('deviceInfo.isDriverMatched:' + deviceInfo.isDriverMatched);
+        expect(typeof(deviceInfo.isDriverMatched)).assertEqual('boolean');
+        if (deviceInfo.isDriverMatched) {
+            console.log('deviceInfo.driverUid:' + deviceInfo.driverUid);
+            expect(typeof(deviceInfo.driverUid)).assertEqual('string');
+        }
+        if (isUsbDevice(deviceInfo.deviceId)) {
+            assertUsbDeviceInfoExt(deviceInfo)
+        }
+    }
+
+    /*
+     * @tc.name:DeviceManager_queryDeviceInfo_002
+     * @tc.desc:verify queryDeviceInfo none deviceId
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_queryDeviceInfo_002", 0, async function () {
+        console.info('----------------------DeviceManager_queryDeviceInfo_002---------------------------');
+        try {
+            const deviceInfos = deviceManager.queryDeviceInfo();
+            expect(Array.isArray(deviceInfos)).assertTrue();
+            for (const deviceInfo of deviceInfos) {
+                assertDeviceInfo(deviceInfo);
+            }
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_queryDeviceInfo_003
+     * @tc.desc:verify queryDeviceInfo has deviceId
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_queryDeviceInfo_003", 0, async function () {
+        console.info('----------------------DeviceManager_queryDeviceInfo_003---------------------------');
+        try {
+            const deviceInfos = deviceManager.queryDeviceInfo(12345);
+            expect(Array.isArray(deviceInfos)).assertTrue();
+            for (const deviceInfo of deviceInfos) {
+                assertDeviceInfo(deviceInfo);
+            }
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_queryDriverInfo_001
+     * @tc.desc:verify queryDriverInfo invalid param
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_queryDriverInfo_001", 0, async function () {
+        console.info('----------------------DeviceManager_queryDriverInfo_001---------------------------');
+        try {
+            deviceManager.queryDriverInfo(12345);
+            expect(false).assertTrue();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+        }
+    })
+
+    function assertDriverInfo(driverInfo) {
+        expect(Object.prototype.toString.call(driverInfo)).assertEqual('[object Object]');
+        console.log('driverInfo.busType:' + driverInfo.busType);
+        expect(typeof(driverInfo.busType)).assertEqual('number');
+        console.log('driverInfo.driverUid:' + driverInfo.driverUid);
+        expect(typeof(driverInfo.driverUid)).assertEqual('string');
+        console.log('driverInfo.driverName:' + driverInfo.driverName);
+        expect(typeof(driverInfo.driverName)).assertEqual('string');
+        console.log('driverInfo.driverVersion:' + driverInfo.driverVersion);
+        expect(typeof(driverInfo.driverVersion)).assertEqual('string');
+        console.log('driverInfo.driverSize:' + driverInfo.driverSize);
+        expect(typeof(driverInfo.driverSize)).assertEqual('string');
+        console.log('driverInfo.description:' + driverInfo.description);
+        expect(typeof(driverInfo.description)).assertEqual('string');
+        if (driverInfo.busType === deviceManager.BusType.USB) {
+            console.log('driverInfo.productIdList:' + JSON.stringify(driverInfo.productIdList));
+            expect(Array.isArray(driverInfo.productIdList)).assertTrue();
+            console.log('driverInfo.vendorIdList:' + JSON.stringify(driverInfo.vendorIdList));
+            expect(Array.isArray(driverInfo.vendorIdList)).assertTrue();
+            for (const productId of driverInfo.productIdList) {
+                expect(typeof(productId)).assertEqual('number');
+            }
+            for (const vendorId of driverInfo.vendorIdList) {
+                expect(typeof(vendorId)).assertEqual('number');
+            }
+        }
+    }
+
+    /*
+     * @tc.name:DeviceManager_queryDriverInfo_002
+     * @tc.desc:verify queryDriverInfo none driverUid
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_queryDriverInfo_002", 0, async function () {
+        console.info('----------------------DeviceManager_queryDriverInfo_002---------------------------');
+        try {
+            const driverInfos = deviceManager.queryDriverInfo();
+            expect(Array.isArray(driverInfos)).assertTrue();
+            for (const driverInfo of driverInfos) {
+                assertDriverInfo(driverInfo);
+            }
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_queryDriverInfo_003
+     * @tc.desc:verify queryDriverInfo has driverUid
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_queryDriverInfo_003", 0, async function () {
+        console.info('----------------------DeviceManager_queryDriverInfo_003---------------------------');
+        try {
+            const driverInfos = deviceManager.queryDriverInfo('driver-12345');
+            expect(Array.isArray(driverInfos)).assertTrue();
+            for (const driverInfo of driverInfos) {
+                assertDriverInfo(driverInfo);
+            }
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
         }
     })
 })

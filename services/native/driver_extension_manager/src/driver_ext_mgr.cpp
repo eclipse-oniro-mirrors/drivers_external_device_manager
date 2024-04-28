@@ -144,7 +144,7 @@ static std::shared_ptr<DeviceInfoData> ParseToDeviceInfoData(const std::shared_p
                     interfaceDesc->bInterfaceNumber = desc.bInterfaceNumber;
                     interfaceDesc->bClass = desc.bInterfaceClass;
                     interfaceDesc->bSubClass = desc.bInterfaceSubClass;
-                    interfaceDesc->bProtocal = desc.bInterfaceProtocol;
+                    interfaceDesc->bProtocol = desc.bInterfaceProtocol;
                     return interfaceDesc;
                 });
             tempDeviceInfo = tempUsbDeviceInfo;
