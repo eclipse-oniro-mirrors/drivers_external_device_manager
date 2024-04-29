@@ -265,6 +265,29 @@ int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devM
         *tmpSetUp, devMmap->size, devMmap->offset, devMmap->bufferLength, devMmap->transferedLength);
 }
 
+int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem *ashmem)
+{
+    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_USB_DDK, "no permission");
+        return USB_DDK_FAILED;
+    }
+
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "invalid obj");
+        return USB_DDK_INVALID_OPERATION;
+    }
+
+    if (pipe == nullptr || ashmem == nullptr || ashmem->address == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "param is null");
+        return USB_DDK_INVALID_PARAMETER;
+    }
+
+    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbRequestPipe *>(pipe);
+    std::vector<uint8_t> address = std::vector<uint8_t>(ashmem->address, ashmem->address + ashmem->size);
+    OHOS::HDI::Usb::Ddk::V1_0::UsbAshmem usbAshmem = {ashmem->ashmemFd, address, ashmem->size, 0, ashmem->size, 0};
+    return g_ddk->SendPipeRequestWithAshmem(*tmpSetUp, usbAshmem, ashmem->transferredLength);
+}
+
 int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMap **devMmap)
 {
     if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {

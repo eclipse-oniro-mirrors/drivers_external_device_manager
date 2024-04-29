@@ -38,6 +38,7 @@
 
 #include <stdint.h>
 
+#include "ddk_types.h"
 #include "usb_ddk_types.h"
 
 #ifdef __cplusplus
@@ -197,6 +198,18 @@ int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const struct Us
  * @version 1.0
  */
 int32_t OH_Usb_SendPipeRequest(const struct UsbRequestPipe *pipe, UsbDeviceMemMap *devMmap);
+
+/**
+ * @brief Sends a pipe request. This API works in a synchronous manner. This API applies to interrupt transfer\n
+ * and bulk transfer.
+ *
+ * @permission ohos.permission.ACCESS_DDK_USB
+ * @param pipe Pipe used to transfer data.
+ * @param ashmem Shared memory, which can be obtained by calling <b>OH_DDK_CreateAshmem</b>.
+ * @return <b>0</b> if the operation is successful; a negative value otherwise.
+ * @since 12
+ */
+int32_t OH_Usb_SendPipeRequestWithAshmem(const struct UsbRequestPipe *pipe, DDK_Ashmem *ashmem);
 
 /**
  * @brief Creates a buffer. To avoid resource leakage, destroy a buffer by calling\n

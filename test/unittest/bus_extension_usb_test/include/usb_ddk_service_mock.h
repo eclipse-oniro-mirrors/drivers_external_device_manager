@@ -42,6 +42,8 @@ public:
     MOCK_METHOD5(SendPipeRequest, int32_t(const UsbRequestPipe &pipe, uint32_t size, uint32_t offset, uint32_t length,
         uint32_t &transferedLength));
     MOCK_METHOD2(GetDeviceMemMapFd, int32_t(uint64_t deviceId, int &fd));
+    MOCK_METHOD3(SendPipeRequestWithAshmem, int32_t(const UsbRequestPipe &pipe, const UsbAshmem &ashmem,
+        uint32_t &transferredLength));
 };
 } // namespace USB
 } // namespace OHOS
