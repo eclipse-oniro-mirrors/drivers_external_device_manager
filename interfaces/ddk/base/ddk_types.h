@@ -77,11 +77,11 @@ typedef enum {
     /** Operation failed */
     DDK_FAILURE = 28600001,
     /** Invalid parameter */
-    DDK_INVALID_PARAMETER,
+    DDK_INVALID_PARAMETER = 28600002,
     /** Invalid operation */
-    DDK_INVALID_OPERATION,
+    DDK_INVALID_OPERATION = 28600003,
     /** Null pointer exception */
-    DDK_NULL_PTR
+    DDK_NULL_PTR = 28600004
 } DDK_RetCode;
 #ifdef __cplusplus
 }
