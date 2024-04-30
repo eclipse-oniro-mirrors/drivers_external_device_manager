@@ -241,8 +241,8 @@ bool USBInterfaceDesc::Marshalling(MessageParcel &parcel) const
         return false;
     }
 
-    if (!parcel.WriteUint8(bProtocal)) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to write bProtocal");
+    if (!parcel.WriteUint8(bProtocol)) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to write bProtocol");
         return false;
     }
     return true;
@@ -364,8 +364,8 @@ std::shared_ptr<USBInterfaceDesc> USBInterfaceDesc::UnMarshalling(MessageParcel 
         EDM_LOGE(MODULE_DEV_MGR, "failed to read bSubClass");
         return nullptr;
     }
-    if (!parcel.ReadUint8(desc->bProtocal)) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to read bProtocal");
+    if (!parcel.ReadUint8(desc->bProtocol)) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to read bProtocol");
         return nullptr;
     }
     return desc;

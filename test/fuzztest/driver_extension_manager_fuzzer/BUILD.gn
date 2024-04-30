@@ -18,6 +18,8 @@ group("driver_extension_manager_fuzzer") {
   deps = [
     "binddevice_fuzzer:BindDeviceFuzzTest",
     "querydevice_fuzzer:QueryDeviceFuzzTest",
+    "querydeviceinfo_fuzzer:QueryDeviceInfoFuzzTest",
+    "querydriverinfo_fuzzer:QueryDriverInfoFuzzTest",
     "unbinddevice_fuzzer:UnBindDeviceFuzzTest",
   ]
 }
