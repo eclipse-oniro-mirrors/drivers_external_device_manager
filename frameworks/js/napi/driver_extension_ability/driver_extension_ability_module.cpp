@@ -20,8 +20,7 @@ extern const char _binary_driver_extension_ability_js_end[];
 extern const char _binary_driver_extension_ability_abc_start[];
 extern const char _binary_driver_extension_ability_abc_end[];
 
-extern "C" __attribute__((constructor))
-void NAPI_app_ability_DriverExtensionAbility_AutoRegister()
+extern "C" __attribute__((constructor)) void NAPI_app_ability_DriverExtensionAbility_AutoRegister()
 {
     auto moduleManager = NativeModuleManager::GetInstance();
     NativeModule newModuleInfo = {
@@ -32,8 +31,8 @@ void NAPI_app_ability_DriverExtensionAbility_AutoRegister()
     moduleManager->Register(&newModuleInfo);
 }
 
-extern "C" __attribute__((visibility("default")))
-void NAPI_app_ability_DriverExtensionAbility_GetJSCode(const char **buf, int *bufLen)
+extern "C" __attribute__((visibility("default"))) void NAPI_app_ability_DriverExtensionAbility_GetJSCode(
+    const char **buf, int *bufLen)
 {
     if (buf != nullptr) {
         *buf = _binary_driver_extension_ability_js_start;
@@ -44,8 +43,8 @@ void NAPI_app_ability_DriverExtensionAbility_GetJSCode(const char **buf, int *bu
     }
 }
 
-extern "C" __attribute__((visibility("default")))
-void NAPI_app_ability_DriverExtensionAbility_GetABCCode(const char **buf, int *buflen)
+extern "C" __attribute__((visibility("default"))) void NAPI_app_ability_DriverExtensionAbility_GetABCCode(
+    const char **buf, int *buflen)
 {
     if (buf != nullptr) {
         *buf = _binary_driver_extension_ability_abc_start;
