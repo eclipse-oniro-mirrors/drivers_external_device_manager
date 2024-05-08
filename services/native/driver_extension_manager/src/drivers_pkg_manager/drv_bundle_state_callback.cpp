@@ -371,7 +371,6 @@ sptr<OHOS::AppExecFwk::IBundleMgr> DrvBundleStateCallback::GetBundleMgrProxy()
 
 void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
 {
-    std::vector<std::string> bundleAbilityNames;
     std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
 
     int32_t ret = helper->DeleteRightRecord(bundleName);

@@ -647,7 +647,7 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::vector<std::shared_ptr<DeviceInfoData>> deviceInfos;
-    int32_t ret = UsbErrCode::EDM_NOK;
+    int32_t ret;
     if (argc > PARAM_COUNT_0) {
         ret = g_edmClient.QueryDeviceInfo(deviceId, deviceInfos);
     } else {
@@ -689,7 +689,7 @@ static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
     }
 
     std::vector<std::shared_ptr<DriverInfoData>> driverInfos;
-    int32_t ret = UsbErrCode::EDM_NOK;
+    int32_t ret;
     if (argc > PARAM_COUNT_0) {
         size_t len;
         NAPI_CALL(env, napi_get_value_string_utf8(env, argv[0], nullptr, 0, &len));
