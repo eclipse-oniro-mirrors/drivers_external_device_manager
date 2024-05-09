@@ -34,7 +34,7 @@ DDK_RetCode OH_DDK_CreateAshmem(const uint8_t *name, uint32_t size, DDK_Ashmem *
         return DDK_INVALID_PARAMETER;
     }
 
-    if (size <= 0) {
+    if (size == 0) {
         EDM_LOGE(MODULE_BASE_DDK, "invalid buffer size!, size = %{public}d", size);
         return DDK_INVALID_PARAMETER;
     }
