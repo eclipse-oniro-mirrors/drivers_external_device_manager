@@ -174,5 +174,6 @@ group("external_device_manager_ut") {
     "ddk_base_test:ddk_base_test",
     "device_manager_js_test:DeviceManagerJsTest",
     "device_manager_test:device_manager_test",
+    "ndk_stage_js_test:NdkStageJsTest",
   ]
 }
