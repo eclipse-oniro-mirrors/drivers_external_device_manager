@@ -23,11 +23,9 @@
 #include <unistd.h>
 #include <vector>
 
-static int32_t deviceId = 0;
-
-static napi_value HidCreateDevice(napi_env env, napi_callback_info info)
+static int32_t CreateTestDevice()
 {
-    std::vector<Hid_DeviceProp> deviceProp = {HID_PROP_DIRECT};
+    std::vector<Hid_DeviceProp> deviceProp = { HID_PROP_DIRECT };
     Hid_Device hidDevice = {
         .deviceName = "VSoC keyboard",
         .vendorId = 0x6006,
@@ -38,73 +36,101 @@ static napi_value HidCreateDevice(napi_env env, napi_callback_info info)
         .propLength = (uint16_t)deviceProp.size()
     };
 
-    std::vector<Hid_EventType> eventType = {HID_EV_ABS, HID_EV_KEY, HID_EV_SYN, HID_EV_MSC};
-    Hid_EventTypeArray eventTypeArray = {.hidEventType = eventType.data(), .length = (uint16_t)eventType.size()};
-    std::vector<Hid_KeyCode> keyCode = {
-        HID_BTN_TOOL_PEN, HID_BTN_TOOL_RUBBER, HID_BTN_TOUCH, HID_BTN_STYLUS, HID_BTN_RIGHT};
-    Hid_KeyCodeArray keyCodeArray = {.hidKeyCode = keyCode.data(), .length = (uint16_t)keyCode.size()};
-    std::vector<Hid_MscEvent> mscEvent = {HID_MSC_SCAN};
-    Hid_MscEventArray mscEventArray = {.hidMscEvent = mscEvent.data(), .length = (uint16_t)mscEvent.size()};
-    std::vector<Hid_AbsAxes> absAxes = {HID_ABS_X, HID_ABS_Y, HID_ABS_PRESSURE};
-    Hid_AbsAxesArray absAxesArray = {.hidAbsAxes = absAxes.data(), .length = (uint16_t)absAxes.size()};
+    std::vector<Hid_EventType> eventType = { HID_EV_ABS, HID_EV_KEY, HID_EV_SYN, HID_EV_MSC };
+    Hid_EventTypeArray eventTypeArray = {
+        .hidEventType = eventType.data(),
+        .length = (uint16_t)eventType.size()
+    };
+    std::vector<Hid_KeyCode> keyCode = { HID_BTN_TOOL_PEN, HID_BTN_TOOL_RUBBER, HID_BTN_TOUCH, HID_BTN_STYLUS,
+        HID_BTN_RIGHT };
+    Hid_KeyCodeArray keyCodeArray = {
+        .hidKeyCode = keyCode.data(),
+        .length = (uint16_t)keyCode.size()
+    };
+    std::vector<Hid_MscEvent> mscEvent = { HID_MSC_SCAN };
+    Hid_MscEventArray mscEventArray = {
+        .hidMscEvent = mscEvent.data(),
+        .length = (uint16_t)mscEvent.size()
+    };
+    std::vector<Hid_AbsAxes> absAxes = { HID_ABS_X, HID_ABS_Y, HID_ABS_PRESSURE };
+    Hid_AbsAxesArray absAxesArray = {
+        .hidAbsAxes = absAxes.data(),
+        .length = (uint16_t)absAxes.size()
+    };
     Hid_EventProperties hidEventProp = {
         .hidEventTypes = eventTypeArray,
         .hidKeys = keyCodeArray,
         .hidAbs = absAxesArray,
-        .hidMiscellaneous=mscEventArray
+        .hidMiscellaneous = mscEventArray
     };
 
-    int32_t returnValue = OH_Hid_CreateDevice(&hidDevice, &hidEventProp);
-    deviceId = returnValue;
+    return OH_Hid_CreateDevice(&hidDevice, &hidEventProp);
+}
+
+static napi_value HidCreateDevice(napi_env env, napi_callback_info info)
+{
+    int32_t deviceId = CreateTestDevice();
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, deviceId, &result));
     return result;
 }
 
 static napi_value HidEmitEventOne(napi_env env, napi_callback_info info)
 {
-    Hid_EmitItem event = {.type = HID_EV_MSC, .code = HID_MSC_SCAN, .value = 0x000d0042};
+    int32_t deviceId = CreateTestDevice();
+    NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
+    Hid_EmitItem event = {
+        .type = HID_EV_MSC,
+        .code = HID_MSC_SCAN,
+        .value = 0x000d0042
+    };
     std::vector<Hid_EmitItem> items;
     items.push_back(event);
     int32_t returnValue = OH_Hid_EmitEvent(deviceId, items.data(), (uint16_t)items.size());
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
 static napi_value HidEmitEventTwo(napi_env env, napi_callback_info info)
 {
+    int32_t deviceId = CreateTestDevice();
+    NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
     const uint16_t len = 21;
     std::vector<Hid_EmitItem> items;
     for (uint16_t i = 0; i < len; ++i) {
-        Hid_EmitItem item = {1, 0x14a, 108};
+        Hid_EmitItem item = { 1, 0x14a, 108 };
         items.push_back(item);
     }
     int32_t returnValue = OH_Hid_EmitEvent(deviceId, items.data(), (uint16_t)items.size());
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
 static napi_value HidEmitEventThree(napi_env env, napi_callback_info info)
 {
+    int32_t deviceId = CreateTestDevice();
+    NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
     const uint16_t len = 20;
     std::vector<Hid_EmitItem> items;
     for (uint16_t i = 0; i < len; ++i) {
-        Hid_EmitItem item = {1, 0x14a, 108};
+        Hid_EmitItem item = { 1, 0x14a, 108 };
         items.push_back(item);
     }
     int32_t returnValue = OH_Hid_EmitEvent(deviceId, items.data(), (uint16_t)items.size());
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
 static napi_value HidDestroyDeviceOne(napi_env env, napi_callback_info info)
 {
+    int32_t deviceId = CreateTestDevice();
+    NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
     int32_t returnValue = OH_Hid_DestroyDevice(deviceId);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -113,7 +139,7 @@ static napi_value HidDestroyDeviceTwo(napi_env env, napi_callback_info info)
     int32_t devId = -1;
     int32_t returnValue = OH_Hid_DestroyDevice(devId);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -122,7 +148,7 @@ static napi_value HidDestroyDeviceThree(napi_env env, napi_callback_info info)
     const int16_t devId = 200;
     int32_t returnValue = OH_Hid_DestroyDevice(devId);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -149,9 +175,12 @@ static napi_module demoModule = {
     .nm_flags = 0,
     .nm_filename = nullptr,
     .nm_register_func = Init,
-    .nm_modname = "libhid_ddk_ndk_test",
+    .nm_modname = "libhid_ddk_js_test",
     .nm_priv = ((void *)0),
-    .reserved = {0},
+    .reserved = { 0 },
 };
 
-extern "C" __attribute__((constructor)) void RegisterModule(void) { napi_module_register(&demoModule); }
+extern "C" __attribute__((constructor)) void RegisterModule(void)
+{
+    napi_module_register(&demoModule);
+}

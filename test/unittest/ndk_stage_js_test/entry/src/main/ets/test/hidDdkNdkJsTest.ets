@@ -18,107 +18,140 @@ import hidDdkNdkTest from 'libhid_ddk_ndk_test.so'
 
 export default function hidDdkNdkJsTest() {
   describe('hidDdkNdkJsTest', () => {
+    const TAG: string = "[hidDdkNdkJsTest]";
+    const HID_DDK_SUCCESS: number = 0;
 
     /**
-     * @tc.name       : testHidCreateDevice0100
+     * @tc.name       : testHidCreateDevice001
      * @tc.desc       : OH_Hid_CreateDevice Interface testing
      * @tc.type       : Function
      */
-    it('testHidCreateDevice0100', 0, async (done: Function) => {
-      let ret = hidDdkNdkTest.hidCreateDevice();
-      console.info("Test result testHidCreateDevice0100 : " + ret);
-      expect(ret >= 0).assertTrue();
-      done()
+    it('testHidCreateDevice001', 0, async (done: Function) => {
+      console.info('----------------------testHidCreateDevice001---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidCreateDevice();
+        console.info("Test result testHidCreateDevice001 : " + ret);
+        expect(ret >= HID_DDK_SUCCESS).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidCreateDevice001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
     });
 
     /**
-     * @tc.number     : SUB_Driver_Ext_HIDDDK_0200
-     * @tc.name       : testHidEmitEventOne0100
+     * @tc.name       : testHidEmitEvent001
      * @tc.desc       : OH_Hid_EmitEvent Interface testing
-     * @tc.size       : MediumTest
      * @tc.type       : Function
-     * @tc.level      : Level 2
      */
-    it('testHidEmitEventOne0100', 0, async (done: Function) => {
-      let ret = hidDdkNdkTest.hidEmitEventOne();
-      console.info("Test result testHidEmitEventOne0100 : " + ret);
-      expect(ret).assertEqual(0);
-      done()
+    it('testHidEmitEvent001', 0, async (done: Function) => {
+      console.info('----------------------testHidEmitEvent001---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidEmitEventOne();
+        console.info("Test result testHidEmitEvent001 : " + ret);
+        expect(ret).assertEqual(HID_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidEmitEvent001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
     });
 
     /**
-     * @tc.number     : SUB_Driver_Ext_HIDDDK_0300
-     * @tc.name       : testHidEmitEventTwo0200
+     * @tc.name       : testHidEmitEvent002
      * @tc.desc       : OH_Hid_EmitEvent Interface testing
-     * @tc.size       : MediumTest
      * @tc.type       : Function
-     * @tc.level      : Level 2
      */
-    it('testHidEmitEventTwo0200', 0, async (done: Function) => {
-      let ret = hidDdkNdkTest.hidEmitEventTwo();
-      console.info("Test result testHidEmitEventTwo0200 : " + ret);
-      expect(ret != 0).assertTrue();
-      done()
+    it('testHidEmitEvent002', 0, async (done: Function) => {
+      console.info('----------------------testHidEmitEvent002---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidEmitEventTwo();
+        console.info("Test result testHidEmitEvent002 : " + ret);
+        expect(ret !== HID_DDK_SUCCESS).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidEmitEvent002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
     });
 
     /**
-     * @tc.number     : SUB_Driver_Ext_HIDDDK_0400
-     * @tc.name       : testHidEmitEventThree0300
+     * @tc.name       : testHidEmitEvent003
      * @tc.desc       : OH_Hid_EmitEvent Interface testing
-     * @tc.size       : MediumTest
      * @tc.type       : Function
-     * @tc.level      : Level 2
      */
-    it('testHidEmitEventThree0300', 0, async (done: Function) => {
-      let ret = hidDdkNdkTest.hidEmitEventThree();
-      console.info("Test result testHidEmitEventThree0300 : " + ret);
-      expect(ret).assertEqual(0);
-      done()
+    it('testHidEmitEvent003', 0, async (done: Function) => {
+      console.info('----------------------testHidEmitEvent003---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidEmitEventThree();
+        console.info("Test result testHidEmitEvent003 : " + ret);
+        expect(ret).assertEqual(HID_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidEmitEvent003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
     });
 
     /**
-     * @tc.number     : SUB_Driver_Ext_HIDDDK_0500
-     * @tc.name       : testHidDestroyDeviceOne0100
+     * @tc.name       : testHidDestroyDevice001
      * @tc.desc       : OH_Hid_DestroyDevice Interface testing
-     * @tc.size       : MediumTest
      * @tc.type       : Function
-     * @tc.level      : Level 2
      */
-    it('testHidDestroyDeviceOne0100', 0, async (done: Function) => {
-      let ret = hidDdkNdkTest.hidDestroyDeviceOne();
-      console.info("Test result testHidDestroyDeviceOne0100 : " + ret);
-      expect(ret).assertEqual(0);
-      done()
+    it('testHidDestroyDevice001', 0, async (done: Function) => {
+      console.info('----------------------testHidDestroyDevice001---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidDestroyDeviceOne();
+        console.info("Test result testHidDestroyDevice001 : " + ret);
+        expect(ret).assertEqual(HID_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidDestroyDevice001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
     });
 
     /**
-     * @tc.number     : SUB_Driver_Ext_HIDDDK_0600
-     * @tc.name       : testHidDestroyDeviceTwo0200
+     * @tc.name       : testHidDestroyDevice002
      * @tc.desc       : OH_Hid_DestroyDevice Interface testing
-     * @tc.size       : MediumTest
      * @tc.type       : Function
-     * @tc.level      : Level 2
      */
-    it('testHidDestroyDeviceTwo0200', 0, async (done: Function) => {
-      let ret = hidDdkNdkTest.hidDestroyDeviceTwo();
-      console.info("Test result testHidDestroyDeviceTwo0200 : " + ret);
-      expect(ret != 0).assertTrue();
-      done()
+    it('testHidDestroyDevice002', 0, async (done: Function) => {
+      console.info('----------------------testHidDestroyDevice002---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidDestroyDeviceTwo();
+        console.info("Test result testHidDestroyDevice002 : " + ret);
+        expect(ret != HID_DDK_SUCCESS).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidDestroyDevice002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
     });
 
     /**
-     * @tc.number     : SUB_Driver_Ext_HIDDDK_0700
-     * @tc.name       : testHidDestroyDeviceThree0300
+     * @tc.name       : testHidDestroyDevice003
      * @tc.desc       : OH_Hid_DestroyDevice Interface testing
-     * @tc.size       : MediumTest
      * @tc.type       : Function
-     * @tc.level      : Level 2
      */
-    it('testHidDestroyDeviceThree0300', 0, async (done: Function) => {
-      let ret = hidDdkNdkTest.hidDestroyDeviceThree();
-      console.info("Test result testHidDestroyDeviceThree0300 : " + ret);
-      expect(ret != 0).assertTrue();
-      done()
+    it('testHidDestroyDevice003', 0, async (done: Function) => {
+      console.info('----------------------testHidDestroyDevice003---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidDestroyDeviceThree();
+        console.info("Test result testHidDestroyDevice003 : " + ret);
+        expect(ret !== HID_DDK_SUCCESS).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidDestroyDevice003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
     });
 
   })

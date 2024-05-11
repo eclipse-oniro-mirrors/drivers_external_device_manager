@@ -37,7 +37,7 @@ export default function baseDdkNdkJsTest() {
         expect(ret).assertEqual(DDK_SUCCESS);
         done();
       } catch (err) {
-        console.error(TAG, `testDdkCreateAshmem0100 failed, message is ${err.message}`);
+        console.error(TAG, `testDdkCreateAshmem001 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -49,13 +49,14 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkCreateAshmem002', 0, async (done: Function) => {
+      console.info('----------------------testDdkCreateAshmem002---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkCreateAshmemTwo();
-        console.info("Test result testDdkCreateAshmem0200 : " + ret);
+        console.info("Test result testDdkCreateAshmem002 : " + ret);
         expect(ret).assertEqual(DDK_INVALID_PARAMETER);
         done();
       } catch (err) {
-        console.error(TAG, `testDdkCreateAshmem0200 failed, message is ${err.message}`);
+        console.error(TAG, `testDdkCreateAshmem002 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -67,6 +68,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkCreateAshmem003', 0, async (done: Function) => {
+      console.info('----------------------testDdkCreateAshmem003---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkCreateAshmemThree();
         console.info("Test result testDdkCreateAshmem003 : " + ret);
@@ -85,6 +87,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkMapAshmem001', 0, async (done: Function) => {
+      console.info('----------------------testDdkMapAshmem001---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkMapAshmemOne();
         console.info("Test result testDdkMapAshmem001 : " + ret);
@@ -103,6 +106,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkMapAshmem002', 0, async (done: Function) => {
+      console.info('----------------------testDdkMapAshmem002---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkMapAshmemTwo();
         console.info("Test result testDdkMapAshmem002 : " + ret);
@@ -121,6 +125,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkMapAshmem003', 0, async (done: Function) => {
+      console.info('----------------------testDdkMapAshmem003---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkMapAshmemThree();
         console.info("Test result testDdkMapAshmem003 : " + ret);
@@ -139,6 +144,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkUnmapAshmem001', 0, async (done: Function) => {
+      console.info('----------------------testDdkUnmapAshmem001---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkUnmapAshmemOne();
         console.info("Test result testDdkUnmapAshmem001 : " + ret);
@@ -157,6 +163,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkUnmapAshmem002', 0, async (done: Function) => {
+      console.info('----------------------testDdkUnmapAshmem002---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkUnmapAshmemTwo();
         console.info("Test result testDdkUnmapAshmem002 : " + ret);
@@ -175,6 +182,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkDestroyAshmem001', 0, async (done: Function) => {
+      console.info('----------------------testDdkDestroyAshmem001---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkDestroyAshmemOne();
         console.info("Test result testDdkDestroyAshmem001 : " + ret);
@@ -193,6 +201,7 @@ export default function baseDdkNdkJsTest() {
      * @tc.type       : Function
      */
     it('testDdkDestroyAshmem002', 0, async (done: Function) => {
+      console.info('----------------------testDdkDestroyAshmem002---------------------------');
       try {
         const ret = baseDdkNdkTest.ddkDestroyAshmemTwo();
         console.info("Test result testDdkDestroyAshmem002 : " + ret);

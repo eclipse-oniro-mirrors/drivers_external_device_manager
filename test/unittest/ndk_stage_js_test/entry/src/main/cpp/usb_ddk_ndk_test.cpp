@@ -46,7 +46,7 @@ static uint32_t timeout = 1000;
 static bool IsInterruptInEndpoint(const UsbEndpointDescriptor &epDesc)
 {
     return (((epDesc.bEndpointAddress & USB_DDK_ENDPOINT_DIR_MASK) == USB_DDK_DIR_IN) &&
-            ((epDesc.bmAttributes & USB_DDK_ENDPOINT_XFERTYPE_MASK) == USB_DDK_ENDPOINT_XFER_INT));
+        ((epDesc.bmAttributes & USB_DDK_ENDPOINT_XFERTYPE_MASK) == USB_DDK_ENDPOINT_XFER_INT));
 }
 
 static std::tuple<bool, uint8_t, uint8_t, uint16_t> FindForEachInterface(const UsbDdkInterface &interface)
@@ -57,15 +57,15 @@ static std::tuple<bool, uint8_t, uint8_t, uint16_t> FindForEachInterface(const U
         uint32_t numEp = intDesc[setIdx].interfaceDescriptor.bNumEndpoints;
         struct UsbDdkEndpointDescriptor *epDesc = intDesc[setIdx].endPoint;
         for (uint32_t epIdx = PARAM_0; epIdx < numEp; ++epIdx) {
-            if (IsInterruptInEndpoint(epDesc[epIdx].endpointDescriptor)) {
-                return {true, intDesc[setIdx].interfaceDescriptor.bInterfaceNumber,
-                        epDesc[epIdx].endpointDescriptor.bEndpointAddress,
-                        epDesc[epIdx].endpointDescriptor.wMaxPacketSize};
+            if (!IsInterruptInEndpoint(epDesc[epIdx].endpointDescriptor)) {
+                continue;
             }
+            return { true, intDesc[setIdx].interfaceDescriptor.bInterfaceNumber,
+                epDesc[epIdx].endpointDescriptor.bEndpointAddress, epDesc[epIdx].endpointDescriptor.wMaxPacketSize };
         }
     }
 
-    return {false, {}, {}, {}};
+    return { false, {}, {}, {} };
 }
 
 static std::tuple<bool, uint8_t, uint8_t, uint16_t> GetEndpointInfo(const struct UsbDdkConfigDescriptor *config)
@@ -76,7 +76,7 @@ static std::tuple<bool, uint8_t, uint8_t, uint16_t> GetEndpointInfo(const struct
             return result;
         }
     }
-    return {false, {}, {}, {}};
+    return { false, {}, {}, {} };
 }
 
 static napi_value UsbInit(napi_env env, napi_callback_info info)
@@ -84,7 +84,7 @@ static napi_value UsbInit(napi_env env, napi_callback_info info)
     int32_t returnValue = OH_Usb_Init();
     OH_Usb_Release();
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -94,7 +94,7 @@ static napi_value UsbRelease(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     OH_Usb_Release();
     napi_value result = nullptr;
-    napi_create_int32(env, true, &result);
+    NAPI_CALL(env, napi_get_boolean(env, true, &result));
     return result;
 }
 
@@ -102,9 +102,9 @@ static napi_value UsbGetDeviceDescriptorOne(napi_env env, napi_callback_info inf
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
 
     int32_t usbInitReturnValue = OH_Usb_Init();
@@ -112,7 +112,7 @@ static napi_value UsbGetDeviceDescriptorOne(napi_env env, napi_callback_info inf
     struct UsbDeviceDescriptor devDesc;
     int32_t returnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -120,15 +120,15 @@ static napi_value UsbGetDeviceDescriptorTwo(napi_env env, napi_callback_info inf
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t returnValue = OH_Usb_GetDeviceDescriptor(deviceId, nullptr);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -136,9 +136,9 @@ static napi_value UsbGetConfigDescriptorOne(napi_env env, napi_callback_info inf
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -146,7 +146,7 @@ static napi_value UsbGetConfigDescriptorOne(napi_env env, napi_callback_info inf
     int32_t returnValue = OH_Usb_GetConfigDescriptor(deviceId, configIndex, &config);
     OH_Usb_FreeConfigDescriptor(config);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -157,7 +157,7 @@ static napi_value UsbGetConfigDescriptorTwo(napi_env env, napi_callback_info inf
     int32_t returnValue = OH_Usb_GetConfigDescriptor(errorId, configIndex, &config);
     OH_Usb_FreeConfigDescriptor(config);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -165,16 +165,16 @@ static napi_value UsbGetConfigDescriptorThree(napi_env env, napi_callback_info i
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
 
     int32_t returnValue = OH_Usb_GetConfigDescriptor(deviceId, configIndex, nullptr);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -182,9 +182,9 @@ static napi_value UsbFreeConfigDescriptor(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -193,7 +193,7 @@ static napi_value UsbFreeConfigDescriptor(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, returnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
     OH_Usb_FreeConfigDescriptor(config);
     napi_value result = nullptr;
-    napi_create_int32(env, true, &result);
+    NAPI_CALL(env, napi_get_boolean(env, true, &result));
     return result;
 }
 
@@ -201,15 +201,15 @@ static napi_value UsbClaimInterfaceOne(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t returnValue = OH_Usb_ClaimInterface(deviceId, interfaceIndex, &interfaceHandle);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -218,7 +218,7 @@ static napi_value UsbClaimInterfaceTwo(napi_env env, napi_callback_info info)
     uint64_t errorId = PARAM_1;
     int32_t returnValue = OH_Usb_ClaimInterface(errorId, interfaceIndex, &interfaceHandle);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -226,15 +226,15 @@ static napi_value UsbClaimInterfaceThree(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t returnValue = OH_Usb_ClaimInterface(deviceId, interfaceIndex, nullptr);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -242,9 +242,9 @@ static napi_value UsbReleaseInterface(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -252,7 +252,7 @@ static napi_value UsbReleaseInterface(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     int32_t returnValue = OH_Usb_ReleaseInterface(interfaceHandle);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -260,9 +260,9 @@ static napi_value UsbSelectInterfaceSettingOne(napi_env env, napi_callback_info 
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -270,7 +270,7 @@ static napi_value UsbSelectInterfaceSettingOne(napi_env env, napi_callback_info 
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     int32_t returnValue = OH_Usb_SelectInterfaceSetting(interfaceHandle, settingIndex);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -278,9 +278,9 @@ static napi_value UsbSelectInterfaceSettingTwo(napi_env env, napi_callback_info 
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -289,7 +289,7 @@ static napi_value UsbSelectInterfaceSettingTwo(napi_env env, napi_callback_info 
     OH_Usb_Release();
     int32_t returnValue = OH_Usb_SelectInterfaceSetting(interfaceHandle, settingIndex);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -297,9 +297,9 @@ static napi_value UsbGetCurrentInterfaceSettingOne(napi_env env, napi_callback_i
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -309,7 +309,7 @@ static napi_value UsbGetCurrentInterfaceSettingOne(napi_env env, napi_callback_i
     NAPI_ASSERT(env, usbSelectInterfaceSettingReturnValue == PARAM_0, "OH_Usb_SelectInterfaceSetting failed");
     int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(interfaceHandle, &settingIndex);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -317,9 +317,9 @@ static napi_value UsbGetCurrentInterfaceSettingTwo(napi_env env, napi_callback_i
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -330,7 +330,7 @@ static napi_value UsbGetCurrentInterfaceSettingTwo(napi_env env, napi_callback_i
     OH_Usb_Release();
     int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(interfaceHandle, &settingIndex);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -338,9 +338,9 @@ static napi_value UsbGetCurrentInterfaceSettingThree(napi_env env, napi_callback
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -350,7 +350,7 @@ static napi_value UsbGetCurrentInterfaceSettingThree(napi_env env, napi_callback
     NAPI_ASSERT(env, usbSelectInterfaceSettingReturnValue == PARAM_0, "Usb_ClaimInterface failed");
     int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(interfaceHandle, nullptr);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -358,9 +358,9 @@ static napi_value UsbSendControlReadRequestOne(napi_env env, napi_callback_info 
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -376,7 +376,7 @@ static napi_value UsbSendControlReadRequestOne(napi_env env, napi_callback_info 
     setup.wLength = dataLen;
     int32_t returnValue = OH_Usb_SendControlReadRequest(interfaceHandle, &setup, UINT32_MAX, data, &dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -384,9 +384,9 @@ static napi_value UsbSendControlReadRequestTwo(napi_env env, napi_callback_info 
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -398,7 +398,7 @@ static napi_value UsbSendControlReadRequestTwo(napi_env env, napi_callback_info 
     uint32_t dataLen = USB_DDK_TEST_BUF_SIZE;
     int32_t returnValue = OH_Usb_SendControlReadRequest(interfaceHandle, &setup, timeout, data, &dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -406,9 +406,9 @@ static napi_value UsbSendControlReadRequestThree(napi_env env, napi_callback_inf
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -418,7 +418,7 @@ static napi_value UsbSendControlReadRequestThree(napi_env env, napi_callback_inf
     uint32_t dataLen = USB_DDK_TEST_BUF_SIZE;
     int32_t returnValue = OH_Usb_SendControlReadRequest(interfaceHandle, nullptr, timeout, data, &dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -426,7 +426,7 @@ static napi_value UsbSendControlReadRequestFour(napi_env env, napi_callback_info
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
     napi_get_value_int64(env, args[PARAM_0], &deviceId64);
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
@@ -438,7 +438,7 @@ static napi_value UsbSendControlReadRequestFour(napi_env env, napi_callback_info
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlReadRequest(interfaceHandle, &setup, timeout, nullptr, &dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -446,9 +446,9 @@ static napi_value UsbSendControlReadRequestFive(napi_env env, napi_callback_info
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -458,7 +458,7 @@ static napi_value UsbSendControlReadRequestFive(napi_env env, napi_callback_info
     uint8_t data = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlReadRequest(interfaceHandle, &setup, timeout, &data, nullptr);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -466,9 +466,9 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -479,7 +479,7 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(interfaceHandle, &setup, timeout, &data, dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -487,9 +487,9 @@ static napi_value UsbSendControlWriteRequestTwo(napi_env env, napi_callback_info
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -501,7 +501,7 @@ static napi_value UsbSendControlWriteRequestTwo(napi_env env, napi_callback_info
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(interfaceHandle, &setup, timeout, &data, dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -509,9 +509,9 @@ static napi_value UsbSendControlWriteRequestThree(napi_env env, napi_callback_in
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -521,7 +521,7 @@ static napi_value UsbSendControlWriteRequestThree(napi_env env, napi_callback_in
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(interfaceHandle, nullptr, timeout, &data, dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -529,9 +529,9 @@ static napi_value UsbSendControlWriteRequestFour(napi_env env, napi_callback_inf
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -541,7 +541,7 @@ static napi_value UsbSendControlWriteRequestFour(napi_env env, napi_callback_inf
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(interfaceHandle, &setup, timeout, nullptr, dataLen);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 uint64_t JsDeviceIdToNative(uint64_t deviceId)
@@ -555,9 +555,9 @@ static napi_value UsbSendPipeRequestOne(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -583,7 +583,7 @@ static napi_value UsbSendPipeRequestOne(napi_env env, napi_callback_info info)
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -591,9 +591,9 @@ static napi_value UsbSendPipeRequestTwo(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -616,7 +616,7 @@ static napi_value UsbSendPipeRequestTwo(napi_env env, napi_callback_info info)
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -624,9 +624,9 @@ static napi_value UsbSendPipeRequestThree(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -648,7 +648,7 @@ static napi_value UsbSendPipeRequestThree(napi_env env, napi_callback_info info)
     int32_t returnValue = OH_Usb_SendPipeRequest(nullptr, devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -656,9 +656,9 @@ static napi_value UsbSendPipeRequestFour(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -680,7 +680,7 @@ static napi_value UsbSendPipeRequestFour(napi_env env, napi_callback_info info)
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, nullptr);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -688,9 +688,9 @@ static napi_value UsbCreateDeviceMemMapOne(napi_env env, napi_callback_info info
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -706,17 +706,17 @@ static napi_value UsbCreateDeviceMemMapOne(napi_env env, napi_callback_info info
     int32_t returnValue = OH_Usb_CreateDeviceMemMap(deviceId, bufferLen, &devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
-static napi_value UsbCreateDeviceMemMapTow(napi_env env, napi_callback_info info)
+static napi_value UsbCreateDeviceMemMapTwo(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -730,7 +730,7 @@ static napi_value UsbCreateDeviceMemMapTow(napi_env env, napi_callback_info info
     size_t bufferLen = PARAM_10;
     int32_t returnValue = OH_Usb_CreateDeviceMemMap(deviceId, bufferLen, nullptr);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -738,9 +738,9 @@ static napi_value UsbDestroyDeviceMemMap(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = static_cast<uint64_t>(deviceId64);
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -756,7 +756,7 @@ static napi_value UsbDestroyDeviceMemMap(napi_env env, napi_callback_info info)
     OH_Usb_CreateDeviceMemMap(deviceId, bufferLen, &devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
-    napi_create_int32(env, true, &result);
+    NAPI_CALL(env, napi_get_boolean(env, true, &result));
     return result;
 }
 
@@ -764,9 +764,9 @@ static napi_value UsbSendPipeRequestWithAshmemOne(napi_env env, napi_callback_in
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -795,7 +795,7 @@ static napi_value UsbSendPipeRequestWithAshmemOne(napi_env env, napi_callback_in
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
     OH_DDK_DestroyAshmem(ashmem);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -803,7 +803,7 @@ static napi_value UsbSendPipeRequestWithAshmemTwo(napi_env env, napi_callback_in
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     size_t bufferLen = PARAM_10;
     const uint8_t name[100] = "TestAshmem";
     DDK_Ashmem *ashmem = nullptr;
@@ -815,7 +815,7 @@ static napi_value UsbSendPipeRequestWithAshmemTwo(napi_env env, napi_callback_in
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(nullptr, ashmem);
     OH_DDK_DestroyAshmem(ashmem);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -823,9 +823,9 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -845,7 +845,7 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, nullptr);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -853,9 +853,9 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
 {
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
     int64_t deviceId64;
-    napi_get_value_int64(env, args[PARAM_0], &deviceId64);
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
     uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
@@ -884,7 +884,7 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
     OH_DDK_DestroyAshmem(ashmem);
     napi_value result = nullptr;
-    napi_create_int32(env, returnValue, &result);
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
 
@@ -892,68 +892,44 @@ EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
-        {"usbInit", nullptr, UsbInit, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbRelease", nullptr, UsbRelease, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbGetDeviceDescriptorOne", nullptr, UsbGetDeviceDescriptorOne, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbGetDeviceDescriptorTwo", nullptr, UsbGetDeviceDescriptorTwo, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbGetConfigDescriptorOne", nullptr, UsbGetConfigDescriptorOne, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbGetConfigDescriptorTwo", nullptr, UsbGetConfigDescriptorTwo, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbGetConfigDescriptorThree", nullptr, UsbGetConfigDescriptorThree, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbFreeConfigDescriptor", nullptr, UsbFreeConfigDescriptor, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbClaimInterfaceOne", nullptr, UsbClaimInterfaceOne, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbClaimInterfaceTwo", nullptr, UsbClaimInterfaceTwo, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbClaimInterfaceThree", nullptr, UsbClaimInterfaceThree, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbReleaseInterface", nullptr, UsbReleaseInterface, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbSelectInterfaceSettingOne", nullptr, UsbSelectInterfaceSettingOne, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbSelectInterfaceSettingTwo", nullptr, UsbSelectInterfaceSettingTwo, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbGetCurrentInterfaceSettingOne", nullptr, UsbGetCurrentInterfaceSettingOne, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbGetCurrentInterfaceSettingTwo", nullptr, UsbGetCurrentInterfaceSettingTwo, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbGetCurrentInterfaceSettingThree", nullptr, UsbGetCurrentInterfaceSettingThree, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendControlReadRequestOne", nullptr, UsbSendControlReadRequestOne, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbSendControlReadRequestTwo", nullptr, UsbSendControlReadRequestTwo, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbSendControlReadRequestThree", nullptr, UsbSendControlReadRequestThree, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendControlReadRequestFour", nullptr, UsbSendControlReadRequestFour, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendControlReadRequestFive", nullptr, UsbSendControlReadRequestFive, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendControlWriteRequestOne", nullptr, UsbSendControlWriteRequestOne, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendControlWriteRequestTwo", nullptr, UsbSendControlWriteRequestTwo, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendControlWriteRequestThree", nullptr, UsbSendControlWriteRequestThree, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendControlWriteRequestFour", nullptr, UsbSendControlWriteRequestFour, nullptr, nullptr, nullptr,
-         napi_default, nullptr},
-        {"usbSendPipeRequestOne", nullptr, UsbSendPipeRequestOne, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbSendPipeRequestTwo", nullptr, UsbSendPipeRequestTwo, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbSendPipeRequestThree", nullptr, UsbSendPipeRequestThree, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbSendPipeRequestFour", nullptr, UsbSendPipeRequestFour, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbCreateDeviceMemMapOne", nullptr, UsbCreateDeviceMemMapOne, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbCreateDeviceMemMapTow", nullptr, UsbCreateDeviceMemMapTow, nullptr, nullptr, nullptr, napi_default,
-         nullptr},
-        {"usbDestroyDeviceMemMap", nullptr, UsbDestroyDeviceMemMap, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"usbSendPipeRequestWithAshmemOne", nullptr, UsbSendPipeRequestWithAshmemOne, nullptr, nullptr, nullptr,
-        napi_default, nullptr},
-        {"usbSendPipeRequestWithAshmemTwo", nullptr, UsbSendPipeRequestWithAshmemTwo, nullptr, nullptr, nullptr,
-        napi_default, nullptr},
-        {"usbSendPipeRequestWithAshmemThree", nullptr, UsbSendPipeRequestWithAshmemThree, nullptr, nullptr, nullptr,
-        napi_default, nullptr},
-        {"usbSendPipeRequestWithAshmemFour", nullptr, UsbSendPipeRequestWithAshmemFour, nullptr, nullptr, nullptr,
-        napi_default, nullptr}};
+        DECLARE_NAPI_FUNCTION("usbInit", UsbInit),
+        DECLARE_NAPI_FUNCTION("usbRelease", UsbRelease),
+        DECLARE_NAPI_FUNCTION("usbGetDeviceDescriptorOne", UsbGetDeviceDescriptorOne),
+        DECLARE_NAPI_FUNCTION("usbGetDeviceDescriptorTwo", UsbGetDeviceDescriptorTwo),
+        DECLARE_NAPI_FUNCTION("usbGetConfigDescriptorOne", UsbGetConfigDescriptorOne),
+        DECLARE_NAPI_FUNCTION("usbGetConfigDescriptorTwo", UsbGetConfigDescriptorTwo),
+        DECLARE_NAPI_FUNCTION("usbGetConfigDescriptorThree", UsbGetConfigDescriptorThree),
+        DECLARE_NAPI_FUNCTION("usbFreeConfigDescriptor", UsbFreeConfigDescriptor),
+        DECLARE_NAPI_FUNCTION("usbClaimInterfaceOne", UsbClaimInterfaceOne),
+        DECLARE_NAPI_FUNCTION("usbClaimInterfaceTwo", UsbClaimInterfaceTwo),
+        DECLARE_NAPI_FUNCTION("usbClaimInterfaceThree", UsbClaimInterfaceThree),
+        DECLARE_NAPI_FUNCTION("usbReleaseInterface", UsbReleaseInterface),
+        DECLARE_NAPI_FUNCTION("usbSelectInterfaceSettingOne", UsbSelectInterfaceSettingOne),
+        DECLARE_NAPI_FUNCTION("usbSelectInterfaceSettingTwo", UsbSelectInterfaceSettingTwo),
+        DECLARE_NAPI_FUNCTION("usbGetCurrentInterfaceSettingOne", UsbGetCurrentInterfaceSettingOne),
+        DECLARE_NAPI_FUNCTION("usbGetCurrentInterfaceSettingTwo", UsbGetCurrentInterfaceSettingTwo),
+        DECLARE_NAPI_FUNCTION("usbGetCurrentInterfaceSettingThree", UsbGetCurrentInterfaceSettingThree),
+        DECLARE_NAPI_FUNCTION("usbSendControlReadRequestOne", UsbSendControlReadRequestOne),
+        DECLARE_NAPI_FUNCTION("usbSendControlReadRequestTwo", UsbSendControlReadRequestTwo),
+        DECLARE_NAPI_FUNCTION("usbSendControlReadRequestThree", UsbSendControlReadRequestThree),
+        DECLARE_NAPI_FUNCTION("usbSendControlReadRequestFour", UsbSendControlReadRequestFour),
+        DECLARE_NAPI_FUNCTION("usbSendControlReadRequestFive", UsbSendControlReadRequestFive),
+        DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestOne", UsbSendControlWriteRequestOne),
+        DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestTwo", UsbSendControlWriteRequestTwo),
+        DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestThree", UsbSendControlWriteRequestThree),
+        DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestFour", UsbSendControlWriteRequestFour),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestOne", UsbSendPipeRequestOne),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestTwo", UsbSendPipeRequestTwo),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestThree", UsbSendPipeRequestThree),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestFour", UsbSendPipeRequestFour),
+        DECLARE_NAPI_FUNCTION("usbCreateDeviceMemMapOne", UsbCreateDeviceMemMapOne),
+        DECLARE_NAPI_FUNCTION("usbCreateDeviceMemMapTwo", UsbCreateDeviceMemMapTwo),
+        DECLARE_NAPI_FUNCTION("usbDestroyDeviceMemMap", UsbDestroyDeviceMemMap),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemOne", UsbSendPipeRequestWithAshmemOne),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemTwo", UsbSendPipeRequestWithAshmemTwo),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemThree", UsbSendPipeRequestWithAshmemThree),
+        DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemFour", UsbSendPipeRequestWithAshmemFour),
+    };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;
@@ -965,9 +941,12 @@ static napi_module demoModule = {
     .nm_flags = 0,
     .nm_filename = nullptr,
     .nm_register_func = Init,
-    .nm_modname = "libusb_ddk_ndk_test",
+    .nm_modname = "libusb_ddk_js_test",
     .nm_priv = ((void *)0),
-    .reserved = {0},
+    .reserved = { 0 },
 };
 
-extern "C" __attribute__((constructor)) void RegisterModule(void) { napi_module_register(&demoModule); }
+extern "C" __attribute__((constructor)) void RegisterModule(void)
+{
+    napi_module_register(&demoModule);
+}
