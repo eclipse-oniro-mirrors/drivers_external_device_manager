@@ -31,9 +31,9 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${ext_mgr_path}/frameworks/ddk/usb:usb_ndk",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
   ]
-  public_deps = [ "//third_party/cJSON:cjson" ]
   external_deps = [
     "bundle_framework:appexecfwk_base",
+    "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "drivers_interface_usb:libusb_proxy_1.0",
