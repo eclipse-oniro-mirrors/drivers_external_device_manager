@@ -41,6 +41,7 @@ ohos_unittest("driver_extension_context_test") {
     "ability_runtime:app_context",
     "ability_runtime:napi_common",
     "ability_runtime:runtime",
+    "background_task_mgr:bgtaskmgr_innerkits",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -50,6 +51,5 @@ ohos_unittest("driver_extension_context_test") {
     "napi:ace_napi",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
-    "background_task_mgr:bgtaskmgr_innerkits",
   ]
 }
