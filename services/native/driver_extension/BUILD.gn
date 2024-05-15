@@ -12,14 +12,9 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/ability/ability_runtime/ability_runtime.gni")
 
 config("ability_config") {
   visibility = [ ":*" ]
-  include_dirs = [
-    "${ability_runtime_path}/interfaces/kits/native/ability/native",
-    "${ability_runtime_services_path}/common/include",
-  ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]

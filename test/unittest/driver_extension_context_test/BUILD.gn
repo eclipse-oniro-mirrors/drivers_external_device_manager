@@ -12,42 +12,21 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("//foundation/ability/ability_runtime/ability_runtime.gni")
 
 module_output_path = "external_device_manager/unittest"
 
 ohos_unittest("driver_extension_context_test") {
   module_out_path = module_output_path
 
-  include_dirs = [
-    "${ability_runtime_test_path}/mock/services_abilitymgr_test/libs/system_ability_mock",
-    "${distributedschedule_path}/samgr/interfaces/innerkits/samgr_proxy/include",
-    "../../../services/native/driver_extension/include",
-  ]
+  include_dirs = [ "../../../services/native/driver_extension/include" ]
 
-  sources = [
-    "${ability_runtime_test_path}/mock/services_abilitymgr_test/libs/appexecfwk_core/src/appmgr/mock_app_scheduler.cpp",
-    "driver_extension_context_test.cpp",  # add mock file
-  ]
+  sources = [ "driver_extension_context_test.cpp" ]
 
-  configs = [
-    "${ability_runtime_services_path}/abilitymgr:abilityms_config",
-    "${ability_runtime_test_path}/mock/services_abilitymgr_test:aafwk_mock_config",
-  ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${ability_runtime_napi_path}/inner/napi_common:napi_common",
-    "${ability_runtime_native_path}/ability/native:ability_business_error",
-    "${ability_runtime_native_path}/ability/native:abilitykit_native",
-    "${ability_runtime_native_path}/appkit:app_context",
-    "${ability_runtime_services_path}/abilitymgr:abilityms",
-    "${ability_runtime_services_path}/common:perm_verification",
-    "${ability_runtime_test_path}/mock/services_abilitymgr_test/libs/aakit:aakit_mock",
-    "${ability_runtime_test_path}/mock/services_abilitymgr_test/libs/appexecfwk_core:appexecfwk_appmgr_mock",
-    "${ability_runtime_test_path}/mock/services_abilitymgr_test/libs/appexecfwk_core:appexecfwk_bundlemgr_mock",
     "../../../services/native/driver_extension:driver_extension",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -58,7 +37,11 @@ ohos_unittest("driver_extension_context_test") {
     "ability_base:zuri",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:napi_common",
     "ability_runtime:runtime",
+    "background_task_mgr:bgtaskmgr_innerkits",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -69,8 +52,4 @@ ohos_unittest("driver_extension_context_test") {
     "relational_store:native_dataability",
     "relational_store:native_rdb",
   ]
-
-  if (background_task_mgr_continuous_task_enable) {
-    external_deps += [ "background_task_mgr:bgtaskmgr_innerkits" ]
-  }
 }
