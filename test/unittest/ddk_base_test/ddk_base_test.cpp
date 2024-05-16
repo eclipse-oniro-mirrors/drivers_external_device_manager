@@ -25,6 +25,7 @@ using namespace testing::ext;
 #define BUFF_LENTH 10
 #define PORT_READ 0x01
 #define PORT_WRITE 0x02
+#define PORT_ILLEGAL 0x08
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -98,6 +99,18 @@ HWTEST_F(DdkBaseTest, OH_DDK_MapAshmem_003, TestSize.Level1)
     ashmem->ashmemFd = 0;
     ret = OH_DDK_MapAshmem(ashmem, ashmemMapType);
     EXPECT_EQ(ret, DDK_FAILURE);
+}
+
+HWTEST_F(DdkBaseTest, OH_DDK_MapAshmem_004, TestSize.Level1)
+{
+    DDK_Ashmem *ashmem = nullptr;
+    const uint8_t name[100] = "TestAshmem";
+    uint32_t bufferLen = BUFF_LENTH;
+    auto ret = OH_DDK_CreateAshmem(name, bufferLen, &ashmem);
+    EXPECT_EQ(ret, DDK_SUCCESS);
+    const uint8_t ashmemMapType = PORT_ILLEGAL;
+    ret = OH_DDK_MapAshmem(ashmem, ashmemMapType);
+    EXPECT_EQ(ret, DDK_INVALID_OPERATION);
 }
 
 HWTEST_F(DdkBaseTest, OH_DDK_UnMapAshmem_001, TestSize.Level1)
