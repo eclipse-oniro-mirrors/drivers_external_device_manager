@@ -577,7 +577,7 @@ static napi_value UsbSendPipeRequestOne(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, usbCreateDeviceMemMapReturnValue == PARAM_0, "OH_Usb_CreateDeviceMemMap failed");
     NAPI_ASSERT(env, devMemMap != nullptr, "OH_Usb_CreateDeviceMemMap failed");
     struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = interfaceHandle;
+    pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
@@ -610,7 +610,7 @@ static napi_value UsbSendPipeRequestTwo(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, usbCreateDeviceMemMapReturnValue == PARAM_0, "OH_Usb_CreateDeviceMemMap failed");
     OH_Usb_Release();
     struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = interfaceHandle;
+    pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = ENDPOINT;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
@@ -642,7 +642,7 @@ static napi_value UsbSendPipeRequestThree(napi_env env, napi_callback_info info)
     int32_t usbCreateDeviceMemMapReturnValue = OH_Usb_CreateDeviceMemMap(deviceId, bufferLen, &devMemMap);
     NAPI_ASSERT(env, usbCreateDeviceMemMapReturnValue == PARAM_0, "OH_Usb_CreateDeviceMemMap failed");
     struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = interfaceHandle;
+    pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = ENDPOINT;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequest(nullptr, devMemMap);
@@ -674,7 +674,7 @@ static napi_value UsbSendPipeRequestFour(napi_env env, napi_callback_info info)
     int32_t usbCreateDeviceMemMapReturnValue = OH_Usb_CreateDeviceMemMap(deviceId, bufferLen, &devMemMap);
     NAPI_ASSERT(env, usbCreateDeviceMemMapReturnValue == PARAM_0, "OH_Usb_CreateDeviceMemMap failed");
     struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = interfaceHandle;
+    pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = ENDPOINT;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, nullptr);
@@ -789,7 +789,7 @@ static napi_value UsbSendPipeRequestWithAshmemOne(napi_env env, napi_callback_in
     int32_t mapAshmemValue = OH_DDK_MapAshmem(ashmem, ashmemMapType);
     NAPI_ASSERT(env, mapAshmemValue == PARAM_0, "OH_DDK_MapAshmem failed");
     struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = interfaceHandle;
+    pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
@@ -840,7 +840,7 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = interfaceHandle;
+    pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, nullptr);
@@ -878,7 +878,7 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     int32_t mapAshmemValue = OH_DDK_MapAshmem(ashmem, ashmemMapType);
     NAPI_ASSERT(env, mapAshmemValue == PARAM_0, "OH_DDK_MapAshmem failed");
     struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = interfaceHandle;
+    pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = ENDPOINT;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
