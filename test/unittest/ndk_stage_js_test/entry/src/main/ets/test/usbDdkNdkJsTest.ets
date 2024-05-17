@@ -18,7 +18,7 @@ import usbDdkNdkTest from 'libusb_ddk_ndk_test.so'
 import deviceManager from "@ohos.driver.deviceManager";
 
 
-export default function usbDdkNdkJdTest() {
+export default function usbDdkNdkJsTest() {
   let deviceId: number = -1;
 
   describe('usbDdkNdkJdTest', () => {
