@@ -42,6 +42,7 @@ enum UsbErrCode : int32_t {
     EDM_ERR_JSON_PARSE_FAIL,
     EDM_ERR_JSON_OBJ_ERR,
     EDM_ERR_USB_ERR,
+    EDM_ERR_NOT_SYSTEM_APP,
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

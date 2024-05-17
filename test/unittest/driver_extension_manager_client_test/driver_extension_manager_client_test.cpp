@@ -18,6 +18,9 @@
 #include <iostream>
 #include <thread>
 #include <gtest/gtest.h>
+#include "accesstoken_kit.h"
+#include "nativetoken_kit.h"
+#include "token_setproc.h"
 #include "driver_ext_mgr_callback_stub.h"
 #include "driver_ext_mgr_client.h"
 #include "edm_errors.h"
@@ -58,8 +61,32 @@ static sptr<IRemoteObject> g_saObject = nullptr;
 static constexpr int32_t ERROR_CODE_WITH_INVALID_CODE = 305;
 static constexpr uint64_t START_SA_SERVICE_WAIT_TIME = 3;
 
+void GetNativeToken()
+{
+    uint64_t tokenId;
+    const char **perms = new const char *[1];
+    perms[0] = "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER";
+
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = 1,
+        .aclsNum = 0,
+        .dcaps = nullptr,
+        .perms = perms,
+        .acls = nullptr,
+        .aplStr = "system_core",
+    };
+
+    infoInstance.processName = "TestCase";
+    tokenId = GetAccessTokenId(&infoInstance);
+    EXPECT_EQ(0, SetSelfTokenID(tokenId));
+    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+    delete[] perms;
+}
+
 void DrvExtMgrClientTest::SetUpTestCase()
 {
+    GetNativeToken();
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s get samgr failed", __func__);

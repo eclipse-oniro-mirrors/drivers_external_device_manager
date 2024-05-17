@@ -21,6 +21,7 @@
 #include "driver_pkg_manager.h"
 #include "edm_errors.h"
 #include "etx_device_mgr.h"
+#include "ext_permission_manager.h"
 #include "hilog_wrapper.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
@@ -31,6 +32,7 @@ namespace OHOS {
 namespace ExternalDeviceManager {
 const bool G_REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<DriverExtMgr>::GetInstance().get());
+static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER";
 
 DriverExtMgr::DriverExtMgr() : SystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID, true) {}
 DriverExtMgr::~DriverExtMgr() {}
@@ -75,6 +77,11 @@ int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
 
 UsbErrCode DriverExtMgr::QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices)
 {
+    if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+
     if (busType == BusType::BUS_TYPE_INVALID) {
         EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}d", static_cast<int32_t>(busType));
         return UsbErrCode::EDM_ERR_INVALID_PARAM;
@@ -107,12 +114,22 @@ UsbErrCode DriverExtMgr::QueryDevice(uint32_t busType, std::vector<std::shared_p
 UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+
     return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, connectCallback));
 }
 
 UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+
     return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId));
 }
 
@@ -206,6 +223,16 @@ UsbErrCode DriverExtMgr::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoD
     bool isByDeviceId, const uint64_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    if (!ExtPermissionManager::IsSystemApp()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
+        return UsbErrCode::EDM_ERR_NOT_SYSTEM_APP;
+    }
+
+    if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+
     vector<shared_ptr<Device>> devices;
     if (isByDeviceId) {
         devices = ExtDeviceManager::GetInstance().QueryDevicesById(deviceId);
@@ -225,6 +252,16 @@ UsbErrCode DriverExtMgr::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoD
 UsbErrCode DriverExtMgr::QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
     bool isByDriverUid, const std::string &driverUid)
 {
+    if (!ExtPermissionManager::IsSystemApp()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
+        return UsbErrCode::EDM_ERR_NOT_SYSTEM_APP;
+    }
+
+    if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+
     vector<shared_ptr<DriverInfo>> tempDriverInfos;
     int32_t ret = DriverPkgManager::GetInstance().QueryDriverInfo(tempDriverInfos, isByDriverUid, driverUid);
     if (ret != UsbErrCode::EDM_OK) {

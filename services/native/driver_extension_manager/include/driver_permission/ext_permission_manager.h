@@ -13,48 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef DRIVER_PKG_MANAGER_H
-#define DRIVER_PKG_MANAGER_H
+#ifndef DRIVER_PERMISSION_MANAGER_H
+#define DRIVER_PERMISSION_MANAGER_H
 
 #include <iostream>
-#include <stdint.h>
-
-#include "bundle_info.h"
-#include "bundle_mgr_proxy.h"
-#include "single_instance.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-using namespace std;
-using namespace OHOS;
-using namespace OHOS::AAFwk;
-using namespace OHOS::AppExecFwk;
-using namespace OHOS::ExternalDeviceManager;
-
-enum DDK_PERMISSION {
-    ERROR,
-    CHECK,
-    NOT_CHECK
-};
-
 class ExtPermissionManager {
-    DECLARE_SINGLE_INSTANCE_BASE(ExtPermissionManager);
-
 public:
-    bool HasPermission(std::string permissionName);
+    static bool VerifyPermission(std::string permissionName);
 
     static bool IsSystemApp();
-
-    ~ExtPermissionManager();
-private:
-    sptr<IBundleMgr> bundleMgr_ = nullptr;
-    std::mutex bundleMgrMutex_;
-    DDK_PERMISSION NeedCheckPermission();
-    sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
-    int32_t GetCurrentActiveUserId();
-    ExtPermissionManager();
-    std::map<std::string, bool> rightsMap_;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
-#endif // DRIVER_PKG_MANAGER_H
+#endif // DRIVER_PERMISSION_MANAGER_H
