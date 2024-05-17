@@ -21,7 +21,7 @@ import deviceManager from "@ohos.driver.deviceManager";
 export default function usbDdkNdkJsTest() {
   let deviceId: number = -1;
 
-  describe('usbDdkNdkJdTest', () => {
+  describe('usbDdkNdkJsTest', () => {
 
     const TAG: string = "[usbDdkNdkJsTest]";
     const USB_DDK_SUCCESS: number = 0;
