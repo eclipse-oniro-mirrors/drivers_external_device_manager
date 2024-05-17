@@ -268,7 +268,7 @@ static napi_value UsbSelectInterfaceSettingOne(napi_env env, napi_callback_info 
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
-    int32_t returnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, settingIndex);
+    int32_t returnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, g_settingIndex);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
@@ -287,7 +287,7 @@ static napi_value UsbSelectInterfaceSettingTwo(napi_env env, napi_callback_info 
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     OH_Usb_Release();
-    int32_t returnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, settingIndex);
+    int32_t returnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, g_settingIndex);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
@@ -305,9 +305,9 @@ static napi_value UsbGetCurrentInterfaceSettingOne(napi_env env, napi_callback_i
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "OH_Usb_ClaimInterface failed");
-    int32_t usbSelectInterfaceSettingReturnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, settingIndex);
+    int32_t usbSelectInterfaceSettingReturnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, g_settingIndex);
     NAPI_ASSERT(env, usbSelectInterfaceSettingReturnValue == PARAM_0, "OH_Usb_SelectInterfaceSetting failed");
-    int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(g_interfaceHandle, &settingIndex);
+    int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(g_interfaceHandle, &g_settingIndex);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
@@ -325,10 +325,10 @@ static napi_value UsbGetCurrentInterfaceSettingTwo(napi_env env, napi_callback_i
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "OH_Usb_ClaimInterface failed");
-    int32_t usbSelectInterfaceSettingReturnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, settingIndex);
+    int32_t usbSelectInterfaceSettingReturnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, g_settingIndex);
     NAPI_ASSERT(env, usbSelectInterfaceSettingReturnValue == PARAM_0, "OH_Usb_SelectInterfaceSetting failed");
     OH_Usb_Release();
-    int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(g_interfaceHandle, &settingIndex);
+    int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(g_interfaceHandle, &g_settingIndex);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
@@ -346,7 +346,7 @@ static napi_value UsbGetCurrentInterfaceSettingThree(napi_env env, napi_callback
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
-    int32_t usbSelectInterfaceSettingReturnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, settingIndex);
+    int32_t usbSelectInterfaceSettingReturnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, g_settingIndex);
     NAPI_ASSERT(env, usbSelectInterfaceSettingReturnValue == PARAM_0, "Usb_ClaimInterface failed");
     int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(g_interfaceHandle, nullptr);
     napi_value result = nullptr;
