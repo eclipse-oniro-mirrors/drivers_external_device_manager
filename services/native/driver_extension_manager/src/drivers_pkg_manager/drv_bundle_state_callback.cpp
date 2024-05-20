@@ -227,7 +227,7 @@ sptr<IRemoteObject> DrvBundleStateCallback::AsObject()
     return nullptr;
 }
 
-bool DrvBundleStateCallback::GetAllDriverInfos()
+bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
 {
     if (initOnce) {
         return true;
@@ -241,7 +241,7 @@ bool DrvBundleStateCallback::GetAllDriverInfos()
     std::vector<ExtensionAbilityInfo> driverInfos;
     int32_t userId = GetCurrentActiveUserId();
     iBundleMgr->QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER, userId, driverInfos);
-    if (!UpdateToRdb(driverInfos)) {
+    if (!UpdateToRdb(driverInfos, "", isExecCallback)) {
         EDM_LOGE(MODULE_PKG_MGR, "UpdateToRdb failed");
         return false;
     }
@@ -313,7 +313,7 @@ void DrvBundleStateCallback::ClearDriverInfo(DriverInfo &tmpDrvInfo)
 }
 
 bool DrvBundleStateCallback::UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos,
-    const std::string &bundleName)
+    const std::string &bundleName, bool isExecCallback)
 {
     std::vector<PkgInfoTable> pkgInfoTables;
     ParseToPkgInfoTables(driverInfos, pkgInfoTables);
@@ -323,7 +323,7 @@ bool DrvBundleStateCallback::UpdateToRdb(const std::vector<ExtensionAbilityInfo>
         return false;
     }
 
-    if (onBundlesUpdate != nullptr) {
+    if (isExecCallback && onBundlesUpdate != nullptr) {
         onBundlesUpdate(bundleName);
     }
     return true;

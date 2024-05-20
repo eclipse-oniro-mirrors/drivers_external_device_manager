@@ -79,7 +79,7 @@ public:
     
     virtual sptr<IRemoteObject> AsObject() override;
 
-    bool GetAllDriverInfos();
+    bool GetAllDriverInfos(bool isExecCallback = true);
 
     bool CheckBundleMgrProxyPermission();
 
@@ -96,7 +96,8 @@ private:
 
     bool QueryDriverInfos(const std::string &bundleName, const int userId,
         std::vector<ExtensionAbilityInfo> &driverInfos);
-    bool UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName = "");
+    bool UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName = "",
+        bool isExecCallback = true);
     void ClearDriverInfo(DriverInfo &tmpDrvInfo);
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
