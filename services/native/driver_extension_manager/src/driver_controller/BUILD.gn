@@ -35,7 +35,7 @@ ohos_shared_library("driver_extension_controller") {
     "ability_base:want",
     "ability_runtime:ability_manager",
     "cJSON:cjson",
-    "c_utils:utilsbase",
+    "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]
