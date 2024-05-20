@@ -73,7 +73,7 @@ int32_t DriverPkgManager::Init()
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if (!bundleStateCallback_->GetAllDriverInfos()) {
+    if (!bundleStateCallback_->GetAllDriverInfos(false)) {
         EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ GetAllDriverInfos Err");
         return EDM_ERR_NOT_SUPPORT;
     }
@@ -93,7 +93,7 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
         return nullptr;
     }
 
-    if (!bundleStateCallback_->GetAllDriverInfos()) {
+    if (!bundleStateCallback_->GetAllDriverInfos(false)) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetAllDriverInfos Err");
         return nullptr;
     }
