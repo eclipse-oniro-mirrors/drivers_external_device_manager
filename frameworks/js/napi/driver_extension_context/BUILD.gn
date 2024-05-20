@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
 import("//build/ohos.gni")
+import("//build/templates/abc/ohos_abc.gni")
 
 es2abc_gen_abc("gen_driver_extension_context_abc") {
   src_js = rebase_path("driver_extension_context.js")
