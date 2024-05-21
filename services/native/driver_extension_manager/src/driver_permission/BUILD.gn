@@ -33,7 +33,7 @@ ohos_shared_library("driver_permission_manager") {
     "access_token:libtokenid_sdk",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
-    "c_utils:utilsbase",
+    "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
