@@ -26,18 +26,14 @@
 #include "usb_config_desc_parser.h"
 #include "usb_ddk_types.h"
 #include "v1_0/usb_ddk_service.h"
-#include "ext_permission_manager.h"
+
 using namespace OHOS::ExternalDeviceManager;
 namespace {
 OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_0::IUsbDdk> g_ddk = nullptr;
 } // namespace
-static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_DDK_USB";
+
 int32_t OH_Usb_Init()
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     g_ddk = OHOS::HDI::Usb::Ddk::V1_0::IUsbDdk::Get();
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "get ddk failed");
@@ -49,10 +45,6 @@ int32_t OH_Usb_Init()
 
 void OH_Usb_Release()
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "ddk is null");
         return;
@@ -63,10 +55,6 @@ void OH_Usb_Release()
 
 int32_t OH_Usb_GetDeviceDescriptor(uint64_t deviceId, UsbDeviceDescriptor *desc)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -88,10 +76,6 @@ int32_t OH_Usb_GetDeviceDescriptor(uint64_t deviceId, UsbDeviceDescriptor *desc)
 int32_t OH_Usb_GetConfigDescriptor(
     uint64_t deviceId, uint8_t configIndex, struct UsbDdkConfigDescriptor ** const config)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -112,19 +96,11 @@ int32_t OH_Usb_GetConfigDescriptor(
 
 void OH_Usb_FreeConfigDescriptor(UsbDdkConfigDescriptor * const config)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return;
-    }
     return FreeUsbConfigDescriptor(config);
 }
 
 int32_t OH_Usb_ClaimInterface(uint64_t deviceId, uint8_t interfaceIndex, uint64_t *interfaceHandle)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -139,10 +115,6 @@ int32_t OH_Usb_ClaimInterface(uint64_t deviceId, uint8_t interfaceIndex, uint64_
 
 int32_t OH_Usb_ReleaseInterface(uint64_t interfaceHandle)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -153,10 +125,6 @@ int32_t OH_Usb_ReleaseInterface(uint64_t interfaceHandle)
 
 int32_t OH_Usb_SelectInterfaceSetting(uint64_t interfaceHandle, uint8_t settingIndex)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -167,10 +135,6 @@ int32_t OH_Usb_SelectInterfaceSetting(uint64_t interfaceHandle, uint8_t settingI
 
 int32_t OH_Usb_GetCurrentInterfaceSetting(uint64_t interfaceHandle, uint8_t *settingIndex)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -187,10 +151,6 @@ int32_t OH_Usb_GetCurrentInterfaceSetting(uint64_t interfaceHandle, uint8_t *set
 int32_t OH_Usb_SendControlReadRequest(
     uint64_t interfaceHandle, const UsbControlRequestSetup *setup, uint32_t timeout, uint8_t *data, uint32_t *dataLen)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -225,10 +185,6 @@ int32_t OH_Usb_SendControlReadRequest(
 int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const UsbControlRequestSetup *setup, uint32_t timeout,
     const uint8_t *data, uint32_t dataLen)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -246,10 +202,6 @@ int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const UsbContro
 
 int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devMmap)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -267,11 +219,6 @@ int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devM
 
 int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem *ashmem)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
-
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid obj");
         return USB_DDK_INVALID_OPERATION;
@@ -290,10 +237,6 @@ int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem 
 
 int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMap **devMmap)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return USB_DDK_FAILED;
-    }
     if (devMmap == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid param");
         return USB_DDK_INVALID_PARAMETER;
@@ -325,10 +268,6 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
 
 void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_USB_DDK, "no permission");
-        return;
-    }
     if (devMmap == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "devMmap is nullptr");
         return;

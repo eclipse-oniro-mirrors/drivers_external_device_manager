@@ -20,8 +20,8 @@
 #include "v1_0/ihid_ddk.h"
 #include "hilog_wrapper.h"
 #include <iproxy_broker.h>
-#include "ext_permission_manager.h"
 
+using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
 namespace {
 static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_0::IHidDdk> g_ddk = nullptr;
@@ -38,7 +38,6 @@ constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_DDK_HID";
 static std::unordered_map<int32_t, std::shared_ptr<struct TempDevice>> g_deviceMap;
 
 struct TempDevice {
@@ -173,11 +172,6 @@ static int32_t CacheDeviceInfor(OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevi
 
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_HID_DDK, "no permission");
-        return HID_DDK_FAILURE;
-    }
-
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
     }
@@ -236,11 +230,6 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
 
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_HID_DDK, "no permission");
-        return HID_DDK_FAILURE;
-    }
-
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
     }
@@ -276,11 +265,6 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
 
 int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        EDM_LOGE(MODULE_HID_DDK, "no permission");
-        return HID_DDK_FAILURE;
-    }
-
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
     }

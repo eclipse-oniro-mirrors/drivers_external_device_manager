@@ -24,7 +24,6 @@
 #include <uv.h>
 
 #include "napi_remote_object.h"
-#include "ext_permission_manager.h"
 #include "device_manager_middle.h"
 
 namespace OHOS {
@@ -47,7 +46,6 @@ static std::mutex mapMutex;
 static std::map<uint64_t, sptr<AsyncData>> g_callbackMap = {};
 static DriverExtMgrClient &g_edmClient = DriverExtMgrClient::GetInstance();
 static sptr<DeviceManagerCallback> g_edmCallback = new (std::nothrow) DeviceManagerCallback {};
-static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER";
 
 static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errMsg);
 static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId);
@@ -483,10 +481,6 @@ static napi_value ConvertToJsDriverInfo(napi_env& env, std::shared_ptr<DriverInf
 
 static napi_value QueryDevices(napi_env env, napi_callback_info info)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        ThrowErr(env, PERMISSION_DENIED, "queryDevices: no permission");
-        return nullptr;
-    }
     EDM_LOGI(MODULE_DEV_MGR, "queryDevices start");
     size_t argc = PARAM_COUNT_1;
     napi_value argv[PARAM_COUNT_1] = {nullptr};
@@ -499,8 +493,13 @@ static napi_value QueryDevices(napi_env env, napi_callback_info info)
     }
 
     std::vector<std::shared_ptr<DeviceData>> devices;
-    if (g_edmClient.QueryDevice(busType, devices) != UsbErrCode::EDM_OK) {
-        ThrowErr(env, SERVICE_EXCEPTION, "Query device service fail");
+    UsbErrCode retCode = g_edmClient.QueryDevice(busType, devices);
+    if (retCode != UsbErrCode::EDM_OK) {
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            ThrowErr(env, PERMISSION_DENIED, "queryDevice: no permission");
+        } else {
+            ThrowErr(env, SERVICE_EXCEPTION, "Query device service fail");
+        }
         return nullptr;
     }
 
@@ -534,10 +533,6 @@ static bool ParseDeviceId(const napi_env& env, const napi_value& value, uint64_t
 
 static napi_value BindDevice(napi_env env, napi_callback_info info)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
-        return nullptr;
-    }
     size_t argc = PARAM_COUNT_3;
     napi_value argv[PARAM_COUNT_3] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -559,8 +554,13 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     }
 
     std::lock_guard<std::mutex> mapLock(mapMutex);
-    if (g_edmClient.BindDevice(deviceId, g_edmCallback) != UsbErrCode::EDM_OK) {
-        ThrowErr(env, SERVICE_EXCEPTION, "bindDevice service failed");
+    UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
+    if (retCode != UsbErrCode::EDM_OK) {
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
+        } else {
+            ThrowErr(env, SERVICE_EXCEPTION, "bindDevice service failed");
+        }
         return nullptr;
     }
 
@@ -585,10 +585,6 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
 
 static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 {
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        ThrowErr(env, PERMISSION_DENIED, "unbindDevice: no permission");
-        return nullptr;
-    }
     size_t argc = PARAM_COUNT_2;
     napi_value argv[PARAM_COUNT_2] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -609,9 +605,13 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
         ThrowErr(env, SERVICE_EXCEPTION, "unbind map is null");
         return nullptr;
     }
-
-    if (g_edmClient.UnBindDevice(deviceId) != UsbErrCode::EDM_OK) {
-        ThrowErr(env, SERVICE_EXCEPTION, "unbindDevice service failed");
+    UsbErrCode retCode = g_edmClient.UnBindDevice(deviceId);
+    if (retCode != UsbErrCode::EDM_OK) {
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            ThrowErr(env, PERMISSION_DENIED, "unbindDevice: no permission");
+        } else {
+            ThrowErr(env, SERVICE_EXCEPTION, "unbindDevice service failed");
+        }
         return nullptr;
     }
     auto data = g_callbackMap[deviceId];
@@ -627,16 +627,6 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 
 static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 {
-    if (!ExtPermissionManager::IsSystemApp()) {
-        ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDeviceInfo: none system app");
-        return nullptr;
-    }
-
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        ThrowErr(env, PERMISSION_DENIED, "queryDeviceInfo: no permission");
-        return nullptr;
-    }
-
     size_t argc = PARAM_COUNT_1;
     napi_value argv[PARAM_COUNT_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -654,7 +644,13 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
         ret = g_edmClient.QueryDeviceInfo(deviceInfos);
     }
     if (ret != UsbErrCode::EDM_OK) {
-        ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query device info service fail");
+        if (ret == UsbErrCode::EDM_ERR_NOT_SYSTEM_APP) {
+            ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDeviceInfo: none system app");
+        } else if (ret == UsbErrCode::EDM_ERR_NO_PERM) {
+            ThrowErr(env, PERMISSION_DENIED, "queryDeviceInfo: no permission");
+        } else {
+            ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query device info service fail");
+        }
         return nullptr;
     }
 
@@ -670,16 +666,6 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 
 static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
 {
-    if (!ExtPermissionManager::IsSystemApp()) {
-        ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDriverInfo: none system app");
-        return nullptr;
-    }
-
-    if (!ExtPermissionManager::GetInstance().HasPermission(PERMISSION_NAME)) {
-        ThrowErr(env, PERMISSION_DENIED, "queryDriverInfo: no permission");
-        return nullptr;
-    }
-
     size_t argc = PARAM_COUNT_1;
     napi_value argv[PARAM_COUNT_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -702,7 +688,13 @@ static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
     }
 
     if (ret != UsbErrCode::EDM_OK) {
-        ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query driver info service fail");
+        if (ret == UsbErrCode::EDM_ERR_NOT_SYSTEM_APP) {
+            ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDriverInfo: none system app");
+        } else if (ret == UsbErrCode::EDM_ERR_NO_PERM) {
+            ThrowErr(env, PERMISSION_DENIED, "queryDriverInfo: no permission");
+        } else {
+            ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query driver info service fail");
+        }
         return nullptr;
     }
 

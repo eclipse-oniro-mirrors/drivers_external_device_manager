@@ -21,8 +21,6 @@ ohos_shared_library("hid") {
 
   sources = [ "input_emit_event.cpp" ]
 
-  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_permission:driver_permission_manager" ]
-
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
