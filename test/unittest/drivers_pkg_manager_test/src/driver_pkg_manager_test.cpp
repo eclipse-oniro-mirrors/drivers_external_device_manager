@@ -58,7 +58,6 @@ static constexpr uint64_t START_SA_SERVICE_WAIT_TIME = 3;
 
 void DriverPkgManagerTest::SetUpTestCase()
 {
-    int32_t ret = 0;
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s get samgr failed", __func__);
@@ -74,7 +73,7 @@ void DriverPkgManagerTest::SetUpTestCase()
         return;
     }
     sptr<LoadCallback> loadCallback_ = new LoadCallback();
-    ret = samgr->LoadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID, loadCallback_);
+    int32_t ret = samgr->LoadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID, loadCallback_);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(EDM_MODULE_TEST, "%{public}s load hdf_ext_devmgr failed", __func__);
         g_loadStatus = LoadStatus::LOAD_FAILED;
@@ -99,10 +98,10 @@ void DriverPkgManagerTest::TearDownTestCase()
     }
 
     int32_t ret = samgr->UnloadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
-    if (ret != UsbErrCode::EDM_OK) {
-        EDM_LOGI(EDM_MODULE_TEST, "UnloadSystemAbility failed");
-    } else {
+    if (ret == UsbErrCode::EDM_OK) {
         EDM_LOGI(EDM_MODULE_TEST, "UnloadSystemAbility success");
+    } else {
+        EDM_LOGI(EDM_MODULE_TEST, "UnloadSystemAbility failed");
     }
 }
 
