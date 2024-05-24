@@ -600,11 +600,6 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDevice:%{public}016" PRIX64, deviceId);
 
-    std::lock_guard<std::mutex> mapLock(mapMutex);
-    if (g_callbackMap.count(deviceId) == 0) {
-        ThrowErr(env, SERVICE_EXCEPTION, "unbind map is null");
-        return nullptr;
-    }
     UsbErrCode retCode = g_edmClient.UnBindDevice(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
@@ -612,6 +607,12 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
         } else {
             ThrowErr(env, SERVICE_EXCEPTION, "unbindDevice service failed");
         }
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> mapLock(mapMutex);
+    if (g_callbackMap.find(deviceId) == g_callbackMap.end()) {
+        ThrowErr(env, SERVICE_EXCEPTION, "Unbind callback does not exist");
         return nullptr;
     }
     auto data = g_callbackMap[deviceId];
