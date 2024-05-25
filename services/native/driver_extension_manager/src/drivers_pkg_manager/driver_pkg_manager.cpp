@@ -75,7 +75,6 @@ int32_t DriverPkgManager::Init()
 
     if (!bundleStateCallback_->GetAllDriverInfos(false)) {
         EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ GetAllDriverInfos Err");
-        return EDM_ERR_NOT_SUPPORT;
     }
     // register calback to BMS
     return RegisterCallback(bundleStateCallback_);
@@ -162,21 +161,17 @@ int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &ca
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if (!bundleStateCallback_->CheckBundleMgrProxyPermission()) {
-        EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, Permission check is false");
-        return EDM_ERR_NOT_SUPPORT;
-    }
-
     if (bundleMonitor_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, bundleMonitor_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if ((int32_t)(bundleMonitor_->Subscribe(callback)) == 1) {
-        return EDM_OK;
+    if (!bundleMonitor_->Subscribe(callback)) {
+        EDM_LOGE(MODULE_PKG_MGR, "Failed to subscribe bundleMonitor callback");
+        return EDM_NOK;
     }
 
-    return EDM_NOK;
+    return EDM_OK;
 }
 
 int32_t DriverPkgManager::UnRegisterCallback()
@@ -187,21 +182,17 @@ int32_t DriverPkgManager::UnRegisterCallback()
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if (!bundleStateCallback_->CheckBundleMgrProxyPermission()) {
-        EDM_LOGE(MODULE_PKG_MGR, "failed to unregister callback, Permission check is false");
-        return EDM_ERR_NOT_SUPPORT;
-    }
-
     if (bundleMonitor_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "failed to unregister callback, bundleMonitor is null");
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if ((int32_t)(bundleMonitor_->UnSubscribe()) == 1) {
-        return EDM_OK;
+    if (!bundleMonitor_->UnSubscribe()) {
+        EDM_LOGE(MODULE_PKG_MGR, "Failed to unSubscribe bundleMonitor callback");
+        return EDM_NOK;
     }
 
-    return EDM_NOK;
+    return EDM_OK;
 }
 
 int32_t DriverPkgManager::RegisterOnBundleUpdate(PCALLBACKFUN pFun)
