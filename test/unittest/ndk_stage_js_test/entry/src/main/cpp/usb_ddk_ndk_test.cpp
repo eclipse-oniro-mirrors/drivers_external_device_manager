@@ -641,10 +641,6 @@ static napi_value UsbSendPipeRequestThree(napi_env env, napi_callback_info info)
     size_t bufferLen = PARAM_10;
     int32_t usbCreateDeviceMemMapReturnValue = OH_Usb_CreateDeviceMemMap(deviceId, bufferLen, &devMemMap);
     NAPI_ASSERT(env, usbCreateDeviceMemMapReturnValue == PARAM_0, "OH_Usb_CreateDeviceMemMap failed");
-    struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = g_interfaceHandle;
-    pipe.endpoint = ENDPOINT;
-    pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequest(nullptr, devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
