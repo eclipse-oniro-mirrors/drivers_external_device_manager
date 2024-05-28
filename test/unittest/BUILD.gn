@@ -168,5 +168,6 @@ group("external_device_manager_ut") {
     "device_manager_js_test:DeviceManagerJsTest",
     "device_manager_test:device_manager_test",
     "emit_event_test:emit_event_test",
+    "permission_js_test:PermissionJsTest",
   ]
 }
