@@ -21,6 +21,8 @@
 #include "ddk_types.h"
 #include "hilog_wrapper.h"
 
+#define PORT_MAX 7
+
 using namespace OHOS::ExternalDeviceManager;
 namespace {
 static std::unordered_map<int32_t, OHOS::sptr<OHOS::Ashmem>> g_shareMemoryMap;
@@ -90,6 +92,12 @@ DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
     if (ret != DDK_SUCCESS) {
         EDM_LOGE(MODULE_BASE_DDK, "%{public}s: check the validity of ashmem fail!", __func__);
         return ret;
+    }
+
+    if (ashmemMapType > PORT_MAX) {
+        EDM_LOGE(MODULE_BASE_DDK, "%{public}s: the ashmemMapType is illegal ,ashmemMapType = %{public}u",
+            __func__, ashmemMapType);
+        return DDK_INVALID_OPERATION;
     }
 
     if (!g_shareMemoryMap[ashmem->ashmemFd]->MapAshmem(ashmemMapType)) {
