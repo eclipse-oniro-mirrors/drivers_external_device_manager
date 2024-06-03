@@ -22,6 +22,7 @@ export default function baseDdkNdkJsTest() {
     const DDK_SUCCESS: number = 0;
     const DDK_FAILURE: number = 28600001;
     const DDK_INVALID_PARAMETER: number = 28600002;
+    const DDK_INVALID_OPERATION: number = 28600003;
     const DDK_NULL_PTR: number = 28600004;
 
     /**
@@ -133,6 +134,25 @@ export default function baseDdkNdkJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testDdkMapAshmem003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testDdkMapAshmem004
+     * @tc.desc       : OH_DDK_MapAshmem Interface testing
+     * @tc.type       : Function
+     */
+    it('testDdkMapAshmem004', 0, async (done: Function) => {
+      console.info('----------------------testDdkMapAshmem004---------------------------');
+      try {
+        const ret = baseDdkNdkTest.ddkMapAshmemFour();
+        console.info("Test result testDdkMapAshmem004 : " + ret);
+        expect(ret).assertEqual(DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testDdkMapAshmem004 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
