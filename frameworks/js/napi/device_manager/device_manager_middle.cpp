@@ -38,7 +38,7 @@ constexpr uint64_t MAX_JS_NUMBER = 9007199254740991;
 static const std::map<int32_t, std::string> ERROR_MESSAGES = {
     {SERVICE_EXCEPTION,  "ExternalDeviceManager service exception."},
     {PERMISSION_DENIED,  "Permission denied."},
-    {PERMISSION_DENIED,  "Permission denied. A non-system application cannot call a system API."},
+    {PERMISSION_NOT_SYSTEM_APP,  "Permission denied. A non-system application cannot call a system API."},
     {PARAMETER_ERROR,  "The parameter check failed."},
     {SERVICE_EXCEPTION_NEW, "ExternalDeviceManager service exception."}
 };
