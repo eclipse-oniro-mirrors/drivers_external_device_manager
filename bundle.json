@@ -46,7 +46,8 @@
                 "access_token",
                 "relational_store",
                 "drivers_interface_input",
-                "cJSON"
+                "cJSON",
+                "window_manager"
             ]
         },
         "build": {
