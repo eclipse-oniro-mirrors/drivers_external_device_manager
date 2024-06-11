@@ -67,6 +67,7 @@ ohos_shared_library("driver_extension_module") {
     "ability_base:configuration",
     "ability_base:session_info",
     "ability_runtime:ability_manager",
+    "ability_runtime:extensionkit_native",
     "ace_engine:ace_uicontent",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
