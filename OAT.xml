@@ -61,6 +61,7 @@ Note:If the text contains special characters, please escape them according to th
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies" >
                 <filteritem type="filepath" name="figures/.*.png" desc="README diagram"/>
                 <filteritem type="filepath" name="test/unittest/ndk_stage_js_test/entry/src/main/resources/base/media/icon.png" desc="js test icon have check"/>
+                <filteritem type="filepath" name="test/unittest/ndk_permission_js_test/entry/src/main/resources/base/media/icon.png" desc="js test icon have check"/>
             </filefilter>
         </filefilterlist>
     </oatconfig>
