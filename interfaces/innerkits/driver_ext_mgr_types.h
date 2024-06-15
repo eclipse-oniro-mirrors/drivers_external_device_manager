@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "hid_ddk_types.h"
 #include "ext_object.h"
 #include "message_parcel.h"
 

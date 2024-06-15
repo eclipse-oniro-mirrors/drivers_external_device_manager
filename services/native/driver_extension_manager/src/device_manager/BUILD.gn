@@ -20,7 +20,6 @@ ohos_shared_library("driver_extension_dev_callback") {
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",
-    "${ext_mgr_path}/interfaces/ddk/hid/",
     "${ext_mgr_path}/interfaces/innerkits/",
   ]
   configs = [ "${utils_path}:utils_config" ]
@@ -42,7 +41,6 @@ ohos_shared_library("driver_extension_device_manager") {
   ]
 
   include_dirs = [
-    "${ext_mgr_path}/interfaces/ddk/hid",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
