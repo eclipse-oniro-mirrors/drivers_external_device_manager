@@ -54,6 +54,15 @@ ohos_shared_library("driver_extension_manager") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    cfi_no_nvcall = true
+    cfi_vcall_icall_only = true
+    debug = false
+  }
+
   shlib_type = "sa"
   subsystem_name = "hdf"
   part_name = "external_device_manager"
