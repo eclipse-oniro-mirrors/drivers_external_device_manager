@@ -31,8 +31,6 @@ ohos_shared_library("usb_ndk") {
   deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "hilog:libhilog",

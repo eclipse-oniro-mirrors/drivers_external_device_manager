@@ -79,7 +79,6 @@ ohos_unittest("drivers_pkg_manager_test") {
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
     "${usb_bus_extension_include_path}",
-    "${ext_mgr_path}/interfaces/ddk/hid",
     "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/services/zidl/include",
   ]
@@ -115,10 +114,7 @@ ohos_unittest("driver_extension_manager_client_test") {
 
   sources = [ "driver_extension_manager_client_test/driver_extension_manager_client_test.cpp" ]
 
-  include_dirs = [
-    "${ext_mgr_path}/interfaces/ddk/hid",
-    "${ext_mgr_path}/services/zidl/include",
-  ]
+  include_dirs = [ "${ext_mgr_path}/services/zidl/include" ]
 
   deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
 

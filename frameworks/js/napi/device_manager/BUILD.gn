@@ -20,7 +20,6 @@ ohos_shared_library("devicemanager_napi") {
     "${utils_path}/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
-    "${ext_mgr_path}/interfaces/ddk/hid/",
   ]
 
   deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
