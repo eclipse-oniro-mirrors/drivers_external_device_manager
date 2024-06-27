@@ -36,6 +36,7 @@ ohos_shared_library("driver_extension_dev_callback") {
 ohos_shared_library("driver_extension_device_manager") {
   install_enable = true
   sources = [
+    "bundle_update_callback.cpp",
     "device.cpp",
     "etx_device_mgr.cpp",
   ]

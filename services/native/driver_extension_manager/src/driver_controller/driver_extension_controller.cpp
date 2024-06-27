@@ -90,7 +90,8 @@ int32_t DriverExtensionController::StartDriverExtension(
 
 int32_t DriverExtensionController::StopDriverExtension(
     std::string bundleName,
-    std::string abilityName)
+    std::string abilityName,
+    int32_t userId)
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
@@ -101,7 +102,7 @@ int32_t DriverExtensionController::StopDriverExtension(
     }
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
-    auto ret = abmc->StopExtensionAbility(want, nullptr);
+    auto ret = abmc->StopExtensionAbility(want, nullptr, userId);
     if (ret != 0) {
         EDM_LOGE(MODULE_EA_MGR, "StopExtensionAbility failed %{public}d", ret);
         return ret;

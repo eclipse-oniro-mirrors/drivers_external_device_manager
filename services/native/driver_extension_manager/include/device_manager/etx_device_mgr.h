@@ -40,25 +40,19 @@ public:
     vector<shared_ptr<DeviceInfo>> QueryDevice(const BusType busType);
     vector<shared_ptr<Device>> QueryAllDevices();
     vector<shared_ptr<Device>> QueryDevicesById(const uint64_t deviceId);
-    static int32_t UpdateBundleStatusCallback(
-        int32_t bundleStatus, int32_t busType, const string &bundleName, const string &abilityName);
-    static void OnBundlesUpdated(const string &bundleName = "");
     int32_t ConnectDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
     int32_t DisConnectDevice(uint64_t deviceId);
     void RemoveDeviceOfDeviceMap(shared_ptr<Device> device);
     void UnLoadSA(void);
     std::unordered_set<uint64_t> DeleteBundlesOfBundleInfoMap(const std::string &bundleName = "");
-    void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds);
+    void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds, bool isDriversReset = false);
+    void ClearMatchedDrivers(const int32_t userId);
 
 private:
     ExtDeviceManager() = default;
     void PrintMatchDriverMap();
     int32_t AddDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
     int32_t RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
-    int32_t RemoveAllDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
-    int32_t AddBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
-    int32_t RemoveBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
-    int32_t UpdateBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName);
     std::shared_ptr<Device> QueryDeviceByDeviceID(uint64_t deviceId);
     void UnLoadSelf(void);
     size_t GetTotalDeviceNum(void) const;

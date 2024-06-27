@@ -29,7 +29,7 @@ class DriverExtensionController {
 public:
     ~DriverExtensionController() = default;
     int32_t StartDriverExtension(std::string baudleName, std::string abilityName);
-    int32_t StopDriverExtension(std::string bundleName, std::string abilityName);
+    int32_t StopDriverExtension(std::string bundleName, std::string abilityName, int32_t userId = -1);
     int32_t ConnectDriverExtension(
         std::string bundleName,
         std::string abilityName,

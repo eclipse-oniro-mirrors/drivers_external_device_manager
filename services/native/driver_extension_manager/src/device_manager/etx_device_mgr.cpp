@@ -22,6 +22,7 @@
 #include "hilog_wrapper.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
+#include "bundle_update_callback.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -53,9 +54,10 @@ void ExtDeviceManager::PrintMatchDriverMap()
 int32_t ExtDeviceManager::Init()
 {
     EDM_LOGD(MODULE_DEV_MGR, "ExtDeviceManager Init success");
-    int32_t ret = DriverPkgManager::GetInstance().RegisterOnBundleUpdate(OnBundlesUpdated);
+    auto callback = make_shared<BundleUpdateCallback>();
+    int32_t ret = DriverPkgManager::GetInstance().RegisterBundleCallback(callback);
     if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "register bundle status callback fail");
+        EDM_LOGE(MODULE_DEV_MGR, "Register bundle update callback fail");
         return EDM_NOK;
     }
     return EDM_OK;
@@ -137,30 +139,6 @@ int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, 
     return EDM_OK;
 }
 
-int32_t ExtDeviceManager::RemoveAllDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo)
-{
-    if (device == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "device is null");
-        return EDM_ERR_INVALID_PARAM;
-    }
-    // update bundle info
-    lock_guard<mutex> lock(bundleMatchMapMutex_);
-    auto pos = bundleMatchMap_.find(bundleInfo);
-    if (pos == bundleMatchMap_.end()) {
-        return EDM_OK;
-    }
-
-    bundleMatchMap_.erase(pos);
-    // stop ability and destory sa
-    int32_t ret = device->Disconnect();
-    if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "disconnect driver extension ability[%{public}s] failed[%{public}d]",
-            Device::GetAbilityName(bundleInfo).c_str(), ret);
-        return ret;
-    }
-    return EDM_OK;
-}
-
 void ExtDeviceManager::RemoveDeviceOfDeviceMap(shared_ptr<Device> device)
 {
     EDM_LOGI(MODULE_DEV_MGR, "RemoveDeviceOfDeviceMap enter");
@@ -178,153 +156,6 @@ void ExtDeviceManager::RemoveDeviceOfDeviceMap(shared_ptr<Device> device)
         map.erase(deviceId);
         EDM_LOGI(MODULE_DEV_MGR, "success RemoveDeviceOfDeviceMap, deviceId:%{public}016" PRIx64 "", deviceId);
     }
-}
-
-int32_t ExtDeviceManager::AddBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName)
-{
-    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    if (busType <= BUS_TYPE_INVALID || busType > BUS_TYPE_TEST) {
-        EDM_LOGE(MODULE_DEV_MGR, "busType para invalid");
-        return EDM_ERR_INVALID_PARAM;
-    }
-
-    if (bundleName.empty() || abilityName.empty()) {
-        EDM_LOGE(MODULE_DEV_MGR, "BundleInfo para invalid");
-        return EDM_ERR_INVALID_PARAM;
-    }
-
-    // iterate over device, find bundleInfo and ability status
-    lock_guard<mutex> lock(deviceMapMutex_);
-
-    // find device
-    if (deviceMap_.count(busType) == 0) {
-        EDM_LOGD(MODULE_DEV_MGR, "deviceMap_ not bustype[%{public}d], wait to plug device", busType);
-        return EDM_OK;
-    }
-
-    string bundleInfo = bundleName + Device::GetStiching() + abilityName;
-    unordered_map<uint64_t, shared_ptr<Device>> &map = deviceMap_[busType];
-
-    for (auto iter : map) {
-        shared_ptr<Device> device = iter.second;
-
-        // iterate over device by bustype
-        auto bundleInfoNames = DriverPkgManager::GetInstance().QueryMatchDriver(device->GetDeviceInfo());
-        if (bundleInfoNames == nullptr) {
-            EDM_LOGD(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "], not find driver",
-                device->GetDeviceInfo()->GetDeviceId());
-            continue;
-        }
-
-        if (bundleName.compare(bundleInfoNames->bundleName) == 0 &&
-            abilityName.compare(bundleInfoNames->abilityName) == 0) {
-            device->AddBundleInfo(bundleInfo);
-            int32_t ret = AddDevIdOfBundleInfoMap(device, bundleInfo);
-            if (ret != EDM_OK) {
-                EDM_LOGE(MODULE_DEV_MGR,
-                    "deviceId[%{public}016" PRIX64 "] start driver extension ability[%{public}s] fail[%{public}d]",
-                    device->GetDeviceInfo()->GetDeviceId(), Device::GetAbilityName(bundleInfo).c_str(), ret);
-            }
-        }
-    }
-
-    return EDM_OK;
-}
-
-int32_t ExtDeviceManager::RemoveBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName)
-{
-    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    if (busType <= BUS_TYPE_INVALID || busType >= BUS_TYPE_TEST) {
-        EDM_LOGE(MODULE_DEV_MGR, "busType para invalid");
-        return EDM_ERR_INVALID_PARAM;
-    }
-
-    if (bundleName.empty() || abilityName.empty()) {
-        EDM_LOGE(MODULE_DEV_MGR, "BundleInfo para invalid");
-        return EDM_ERR_INVALID_PARAM;
-    }
-
-    lock_guard<mutex> lock(deviceMapMutex_);
-    if (deviceMap_.count(busType) == 0) {
-        EDM_LOGD(MODULE_DEV_MGR, "deviceMap_ not bustype[%{public}d], wait to plug device", busType);
-        return EDM_OK;
-    }
-
-    // iterate over device, remove bundleInfo
-    string bundleInfo = bundleName + Device::GetStiching() + abilityName;
-    unordered_map<uint64_t, shared_ptr<Device>> &deviceMap = deviceMap_[busType];
-
-    for (auto iter : deviceMap) {
-        shared_ptr<Device> device = iter.second;
-
-        // iterate over device by bustype
-        if (bundleInfo.compare(device->GetBundleInfo()) == 0) {
-            int32_t ret = RemoveAllDevIdOfBundleInfoMap(device, bundleInfo);
-            device->RemoveBundleInfo(); // update device
-            if (ret != EDM_OK) {
-                EDM_LOGE(MODULE_DEV_MGR,
-                    "deviceId[%{public}016" PRIX64 "] stop driver extension ability[%{public}s] fail[%{public}d]",
-                    device->GetDeviceInfo()->GetDeviceId(), Device::GetAbilityName(bundleInfo).c_str(), ret);
-            }
-        }
-    }
-    return EDM_OK;
-}
-
-int32_t ExtDeviceManager::UpdateBundleInfo(enum BusType busType, const string &bundleName, const string &abilityName)
-{
-    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    // stop ability of device and reset bundleInfo of device
-    int32_t ret = RemoveBundleInfo(busType, bundleName, abilityName);
-    if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "remove bundle info fail");
-        return EDM_NOK;
-    }
-
-    // iterate over device, add bundleInfo and start ability
-    ret = AddBundleInfo(busType, bundleName, abilityName);
-    if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "add bundle info fail");
-        return EDM_NOK;
-    }
-
-    return EDM_OK;
-}
-
-int32_t ExtDeviceManager::UpdateBundleStatusCallback(
-    int32_t bundleStatus, int32_t busType, const string &bundleName, const string &abilityName)
-{
-    int32_t ret = EDM_NOK;
-    if (bundleStatus < BUNDLE_ADDED || bundleStatus > BUNDLE_REMOVED) {
-        EDM_LOGE(MODULE_DEV_MGR, "bundleStatus para invalid");
-        return EDM_ERR_INVALID_PARAM;
-    }
-
-    // add bundle
-    if (bundleStatus == BUNDLE_ADDED) {
-        ret = ExtDeviceManager::GetInstance().AddBundleInfo((enum BusType)busType, bundleName, abilityName);
-        if (ret != EDM_OK) {
-            EDM_LOGE(MODULE_DEV_MGR, "callback add bundle info fail");
-        }
-        return ret;
-    }
-
-    // update bundle
-    if (bundleStatus == BUNDLE_UPDATED) {
-        ret = ExtDeviceManager::GetInstance().UpdateBundleInfo((enum BusType)busType, bundleName, abilityName);
-        if (ret != EDM_OK) {
-            EDM_LOGE(MODULE_DEV_MGR, "callback update bundle info fail");
-        }
-        return ret;
-    }
-
-    // remove bundle
-    ret = ExtDeviceManager::GetInstance().RemoveBundleInfo((enum BusType)busType, bundleName, abilityName);
-    if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "callback remove bundle info fail");
-    }
-
-    return ret;
 }
 
 std::unordered_set<uint64_t> ExtDeviceManager::DeleteBundlesOfBundleInfoMap(const std::string &bundleName)
@@ -348,12 +179,16 @@ std::unordered_set<uint64_t> ExtDeviceManager::DeleteBundlesOfBundleInfoMap(cons
     return deviceIds;
 }
 
-void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
+void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds, bool isDriversReset)
 {
-    EDM_LOGD(MODULE_DEV_MGR, "MatchDriverInfos enter");
+    EDM_LOGI(MODULE_DEV_MGR, "MatchDriverInfos enter");
     lock_guard<mutex> lock(deviceMapMutex_);
     for (auto &m : deviceMap_) {
         for (auto &[deviceId, device] : m.second) {
+            if (isDriversReset) {
+                device->RemoveBundleInfo();
+                device->ClearDrvExtRemote();
+            }
             if (deviceIds.find(deviceId) != deviceIds.end()) {
                 device->RemoveBundleInfo();
             }
@@ -366,6 +201,7 @@ void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
                 continue;
             }
             std::string bundleInfo = bundleInfoNames->bundleName + Device::GetStiching() + bundleInfoNames->abilityName;
+            EDM_LOGI(MODULE_DEV_MGR, "MatchDriverInfo success, bundleInfo: %{public}s", bundleInfo.c_str());
             device->AddBundleInfo(bundleInfo, bundleInfoNames->driverUid);
             int32_t ret = AddDevIdOfBundleInfoMap(device, bundleInfo);
             if (ret != EDM_OK) {
@@ -376,11 +212,16 @@ void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
     }
 }
 
-void ExtDeviceManager::OnBundlesUpdated(const std::string &bundleName)
+void ExtDeviceManager::ClearMatchedDrivers(const int32_t userId)
 {
-    EDM_LOGD(MODULE_DEV_MGR, "OnBundlesUpdated enter");
-    auto deviceIds = ExtDeviceManager::GetInstance().DeleteBundlesOfBundleInfoMap(bundleName);
-    ExtDeviceManager::GetInstance().MatchDriverInfos(deviceIds);
+    EDM_LOGI(MODULE_DEV_MGR, "ClearMatchedDrivers start");
+    lock_guard<mutex> lock(bundleMatchMapMutex_);
+    for (auto iter : bundleMatchMap_) {
+        std::string bundleInfo = iter.first;
+        (void)DriverExtensionController::GetInstance().StopDriverExtension(Device::GetBundleName(bundleInfo),
+            Device::GetAbilityName(bundleInfo), userId);
+    }
+    bundleMatchMap_.clear();
 }
 
 int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)

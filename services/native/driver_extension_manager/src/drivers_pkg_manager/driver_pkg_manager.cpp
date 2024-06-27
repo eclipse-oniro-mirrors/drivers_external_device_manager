@@ -24,6 +24,8 @@
 #include "bus_extension_core.h"
 #include "pkg_db_helper.h"
 #include "driver_pkg_manager.h"
+#include "driver_os_account_subscriber.h"
+#include "os_account_manager.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -32,6 +34,10 @@ using namespace OHOS;
 using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::ExternalDeviceManager;
+using namespace OHOS::AccountSA;
+
+static constexpr const char *ACCOUNT_SWITCHING_SUBSCRIBE_NAME = "DRIVER_ACCOUNT_SWITCHING_SUBSCRIBE";
+static constexpr const char *ACCOUNT_SWITCHED_SUBSCRIBE_NAME = "DRIVER_ACCOUNT_SWITCHED_SUBSCRIBE";
 
 IMPLEMENT_SINGLE_INSTANCE(DriverPkgManager);
 
@@ -76,6 +82,23 @@ int32_t DriverPkgManager::Init()
     if (!bundleStateCallback_->GetAllDriverInfos(false)) {
         EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ GetAllDriverInfos Err");
     }
+
+    OsAccountSubscribeInfo switchingSubscribeInfo(OS_ACCOUNT_SUBSCRIBE_TYPE::SWITCHING,
+        ACCOUNT_SWITCHING_SUBSCRIBE_NAME);
+    OsAccountSubscribeInfo switchedSubscribeInfo(OS_ACCOUNT_SUBSCRIBE_TYPE::SWITCHED, ACCOUNT_SWITCHED_SUBSCRIBE_NAME);
+    shared_ptr<DriverOsAccountSwitching> driverOsAccountSwitching
+        = make_shared<DriverOsAccountSwitching>(switchingSubscribeInfo, bundleStateCallback_);
+    shared_ptr<DriverOsAccountSwitched> driverOsAccountSwitched
+        = make_shared<DriverOsAccountSwitched>(switchedSubscribeInfo, bundleStateCallback_);
+    auto retCode = OsAccountManager::SubscribeOsAccount(driverOsAccountSwitching);
+    if (retCode != ERR_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "SubscribeOsAccount Switching fail, retCode=%{public}d", retCode);
+    }
+    retCode = OsAccountManager::SubscribeOsAccount(driverOsAccountSwitched);
+    if (retCode != ERR_OK) {
+        EDM_LOGE(MODULE_PKG_MGR, "SubscribeOsAccount Switched fail, retCode=%{public}d", retCode);
+    }
+
     // register calback to BMS
     return RegisterCallback(bundleStateCallback_);
 }
@@ -104,7 +127,7 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
         /* error or empty record */
         return nullptr;
     }
-    EDM_LOGD(MODULE_PKG_MGR, "total driverInfos number: %{public}zu", pkgInfos.size());
+    EDM_LOGI(MODULE_PKG_MGR, "Total driverInfos number: %{public}zu", pkgInfos.size());
     for (const auto &pkgInfo : pkgInfos) {
         DriverInfo driverInfo;
         driverInfo.UnSerialize(pkgInfo.driverInfo);
@@ -209,17 +232,16 @@ int32_t DriverPkgManager::RegisterOnBundleUpdate(PCALLBACKFUN pFun)
     return EDM_OK;
 }
 
-int32_t DriverPkgManager::RegisterOnBundleUpdate(ONBUNDLESUPDATE pFun)
+int32_t DriverPkgManager::RegisterBundleCallback(std::shared_ptr<IBundleUpdateCallback> callback)
 {
-    if (pFun == nullptr) {
+    if (callback == nullptr) {
         return EDM_ERR_INVALID_OBJECT;
     }
-
     if (bundleStateCallback_ == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "failed to register onBundlesUpdate, bundleStateCallback_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "Failed to register bundleUpdate callback, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
-    bundleStateCallback_->onBundlesUpdate = pFun;
+    bundleStateCallback_->bundleUpdateCallback_ = callback;
     return EDM_OK;
 }
 
@@ -230,7 +252,6 @@ int32_t DriverPkgManager::UnRegisterOnBundleUpdate()
         return EDM_ERR_INVALID_OBJECT;
     }
     bundleStateCallback_->m_pFun = nullptr;
-    bundleStateCallback_->onBundlesUpdate = nullptr;
     return EDM_OK;
 }
 } // namespace ExternalDeviceManager

@@ -26,6 +26,7 @@
 #include "extension_ability_info.h"
 #include "ibus_extension.h"
 #include "pkg_tables.h"
+#include "ibundle_update_callback.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -46,7 +47,6 @@ enum ON_BUNDLE_STATUS {
 };
 
 typedef int32_t(*PCALLBACKFUN)(int, int, const string &, const string &);
-typedef void(*ONBUNDLESUPDATE)(const string &);
 
 class DrvBundleStateCallback : public IBundleStatusCallback {
 public:
@@ -86,10 +86,14 @@ public:
     string GetStiching();
 
     PCALLBACKFUN m_pFun = nullptr;
-    ONBUNDLESUPDATE onBundlesUpdate = nullptr;
+    std::shared_ptr<IBundleUpdateCallback> bundleUpdateCallback_ = nullptr;
+
+    void ResetInitOnce();
+    void ResetMatchedBundles(const int32_t userId);
 
 private:
     std::mutex bundleMgrMutex_;
+    std::mutex initOnceMutex_;
     sptr<IBundleMgr> bundleMgr_ = nullptr;
     string stiching = "This is used for Name Stiching";
     bool initOnce = false;
@@ -105,6 +109,7 @@ private:
     std::string GetBundleSize(const std::string &bundleName);
     void ParseToPkgInfoTables(
         const std::vector<ExtensionAbilityInfo> &driverInfos, std::vector<PkgInfoTable> &pkgInfoTables);
+    bool IsCurrentUserId(const int userId);
 
     void OnBundleDrvAdded(int bundleStatus);
     void OnBundleDrvUpdated(int bundleStatus);

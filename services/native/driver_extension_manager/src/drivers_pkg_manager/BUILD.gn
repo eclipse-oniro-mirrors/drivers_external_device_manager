@@ -21,6 +21,7 @@ ohos_shared_library("drivers_pkg_manager") {
   install_enable = true
   sources = [
     "driver_info.cpp",
+    "driver_os_account_subscriber.cpp",
     "driver_pkg_manager.cpp",
     "drv_bundle_state_callback.cpp",
     "pkg_database.cpp",
