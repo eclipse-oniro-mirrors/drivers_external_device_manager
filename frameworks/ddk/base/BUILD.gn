@@ -25,6 +25,10 @@ ohos_shared_library("ddk_base") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+  ]
   install_enable = true
   subsystem_name = "hdf"
   part_name = "external_device_manager"

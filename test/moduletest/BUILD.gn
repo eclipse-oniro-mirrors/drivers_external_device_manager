@@ -37,9 +37,9 @@ ohos_executable("bus_extension_usb_mt") {
 ohos_executable("driver_extension_controller_mt") {
   sources =
       [ "driver_extension_controller_mt/driver_extension_controller_mt.cpp" ]
-  include_dirs = [ "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller" ]
+  include_dirs = [ "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager" ]
   configs = [ "${utils_path}:utils_config" ]
-  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_controller:driver_extension_controller" ]
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager" ]
   external_deps = [
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
@@ -64,9 +64,7 @@ ohos_executable("bus_extension_core_mt") {
   configs = [ "${utils_path}:utils_config" ]
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_controller:driver_extension_controller",
   ]
   external_deps = [
     "c_utils:utils",
@@ -85,14 +83,11 @@ ohos_executable("ext_device_manager_mt") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
-    "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_controller:driver_extension_controller",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [
@@ -122,7 +117,6 @@ ohos_executable("drivers_pkg_manager_mt") {
   configs = [ "${utils_path}:utils_config" ]
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]

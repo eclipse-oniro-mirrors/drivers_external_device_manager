@@ -49,6 +49,11 @@ ohos_shared_library("driver_extension") {
     "ipc:ipc_napi",
     "napi:ace_napi",
   ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-Os",
+  ]
 
   subsystem_name = "hdf"
   part_name = "external_device_manager"
@@ -64,16 +69,8 @@ ohos_shared_library("driver_extension_module") {
   deps = [ ":driver_extension" ]
 
   external_deps = [
-    "ability_base:configuration",
-    "ability_base:session_info",
     "ability_runtime:ability_manager",
     "ability_runtime:extensionkit_native",
-    "ace_engine:ace_uicontent",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "c_utils:utils",
-    "hilog:libhilog",
-    "ipc:ipc_core",
     "napi:ace_napi",
   ]
 

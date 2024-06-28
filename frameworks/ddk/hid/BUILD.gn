@@ -27,6 +27,10 @@ ohos_shared_library("hid") {
     "hilog:libhilog",
     "ipc:ipc_core",
   ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+  ]
   install_enable = true
   subsystem_name = "hdf"
   part_name = "external_device_manager"

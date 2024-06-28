@@ -32,14 +32,11 @@ ohos_shared_library("driver_extension_manager") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
-    "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_controller:driver_extension_controller",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [
@@ -53,6 +50,11 @@ ohos_shared_library("driver_extension_manager") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+  ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-Os",
   ]
 
   sanitize = {
@@ -96,15 +98,12 @@ ohos_static_library("driver_extension_manager_test") {
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",
   ]
 
   configs = [ "${utils_path}:utils_config" ]
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_dev_callback",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_controller:driver_extension_controller",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [

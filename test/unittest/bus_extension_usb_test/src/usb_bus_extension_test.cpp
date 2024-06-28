@@ -40,12 +40,12 @@ public:
     }
 };
 
-static const vector<Metadata> g_testMetaDatas = {
-    Metadata("bus", "usb", ""),
-    Metadata("desc", "test usb driver extension", ""),
-    Metadata("vendor", "testVendor", ""),
-    Metadata("pid", "0x1234,0x5678", ""),
-    Metadata("vid", "0x1111,0x2222", "")
+static const map<string, string> g_testMetaDatas = {
+    {"bus", "usb"},
+    {"desc", "test usb driver extension"},
+    {"vendor", "testVendor"},
+    {"pid", "0x1234,0x5678"},
+    {"vid", "0x1111,0x2222"}
 };
 HWTEST_F(UsbBusExtensionTest, GetExtensionInstanceTest, TestSize.Level1)
 {

@@ -38,13 +38,10 @@ bool ParseDriverInfoTest(const uint8_t *data, size_t size)
 {
     auto bus = make_shared<UsbBusExtension>();
     string str(reinterpret_cast<const char *>(data));
-    Metadata vids;
-    Metadata pids;
-    vids.name = "vid";
-    vids.value = str;
-    pids.name = "pid";
-    pids.value = str;
-    vector<Metadata> metadata = {vids, pids};
+    map<string, string> metadata = {
+        {"vid", str},
+        {"pid", str}
+    };
     auto ret = bus->ParseDriverInfo(metadata);
     return true;
 }

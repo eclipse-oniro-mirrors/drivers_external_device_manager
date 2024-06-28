@@ -61,6 +61,11 @@ ohos_shared_library("drivers_pkg_manager") {
     "relational_store:native_rdb",
     "samgr:samgr_proxy",
   ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-Os",
+  ]
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
