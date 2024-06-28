@@ -31,6 +31,8 @@
 #include "bus_extension_core.h"
 #include "accesstoken_kit.h"
 #include <unordered_map>
+#include <pthread.h>
+#include <thread>
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -44,6 +46,9 @@ constexpr uint64_t LABEL = HITRACE_TAG_OHOS;
 const string DRV_INFO_BUS = "bus";
 const string DRV_INFO_VENDOR = "vendor";
 const string DRV_INFO_DESC = "description";
+
+static constexpr const char *BUNDLE_RESET_TASK_NAME = "DRIVER_INFO_RESET";
+static constexpr const char *BUNDLE_UPDATE_TASK_NAME = "DRIVER_INFO_UPDATE";
 
 std::string DrvBundleStateCallback::GetBundleSize(const std::string &bundleName)
 {
@@ -174,6 +179,9 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnBundleAdded");
     StartTrace(LABEL, "OnBundleAdded");
+    if (!IsCurrentUserId(userId)) {
+        return;
+    }
     std::vector<ExtensionAbilityInfo> driverInfos;
     if (!QueryDriverInfos(bundleName, userId, driverInfos) || driverInfos.empty()) {
         return;
@@ -193,6 +201,9 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnBundleUpdated");
     StartTrace(LABEL, "OnBundleUpdated");
+    if (!IsCurrentUserId(userId)) {
+        return;
+    }
     std::vector<ExtensionAbilityInfo> driverInfos;
     if (!QueryDriverInfos(bundleName, userId, driverInfos)) {
         return;
@@ -218,6 +229,9 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnBundleRemoved");
     StartTrace(LABEL, "OnBundleRemoved");
+    if (!IsCurrentUserId(userId)) {
+        return;
+    }
     OnBundleDrvRemoved(bundleName);
     FinishTrace(LABEL);
 }
@@ -227,8 +241,28 @@ sptr<IRemoteObject> DrvBundleStateCallback::AsObject()
     return nullptr;
 }
 
+void DrvBundleStateCallback::ResetInitOnce()
+{
+    std::lock_guard<std::mutex> lock(initOnceMutex_);
+    initOnce = false;
+}
+
+void DrvBundleStateCallback::ResetMatchedBundles(const int32_t userId)
+{
+    if (bundleUpdateCallback_ == nullptr) {
+        EDM_LOGE(MODULE_PKG_MGR, "DrvBundleStateCallback::ResetMatchedBundles bundleUpdateCallback_ is null");
+        return;
+    }
+    std::thread taskThread([userId, this]() {
+        bundleUpdateCallback_->OnBundlesReseted(userId);
+    });
+    pthread_setname_np(taskThread.native_handle(), BUNDLE_RESET_TASK_NAME);
+    taskThread.detach();
+}
+
 bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
 {
+    std::lock_guard<std::mutex> lock(initOnceMutex_);
     if (initOnce) {
         return true;
     }
@@ -240,6 +274,11 @@ bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
     }
     std::vector<ExtensionAbilityInfo> driverInfos;
     int32_t userId = GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        EDM_LOGI(MODULE_PKG_MGR, "GetCurrentActiveUserId userId is invalid");
+        return false;
+    }
+    EDM_LOGI(MODULE_PKG_MGR, "QueryExtensionAbilityInfos userId:%{public}d", userId);
     iBundleMgr->QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER, userId, driverInfos);
     if (!UpdateToRdb(driverInfos, "", isExecCallback)) {
         EDM_LOGE(MODULE_PKG_MGR, "UpdateToRdb failed");
@@ -323,25 +362,30 @@ bool DrvBundleStateCallback::UpdateToRdb(const std::vector<ExtensionAbilityInfo>
         return false;
     }
 
-    if (isExecCallback && onBundlesUpdate != nullptr) {
-        onBundlesUpdate(bundleName);
+    if (isExecCallback && bundleUpdateCallback_ != nullptr) {
+        std::thread taskThread([bundleName, this]() {
+            bundleUpdateCallback_->OnBundlesUpdated(bundleName);
+        });
+        pthread_setname_np(taskThread.native_handle(), BUNDLE_UPDATE_TASK_NAME);
+        taskThread.detach();
     }
     return true;
 }
 
 int32_t DrvBundleStateCallback::GetCurrentActiveUserId()
 {
-    std::vector<int32_t> activeIds;
-    int ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
+    int32_t localId;
+    int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     if (ret != 0) {
-        EDM_LOGE(MODULE_PKG_MGR, "QueryActiveOsAccountIds failed ret:%{public}d", ret);
+        EDM_LOGE(MODULE_PKG_MGR, "GetForegroundOsAccountLocalId failed ret:%{public}d", ret);
         return Constants::INVALID_USERID;
     }
-    if (activeIds.empty()) {
-        EDM_LOGE(MODULE_PKG_MGR, "QueryActiveOsAccountIds activeIds empty");
-        return Constants::ALL_USERID;
-    }
-    return activeIds[0];
+    return localId;
+}
+
+bool DrvBundleStateCallback::IsCurrentUserId(const int userId)
+{
+    return GetCurrentActiveUserId() == userId;
 }
 
 sptr<OHOS::AppExecFwk::IBundleMgr> DrvBundleStateCallback::GetBundleMgrProxy()
@@ -378,8 +422,12 @@ void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
         EDM_LOGE(MODULE_PKG_MGR, "delete failed: %{public}s", bundleName.c_str());
         return;
     }
-    if (onBundlesUpdate != nullptr) {
-        onBundlesUpdate(bundleName);
+    if (bundleUpdateCallback_ != nullptr) {
+        std::thread taskThread([bundleName, this]() {
+            bundleUpdateCallback_->OnBundlesUpdated(bundleName);
+        });
+        pthread_setname_np(taskThread.native_handle(), BUNDLE_UPDATE_TASK_NAME);
+        taskThread.detach();
     }
 }
 }

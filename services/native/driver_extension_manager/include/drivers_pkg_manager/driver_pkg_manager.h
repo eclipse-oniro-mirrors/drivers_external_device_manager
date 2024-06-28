@@ -58,7 +58,7 @@ public:
     int32_t QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driverInfos,
         bool isByDriverUid = false, const std::string &driverUid = "");
     int32_t RegisterOnBundleUpdate(PCALLBACKFUN pFun);
-    int32_t RegisterOnBundleUpdate(ONBUNDLESUPDATE pFun);
+    int32_t RegisterBundleCallback(std::shared_ptr<IBundleUpdateCallback> callback);
     int32_t UnRegisterOnBundleUpdate();
     ~DriverPkgManager();
 private:

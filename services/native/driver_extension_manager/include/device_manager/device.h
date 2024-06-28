@@ -59,6 +59,7 @@ public:
     void RemoveBundleInfo()
     {
         bundleInfo_.clear();
+        driverUid_.clear();
     }
 
     std::string GetBundleInfo() const
@@ -79,6 +80,11 @@ public:
     void UpdateDrvExtRemote(const sptr<IRemoteObject> &remote)
     {
         drvExtRemote_ = remote;
+    }
+
+    void ClearDrvExtRemote()
+    {
+        drvExtRemote_ = nullptr;
     }
 
     void AddDrvExtConnNotify()
