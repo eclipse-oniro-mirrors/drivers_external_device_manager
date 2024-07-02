@@ -25,14 +25,16 @@ ohos_shared_library("devicemanager_napi") {
   deps = [ "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client" ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
-    "ipc:ipc_core",
     "ipc:ipc_napi",
     "ipc:ipc_single",
     "napi:ace_napi",
+  ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-Os",
   ]
 
   relative_install_dir = "module/driver"

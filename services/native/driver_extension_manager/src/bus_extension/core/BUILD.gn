@@ -20,9 +20,13 @@ ohos_shared_library("driver_extension_bus_core") {
   include_dirs = [ "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core" ]
   configs = [ "${utils_path}:utils_config" ]
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hilog:libhilog",
+  ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-Os",
   ]
 
   subsystem_name = "hdf"

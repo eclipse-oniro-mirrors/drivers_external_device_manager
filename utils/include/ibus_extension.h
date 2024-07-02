@@ -16,22 +16,17 @@
 #ifndef IUSB_EXTENSION_H
 #define IUSB_EXTENSION_H
 #include <vector>
-#include <stdint.h>
-#include <string>
-#include <memory>
-#include "application_info.h"
+#include <map>
 #include "ext_object.h"
 #include "idev_change_callback.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
-using namespace OHOS::AppExecFwk;
-
 
 class IBusExtension {
 public:
     virtual ~IBusExtension() = default;
-    virtual shared_ptr<DriverInfoExt> ParseDriverInfo(const vector<Metadata> &metadata) = 0;
+    virtual shared_ptr<DriverInfoExt> ParseDriverInfo(const map<string, string> &metadata) = 0;
     virtual shared_ptr<DriverInfoExt> GetNewDriverInfoExtObject() = 0;
     virtual bool MatchDriver(const DriverInfo &driver, const DeviceInfo &device) = 0;
     virtual int32_t SetDevChangeCallback(shared_ptr<IDevChangeCallback> callback) = 0;

@@ -139,18 +139,18 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     return true;
 }
 
-shared_ptr<DriverInfoExt> UsbBusExtension::ParseDriverInfo(const vector<Metadata> &metadata)
+shared_ptr<DriverInfoExt> UsbBusExtension::ParseDriverInfo(const map<string, string> &metadata)
 {
     shared_ptr<UsbDriverInfo> usbDriverInfo = make_shared<UsbDriverInfo>();
     if (usbDriverInfo == nullptr) {
         EDM_LOGE(MODULE_BUS_USB,  "creat UsbDriverInfo obj fail\n");
         return nullptr;
     }
-    for (auto meta : metadata) {
-        if (LowerStr(meta.name) == "pid") {
-            usbDriverInfo->pids_ = this->ParseCommaStrToVectorUint16(meta.value);
-        } else if (LowerStr(meta.name) == "vid") {
-            usbDriverInfo->vids_ = this->ParseCommaStrToVectorUint16(meta.value);
+    for (auto& meta : metadata) {
+        if (LowerStr(meta.first) == "pid") {
+            usbDriverInfo->pids_ = this->ParseCommaStrToVectorUint16(meta.second);
+        } else if (LowerStr(meta.first) == "vid") {
+            usbDriverInfo->vids_ = this->ParseCommaStrToVectorUint16(meta.second);
         }
     }
     return usbDriverInfo;

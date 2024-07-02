@@ -32,7 +32,6 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
   ]
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.0",
@@ -40,6 +39,11 @@ ohos_shared_library("driver_extension_usb_bus") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+  ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-Os",
   ]
 
   install_enable = true

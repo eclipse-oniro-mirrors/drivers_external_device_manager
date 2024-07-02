@@ -105,10 +105,11 @@ private:
     void ClearDriverInfo(DriverInfo &tmpDrvInfo);
     sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
-    void ChangeValue(DriverInfo &tmpDrvInfo, const std::vector<Metadata> &metadata);
+    void ChangeValue(DriverInfo &tmpDrvInfo, const map<string, string> &metadata);
     std::string GetBundleSize(const std::string &bundleName);
     void ParseToPkgInfoTables(
         const std::vector<ExtensionAbilityInfo> &driverInfos, std::vector<PkgInfoTable> &pkgInfoTables);
+    PkgInfoTable CreatePkgInfoTable(const ExtensionAbilityInfo &driverInfo, string driverInfoStr);
     bool IsCurrentUserId(const int userId);
 
     void OnBundleDrvAdded(int bundleStatus);

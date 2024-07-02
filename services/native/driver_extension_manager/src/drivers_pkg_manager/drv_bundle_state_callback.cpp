@@ -70,17 +70,17 @@ std::string DrvBundleStateCallback::GetBundleSize(const std::string &bundleName)
     return bundleSize;
 }
 
-void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, const std::vector<Metadata> &metadata)
+void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, const map<string, string> &metadata)
 {
     for (auto data : metadata) {
-        if (data.name == DRV_INFO_BUS) {
-            tmpDrvInfo.bus_ = data.value;
+        if (data.first == DRV_INFO_BUS) {
+            tmpDrvInfo.bus_ = data.second;
         }
-        if (data.name == DRV_INFO_VENDOR) {
-            tmpDrvInfo.vendor_ = data.value;
+        if (data.first == DRV_INFO_VENDOR) {
+            tmpDrvInfo.vendor_ = data.second;
         }
-        if (data.name == DRV_INFO_DESC) {
-            tmpDrvInfo.description_ = data.value;
+        if (data.first == DRV_INFO_DESC) {
+            tmpDrvInfo.description_ = data.second;
         }
     }
 }
@@ -95,13 +95,17 @@ void DrvBundleStateCallback::ParseToPkgInfoTables(const std::vector<ExtensionAbi
             continue;
         }
         DriverInfo tmpDrvInfo(driverInfo.bundleName, driverInfo.name);
-        ChangeValue(tmpDrvInfo, driverInfo.metadata);
+        map<string, string> metaMap;
+        for (auto meta : driverInfo.metadata) {
+            metaMap.emplace(meta.name, meta.value);
+        }
+        ChangeValue(tmpDrvInfo, metaMap);
         extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(tmpDrvInfo.GetBusName());
         if (extInstance == nullptr) {
             EDM_LOGE(MODULE_PKG_MGR, "GetBusExtensionByName failed, bus:%{public}s", tmpDrvInfo.bus_.c_str());
             continue;
         }
-        tmpDrvInfo.driverInfoExt_ = extInstance->ParseDriverInfo(driverInfo.metadata);
+        tmpDrvInfo.driverInfoExt_ = extInstance->ParseDriverInfo(metaMap);
         if (tmpDrvInfo.driverInfoExt_ == nullptr) {
             EDM_LOGE(MODULE_PKG_MGR, "ParseDriverInfo null");
             continue;
@@ -120,24 +124,29 @@ void DrvBundleStateCallback::ParseToPkgInfoTables(const std::vector<ExtensionAbi
             continue;
         }
 
-        PkgInfoTable pkgInfo = {
-            .driverUid = driverInfo.name + "-" + std::to_string(driverInfo.applicationInfo.accessTokenId),
-            .bundleAbility = driverInfo.bundleName + "-" + driverInfo.name,
-            .bundleName = driverInfo.bundleName,
-            .driverName = driverInfo.name,
-            .driverInfo = driverInfoStr
-        };
-        HapTokenInfo hapTokenInfo;
-        if (AccessTokenKit::GetHapTokenInfo(driverInfo.applicationInfo.accessTokenId, hapTokenInfo)
-            == AccessTokenKitRet::RET_SUCCESS) {
-            pkgInfo.userId = hapTokenInfo.userID;
-            pkgInfo.appIndex = hapTokenInfo.instIndex;
-            EDM_LOGD(MODULE_PKG_MGR, "userId:%{public}d, appIndex:%{public}d",
-                hapTokenInfo.userID, hapTokenInfo.instIndex);
-        }
-
+        PkgInfoTable pkgInfo = CreatePkgInfoTable(driverInfo, driverInfoStr);
         pkgInfoTables.emplace_back(pkgInfo);
     }
+}
+
+PkgInfoTable DrvBundleStateCallback::CreatePkgInfoTable(const ExtensionAbilityInfo &driverInfo, string driverInfoStr)
+{
+    PkgInfoTable pkgInfo = {
+        .driverUid = driverInfo.name + "-" + std::to_string(driverInfo.applicationInfo.accessTokenId),
+        .bundleAbility = driverInfo.bundleName + "-" + driverInfo.name,
+        .bundleName = driverInfo.bundleName,
+        .driverName = driverInfo.name,
+        .driverInfo = driverInfoStr
+    };
+    HapTokenInfo hapTokenInfo;
+    if (AccessTokenKit::GetHapTokenInfo(driverInfo.applicationInfo.accessTokenId, hapTokenInfo)
+        == AccessTokenKitRet::RET_SUCCESS) {
+        pkgInfo.userId = hapTokenInfo.userID;
+        pkgInfo.appIndex = hapTokenInfo.instIndex;
+        EDM_LOGD(MODULE_PKG_MGR, "userId:%{public}d, appIndex:%{public}d",
+            hapTokenInfo.userID, hapTokenInfo.instIndex);
+    }
+    return pkgInfo;
 }
 
 DrvBundleStateCallback::DrvBundleStateCallback()
