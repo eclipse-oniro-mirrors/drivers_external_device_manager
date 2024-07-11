@@ -42,7 +42,10 @@ void DriverExtMgr::OnStart()
     int32_t ret;
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStart");
     BusExtensionCore::GetInstance().LoadBusExtensionLibs();
-    ret = DriverPkgManager::GetInstance().Init();
+    ret = DriverPkgManager::GetInstance().Init(bmsFuture_, accountFuture_, commEventFuture_);
+    AddSystemAbilityListener(SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN);
+    AddSystemAbilityListener(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_SERVICE, "DriverPkgManager Init failed %{public}d", ret);
     }
@@ -73,6 +76,32 @@ void DriverExtMgr::OnStop()
 int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
 {
     return 0;
+}
+
+void DriverExtMgr::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
+{
+    EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility systemAbilityId: %{public}d", systemAbilityId);
+    switch (systemAbilityId) {
+        case SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN: {
+            EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility accountMgr");
+            DriverPkgManager::GetInstance().SubscribeOsAccountSwitch();
+            bmsPromise_.set_value(systemAbilityId);
+            break;
+        }
+        case  BUNDLE_MGR_SERVICE_SYS_ABILITY_ID: {
+            EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility BMS");
+            accountPromise_.set_value(systemAbilityId);
+            break;
+        }
+        case  COMMON_EVENT_SERVICE_ID: {
+            EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility CommonEventService");
+            DriverPkgManager::GetInstance().RegisterBundleStatusCallback();
+            commEventPromise_.set_value(systemAbilityId);
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 UsbErrCode DriverExtMgr::QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices)

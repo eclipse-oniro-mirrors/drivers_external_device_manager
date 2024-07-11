@@ -27,6 +27,7 @@
 #include "ibus_extension.h"
 #include "pkg_tables.h"
 #include "ibundle_update_callback.h"
+#include <future>
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -51,6 +52,8 @@ typedef int32_t(*PCALLBACKFUN)(int, int, const string &, const string &);
 class DrvBundleStateCallback : public IBundleStatusCallback {
 public:
     DrvBundleStateCallback();
+    DrvBundleStateCallback(shared_future<int32_t> bmsFuture, shared_future<int32_t> accountFuture,
+        shared_future<int32_t> commEventFuture);
     ~DrvBundleStateCallback();
 
     void PrintTest();
@@ -80,6 +83,7 @@ public:
     virtual sptr<IRemoteObject> AsObject() override;
 
     bool GetAllDriverInfos(bool isExecCallback = true);
+    void GetAllDriverInfosAsync(bool isExecCallback = true);
 
     bool CheckBundleMgrProxyPermission();
 
@@ -97,6 +101,10 @@ private:
     sptr<IBundleMgr> bundleMgr_ = nullptr;
     string stiching = "This is used for Name Stiching";
     bool initOnce = false;
+
+    shared_future<int32_t> bmsFuture_;
+    shared_future<int32_t> accountFuture_;
+    shared_future<int32_t> commEventFuture_;
 
     bool QueryDriverInfos(const std::string &bundleName, const int userId,
         std::vector<ExtensionAbilityInfo> &driverInfos);

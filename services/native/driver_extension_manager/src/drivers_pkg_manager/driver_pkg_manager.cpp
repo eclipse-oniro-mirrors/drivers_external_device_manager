@@ -47,8 +47,8 @@ DriverPkgManager::DriverPkgManager()
 
 DriverPkgManager::~DriverPkgManager()
 {
-    if (UnRegisterCallback() == 0) {
-        EDM_LOGE(MODULE_PKG_MGR, "~DriverPkgManager UnRegisterCallback Fail");
+    if (UnRegisterBundleStatusCallback() == 0) {
+        EDM_LOGE(MODULE_PKG_MGR, "~DriverPkgManager UnRegisterBundleStatusCallback Fail");
     }
     bundleStateCallback_ = nullptr;
 }
@@ -60,29 +60,36 @@ void DriverPkgManager::PrintTest()
 
 int32_t DriverPkgManager::Init()
 {
-    EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
-    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    bundleMonitor_ = std::make_shared<BundleMonitor>(subscribeInfo);
-
-    if (bundleMonitor_ == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "bundleMonitor_ new Err");
-        return EDM_ERR_INVALID_OBJECT;
-    }
-
     bundleStateCallback_ = new DrvBundleStateCallback();
-
     if (bundleStateCallback_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ new Err");
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if (!bundleStateCallback_->GetAllDriverInfos(false)) {
-        EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ GetAllDriverInfos Err");
+    bundleStateCallback_->GetAllDriverInfos();
+    return EDM_OK;
+}
+
+int32_t DriverPkgManager::Init(shared_future<int32_t> bmsFuture, shared_future<int32_t> accountFuture,
+    shared_future<int32_t> commEventFuture)
+{
+    bmsFuture_ = bmsFuture;
+    accountFuture_ = accountFuture;
+    commEventFuture_ = commEventFuture;
+
+    bundleStateCallback_ = new DrvBundleStateCallback(bmsFuture, accountFuture, commEventFuture);
+    if (bundleStateCallback_ == nullptr) {
+        EDM_LOGE(MODULE_PKG_MGR, "bundleStateCallback_ new Err");
+        return EDM_ERR_INVALID_OBJECT;
     }
 
+    bundleStateCallback_->GetAllDriverInfosAsync();
+    return EDM_OK;
+}
+
+bool DriverPkgManager::SubscribeOsAccountSwitch()
+{
+    EDM_LOGI(MODULE_PKG_MGR, "SubscribeOsAccountSwitch start");
     OsAccountSubscribeInfo switchingSubscribeInfo(OS_ACCOUNT_SUBSCRIBE_TYPE::SWITCHING,
         ACCOUNT_SWITCHING_SUBSCRIBE_NAME);
     OsAccountSubscribeInfo switchedSubscribeInfo(OS_ACCOUNT_SUBSCRIBE_TYPE::SWITCHED, ACCOUNT_SWITCHED_SUBSCRIBE_NAME);
@@ -93,14 +100,14 @@ int32_t DriverPkgManager::Init()
     auto retCode = OsAccountManager::SubscribeOsAccount(driverOsAccountSwitching);
     if (retCode != ERR_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "SubscribeOsAccount Switching fail, retCode=%{public}d", retCode);
+        return false;
     }
     retCode = OsAccountManager::SubscribeOsAccount(driverOsAccountSwitched);
     if (retCode != ERR_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "SubscribeOsAccount Switched fail, retCode=%{public}d", retCode);
+        return false;
     }
-
-    // register calback to BMS
-    return RegisterCallback(bundleStateCallback_);
+    return true;
 }
 
 shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo> devInfo)
@@ -176,20 +183,26 @@ int32_t DriverPkgManager::QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driver
     return EDM_OK;
 }
 
-int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &callback)
+int32_t DriverPkgManager::RegisterBundleStatusCallback()
 {
-    EDM_LOGI(MODULE_PKG_MGR, "RegisterCallback called");
+    EDM_LOGI(MODULE_PKG_MGR, "RegisterBundleStatusCallback start");
     if (bundleStateCallback_ == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, bundleStateCallback_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "RegisterBundleStatusCallback failed, bundleStateCallback_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    bundleMonitor_ = std::make_shared<BundleMonitor>(subscribeInfo);
 
     if (bundleMonitor_ == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "failed to register callback, bundleMonitor_ is null");
+        EDM_LOGE(MODULE_PKG_MGR, "RegisterBundleStatusCallback failed, bundleMonitor_ is null");
         return EDM_ERR_INVALID_OBJECT;
     }
 
-    if (!bundleMonitor_->Subscribe(callback)) {
+    if (!bundleMonitor_->Subscribe(bundleStateCallback_)) {
         EDM_LOGE(MODULE_PKG_MGR, "Failed to subscribe bundleMonitor callback");
         return EDM_NOK;
     }
@@ -197,7 +210,7 @@ int32_t DriverPkgManager::RegisterCallback(const sptr<IBundleStatusCallback> &ca
     return EDM_OK;
 }
 
-int32_t DriverPkgManager::UnRegisterCallback()
+int32_t DriverPkgManager::UnRegisterBundleStatusCallback()
 {
     EDM_LOGI(MODULE_PKG_MGR, "UnRegisterCallback called");
     if (bundleStateCallback_ == nullptr) {
