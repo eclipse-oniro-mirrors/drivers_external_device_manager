@@ -38,7 +38,7 @@ void DriverOsAccountSwitched::OnAccountsSwitch(const int &newId, const int &oldI
         return;
     }
     bundleStateCallback_->ResetInitOnce();
-    bundleStateCallback_->GetAllDriverInfos(true);
+    bundleStateCallback_->GetAllDriverInfosAsync(true);
 }
 
 DriverOsAccountSwitching::DriverOsAccountSwitching(const OsAccountSubscribeInfo &subscribeInfo,

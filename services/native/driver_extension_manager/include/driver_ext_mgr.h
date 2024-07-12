@@ -17,6 +17,7 @@
 #define DRIVER_EXTENSION_MANAGER_H
 #include <singleton.h>
 #include <system_ability.h>
+#include <future>
 
 #include "driver_ext_mgr_stub.h"
 
@@ -30,6 +31,7 @@ public:
     void OnStart() override;
     void OnStop() override;
     int Dump(int fd, const std::vector<std::u16string> &args) override;
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     UsbErrCode UnBindDevice(uint64_t deviceId) override;
@@ -40,6 +42,12 @@ public:
 
 private:
     std::mutex connectCallbackMutex;
+    std::promise<int32_t> bmsPromise_;
+    std::promise<int32_t> accountPromise_;
+    std::promise<int32_t> commEventPromise_;
+    std::shared_future<int32_t> bmsFuture_ = bmsPromise_.get_future();
+    std::shared_future<int32_t> accountFuture_ = accountPromise_.get_future();
+    std::shared_future<int32_t> commEventFuture_ = commEventPromise_.get_future();
     std::map<uint64_t, std::vector<sptr<IDriverExtMgrCallback>>> connectCallbackMap;
 };
 } // namespace ExternalDeviceManager

@@ -49,6 +49,7 @@ const string DRV_INFO_DESC = "description";
 
 static constexpr const char *BUNDLE_RESET_TASK_NAME = "DRIVER_INFO_RESET";
 static constexpr const char *BUNDLE_UPDATE_TASK_NAME = "DRIVER_INFO_UPDATE";
+static constexpr const char *GET_DRIVERINFO_TASK_NAME = "GET_DRIVERINFO_ASYNC";
 
 std::string DrvBundleStateCallback::GetBundleSize(const std::string &bundleName)
 {
@@ -154,6 +155,14 @@ DrvBundleStateCallback::DrvBundleStateCallback()
     stiching.clear();
     stiching += "-";
 };
+
+DrvBundleStateCallback::DrvBundleStateCallback(shared_future<int32_t> bmsFuture, shared_future<int32_t> accountFuture,
+    shared_future<int32_t> commEventFuture): DrvBundleStateCallback()
+{
+    bmsFuture_ = bmsFuture;
+    accountFuture_ = accountFuture;
+    commEventFuture_ = commEventFuture;
+}
 
 DrvBundleStateCallback::~DrvBundleStateCallback()
 {
@@ -273,6 +282,7 @@ bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
 {
     std::lock_guard<std::mutex> lock(initOnceMutex_);
     if (initOnce) {
+        EDM_LOGI(MODULE_PKG_MGR, "GetAllDriverInfos has inited");
         return true;
     }
     // query history bundle
@@ -295,6 +305,20 @@ bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
     }
     initOnce = true;
     return true;
+}
+
+void DrvBundleStateCallback::GetAllDriverInfosAsync(bool isExecCallback)
+{
+    EDM_LOGI(MODULE_PKG_MGR, "GetAllDriverInfosAsync enter");
+    std::thread taskThread([isExecCallback, this]() {
+        bmsFuture_.wait();
+        accountFuture_.wait();
+        if (!GetAllDriverInfos(isExecCallback)) {
+            EDM_LOGE(MODULE_PKG_MGR, "GetAllDriverInfos failed");
+        }
+    });
+    pthread_setname_np(taskThread.native_handle(), GET_DRIVERINFO_TASK_NAME);
+    taskThread.detach();
 }
 
 string DrvBundleStateCallback::GetStiching()
