@@ -81,22 +81,32 @@ int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
 void DriverExtMgr::OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId)
 {
     EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility systemAbilityId: %{public}d", systemAbilityId);
+    std::lock_guard<std::mutex> lock(promiseMutex_);
     switch (systemAbilityId) {
         case SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN: {
             EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility accountMgr");
             DriverPkgManager::GetInstance().SubscribeOsAccountSwitch();
-            bmsPromise_.set_value(systemAbilityId);
+            if (!accountPromiseUsed_) {
+                accountPromise_.set_value(systemAbilityId);
+                accountPromiseUsed_ = true;
+            }
             break;
         }
         case  BUNDLE_MGR_SERVICE_SYS_ABILITY_ID: {
             EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility BMS");
-            accountPromise_.set_value(systemAbilityId);
+            if (!bmsPromiseUsed_) {
+                bmsPromise_.set_value(systemAbilityId);
+                bmsPromiseUsed_ = true;
+            }
             break;
         }
         case  COMMON_EVENT_SERVICE_ID: {
             EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility CommonEventService");
             DriverPkgManager::GetInstance().RegisterBundleStatusCallback();
-            commEventPromise_.set_value(systemAbilityId);
+            if (!cesPromiseUsed_) {
+                commEventPromise_.set_value(systemAbilityId);
+                cesPromiseUsed_ = true;
+            }
             break;
         }
         default:

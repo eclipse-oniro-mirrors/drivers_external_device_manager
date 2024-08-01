@@ -42,12 +42,16 @@ public:
 
 private:
     std::mutex connectCallbackMutex;
+    std::mutex promiseMutex_;
     std::promise<int32_t> bmsPromise_;
     std::promise<int32_t> accountPromise_;
     std::promise<int32_t> commEventPromise_;
     std::shared_future<int32_t> bmsFuture_ = bmsPromise_.get_future();
     std::shared_future<int32_t> accountFuture_ = accountPromise_.get_future();
     std::shared_future<int32_t> commEventFuture_ = commEventPromise_.get_future();
+    bool bmsPromiseUsed_ = false;
+    bool accountPromiseUsed_ = false;
+    bool cesPromiseUsed_ = false;
     std::map<uint64_t, std::vector<sptr<IDriverExtMgrCallback>>> connectCallbackMap;
 };
 } // namespace ExternalDeviceManager
