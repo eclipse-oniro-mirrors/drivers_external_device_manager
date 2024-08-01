@@ -41,6 +41,7 @@ ohos_shared_library("usb_ndk") {
     "-fno-unwind-tables",
   ]
   install_enable = true
+  relative_install_dir = "ndk"
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
