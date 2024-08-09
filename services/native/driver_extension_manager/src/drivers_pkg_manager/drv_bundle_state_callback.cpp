@@ -397,6 +397,10 @@ bool DrvBundleStateCallback::UpdateToRdb(const std::vector<ExtensionAbilityInfo>
 
     if (isExecCallback && bundleUpdateCallback_ != nullptr) {
         std::thread taskThread([bundleName, this]() {
+            if (bundleUpdateCallback_ == nullptr) {
+                EDM_LOGE(MODULE_PKG_MGR, "UpdateToRdb bundleUpdateCallback_ is nullptr");
+                return;
+            }
             bundleUpdateCallback_->OnBundlesUpdated(bundleName);
         });
         pthread_setname_np(taskThread.native_handle(), BUNDLE_UPDATE_TASK_NAME);
@@ -457,6 +461,10 @@ void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
     }
     if (bundleUpdateCallback_ != nullptr) {
         std::thread taskThread([bundleName, this]() {
+            if (bundleUpdateCallback_ == nullptr) {
+                EDM_LOGE(MODULE_PKG_MGR, "OnBundleDrvRemoved bundleUpdateCallback_ is nullptr");
+                return;
+            }
             bundleUpdateCallback_->OnBundlesUpdated(bundleName);
         });
         pthread_setname_np(taskThread.native_handle(), BUNDLE_UPDATE_TASK_NAME);
