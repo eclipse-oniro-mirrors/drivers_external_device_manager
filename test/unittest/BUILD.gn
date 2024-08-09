@@ -43,6 +43,7 @@ ohos_unittest("bus_extension_usb_test") {
     "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
+    "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
   ]
   configs = [ "${utils_path}:utils_config" ]
