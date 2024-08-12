@@ -54,14 +54,14 @@ static constexpr const char *GET_DRIVERINFO_TASK_NAME = "GET_DRIVERINFO_ASYNC";
 std::string DrvBundleStateCallback::GetBundleSize(const std::string &bundleName)
 {
     std::string bundleSize = "";
-    auto iBundleMgr = GetBundleMgrProxy();
-    if (iBundleMgr == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "Can not get iBundleMgr");
-        return bundleSize;
-    }
     int32_t userId = GetCurrentActiveUserId();
     std::vector<int64_t> bundleStats;
-    if (!iBundleMgr->GetBundleStats(bundleName, userId, bundleStats)) {
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    if (!GetBundleMgrProxy()) {
+        EDM_LOGE(MODULE_PKG_MGR, "%{public}s: failed to GetBundleMgrProxy", __func__);
+        return bundleSize;
+    }
+    if (!bundleMgr_->GetBundleStats(bundleName, userId, bundleStats)) {
         EDM_LOGE(MODULE_PKG_MGR, "GetBundleStats failed");
         return bundleSize;
     }
@@ -285,12 +285,7 @@ bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
         EDM_LOGI(MODULE_PKG_MGR, "GetAllDriverInfos has inited");
         return true;
     }
-    // query history bundle
-    auto iBundleMgr = GetBundleMgrProxy();
-    if (iBundleMgr == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "Can not get iBundleMgr");
-        return false;
-    }
+    
     std::vector<ExtensionAbilityInfo> driverInfos;
     int32_t userId = GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
@@ -298,7 +293,14 @@ bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
         return false;
     }
     EDM_LOGI(MODULE_PKG_MGR, "QueryExtensionAbilityInfos userId:%{public}d", userId);
-    iBundleMgr->QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER, userId, driverInfos);
+    bundleMgrMutex_.lock();
+    if (!GetBundleMgrProxy()) {
+        EDM_LOGE(MODULE_PKG_MGR, "%{public}s: failed to GetBundleMgrProxy", __func__);
+        bundleMgrMutex_.unlock();
+        return false;
+    }
+    bundleMgr_->QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER, userId, driverInfos);
+    bundleMgrMutex_.unlock();
     if (!UpdateToRdb(driverInfos, "", isExecCallback)) {
         EDM_LOGE(MODULE_PKG_MGR, "UpdateToRdb failed");
         return false;
@@ -329,16 +331,16 @@ string DrvBundleStateCallback::GetStiching()
 bool DrvBundleStateCallback::CheckBundleMgrProxyPermission()
 {
     // check permission
-    auto iBundleMgr = GetBundleMgrProxy();
-    if (iBundleMgr == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "Can not get iBundleMgr");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    if (!GetBundleMgrProxy()) {
+        EDM_LOGE(MODULE_PKG_MGR, "%{public}s: failed to GetBundleMgrProxy", __func__);
         return false;
     }
-    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+    if (!bundleMgr_->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         EDM_LOGE(MODULE_PKG_MGR, "non-system app calling system api");
         return false;
     }
-    if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
+    if (!bundleMgr_->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         EDM_LOGE(MODULE_PKG_MGR, "register bundle status callback failed due to lack of permission");
         return false;
     }
@@ -349,12 +351,13 @@ bool DrvBundleStateCallback::QueryDriverInfos(const std::string &bundleName, con
     std::vector<ExtensionAbilityInfo> &driverInfos)
 {
     if (bundleName.empty()) {
-        EDM_LOGE(MODULE_PKG_MGR, "BundleName empty");
+        EDM_LOGE(MODULE_PKG_MGR, "%{public}s: BundleName is empty", __func__);
         return false;
     }
 
-    if (bundleMgr_ == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "BundleMgr_ nullptr");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    if (!GetBundleMgrProxy()) {
+        EDM_LOGE(MODULE_PKG_MGR, "%{public}s: failed to GetBundleMgrProxy", __func__);
         return false;
     }
  
@@ -425,29 +428,35 @@ bool DrvBundleStateCallback::IsCurrentUserId(const int userId)
     return GetCurrentActiveUserId() == userId;
 }
 
-sptr<OHOS::AppExecFwk::IBundleMgr> DrvBundleStateCallback::GetBundleMgrProxy()
+bool DrvBundleStateCallback::GetBundleMgrProxy()
 {
     if (bundleMgr_ == nullptr) {
-        std::lock_guard<std::mutex> lock(bundleMgrMutex_);
-        if (bundleMgr_ == nullptr) {
-            auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            if (systemAbilityManager == nullptr) {
-                EDM_LOGE(MODULE_PKG_MGR, "GetBundleMgr GetSystemAbilityManager is null");
-                return nullptr;
-            }
-            auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-            if (bundleMgrSa == nullptr) {
-                EDM_LOGE(MODULE_PKG_MGR, "GetBundleMgr GetSystemAbility is null");
-                return nullptr;
-            }
-            auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-            if (bundleMgr == nullptr) {
-                EDM_LOGE(MODULE_PKG_MGR, "GetBundleMgr iface_cast get null");
-            }
-            bundleMgr_ = bundleMgr;
+        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            EDM_LOGE(MODULE_PKG_MGR, "%{public}s: GetSystemAbilityManager is null", __func__);
+            return false;
         }
+        auto remoteObj = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (remoteObj == nullptr) {
+            EDM_LOGE(MODULE_PKG_MGR, "%{public}s: GetSystemAbility is null", __func__);
+            return false;
+        }
+        bundleMgr_ = OHOS::iface_cast<IBundleMgr>(remoteObj);
+        if (bundleMgr_ == nullptr) {
+            EDM_LOGE(MODULE_PKG_MGR, "%{public}s: iface_cast get null", __func__);
+            return false;
+        }
+        bmsDeathRecipient_ = new (std::nothrow) BundleMgrDeathRecipient([this]() {
+            ResetBundleMgr();
+        });
+        if (bmsDeathRecipient_ == nullptr) {
+            EDM_LOGE(MODULE_PKG_MGR, "%{public}s: failed to create BundleMgrDeathRecipient", __func__);
+            bundleMgr_ = nullptr;
+            return false;
+        }
+        remoteObj->AddDeathRecipient(bmsDeathRecipient_);
     }
-    return bundleMgr_;
+    return true;
 }
 
 void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
@@ -470,6 +479,15 @@ void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName)
         pthread_setname_np(taskThread.native_handle(), BUNDLE_UPDATE_TASK_NAME);
         taskThread.detach();
     }
+}
+
+void DrvBundleStateCallback::ResetBundleMgr()
+{
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    if (bundleMgr_ != nullptr && bundleMgr_->AsObject()) {
+        bundleMgr_->AsObject()->RemoveDeathRecipient(bmsDeathRecipient_);
+    }
+    bundleMgr_ = nullptr;
 }
 }
 }

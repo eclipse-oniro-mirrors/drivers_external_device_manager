@@ -28,6 +28,8 @@
 #include "pkg_tables.h"
 #include "ibundle_update_callback.h"
 #include <future>
+#include "iremote_object.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -99,6 +101,7 @@ private:
     std::mutex bundleMgrMutex_;
     std::mutex initOnceMutex_;
     sptr<IBundleMgr> bundleMgr_ = nullptr;
+    sptr<IRemoteObject::DeathRecipient> bmsDeathRecipient_ = nullptr;
     string stiching = "This is used for Name Stiching";
     bool initOnce = false;
 
@@ -111,7 +114,7 @@ private:
     bool UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName = "",
         bool isExecCallback = true);
     void ClearDriverInfo(DriverInfo &tmpDrvInfo);
-    sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgrProxy();
+    bool GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
     void ChangeValue(DriverInfo &tmpDrvInfo, const map<string, string> &metadata);
     std::string GetBundleSize(const std::string &bundleName);
@@ -123,7 +126,30 @@ private:
     void OnBundleDrvAdded(int bundleStatus);
     void OnBundleDrvUpdated(int bundleStatus);
     void OnBundleDrvRemoved(const std::string &bundleName);
+    void ResetBundleMgr();
 };
+
+class BundleMgrDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    explicit BundleMgrDeathRecipient(std::function<void()> callback)
+    {
+        callback_ = callback;
+    }
+    ~BundleMgrDeathRecipient()
+    {
+        callback_ = nullptr;
+    }
+
+    void OnRemoteDied(const wptr<IRemoteObject> &remote) override
+    {
+        if (callback_ != nullptr) {
+            callback_();
+        }
+    }
+private:
+    std::function<void()> callback_ = nullptr;
+};
+
 } // namespace
 }
 #endif // DRIVER_BUNDLE_STATUS_CALLBACK_H
