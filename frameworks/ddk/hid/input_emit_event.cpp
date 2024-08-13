@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include "hid_ddk_api.h"
+#include "hid_ddk_types.h"
 #include "v1_0/ihid_ddk.h"
 #include "hilog_wrapper.h"
 #include <iproxy_broker.h>
@@ -125,32 +126,46 @@ static OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties ParseHidEventProperties(
         .hidAbsFlat = std::vector<int32_t>(hidEventProperties->hidAbsFlat, hidEventProperties->hidAbsFlat + absLength)
     };
 
-    std::transform(hidEventProperties->hidEventTypes.hidEventType,
-        hidEventProperties->hidEventTypes.hidEventType + hidEventProperties->hidEventTypes.length,
-        std::back_inserter(tempProperties.hidEventTypes), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EventType>(n);
-        });
+    if (hidEventProperties->hidEventTypes.hidEventType != nullptr) {
+        std::transform(hidEventProperties->hidEventTypes.hidEventType,
+            hidEventProperties->hidEventTypes.hidEventType + hidEventProperties->hidEventTypes.length,
+            std::back_inserter(tempProperties.hidEventTypes), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EventType>(n);
+            });
+    }
 
-    std::transform(hidEventProperties->hidKeys.hidKeyCode,
-        hidEventProperties->hidKeys.hidKeyCode + hidEventProperties->hidKeys.length,
-        std::back_inserter(tempProperties.hidKeys), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_KeyCode>(n);
-        });
-    std::transform(hidEventProperties->hidAbs.hidAbsAxes,
-        hidEventProperties->hidAbs.hidAbsAxes + hidEventProperties->hidAbs.length,
-        std::back_inserter(tempProperties.hidAbs), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_AbsAxes>(n);
-        });
-    std::transform(hidEventProperties->hidRelBits.hidRelAxes,
-        hidEventProperties->hidRelBits.hidRelAxes + hidEventProperties->hidRelBits.length,
-        std::back_inserter(tempProperties.hidRelBits), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_RelAxes>(n);
-        });
-    std::transform(hidEventProperties->hidMiscellaneous.hidMscEvent,
-        hidEventProperties->hidMiscellaneous.hidMscEvent + hidEventProperties->hidMiscellaneous.length,
-        std::back_inserter(tempProperties.hidMiscellaneous), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_MscEvent>(n);
-        });
+    if (hidEventProperties->hidKeys.hidKeyCode != nullptr) {
+        std::transform(hidEventProperties->hidKeys.hidKeyCode,
+            hidEventProperties->hidKeys.hidKeyCode + hidEventProperties->hidKeys.length,
+            std::back_inserter(tempProperties.hidKeys), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_KeyCode>(n);
+            });
+    }
+    
+    if (hidEventProperties->hidAbs.hidAbsAxes != nullptr) {
+        std::transform(hidEventProperties->hidAbs.hidAbsAxes,
+            hidEventProperties->hidAbs.hidAbsAxes + hidEventProperties->hidAbs.length,
+            std::back_inserter(tempProperties.hidAbs), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_AbsAxes>(n);
+            });
+    }
+
+    if (hidEventProperties->hidRelBits.hidRelAxes != nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "hidEventProperties->hidRelBits.hidRelAxes is null");
+        std::transform(hidEventProperties->hidRelBits.hidRelAxes,
+            hidEventProperties->hidRelBits.hidRelAxes + hidEventProperties->hidRelBits.length,
+            std::back_inserter(tempProperties.hidRelBits), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_RelAxes>(n);
+            });
+    }
+
+    if (hidEventProperties->hidMiscellaneous.hidMscEvent != nullptr) {
+        std::transform(hidEventProperties->hidMiscellaneous.hidMscEvent,
+            hidEventProperties->hidMiscellaneous.hidMscEvent + hidEventProperties->hidMiscellaneous.length,
+            std::back_inserter(tempProperties.hidMiscellaneous), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_MscEvent>(n);
+            });
+    }
 
     return tempProperties;
 }
