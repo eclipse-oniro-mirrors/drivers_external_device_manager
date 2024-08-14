@@ -418,11 +418,10 @@ static void ClearInterface(UsbDdkInterface &usbInterface)
 void RawClearConfiguration(UsbDdkConfigDescriptor &config)
 {
     uint8_t i;
+    if (config.interface == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "config.interface is nullptr");
+    }
     for (i = 0; i < config.configDescriptor.bNumInterfaces; i++) {
-        if (config.interface == nullptr) {
-            EDM_LOGE(MODULE_USB_DDK, "config.interface is nullptr");
-            return;
-        }
         ClearInterface(config.interface[i]);
     }
 
