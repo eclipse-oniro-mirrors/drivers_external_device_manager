@@ -151,7 +151,6 @@ static OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties ParseHidEventProperties(
     }
 
     if (hidEventProperties->hidRelBits.hidRelAxes != nullptr) {
-        EDM_LOGE(MODULE_HID_DDK, "hidEventProperties->hidRelBits.hidRelAxes is null");
         std::transform(hidEventProperties->hidRelBits.hidRelAxes,
             hidEventProperties->hidRelBits.hidRelAxes + hidEventProperties->hidRelBits.length,
             std::back_inserter(tempProperties.hidRelBits), [](uint32_t n) {
