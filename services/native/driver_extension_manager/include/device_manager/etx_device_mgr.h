@@ -43,7 +43,6 @@ public:
     int32_t ConnectDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
     int32_t DisConnectDevice(uint64_t deviceId);
     void RemoveDeviceOfDeviceMap(shared_ptr<Device> device);
-    void UnLoadSA(void);
     std::unordered_set<uint64_t> DeleteBundlesOfBundleInfoMap(const std::string &bundleName = "");
     void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds, bool isDriversReset = false);
     void ClearMatchedDrivers(const int32_t userId);

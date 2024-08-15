@@ -394,31 +394,6 @@ size_t ExtDeviceManager::GetTotalDeviceNum(void) const
     return totalNum;
 }
 
-void ExtDeviceManager::UnLoadSA(void)
-{
-    EDM_LOGI(MODULE_DEV_MGR, "UnLoadSA enter");
-    if (GetTotalDeviceNum() != 0) {
-        EDM_LOGI(MODULE_DEV_MGR, "not need unload");
-        return;
-    }
-    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (samgrProxy == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "get samgr failed");
-        return;
-    }
-
-    auto saObj = samgrProxy->CheckSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
-    if (saObj == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "sa has unloaded");
-        return;
-    }
-
-    auto ret = samgrProxy->UnloadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
-    if (ret != EDM_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "unload failed");
-    }
-}
-
 void ExtDeviceManager::UnLoadSelf(void)
 {
     unloadSelftimer_.Unregister(unloadSelftimerId_);

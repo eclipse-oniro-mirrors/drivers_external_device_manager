@@ -175,7 +175,6 @@ void Device::OnDisconnect(int resultCode)
     std::string bundleName = Device::GetBundleName(bundleInfo);
     std::string abilityName = Device::GetAbilityName(bundleInfo);
     DriverExtensionController::GetInstance().StopDriverExtension(bundleName, abilityName);
-    ExtDeviceManager::GetInstance().UnLoadSA();
 }
 
 void Device::UpdateDrvExtConnNotify()
