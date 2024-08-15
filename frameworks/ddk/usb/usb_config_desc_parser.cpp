@@ -418,10 +418,12 @@ static void ClearInterface(UsbDdkInterface &usbInterface)
 void RawClearConfiguration(UsbDdkConfigDescriptor &config)
 {
     uint8_t i;
-    for (i = 0; i < config.configDescriptor.bNumInterfaces; i++) {
-        ClearInterface(config.interface[i]);
+    if (config.interface != nullptr) {
+        for (i = 0; i < config.configDescriptor.bNumInterfaces; i++) {
+            ClearInterface(config.interface[i]);
+        }
     }
-
+    
     if (config.interface != nullptr) {
         delete[] config.interface;
         config.interface = nullptr;
