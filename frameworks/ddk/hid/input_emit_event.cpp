@@ -108,10 +108,12 @@ static OHOS::HDI::Input::Ddk::V1_0::Hid_Device ParseHidDevice(Hid_Device *hidDev
         .bustype = hidDevice->bustype
     };
 
-    std::transform(hidDevice->properties, hidDevice->properties + hidDevice->propLength,
-        std::back_inserter(tempDevice.properties), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_DeviceProp>(n);
-        });
+    if (hidDevice->properties != nullptr) {
+        std::transform(hidDevice->properties, hidDevice->properties + hidDevice->propLength,
+            std::back_inserter(tempDevice.properties), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_DeviceProp>(n);
+            });
+    }
 
     return tempDevice;
 }
