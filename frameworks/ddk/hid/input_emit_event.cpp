@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <cstdint>
+#include <cstring>
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
@@ -35,6 +37,7 @@ constexpr uint32_t MAX_HID_KEYS_LEN = 100;
 constexpr uint32_t MAX_HID_ABS_LEN = 26;
 constexpr uint32_t MAX_HID_REL_BITS_LEN = 13;
 constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
+constexpr uint32_t MAX_NAME_LENGTH = 80;
 }
 #ifdef __cplusplus
 extern "C" {
@@ -185,6 +188,30 @@ static int32_t CacheDeviceInfor(OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevi
     return id;
 }
 
+static bool CheckHidDevice(Hid_Device *hidDevice)
+{
+    if (hidDevice == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "hidDevice is null");
+        return false;
+    }
+    
+    if (hidDevice->propLength > MAX_HID_DEVICE_PROP_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "properties length is out of range");
+        return false;
+    }
+    
+    if (hidDevice->deviceName == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "hidDevice->deviceName is nullpointer");
+        return false;
+    }
+    
+    if (strlen(hidDevice->deviceName) == 0 || strlen(hidDevice->deviceName) > MAX_NAME_LENGTH - 1) {
+        EDM_LOGE(MODULE_HID_DDK, "length of hidDevice->deviceName is out of range");
+        return false;
+    }
+    return true;
+}
+
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
@@ -192,18 +219,12 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
         return HID_DDK_INVALID_OPERATION;
     }
 
-    if (hidDevice == nullptr) {
-        EDM_LOGE(MODULE_HID_DDK, "hidDevice is null");
+    if (!CheckHidDevice(hidDevice)) {
         return HID_DDK_INVALID_PARAMETER;
     }
 
     if (hidEventProperties == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "hidEventProperties is null");
-        return HID_DDK_INVALID_PARAMETER;
-    }
-
-    if (hidDevice->propLength > MAX_HID_DEVICE_PROP_LEN) {
-        EDM_LOGE(MODULE_HID_DDK, "properties length is out of range");
         return HID_DDK_INVALID_PARAMETER;
     }
 
