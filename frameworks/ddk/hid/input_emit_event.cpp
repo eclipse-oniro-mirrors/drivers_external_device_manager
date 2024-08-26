@@ -13,10 +13,13 @@
  * limitations under the License.
  */
 
+#include <cstdint>
+#include <cstring>
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
 #include "hid_ddk_api.h"
+#include "hid_ddk_types.h"
 #include "v1_0/ihid_ddk.h"
 #include "hilog_wrapper.h"
 #include <iproxy_broker.h>
@@ -34,6 +37,7 @@ constexpr uint32_t MAX_HID_KEYS_LEN = 100;
 constexpr uint32_t MAX_HID_ABS_LEN = 26;
 constexpr uint32_t MAX_HID_REL_BITS_LEN = 13;
 constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
+constexpr uint32_t MAX_NAME_LENGTH = 80;
 }
 #ifdef __cplusplus
 extern "C" {
@@ -107,10 +111,12 @@ static OHOS::HDI::Input::Ddk::V1_0::Hid_Device ParseHidDevice(Hid_Device *hidDev
         .bustype = hidDevice->bustype
     };
 
-    std::transform(hidDevice->properties, hidDevice->properties + hidDevice->propLength,
-        std::back_inserter(tempDevice.properties), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_DeviceProp>(n);
-        });
+    if (hidDevice->properties != nullptr) {
+        std::transform(hidDevice->properties, hidDevice->properties + hidDevice->propLength,
+            std::back_inserter(tempDevice.properties), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_DeviceProp>(n);
+            });
+    }
 
     return tempDevice;
 }
@@ -125,32 +131,45 @@ static OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties ParseHidEventProperties(
         .hidAbsFlat = std::vector<int32_t>(hidEventProperties->hidAbsFlat, hidEventProperties->hidAbsFlat + absLength)
     };
 
-    std::transform(hidEventProperties->hidEventTypes.hidEventType,
-        hidEventProperties->hidEventTypes.hidEventType + hidEventProperties->hidEventTypes.length,
-        std::back_inserter(tempProperties.hidEventTypes), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EventType>(n);
-        });
+    if (hidEventProperties->hidEventTypes.hidEventType != nullptr) {
+        std::transform(hidEventProperties->hidEventTypes.hidEventType,
+            hidEventProperties->hidEventTypes.hidEventType + hidEventProperties->hidEventTypes.length,
+            std::back_inserter(tempProperties.hidEventTypes), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EventType>(n);
+            });
+    }
 
-    std::transform(hidEventProperties->hidKeys.hidKeyCode,
-        hidEventProperties->hidKeys.hidKeyCode + hidEventProperties->hidKeys.length,
-        std::back_inserter(tempProperties.hidKeys), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_KeyCode>(n);
-        });
-    std::transform(hidEventProperties->hidAbs.hidAbsAxes,
-        hidEventProperties->hidAbs.hidAbsAxes + hidEventProperties->hidAbs.length,
-        std::back_inserter(tempProperties.hidAbs), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_AbsAxes>(n);
-        });
-    std::transform(hidEventProperties->hidRelBits.hidRelAxes,
-        hidEventProperties->hidRelBits.hidRelAxes + hidEventProperties->hidRelBits.length,
-        std::back_inserter(tempProperties.hidRelBits), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_RelAxes>(n);
-        });
-    std::transform(hidEventProperties->hidMiscellaneous.hidMscEvent,
-        hidEventProperties->hidMiscellaneous.hidMscEvent + hidEventProperties->hidMiscellaneous.length,
-        std::back_inserter(tempProperties.hidMiscellaneous), [](uint32_t n) {
-            return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_MscEvent>(n);
-        });
+    if (hidEventProperties->hidKeys.hidKeyCode != nullptr) {
+        std::transform(hidEventProperties->hidKeys.hidKeyCode,
+            hidEventProperties->hidKeys.hidKeyCode + hidEventProperties->hidKeys.length,
+            std::back_inserter(tempProperties.hidKeys), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_KeyCode>(n);
+            });
+    }
+    
+    if (hidEventProperties->hidAbs.hidAbsAxes != nullptr) {
+        std::transform(hidEventProperties->hidAbs.hidAbsAxes,
+            hidEventProperties->hidAbs.hidAbsAxes + hidEventProperties->hidAbs.length,
+            std::back_inserter(tempProperties.hidAbs), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_AbsAxes>(n);
+            });
+    }
+
+    if (hidEventProperties->hidRelBits.hidRelAxes != nullptr) {
+        std::transform(hidEventProperties->hidRelBits.hidRelAxes,
+            hidEventProperties->hidRelBits.hidRelAxes + hidEventProperties->hidRelBits.length,
+            std::back_inserter(tempProperties.hidRelBits), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_RelAxes>(n);
+            });
+    }
+
+    if (hidEventProperties->hidMiscellaneous.hidMscEvent != nullptr) {
+        std::transform(hidEventProperties->hidMiscellaneous.hidMscEvent,
+            hidEventProperties->hidMiscellaneous.hidMscEvent + hidEventProperties->hidMiscellaneous.length,
+            std::back_inserter(tempProperties.hidMiscellaneous), [](uint32_t n) {
+                return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_MscEvent>(n);
+            });
+    }
 
     return tempProperties;
 }
@@ -169,6 +188,30 @@ static int32_t CacheDeviceInfor(OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevi
     return id;
 }
 
+static bool CheckHidDevice(Hid_Device *hidDevice)
+{
+    if (hidDevice == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "hidDevice is null");
+        return false;
+    }
+    
+    if (hidDevice->propLength > MAX_HID_DEVICE_PROP_LEN) {
+        EDM_LOGE(MODULE_HID_DDK, "properties length is out of range");
+        return false;
+    }
+    
+    if (hidDevice->deviceName == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "hidDevice->deviceName is nullpointer");
+        return false;
+    }
+    
+    if (strlen(hidDevice->deviceName) == 0 || strlen(hidDevice->deviceName) > MAX_NAME_LENGTH - 1) {
+        EDM_LOGE(MODULE_HID_DDK, "length of hidDevice->deviceName is out of range");
+        return false;
+    }
+    return true;
+}
+
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
@@ -176,18 +219,12 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
         return HID_DDK_INVALID_OPERATION;
     }
 
-    if (hidDevice == nullptr) {
-        EDM_LOGE(MODULE_HID_DDK, "hidDevice is null");
+    if (!CheckHidDevice(hidDevice)) {
         return HID_DDK_INVALID_PARAMETER;
     }
 
     if (hidEventProperties == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "hidEventProperties is null");
-        return HID_DDK_INVALID_PARAMETER;
-    }
-
-    if (hidDevice->propLength > MAX_HID_DEVICE_PROP_LEN) {
-        EDM_LOGE(MODULE_HID_DDK, "properties length is out of range");
         return HID_DDK_INVALID_PARAMETER;
     }
 
