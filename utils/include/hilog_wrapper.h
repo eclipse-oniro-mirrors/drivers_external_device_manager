@@ -87,20 +87,34 @@ static constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
     { LOG_CORE, BASE_EDM_DOMAIN_ID, "EdmBaseDdk" },
 };
 
-#define R_FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
-#define R_FORMATED(fmt) "[%{public}s(%{public}s:%{public}d)]" fmt, R_FILENAME, __FUNCTION__, __LINE__
+#ifndef EDM_FILENAME
+#define EDM_FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif
+
+#ifndef EDM_FUNC_FMT
+#define EDM_FUNC_FMT "[%{public}s(%{public}s:%{public}d)]"
+#endif
+
+#ifndef EDM_FUNC_INFO
+#define EDM_FUNC_INFO EDM_FILENAME, __FUNCTION__, __LINE__
+#endif
 
 // In order to improve performance, do not check the module range, module should less than EDM_MODULE_BUTT.
 #define EDM_LOGF(module, fmt, ...) \
-    (void)HILOG_IMPL(LOG_CORE, LOG_FATAL, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, R_FORMATED(fmt), ##__VA_ARGS__)
+    (void)HILOG_IMPL(LOG_CORE, LOG_FATAL, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
 #define EDM_LOGE(module, fmt, ...) \
-    (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, R_FORMATED(fmt), ##__VA_ARGS__)
+    (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
 #define EDM_LOGW(module, fmt, ...) \
-    (void)HILOG_IMPL(LOG_CORE, LOG_WARN, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, R_FORMATED(fmt), ##__VA_ARGS__)
+    (void)HILOG_IMPL(LOG_CORE, LOG_WARN, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
 #define EDM_LOGI(module, fmt, ...) \
-    (void)HILOG_IMPL(LOG_CORE, LOG_INFO, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, R_FORMATED(fmt), ##__VA_ARGS__)
+    (void)HILOG_IMPL(LOG_CORE, LOG_INFO, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
 #define EDM_LOGD(module, fmt, ...) \
-    (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, R_FORMATED(fmt), ##__VA_ARGS__)
+    (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, BASE_EDM_DOMAIN_ID, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 
