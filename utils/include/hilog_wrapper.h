@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,9 +42,18 @@ namespace ExternalDeviceManager {
 #undef EDM_LOGD
 #endif
 
-struct EdmLable {
-    uint32_t domainId;
-    const char* tag;
+// 0xD002550: part:ExternalDeviceManager module:Edm.
+constexpr unsigned int BASE_EDM_DOMAIN_ID = 0xD002550;
+
+enum PkgErrCode {
+    PKG_OK = 0,
+    PKG_FAILURE = -1,
+    PKG_RDB_EXECUTE_FAILTURE = -2,
+    PKG_RDB_NO_INIT = -3,
+    PKG_RDB_EMPTY = -4,
+    PKG_PERMISSION_DENIED = -5,
+    PKG_NOP = -6,
+    PKG_OVERFLOW = -7,
 };
 
 // param of log interface, such as EDM_LOGF.
@@ -63,60 +72,58 @@ enum UsbMgrSubModule {
     EDM_MODULE_BUTT,
 };
 
-// 0xD002550: part:ExternalDeviceManager module:Edm.
-constexpr unsigned int BASE_EDM_DOMAIN_ID = 0xD002550;
-
 enum UsbMgrDomainId {
     EDM_FRAMEWORK_DOMAIN = BASE_EDM_DOMAIN_ID + MODULE_FRAMEWORK,
     EDM_SERVICE_DOMAIN,
     EDM_DEV_MGR_DOMAIN,
     EDM_PKG_MGR_DOMAIN,
-    EDM_EA_MGR_DOMAIN,
-    EDM_BUS_USB_DOMAIN,
-    EDM_COMMON_DOMAIN,
-    EDM_USB_DDK_DOMAIN,
-    EDM_TEST,
-    EDM_HID_DDK_DOMAIN,
-    EDM_BASE_DDK_DOMAIN,
+    EDM_DDK_DOMAIN,
     EDM_BUTT,
 };
 
-enum PkgErrCode {
-    PKG_OK = 0,
-    PKG_FAILURE = -1,
-    PKG_RDB_EXECUTE_FAILTURE = -2,
-    PKG_RDB_NO_INIT = -3,
-    PKG_RDB_EMPTY = -4,
-    PKG_PERMISSION_DENIED = -5,
-    PKG_NOP = -6,
-    PKG_OVERFLOW = -7,
+
+static constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
+    { LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmFwk" },
+    { LOG_CORE, EDM_SERVICE_DOMAIN, "EdmService" },
+    { LOG_CORE, EDM_DEV_MGR_DOMAIN, "EdmDevMgr" },
+    { LOG_CORE, EDM_PKG_MGR_DOMAIN, "EdmPkgMgr" },
+    { LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmEaMgr" },
+    { LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmBusUsbMgr" },
+    { LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmCommon" },
+    { LOG_CORE, EDM_DDK_DOMAIN, "EdmUsbDdk" },
+    { LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmTest" },
+    { LOG_CORE, EDM_DDK_DOMAIN, "EdmHidDdk" },
+    { LOG_CORE, EDM_DDK_DOMAIN, "EdmBaseDdk" },
 };
 
-static const EdmLable EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
-    {EDM_FRAMEWORK_DOMAIN, "EdmFwk"      },
-    {EDM_SERVICE_DOMAIN,   "EdmService"  },
-    {EDM_DEV_MGR_DOMAIN,   "EdmDevMgr"   },
-    {EDM_PKG_MGR_DOMAIN,   "EdmPkgMgr"   },
-    {EDM_EA_MGR_DOMAIN,    "EdmEaMgr"    },
-    {EDM_BUS_USB_DOMAIN,   "EdmBusUsbMgr"},
-    {EDM_COMMON_DOMAIN,    "EdmCommon"   },
-    {EDM_USB_DDK_DOMAIN,   "EdmUsbDdk"   },
-    {EDM_TEST,             "EdmTest"     },
-    {EDM_HID_DDK_DOMAIN,   "EdmHidDdk"   },
-    {EDM_BASE_DDK_DOMAIN,  "EdmBaseDdk"  },
-};
+#ifndef EDM_FILENAME
+#define EDM_FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#endif
+
+#ifndef EDM_FUNC_FMT
+#define EDM_FUNC_FMT "[%{public}s(%{public}s:%{public}d)]"
+#endif
+
+#ifndef EDM_FUNC_INFO
+#define EDM_FUNC_INFO EDM_FILENAME, __FUNCTION__, __LINE__
+#endif
 
 // In order to improve performance, do not check the module range, module should less than EDM_MODULE_BUTT.
-#define EDM_LOGF(module, ...) \
-    ((void)HILOG_IMPL(LOG_CORE, LOG_FATAL, EDM_MGR_LABEL[module].domainId, EDM_MGR_LABEL[module].tag, ##__VA_ARGS__))
-#define EDM_LOGE(module, ...) \
-    ((void)HILOG_IMPL(LOG_CORE, LOG_ERROR, EDM_MGR_LABEL[module].domainId, EDM_MGR_LABEL[module].tag, ##__VA_ARGS__))
-#define EDM_LOGW(module, ...) \
-    ((void)HILOG_IMPL(LOG_CORE, LOG_WARN, EDM_MGR_LABEL[module].domainId, EDM_MGR_LABEL[module].tag, ##__VA_ARGS__))
-#define EDM_LOGI(module, ...) \
-    ((void)HILOG_IMPL(LOG_CORE, LOG_INFO, EDM_MGR_LABEL[module].domainId, EDM_MGR_LABEL[module].tag, ##__VA_ARGS__))
-#define EDM_LOGD(module, ...) \
-    ((void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, EDM_MGR_LABEL[module].domainId, EDM_MGR_LABEL[module].tag, ##__VA_ARGS__))
+#define EDM_LOGF(module, fmt, ...) \
+    (void)HILOG_IMPL(LOG_CORE, LOG_FATAL, EDM_MGR_LABEL[module].domain, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
+#define EDM_LOGE(module, fmt, ...) \
+    (void)HILOG_IMPL(LOG_CORE, LOG_ERROR, EDM_MGR_LABEL[module].domain, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
+#define EDM_LOGW(module, fmt, ...) \
+    (void)HILOG_IMPL(LOG_CORE, LOG_WARN, EDM_MGR_LABEL[module].domain, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
+#define EDM_LOGI(module, fmt, ...) \
+    (void)HILOG_IMPL(LOG_CORE, LOG_INFO, EDM_MGR_LABEL[module].domain, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
+#define EDM_LOGD(module, fmt, ...) \
+    (void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, EDM_MGR_LABEL[module].domain, EDM_MGR_LABEL[module].tag, \
+    EDM_FUNC_FMT fmt, EDM_FUNC_INFO, ##__VA_ARGS__)
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 
