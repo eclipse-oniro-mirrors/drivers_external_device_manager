@@ -79,7 +79,7 @@ enum UsbMgrDomainId {
     EDM_PKG_MGR_DOMAIN,
     EDM_DDK_DOMAIN,
     EDM_BUTT,
-}
+};
 
 
 static constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
