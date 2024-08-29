@@ -278,7 +278,7 @@ void DrvBundleStateCallback::ResetMatchedBundles(const int32_t userId)
     taskThread.detach();
 }
 
-bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
+bool DrvBundleStateCallback::GetAllDriverInfos()
 {
     std::lock_guard<std::mutex> lock(initOnceMutex_);
     if (initOnce) {
@@ -301,7 +301,7 @@ bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
     }
     bundleMgr_->QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER, userId, driverInfos);
     bundleMgrMutex_.unlock();
-    if (!UpdateToRdb(driverInfos, "", isExecCallback)) {
+    if (!UpdateToRdb(driverInfos, "")) {
         EDM_LOGE(MODULE_PKG_MGR, "UpdateToRdb failed");
         return false;
     }
@@ -309,13 +309,13 @@ bool DrvBundleStateCallback::GetAllDriverInfos(bool isExecCallback)
     return true;
 }
 
-void DrvBundleStateCallback::GetAllDriverInfosAsync(bool isExecCallback)
+void DrvBundleStateCallback::GetAllDriverInfosAsync()
 {
     EDM_LOGI(MODULE_PKG_MGR, "GetAllDriverInfosAsync enter");
-    std::thread taskThread([isExecCallback, this]() {
+    std::thread taskThread([this]() {
         bmsFuture_.wait();
         accountFuture_.wait();
-        if (!GetAllDriverInfos(isExecCallback)) {
+        if (!GetAllDriverInfos()) {
             EDM_LOGE(MODULE_PKG_MGR, "GetAllDriverInfos failed");
         }
     });
@@ -388,7 +388,7 @@ void DrvBundleStateCallback::ClearDriverInfo(DriverInfo &tmpDrvInfo)
 }
 
 bool DrvBundleStateCallback::UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos,
-    const std::string &bundleName, bool isExecCallback)
+    const std::string &bundleName)
 {
     std::vector<PkgInfoTable> pkgInfoTables;
     ParseToPkgInfoTables(driverInfos, pkgInfoTables);
@@ -398,7 +398,7 @@ bool DrvBundleStateCallback::UpdateToRdb(const std::vector<ExtensionAbilityInfo>
         return false;
     }
 
-    if (isExecCallback && bundleUpdateCallback_ != nullptr) {
+    if (bundleUpdateCallback_ != nullptr) {
         std::thread taskThread([bundleName, this]() {
             if (bundleUpdateCallback_ == nullptr) {
                 EDM_LOGE(MODULE_PKG_MGR, "UpdateToRdb bundleUpdateCallback_ is nullptr");

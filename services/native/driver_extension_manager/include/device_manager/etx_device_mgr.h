@@ -44,7 +44,7 @@ public:
     int32_t DisConnectDevice(uint64_t deviceId);
     void RemoveDeviceOfDeviceMap(shared_ptr<Device> device);
     std::unordered_set<uint64_t> DeleteBundlesOfBundleInfoMap(const std::string &bundleName = "");
-    void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds, bool isDriversReset = false);
+    void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds);
     void ClearMatchedDrivers(const int32_t userId);
 
 private:
