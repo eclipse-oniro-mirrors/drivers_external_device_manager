@@ -122,7 +122,7 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
         return nullptr;
     }
 
-    if (!bundleStateCallback_->GetAllDriverInfos(false)) {
+    if (!bundleStateCallback_->GetAllDriverInfos()) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetAllDriverInfos Err");
         return nullptr;
     }

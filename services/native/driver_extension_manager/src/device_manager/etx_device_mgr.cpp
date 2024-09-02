@@ -179,18 +179,15 @@ std::unordered_set<uint64_t> ExtDeviceManager::DeleteBundlesOfBundleInfoMap(cons
     return deviceIds;
 }
 
-void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds, bool isDriversReset)
+void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
 {
     EDM_LOGI(MODULE_DEV_MGR, "MatchDriverInfos enter");
     lock_guard<mutex> lock(deviceMapMutex_);
     for (auto &m : deviceMap_) {
         for (auto &[deviceId, device] : m.second) {
-            if (isDriversReset) {
-                device->RemoveBundleInfo();
-                device->ClearDrvExtRemote();
-            }
             if (deviceIds.find(deviceId) != deviceIds.end()) {
                 device->RemoveBundleInfo();
+                device->ClearDrvExtRemote();
             }
             if (device->IsUnRegisted() || device->GetDrvExtRemote() != nullptr) {
                 continue;

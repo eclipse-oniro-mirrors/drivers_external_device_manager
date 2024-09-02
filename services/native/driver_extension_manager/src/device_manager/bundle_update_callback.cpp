@@ -21,7 +21,7 @@ namespace ExternalDeviceManager {
 void BundleUpdateCallback::OnBundlesUpdated(const std::string &bundleName)
 {
     auto deviceIds = ExtDeviceManager::GetInstance().DeleteBundlesOfBundleInfoMap(bundleName);
-    ExtDeviceManager::GetInstance().MatchDriverInfos(deviceIds, true);
+    ExtDeviceManager::GetInstance().MatchDriverInfos(deviceIds);
 }
 
 void BundleUpdateCallback::OnBundlesReseted(const int32_t oldUserId)
