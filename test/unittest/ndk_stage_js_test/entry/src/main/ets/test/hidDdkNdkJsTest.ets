@@ -20,6 +20,7 @@ export default function hidDdkNdkJsTest() {
   describe('hidDdkNdkJsTest', () => {
     const TAG: string = "[hidDdkNdkJsTest]";
     const HID_DDK_SUCCESS: number = 0;
+    const HID_DDK_INVALID_PARAMETER: number = -2;
 
     /**
      * @tc.name       : testHidCreateDevice001
@@ -35,6 +36,44 @@ export default function hidDdkNdkJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testHidCreateDevice001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidCreateDevice002
+     * @tc.desc       : OH_Hid_CreateDevice Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidCreateDevice002', 0, async (done: Function) => {
+      console.info('----------------------testHidCreateDevice002---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidCreateDeviceTwo();
+        console.info("Test result testHidCreateDevice002 : " + ret);
+        expect(ret == HID_DDK_INVALID_PARAMETER).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidCreateDevice002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidCreateDevice003
+     * @tc.desc       : OH_Hid_CreateDevice Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidCreateDevice003', 0, async (done: Function) => {
+      console.info('----------------------testHidCreateDevice003---------------------------');
+      try {
+        const ret = hidDdkNdkTest.hidCreateDeviceThree();
+        console.info("Test result testHidCreateDevice003 : " + ret);
+        expect(ret == HID_DDK_INVALID_PARAMETER).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidCreateDevice003 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }

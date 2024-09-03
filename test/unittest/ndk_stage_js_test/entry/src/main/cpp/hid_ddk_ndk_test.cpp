@@ -23,11 +23,13 @@
 #include <unistd.h>
 #include <vector>
 
-static int32_t CreateTestDevice()
+constexpr const char* DEVICE_NAME = "VSoC_keyboard";
+
+static int32_t CreateTestDevice(const char* str)
 {
     std::vector<Hid_DeviceProp> deviceProp = { HID_PROP_DIRECT };
     Hid_Device hidDevice = {
-        .deviceName = "VSoC keyboard",
+        .deviceName = str,
         .vendorId = 0x6006,
         .productId = 0x6006,
         .version = 1,
@@ -69,7 +71,23 @@ static int32_t CreateTestDevice()
 
 static napi_value HidCreateDevice(napi_env env, napi_callback_info info)
 {
-    int32_t deviceId = CreateTestDevice();
+    int32_t deviceId = CreateTestDevice(DEVICE_NAME);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, deviceId, &result));
+    return result;
+}
+
+static napi_value HidCreateDeviceTwo(napi_env env, napi_callback_info info)
+{
+    int32_t deviceId = CreateTestDevice(nullptr);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, deviceId, &result));
+    return result;
+}
+
+static napi_value HidCreateDeviceThree(napi_env env, napi_callback_info info)
+{
+    int32_t deviceId = CreateTestDevice("");
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, deviceId, &result));
     return result;
@@ -77,7 +95,7 @@ static napi_value HidCreateDevice(napi_env env, napi_callback_info info)
 
 static napi_value HidEmitEventOne(napi_env env, napi_callback_info info)
 {
-    int32_t deviceId = CreateTestDevice();
+    int32_t deviceId = CreateTestDevice(DEVICE_NAME);
     NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
     Hid_EmitItem event = {
         .type = HID_EV_MSC,
@@ -94,7 +112,7 @@ static napi_value HidEmitEventOne(napi_env env, napi_callback_info info)
 
 static napi_value HidEmitEventTwo(napi_env env, napi_callback_info info)
 {
-    int32_t deviceId = CreateTestDevice();
+    int32_t deviceId = CreateTestDevice(DEVICE_NAME);
     NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
     const uint16_t len = 21;
     std::vector<Hid_EmitItem> items;
@@ -110,7 +128,7 @@ static napi_value HidEmitEventTwo(napi_env env, napi_callback_info info)
 
 static napi_value HidEmitEventThree(napi_env env, napi_callback_info info)
 {
-    int32_t deviceId = CreateTestDevice();
+    int32_t deviceId = CreateTestDevice(DEVICE_NAME);
     NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
     const uint16_t len = 20;
     std::vector<Hid_EmitItem> items;
@@ -126,7 +144,7 @@ static napi_value HidEmitEventThree(napi_env env, napi_callback_info info)
 
 static napi_value HidDestroyDeviceOne(napi_env env, napi_callback_info info)
 {
-    int32_t deviceId = CreateTestDevice();
+    int32_t deviceId = CreateTestDevice(DEVICE_NAME);
     NAPI_ASSERT(env, deviceId >= 0, "OH_Hid_CreateDevice failed");
     int32_t returnValue = OH_Hid_DestroyDevice(deviceId);
     napi_value result = nullptr;
@@ -157,6 +175,8 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
         {"hidCreateDevice", nullptr, HidCreateDevice, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"hidCreateDeviceTwo", nullptr, HidCreateDeviceTwo, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"hidCreateDeviceThree", nullptr, HidCreateDeviceThree, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidEmitEventOne", nullptr, HidEmitEventOne, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidEmitEventTwo", nullptr, HidEmitEventTwo, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidEmitEventThree", nullptr, HidEmitEventThree, nullptr, nullptr, nullptr, napi_default, nullptr},
