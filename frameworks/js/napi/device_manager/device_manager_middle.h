@@ -41,8 +41,6 @@ public:
     napi_ref unbindCallback;
     napi_deferred bindDeferred;
     napi_deferred unbindDeferred;
-    sptr<IRemoteObject> drvExtObj;
-    ErrMsg errMsg;
     ErrMsg unBindErrMsg;
 
     void DeleteNapiRef();
@@ -51,7 +49,6 @@ public:
     {
         EDM_LOGE(MODULE_DEV_MGR, "Release callback data: %{public}016" PRIX64, deviceId);
         DeleteNapiRef();
-        drvExtObj = nullptr;
     }
 };
 

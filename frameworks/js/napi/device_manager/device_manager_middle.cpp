@@ -51,91 +51,25 @@ static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errM
 static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId);
 static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj);
 
-static void BindDeviceWorkCb(uv_work_t *work, int status)
-{
-    if (work == nullptr) {
-        return;
-    }
-    sptr<AsyncData> data(reinterpret_cast<AsyncData *>(work->data));
-    data->DecStrongRef(nullptr);
-    delete work;
-
-    napi_value result = GetCallbackResult(data->env, data->deviceId, data->drvExtObj);
-    napi_value err = ConvertToBusinessError(data->env, data->errMsg);
-    if (data->bindCallback != nullptr) {
-        napi_value callback;
-        napi_get_reference_value(data->env, data->bindCallback, &callback);
-        napi_value argv[PARAM_COUNT_2] = {err, result};
-        napi_value callResult;
-        napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
-        EDM_LOGI(MODULE_DEV_MGR, "bind device callback finish.");
-    } else if (data->bindDeferred != nullptr) {
-        if (data->errMsg.IsOk()) {
-            napi_resolve_deferred(data->env, data->bindDeferred, result);
-        } else {
-            napi_reject_deferred(data->env, data->bindDeferred, err);
-        }
-        EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
-    }
-}
-
-void UvDeleteRef(uv_work_t *work, int status)
-{
-    if (work == nullptr) {
-        return;
-    }
-    AsyncDataWorker *data = static_cast<AsyncDataWorker *>(work->data);
-    if (data == nullptr) {
-        delete work;
-        work = nullptr;
-        return;
-    }
-    if (data->bindCallback != nullptr) {
-        napi_delete_reference(data->env, data->bindCallback);
-    }
-    if (data->onDisconnect != nullptr) {
-        napi_delete_reference(data->env, data->onDisconnect);
-    }
-    if (data->unbindCallback != nullptr) {
-        napi_delete_reference(data->env, data->unbindCallback);
-    }
-    delete data;
-    data = nullptr;
-    delete work;
-}
-
 void AsyncData::DeleteNapiRef()
 {
     if (env == nullptr) {
         return;
     }
-    uv_loop_t* loop = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_get_uv_event_loop(env, &loop));
-    AsyncDataWorker *data = new (std::nothrow) AsyncDataWorker();
-    if (data == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "new AsyncDataWorker fail");
-        return;
-    }
-    data->env = env;
-    data->bindCallback = bindCallback;
-    data->onDisconnect = onDisconnect;
-    data->unbindCallback = unbindCallback;
-
-    uv_work_t *work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "new work fail");
-        delete data;
-        data = nullptr;
-        return;
-    }
-    work->data = static_cast<void *>(data);
-    auto ret = uv_queue_work(
-        loop, work, [](uv_work_t *work) {}, UvDeleteRef);
-    if (ret != 0) {
-        delete data;
-        data = nullptr;
-        delete work;
-        work = nullptr;
+    auto task = [this]() {
+        EDM_LOGE(MODULE_DEV_MGR, "DeleteNapiRef async task is run.");
+        if (bindCallback != nullptr) {
+            napi_delete_reference(env, bindCallback);
+        }
+        if (onDisconnect != nullptr) {
+            napi_delete_reference(env, onDisconnect);
+        }
+        if (unbindCallback != nullptr) {
+            napi_delete_reference(env, unbindCallback);
+        }
+    };
+    if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_immediate)) {
+        EDM_LOGE(MODULE_DEV_MGR, "delete napi ref send event failed.");
     }
 }
 
@@ -148,42 +82,58 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
         return;
     }
 
-    auto asyncData = g_callbackMap[deviceId];
+    auto data = g_callbackMap[deviceId];
     if (!errMsg.IsOk()) {
         g_callbackMap.erase(deviceId);
     }
-    uv_loop_t* loop = nullptr;
-    NAPI_CALL_RETURN_VOID(asyncData->env, napi_get_uv_event_loop(asyncData->env, &loop));
-    uv_work_t* work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "new work fail");
-        return;
-    }
-    asyncData->drvExtObj = drvExtObj;
-    asyncData->errMsg = errMsg;
-    asyncData->IncStrongRef(nullptr);
-    work->data = asyncData.GetRefPtr();
-    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, BindDeviceWorkCb);
-    if (ret != 0) {
-        delete work;
-        asyncData->DecStrongRef(nullptr);
+    auto task = [data, drvExtObj, errMsg]() {
+        EDM_LOGE(MODULE_DEV_MGR, "OnConnect async task is run.");
+        napi_value result = GetCallbackResult(data->env, data->deviceId, drvExtObj);
+        napi_value err = ConvertToBusinessError(data->env, errMsg);
+        if (data->bindCallback != nullptr) {
+            napi_value callback;
+            napi_get_reference_value(data->env, data->bindCallback, &callback);
+            napi_value argv[PARAM_COUNT_2] = {err, result};
+            napi_value callResult;
+            napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
+            EDM_LOGI(MODULE_DEV_MGR, "bind device callback finish.");
+        } else if (data->bindDeferred != nullptr) {
+            if (errMsg.IsOk()) {
+                napi_resolve_deferred(data->env, data->bindDeferred, result);
+            } else {
+                napi_reject_deferred(data->env, data->bindDeferred, err);
+            }
+            EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
+        }
+    };
+    if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
+        EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
     }
 }
 
-static void DisConnectWorkCb(uv_work_t *work, int status)
+void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
-    if (work == nullptr) {
-            return;
-        }
-        sptr<AsyncData> data(reinterpret_cast<AsyncData*>(work->data));
-        data->DecStrongRef(nullptr);
-        delete work;
+    EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
+    std::lock_guard<std::mutex> mapLock(mapMutex);
+    if (g_callbackMap.count(deviceId) == 0) {
+        EDM_LOGE(MODULE_DEV_MGR, "device callback map is null");
+        return;
+    }
 
+    auto data = g_callbackMap[deviceId];
+    g_callbackMap.erase(deviceId);
+    if (data->onDisconnect == nullptr && data->unbindCallback == nullptr && data->unbindDeferred == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "device callback is null");
+        return;
+    }
+    data->IncStrongRef(nullptr);
+    auto task = [data, errMsg]() {
+        EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect async task is run.");
+        data->DecStrongRef(nullptr);
         napi_value disConnCallback;
-        napi_status napiSatus = napi_get_reference_value(data->env, data->onDisconnect, &disConnCallback);
-        if (napiSatus == napi_ok) {
-            napi_value err = ConvertToBusinessError(data->env, data->errMsg);
-            napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
+        napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
+        if (napi_get_reference_value(data->env, data->onDisconnect, &disConnCallback) == napi_ok) {
+            napi_value err = ConvertToBusinessError(data->env, errMsg);
             napi_value argv[PARAM_COUNT_2] = {err, result};
             napi_value callResult;
             napi_call_function(data->env, nullptr, disConnCallback, PARAM_COUNT_2, argv, &callResult);
@@ -191,11 +141,9 @@ static void DisConnectWorkCb(uv_work_t *work, int status)
         }
 
         napi_value err = ConvertToBusinessError(data->env, data->unBindErrMsg);
-        napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
         if (data->unbindCallback != nullptr) {
             napi_value callback;
             NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->unbindCallback, &callback));
-
             napi_value argv[PARAM_COUNT_2] = {err, result};
             napi_value callResult;
             napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
@@ -208,38 +156,10 @@ static void DisConnectWorkCb(uv_work_t *work, int status)
             }
             EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
         }
-}
-
-void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
-{
-    EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
-    std::lock_guard<std::mutex> mapLock(mapMutex);
-    if (g_callbackMap.count(deviceId) == 0) {
-        EDM_LOGE(MODULE_DEV_MGR, "device callback map is null");
-        return;
-    }
-
-    auto asyncData = g_callbackMap[deviceId];
-    g_callbackMap.erase(deviceId);
-    if (asyncData == nullptr || (asyncData->onDisconnect == nullptr && asyncData->unbindCallback == nullptr
-        && asyncData->unbindDeferred == nullptr)) {
-        EDM_LOGE(MODULE_DEV_MGR, "device callback is null");
-        return;
-    }
-    uv_loop_t* loop = nullptr;
-    NAPI_CALL_RETURN_VOID(asyncData->env, napi_get_uv_event_loop(asyncData->env, &loop));
-    uv_work_t* work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "new work fail");
-        return;
-    }
-    asyncData->errMsg = errMsg;
-    asyncData->IncStrongRef(nullptr);
-    work->data = asyncData.GetRefPtr();
-    auto ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, DisConnectWorkCb);
-    if (ret != 0) {
-        delete work;
-        asyncData->DecStrongRef(nullptr);
+    };
+    if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
+        EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
+        data->DecStrongRef(nullptr);
     }
 }
 

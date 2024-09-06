@@ -66,35 +66,57 @@ private:
     napi_value OnUpdateDriverState(napi_env env, napi_callback_info info)
     {
         HILOG_INFO("OnUpdateDriverState is called");
-        
-        NapiAsyncTask::CompleteCallback complete =
-            [weak = context_](napi_env env, NapiAsyncTask& task, int32_t status) {
-                HILOG_INFO("UpdateDriverState begin");
-                auto context = weak.lock();
-                if (!context) {
-                    HILOG_WARN("context is released");
-                    task.Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context is released"));
-                    return;
-                }
-
-                ErrCode innerErrorCode = context->UpdateDriverState();
-                if (innerErrorCode == 0) {
-                    napi_value result = nullptr;
-                    napi_get_undefined(env, &result);
-                    task.Resolve(env, result);
-                } else {
-                    task.Reject(env, CreateJsErrorByNativeErr(env, innerErrorCode));
-                }
-            };
         size_t argc = 1;
         napi_value argv[1] = {nullptr};
         napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
         napi_value lastParam = (argc > ARGC_ZERO) ? argv[INDEX_ZERO] : nullptr;
 
         napi_value result = nullptr;
-        NapiAsyncTask::Schedule("JSDriverExtensionContext::OnUpdateDriverState",
-            env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+        std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+        auto asyncTask = [weak = context_, env, task = napiAsyncTask.get()]() {
+            HILOG_INFO("UpdateDriverState begin");
+            auto context = weak.lock();
+            if (!context) {
+                HILOG_WARN("context is released");
+                task->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context is released"));
+                delete task;
+                return;
+            }
+
+            ErrCode innerErrorCode = context->UpdateDriverState();
+            if (innerErrorCode == 0) {
+                napi_value result = nullptr;
+                napi_get_undefined(env, &result);
+                task->Resolve(env, result);
+            } else {
+                task->Reject(env, CreateJsErrorByNativeErr(env, innerErrorCode));
+            }
+            delete task;
+        };
+        if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_high)) {
+            napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context send event failed"));
+        } else {
+            napiAsyncTask.release();
+        }
         return result;
+    }
+
+    std::unique_ptr<NapiAsyncTask> CreateEmptyAsyncTask(napi_env env, napi_value lastParam, napi_value* result)
+    {
+        napi_valuetype type = napi_undefined;
+        napi_typeof(env, lastParam, &type);
+        if (lastParam == nullptr || type != napi_function) {
+            napi_deferred nativeDeferred = nullptr;
+            napi_create_promise(env, &nativeDeferred, result);
+            return std::make_unique<NapiAsyncTask>(nativeDeferred, std::unique_ptr<NapiAsyncTask::ExecuteCallback>(),
+                std::unique_ptr<NapiAsyncTask::CompleteCallback>());
+        } else {
+            napi_get_undefined(env, result);
+            napi_ref callbackRef = nullptr;
+            napi_create_reference(env, lastParam, 1, &callbackRef);
+            return std::make_unique<NapiAsyncTask>(callbackRef, std::unique_ptr<NapiAsyncTask::ExecuteCallback>(),
+                std::unique_ptr<NapiAsyncTask::CompleteCallback>());
+        }
     }
 };
 } // namespace
