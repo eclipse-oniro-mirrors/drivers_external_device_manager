@@ -144,8 +144,6 @@ PkgInfoTable DrvBundleStateCallback::CreatePkgInfoTable(const ExtensionAbilityIn
         == AccessTokenKitRet::RET_SUCCESS) {
         pkgInfo.userId = hapTokenInfo.userID;
         pkgInfo.appIndex = hapTokenInfo.instIndex;
-        EDM_LOGD(MODULE_PKG_MGR, "userId:%{public}d, appIndex:%{public}d",
-            hapTokenInfo.userID, hapTokenInfo.instIndex);
     }
     return pkgInfo;
 }
