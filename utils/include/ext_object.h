@@ -88,7 +88,7 @@ public:
 private:
     friend class DrvBundleStateCallback;
     std::string bus_;
-    BusType busType_;
+    BusType busType_{0};
     std::string driverUid_;
     std::string bundleName_;
     std::string driverName_;

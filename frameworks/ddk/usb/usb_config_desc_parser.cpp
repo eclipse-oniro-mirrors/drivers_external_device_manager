@@ -130,7 +130,7 @@ static int32_t FindNextDescriptor(const uint8_t *buffer, int32_t size)
 static int32_t FillExtraDescriptor(
     const unsigned char **extra, uint32_t *extraLength, const uint8_t *buffer, int32_t bufferLen)
 {
-    if (bufferLen == 0) {
+    if (bufferLen == 0 || extra == nullptr || extraLength == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid param");
         return USB_DDK_FAILED;
     }
