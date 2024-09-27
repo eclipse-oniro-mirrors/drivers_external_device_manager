@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-constexpr uint64_t maxInterfaceDescSize = 512;
+constexpr uint64_t MAX_INTERFACE_DESC_SIZE = 512;
 
 bool ErrMsg::Marshalling(MessageParcel &parcel) const
 {
@@ -340,7 +340,7 @@ std::shared_ptr<USBDeviceInfoData> USBDeviceInfoData::UnMarshalling(MessageParce
         return nullptr;
     }
 
-    if (interfaceDescSize > maxInterfaceDescSize) {
+    if (interfaceDescSize > MAX_INTERFACE_DESC_SIZE) {
         EDM_LOGE(MODULE_DEV_MGR, "interfaceDescSize is out of range");
         return nullptr;
     }
