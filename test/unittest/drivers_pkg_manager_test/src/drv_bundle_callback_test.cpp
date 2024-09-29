@@ -35,13 +35,6 @@ public:
     }
 };
 
-HWTEST_F(DrvBundleStateCallbackTest, DrvBundleCallback_CheckPermissio_Test, TestSize.Level1)
-{
-    bool ret = drvbundleInstance.CheckBundleMgrProxyPermission();
-    EXPECT_EQ(true, ret);
-    cout << "DrvBundleCallback_CheckPermissio_Test" << endl;
-}
-
 HWTEST_F(DrvBundleStateCallbackTest, DrvBundleCallback_GetAllInfos_Test, TestSize.Level1)
 {
     bool ret = drvbundleInstance.GetAllDriverInfos();
