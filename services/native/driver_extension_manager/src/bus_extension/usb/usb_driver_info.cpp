@@ -92,7 +92,7 @@ int32_t UsbDriverInfo::Serialize(string &driverStr)
     char *tempStr = cJSON_PrintUnformatted(jsonRoot);
     driverStr = tempStr;
     cJSON_Delete(jsonRoot);
-    free(tempStr);
+    cJSON_free(tempStr);
     return EDM_OK;
 }
 
