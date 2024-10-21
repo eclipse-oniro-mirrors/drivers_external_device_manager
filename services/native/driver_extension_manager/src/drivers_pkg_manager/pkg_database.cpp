@@ -36,7 +36,7 @@ bool PkgDataBase::InitDB()
         EDM_LOGE(MODULE_PKG_MGR, "GetRdbStore errCode :%{public}d", errCode);
         return false;
     } else {
-        EDM_LOGE(MODULE_PKG_MGR, "GetRdbStore success :%{public}d", errCode);
+        EDM_LOGI(MODULE_PKG_MGR, "GetRdbStore success :%{public}d", errCode);
         return true;
     }
 }
@@ -44,7 +44,7 @@ bool PkgDataBase::InitDB()
 std::shared_ptr<PkgDataBase> PkgDataBase::GetInstance()
 {
     if (instance_ == nullptr) {
-        EDM_LOGE(MODULE_PKG_MGR, "PkgDataBase reset to new instance");
+        EDM_LOGI(MODULE_PKG_MGR, "PkgDataBase reset to new instance");
         instance_.reset(new PkgDataBase());
         return instance_;
     }
