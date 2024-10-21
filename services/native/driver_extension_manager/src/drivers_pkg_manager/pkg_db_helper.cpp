@@ -36,7 +36,7 @@ std::shared_ptr<PkgDbHelper> PkgDbHelper::GetInstance()
     static std::mutex instanceMutex;
     std::lock_guard<std::mutex> guard(instanceMutex);
     if (instance_ == nullptr || !g_dbInitSucc) {
-        EDM_LOGE(MODULE_PKG_MGR, "PkgDbHelper reset to new instance");
+        EDM_LOGI(MODULE_PKG_MGR, "PkgDbHelper reset to new instance");
         instance_.reset(new PkgDbHelper());
     }
     return instance_;
