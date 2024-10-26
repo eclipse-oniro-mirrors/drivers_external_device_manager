@@ -66,6 +66,60 @@ ohos_shared_library("drivers_pkg_manager") {
     "-fno-unwind-tables",
     "-Os",
   ]
+  version_script = "drivers_pkg_manager.map"
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+}
+
+ohos_static_library("drivers_pkg_manager_test") {
+  sources = [
+    "driver_info.cpp",
+    "driver_os_account_subscriber.cpp",
+    "driver_pkg_manager.cpp",
+    "drv_bundle_state_callback.cpp",
+    "pkg_database.cpp",
+    "pkg_db_helper.cpp",
+  ]
+  include_dirs = [
+    "../../include/drivers_pkg_manager",
+    "../../include/bus_extension/core",
+  ]
+  configs = [
+    ":drvext_manager_public_config",
+    "${utils_path}:utils_config",
+  ]
+  public_configs = [ ":drvext_manager_public_config" ]
+
+  # Component internal dependencies
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core" ]
+
+  external_deps = [
+    "ability_base:want",
+    "access_token:libaccesstoken_sdk",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "cJSON:cjson",
+    "c_utils:utils",
+    "common_event_service:cesfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "drivers_interface_usb:libusb_proxy_1.0",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "relational_store:native_appdatafwk",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+    "samgr:samgr_proxy",
+  ]
+  cflags_cc = [
+    "-fno-asynchronous-unwind-tables",
+    "-fno-unwind-tables",
+    "-Os",
+  ]
+
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }

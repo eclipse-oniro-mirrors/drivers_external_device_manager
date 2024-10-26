@@ -1,0 +1,14 @@
+1.0 {
+    global:
+      extern "C++" {
+        *Init*;
+        *GetInstance*;
+        *SubscribeOsAccountSwitch*;
+        *QueryMatchDriver*;
+        *QueryDriverInfo*;
+        *RegisterBundleStatusCallback*;
+        *RegisterBundleCallback*;
+      };
+    local:
+      *;
+};
