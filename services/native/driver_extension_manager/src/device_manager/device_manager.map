@@ -1,0 +1,15 @@
+1.0 {
+    global:
+      extern "C++" {
+        *Init*;
+        *GetInstance*;
+        *DevChangeCallback;
+        *QueryDevice*;
+        *ConnectDevice*;
+        *DisConnectDevice*;
+        *QueryDevicesById*;
+        *QueryAllDevices*;
+      };
+    local:
+      *;
+};

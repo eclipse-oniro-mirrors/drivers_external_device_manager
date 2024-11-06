@@ -32,7 +32,7 @@ ohos_unittest("bus_extension_usb_test") {
   ]
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager_test",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -55,7 +55,7 @@ ohos_unittest("driver_extension_controller_test") {
   ]
   include_dirs = [ "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager" ]
   deps = [
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager_test",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -86,7 +86,7 @@ ohos_unittest("drivers_pkg_manager_test") {
   ]
   deps = [
     "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager_test",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -141,6 +141,7 @@ group("external_device_manager_ut") {
     "ddk_base_test:ddk_base_test",
     "device_manager_js_test:DeviceManagerJsTest",
     "device_manager_test:device_manager_test",
+    "driver_extension_context_test:driver_extension_context_test",
     "ndk_permission_js_test:NdkPermissionJsTest",
     "ndk_stage_js_test:NdkStageJsTest",
     "permission_js_test:PermissionJsTest",

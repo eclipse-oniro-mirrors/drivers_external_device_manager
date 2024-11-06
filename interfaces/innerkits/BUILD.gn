@@ -42,7 +42,7 @@ ohos_shared_library("driver_ext_mgr_client") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
-
+  version_script = "driver_ext_mgr_client.map"
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
