@@ -192,7 +192,6 @@ void JsDriverExtension::BindContext(napi_env env, napi_value obj)
     if (status != napi_ok) {
         HILOG_ERROR("Failed to wrap js instance with native object");
         delete workContext;
-        return nullptr;
     }
     HILOG_INFO("JsDriverExtension::Init end.");
 }
