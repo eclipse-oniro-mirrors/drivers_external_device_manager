@@ -108,12 +108,16 @@ napi_value AttachDriverExtensionContext(napi_env env, void *value, void *)
         value, nullptr);
 
     auto workContext = new (std::nothrow) std::weak_ptr<DriverExtensionContext>(ptr);
-    napi_wrap(env, contextObj, workContext,
+    napi_status status = napi_wrap(env, contextObj, workContext,
         [](napi_env env, void *data, void *) {
             HILOG_INFO("Finalizer for weak_ptr driver extension context is called");
             delete static_cast<std::weak_ptr<DriverExtensionContext> *>(data);
         }, nullptr, nullptr);
-
+    if (status != napi_ok) {
+        HILOG_ERROR("Failed to wrap js instance with native object");
+        delete workContext;
+        return nullptr;
+    }
     return contextObj;
 }
 
@@ -180,11 +184,15 @@ void JsDriverExtension::BindContext(napi_env env, napi_value obj)
     HILOG_INFO("JsDriverExtension::SetProperty.");
     napi_set_named_property(env, obj, "context", contextObj);
     HILOG_INFO("Set driver extension context");
-    napi_wrap(env, nativeObj, workContext,
+    napi_status status = napi_wrap(env, nativeObj, workContext,
         [](napi_env, void* data, void*) {
             HILOG_INFO("Finalizer for weak_ptr driver extension context is called");
             delete static_cast<std::weak_ptr<DriverExtensionContext>*>(data);
         }, nullptr, nullptr);
+    if (status != napi_ok) {
+        HILOG_ERROR("Failed to wrap js instance with native object");
+        delete workContext;
+    }
     HILOG_INFO("JsDriverExtension::Init end.");
 }
 
