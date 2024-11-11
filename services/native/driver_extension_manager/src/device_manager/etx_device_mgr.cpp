@@ -219,6 +219,16 @@ void ExtDeviceManager::ClearMatchedDrivers(const int32_t userId)
             Device::GetAbilityName(bundleInfo), userId);
     }
     bundleMatchMap_.clear();
+
+    lock_guard<mutex> deviceMapLock(deviceMapMutex_);
+    for (auto &m : deviceMap_) {
+        for (auto &[_, device] : m.second) {
+            if (device != nullptr && !device->IsUnRegisted()) {
+                device->RemoveBundleInfo();
+                device->ClearDrvExtRemote();
+            }
+        }
+    }
 }
 
 int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
