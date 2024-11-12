@@ -30,6 +30,7 @@ namespace {
 static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_0::IHidDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
 std::mutex g_mutex;
+
 constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
 constexpr uint32_t MAX_HID_DEVICE_PROP_LEN = 7;
 constexpr uint32_t MAX_HID_EVENT_TYPES_LEN = 5;
@@ -38,6 +39,7 @@ constexpr uint32_t MAX_HID_ABS_LEN = 26;
 constexpr uint32_t MAX_HID_REL_BITS_LEN = 13;
 constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
 constexpr uint32_t MAX_NAME_LENGTH = 80;
+
 }
 #ifdef __cplusplus
 extern "C" {
@@ -258,6 +260,7 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
 
     uint32_t deviceId = 0;
     auto ret = g_ddk->CreateDevice(tempDevice, tempEventProperties, deviceId);
+    ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "create device failed:%{public}d", ret);
         return ret;
@@ -293,6 +296,7 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
     });
 
     auto ret = g_ddk->EmitEvent(GetRealDeviceId(deviceId), itemsTemp);
+    ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "emit event failed:%{public}d", ret);
         return ret;
@@ -308,6 +312,7 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
     }
 
     auto ret = g_ddk->DestroyDevice(GetRealDeviceId(deviceId));
+    ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "destroy device failed:%{public}d", ret);
         return ret;

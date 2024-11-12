@@ -24,7 +24,7 @@ export default function DdkPermissionJsTest() {
   describe('DdkPermissionJsTest', () => {
 
     const TAG: string = "[DdkPermissionJsTest]";
-    const DDK_ERR_NOPERM: number = -19;
+    const DDK_ERR_NOPERM: number = 201;
 
     beforeAll(async () => {
       try {
