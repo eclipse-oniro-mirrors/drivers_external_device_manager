@@ -20,7 +20,7 @@ export default function hidDdkNdkJsTest() {
   describe('hidDdkNdkJsTest', () => {
     const TAG: string = "[hidDdkNdkJsTest]";
     const HID_DDK_SUCCESS: number = 0;
-    const HID_DDK_INVALID_PARAMETER: number = -2;
+    const HID_DDK_INVALID_PARAMETER: number = 401;
 
     /**
      * @tc.name       : testHidCreateDevice001
