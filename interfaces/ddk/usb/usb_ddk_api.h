@@ -69,11 +69,10 @@ void OH_Usb_Release(void);
  *
  * @permission ohos.permission.ACCESS_DDK_USB
  * @return <b>0</b> if the operation is successful; a negative value otherwise.
- * @since 10
+ * @since 14
  * @version 1.0
  */
 int32_t OH_Usb_ReleaseResource(void);
-
 
 /**
  * @brief Obtains the USB device descriptor.
