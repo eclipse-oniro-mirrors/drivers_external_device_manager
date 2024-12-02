@@ -59,6 +59,25 @@ export default function DdkPermissionJsTest() {
     });
 
     /**
+     * @tc.name       : testUsbReleaseResource001
+     * @tc.desc       : OH_Usb_ReleaseResource Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReleaseResource001', 0, async (done: Function) => {
+      console.info('----------------------testUsbReleaseResource001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbReleaseResource();
+        console.info("Test Result testUsbReleaseResource001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReleaseResource001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testUsbGetDeviceDescriptor001
      * @tc.desc       : OH_Usb_GetDeviceDescriptor Interface testing
      * @tc.type       : Function
