@@ -173,7 +173,7 @@ void JsDriverExtension::BindContext(napi_env env, napi_value obj)
     napi_value contextObj = CreateJsDriverExtensionContext(env, context);
     shellContextRef_ = JsRuntime::LoadSystemModuleByEngine(env, "application.DriverExtensionContext",
         &contextObj, ARGC_ONE);
-    if (!shellContextRef_) {
+    if (shellContextRef_ == nullptr) {
         HILOG_ERROR("shellContextRef_ is nullptr, Failed to LoadSystemModuleByEngine!");
         return;
     }
