@@ -102,6 +102,10 @@ napi_value AttachDriverExtensionContext(napi_env env, void *value, void *)
     napi_value object = CreateJsDriverExtensionContext(env, ptr);
     auto contextObjRef = JsRuntime::LoadSystemModuleByEngine(env,
         "application.DriverExtensionContext", &object, 1);
+    if (contextObjRef == nullptr) {
+        HILOG_ERROR("LoadSystemModuleByEngine failed.");
+        return nullptr;
+    }
     napi_value contextObj = contextObjRef->GetNapiValue();
 
     napi_coerce_to_native_binding_object(env, contextObj, DetachCallbackFunc, AttachDriverExtensionContext,
