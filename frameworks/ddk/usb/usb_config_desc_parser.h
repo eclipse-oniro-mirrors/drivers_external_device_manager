@@ -15,6 +15,7 @@
 
 #ifndef USB_CONFIG_DESC_PARSER_H
 #include <vector>
+
 #include "usb_ddk_types.h"
 namespace OHOS {
 namespace ExternalDeviceManager {

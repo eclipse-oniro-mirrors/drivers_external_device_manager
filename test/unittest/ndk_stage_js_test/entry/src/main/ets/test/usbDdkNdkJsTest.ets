@@ -25,8 +25,9 @@ export default function usbDdkNdkJsTest() {
 
     const TAG: string = "[usbDdkNdkJsTest]";
     const USB_DDK_SUCCESS: number = 0;
-    const USB_DDK_INVALID_PARAMETER: number = 401;
-    const USB_DDK_INVALID_OPERATION: number = 27400002;
+    const USB_DDK_FAILED: number = -1;
+    const USB_DDK_INVALID_PARAMETER: number = -2;
+    const USB_DDK_INVALID_OPERATION: number = -4;
 
     beforeAll(async () => {
       try {
@@ -193,7 +194,7 @@ export default function usbDdkNdkJsTest() {
         console.info("Test USB deviceId = " + deviceId);
         const ret = usbDdkNdkTest.usbGetConfigDescriptorTwo();
         console.info("Test Result testUsbGetConfigDescriptor002 : " + ret);
-        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        expect(ret).assertEqual(USB_DDK_FAILED);
         done();
       } catch (err) {
         console.error(TAG, `testUsbGetConfigDescriptor002 failed, message is ${err.message}`);
@@ -297,7 +298,7 @@ export default function usbDdkNdkJsTest() {
         console.info("Test USB deviceId = " + deviceId);
         const ret = usbDdkNdkTest.usbClaimInterfaceTwo();
         console.info("Test Result testUsbClaimInterface002 : " + ret);
-        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        expect(ret).assertEqual(USB_DDK_FAILED);
         done();
       } catch (err) {
         console.error(TAG, `testUsbClaimInterface002 failed, message is ${err.message}`);
