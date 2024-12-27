@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -442,6 +442,304 @@ export default function DdkPermissionJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testHidDestroyDevice001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidInit001
+     * @tc.desc       : OH_Hid_Init Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidInit001', 0, async (done: Function) => {
+      console.info('----------------------testHidInit001---------------------------');
+      try {
+        const ret = ddkPermissionTest.hidInit();
+        console.info("Test Result testHidInit001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidInit001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidRelease001
+     * @tc.desc       : OH_Hid_Release Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidRelease001', 0, async (done: Function) => {
+      console.info('----------------------testHidRelease001---------------------------');
+      try {
+        const ret = ddkPermissionTest.hidRelease();
+        console.info("Test Result testHidRelease001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidRelease001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidOpen001
+     * @tc.desc       : OH_Hid_Open Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidOpen001', 0, async (done: Function) => {
+      console.info('----------------------testHidOpen001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidOpen(deviceId);
+        console.info("Test Result testHidOpen001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidOpen001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidClose001
+     * @tc.desc       : OH_Hid_Close Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidClose001', 0, async (done: Function) => {
+      console.info('----------------------testHidClose001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidClose(deviceId);
+        console.info("Test Result testHidClose001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidClose001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidWrite001
+     * @tc.desc       : OH_Hid_Write Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidWrite001', 0, async (done: Function) => {
+      console.info('----------------------testHidWrite001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidWrite(deviceId);
+        console.info("Test Result testHidWrite001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidWrite001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidReadTimeout001
+     * @tc.desc       : OH_Hid_ReadTimeout Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidReadTimeout001', 0, async (done: Function) => {
+      console.info('----------------------testHidReadTimeout001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidReadTimeout(deviceId);
+        console.info("Test Result testHidReadTimeout001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidReadTimeout001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidRead001
+     * @tc.desc       : OH_Hid_Read Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidRead001', 0, async (done: Function) => {
+      console.info('----------------------testHidRead001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidRead(deviceId);
+        console.info("Test Result testHidRead001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidRead001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidSetNonBlocking001
+     * @tc.desc       : OH_Hid_SetNonBlocking Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidSetNonBlocking001', 0, async (done: Function) => {
+      console.info('----------------------testHidSetNonBlocking001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidSetNonBlocking(deviceId);
+        console.info("Test Result testHidSetNonBlocking001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidSetNonBlocking001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidGetRawInfo001
+     * @tc.desc       : OH_Hid_GetRawInfo Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidGetRawInfo001', 0, async (done: Function) => {
+      console.info('----------------------testHidGetRawInfo001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidGetRawInfo(deviceId);
+        console.info("Test Result testHidGetRawInfo001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidGetRawInfo001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidGetRawName001
+     * @tc.desc       : OH_Hid_GetRawName Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidGetRawName001', 0, async (done: Function) => {
+      console.info('----------------------testHidGetRawName001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidGetRawName(deviceId);
+        console.info("Test Result testHidGetRawName001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidGetRawName001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidGetPhysicalAddress001
+     * @tc.desc       : OH_Hid_GetPhysicalAddress Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidGetPhysicalAddress001', 0, async (done: Function) => {
+      console.info('----------------------testHidGetPhysicalAddress001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidGetPhysicalAddress(deviceId);
+        console.info("Test Result testHidGetPhysicalAddress001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidGetPhysicalAddress001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidGetRawUniqueId001
+     * @tc.desc       : OH_Hid_GetRawUniqueId Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidGetRawUniqueId001', 0, async (done: Function) => {
+      console.info('----------------------testHidGetRawUniqueId001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidGetRawUniqueId(deviceId);
+        console.info("Test Result testHidGetRawUniqueId001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidGetRawUniqueId001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidSendReport001
+     * @tc.desc       : OH_Hid_SendReport Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidSendReport001', 0, async (done: Function) => {
+      console.info('----------------------testHidSendReport001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidSendReport(deviceId);
+        console.info("Test Result testHidSendReport001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidSendReport001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidGetReport001
+     * @tc.desc       : OH_Hid_GetReport Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidGetReport001', 0, async (done: Function) => {
+      console.info('----------------------testHidGetReport001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidGetReport(deviceId);
+        console.info("Test Result testHidGetReport001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidGetReport001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testHidGetReportDescriptor001
+     * @tc.desc       : OH_Hid_GetReportDescriptor Interface testing
+     * @tc.type       : Function
+     */
+    it('testHidGetReportDescriptor001', 0, async (done: Function) => {
+      console.info('----------------------testHidGetReportDescriptor001---------------------------');
+      try {
+        console.info("Test HID deviceId = " + deviceId);
+        const ret = ddkPermissionTest.hidGetReportDescriptor(deviceId);
+        console.info("Test Result testHidGetReportDescriptor001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testHidGetReportDescriptor001 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -585,21 +585,83 @@ typedef struct Hid_EventProperties {
  * @version 1.0
  */
 typedef enum {
-    /** Operation successful */
+    /** @error Operation successful */
     HID_DDK_SUCCESS = 0,
-    /** Permission denied */
+    /** @error Permission denied */
     HID_DDK_NO_PERM = 201,
-    /** Invalid parameter */
+    /** @error Invalid parameter */
     HID_DDK_INVALID_PARAMETER = 401,
-    /** Operation failed */
+    /** @error Operation failed */
     HID_DDK_FAILURE = 27300001,
-    /** Null pointer exception */
+    /** @error Null pointer exception */
     HID_DDK_NULL_PTR = 27300002,
-    /** Invalid operation */
+    /** @error Invalid operation */
     HID_DDK_INVALID_OPERATION = 27300003,
-    /** Timeout */
+    /** @error Timeout */
     HID_DDK_TIMEOUT = 27300004,
+    /** @error Init operation
+     *  @since 16
+     */
+    HID_DDK_INIT_ERROR = 27300005,
+    /** @error Service error operation
+     *  @since 16
+     */
+    HID_DDK_SERVICE_ERROR = 27300006,
+    /** @error Buff is outside accessible address space
+     *  @since 16
+     */
+    HID_DDK_MEMORY_ERROR  = 27300007,
+    /** @error Physical I/O error has occurred.
+     *  @since 16
+     */
+    HID_DDK_IO_ERROR = 27300008,
+    /** @error Device not found.
+     *  @since 16
+     */
+    HID_DDK_DEVICE_NOT_FOUND = 27300009
 } Hid_DdkErrCode;
+
+/**
+ * @brief max report buffer size.
+ *
+ * @since 16
+ */
+#define HID_MAX_REPORT_BUFFER_SIZE (16 * 1024 - 1)
+
+/**
+ * @brief Opaque usb HID device structure.
+ *
+ * @since 16
+ */
+typedef struct Hid_DeviceHandle Hid_DeviceHandle;
+
+/**
+ * @brief Defines the report type.
+ *
+ * @since 16
+ */
+typedef enum {
+    /** Input report */
+    HID_INPUT_REPORT = 0,
+    /** Output report */
+    HID_OUTPUT_REPORT = 1,
+    /** Feature report */
+    HID_FEATURE_REPORT = 2
+} Hid_ReportType;
+
+/**
+ * @brief Defines the raw dev info.
+ *
+ * @since 16
+ */
+typedef struct Hid_RawDevInfo {
+    /** Bus type */
+    uint32_t busType;
+    /** Vendor ID */
+    uint16_t vendor;
+    /** Product ID */
+    uint16_t product;
+} Hid_RawDevInfo;
 #ifdef __cplusplus
 }
 /** @} */
