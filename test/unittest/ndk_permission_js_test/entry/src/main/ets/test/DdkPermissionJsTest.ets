@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -385,6 +385,25 @@ export default function DdkPermissionJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testUsbSendPipeRequestWithAshmem001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbGetDevices001
+     * @tc.desc       : OH_Usb_GetDevices Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbGetDevices001', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetDevices001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbGetDevices(deviceId);
+        console.info("Test Result testUsbGetDevices001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetDevices001 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }

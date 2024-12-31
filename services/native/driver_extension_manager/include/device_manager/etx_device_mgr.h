@@ -23,6 +23,7 @@
 #include <unordered_set>
 #include "device.h"
 #include "ext_object.h"
+#include "idriver_change_callback.h"
 #include "single_instance.h"
 #include "timer.h"
 
@@ -47,12 +48,15 @@ public:
     std::unordered_set<uint64_t> DeleteBundlesOfBundleInfoMap(const std::string &bundleName = "");
     void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds);
     void ClearMatchedDrivers(const int32_t userId);
+    void SetDriverChangeCallback(shared_ptr<IDriverChangeCallback> &driverChangeCallback);
 
 private:
     ExtDeviceManager() = default;
     void PrintMatchDriverMap();
     int32_t AddDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
     int32_t RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, string &bundleInfo);
+    void UpdateDriverInfo(const shared_ptr<Device> &device);
+    void RemoveDriverInfo(const shared_ptr<Device> &device);
     std::shared_ptr<Device> QueryDeviceByDeviceID(uint64_t deviceId);
     void UnLoadSelf(void);
     size_t GetTotalDeviceNum(void) const;
@@ -62,6 +66,7 @@ private:
     mutex bundleMatchMapMutex_;
     Utils::Timer unloadSelftimer_ {"unLoadSelfTimer"};
     uint32_t unloadSelftimerId_ {UINT32_MAX};
+    std::shared_ptr<IDriverChangeCallback> driverChangeCallback_ = nullptr;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

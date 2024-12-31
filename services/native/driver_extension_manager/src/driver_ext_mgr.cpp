@@ -23,6 +23,7 @@
 #include "etx_device_mgr.h"
 #include "ext_permission_manager.h"
 #include "hilog_wrapper.h"
+#include "idriver_change_callback.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "usb_device_info.h"
@@ -42,6 +43,9 @@ void DriverExtMgr::OnStart()
     int32_t ret;
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStart");
     BusExtensionCore::GetInstance().LoadBusExtensionLibs();
+    std::shared_ptr<IDriverChangeCallback> driverChangeCallback =
+        BusExtensionCore::GetInstance().AcquireDriverChangeCallback(BUS_TYPE_USB);
+    ExtDeviceManager::GetInstance().SetDriverChangeCallback(driverChangeCallback);
     ret = DriverPkgManager::GetInstance().Init(bmsFuture_, accountFuture_, commEventFuture_);
     AddSystemAbilityListener(SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN);
     AddSystemAbilityListener(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);

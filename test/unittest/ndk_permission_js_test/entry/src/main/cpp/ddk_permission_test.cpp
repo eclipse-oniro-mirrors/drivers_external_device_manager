@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <js_native_api_types.h>
 #include <vector>
+
+constexpr size_t MAX_USB_DEVICE_NUM = 128;
 
 using namespace std;
 
@@ -147,6 +149,20 @@ static napi_value UsbSendPipeRequestWithAshmem(napi_env env, napi_callback_info 
     return result;
 }
 
+static napi_value UsbGetDevices(napi_env env, napi_callback_info info)
+{
+    int32_t usbInitReturnValue = OH_Usb_Init();
+    NAPI_ASSERT(env, usbInitReturnValue == USB_DDK_NO_PERM, "OH_Usb_Init failed, no permission");
+    struct Usb_DeviceArray deviceArray;
+    deviceArray.deviceIds = new uint64_t[MAX_USB_DEVICE_NUM];
+    int32_t returnValue = OH_Usb_GetDevices(&deviceArray);
+    OH_Usb_Release();
+    delete[] deviceArray.deviceIds;
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    return result;
+}
+
 static int32_t CreateTestDevice()
 {
     std::vector<Hid_DeviceProp> deviceProp = { HID_PROP_DIRECT };
@@ -239,6 +255,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("usbSendPipeRequest", UsbSendPipeRequest),
         DECLARE_NAPI_FUNCTION("usbCreateDeviceMemMap", UsbCreateDeviceMemMap),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmem", UsbSendPipeRequestWithAshmem),
+        DECLARE_NAPI_FUNCTION("usbGetDevices", UsbGetDevices),
         DECLARE_NAPI_FUNCTION("hidCreateDevice", HidCreateDevice),
         DECLARE_NAPI_FUNCTION("hidEmitEvent", HidEmitEvent),
         DECLARE_NAPI_FUNCTION("hidDestroyDevice", HidDestroyDevice),

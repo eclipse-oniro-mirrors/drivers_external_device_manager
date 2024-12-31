@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -244,6 +244,19 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
  * @version 1.0
  */
 void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap);
+
+/**
+ * @brief Obtain USB devices.
+ *
+ * @permission ohos.permission.ACCESS_DDK_USB
+ * @param devices USB device array.
+ * @return {@link USB_DDK_SUCCESS} the operation is successful.
+ *         {@link USB_DDK_NO_PERM} permission check failed.
+ *         {@link USB_DDK_INVALID_OPERATION} connect usb ddk service failed.
+ *         {@link USB_DDK_INVALID_PARAMETER} devices is null.
+ * @since 16
+ */
+int32_t OH_Usb_GetDevices(struct Usb_DeviceArray *devices);
 /** @} */
 #ifdef __cplusplus
 }

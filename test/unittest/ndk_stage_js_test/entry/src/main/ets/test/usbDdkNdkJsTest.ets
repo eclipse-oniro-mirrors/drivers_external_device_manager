@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1008,5 +1008,61 @@ export default function usbDdkNdkJsTest() {
       }
     });
 
+    /**
+    * @tc.name       : testUsbGetDevices001
+    * @tc.desc       : OH_Usb_GetDevices Interface testing
+    * @tc.type       : Function
+    */
+    it('testUsbGetDevices001', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetDevices001---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbGetDevicesOne();
+        console.info("Test Result testUsbGetDevices001 : " + ret);
+        expect(ret).assertEqual(USB_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetDevices001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbGetDevices002
+     * @tc.desc       : OH_Usb_GetDevices Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbGetDevices002', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetDevices002---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbGetDevicesTwo();
+        console.info("Test Result testUsbGetDevices002 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetDevices002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbGetDevices003
+     * @tc.desc       : OH_Usb_GetDevices Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbGetDevices003', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetDevices003---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbGetDevicesThree();
+        console.info("Test Result testUsbGetDevices003 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetDevices003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }

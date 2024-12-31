@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -115,6 +115,23 @@ std::shared_ptr<IBusExtension> BusExtensionCore::GetBusExtensionByName(std::stri
         return nullptr;
     }
     return busExtensions_[busType];
+}
+
+std::shared_ptr<IDriverChangeCallback> BusExtensionCore::AcquireDriverChangeCallback(BusType busType)
+{
+    auto iterExtension = busExtensions_.find(busType);
+    if (iterExtension == busExtensions_.end()) {
+        EDM_LOGE(MODULE_DEV_MGR, "usb bus extension not found");
+        return nullptr;
+    }
+
+    auto busExtension = iterExtension->second;
+    if (busExtension == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "usb bus extension is nullptr");
+        return nullptr;
+    }
+
+    return busExtension->AcquireDriverChangeCallback();
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

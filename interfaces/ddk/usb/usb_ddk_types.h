@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -309,6 +309,18 @@ typedef enum {
 } UsbDdkErrCode;
 #ifdef __cplusplus
 }
+
+/**
+ * @brief all usb devices.
+ *
+ * @since 16
+ */
+typedef struct Usb_DeviceArray {
+    /** device id array */
+    uint64_t* deviceIds;
+    /** Number of devices. If the value is 0, no device exists */
+    uint32_t num;
+} Usb_DeviceArray;
 /** @} */
 #endif /* __cplusplus */
 #endif // USB_DDK_TYPES_H

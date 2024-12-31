@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include <map>
 #include "ext_object.h"
 #include "idev_change_callback.h"
+#include "idriver_change_callback.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -31,6 +32,7 @@ public:
     virtual bool MatchDriver(const DriverInfo &driver, const DeviceInfo &device) = 0;
     virtual int32_t SetDevChangeCallback(shared_ptr<IDevChangeCallback> callback) = 0;
     virtual BusType GetBusType() = 0;
+    virtual shared_ptr<IDriverChangeCallback> AcquireDriverChangeCallback() = 0;
 };
 }
 }

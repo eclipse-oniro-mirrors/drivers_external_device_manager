@@ -75,6 +75,11 @@ public:
         driverUid_.clear();
     }
 
+    void RemoveDriverInfo()
+    {
+        driverInfo_ = nullptr;
+    }
+
     std::string GetBundleInfo() const
     {
         return bundleInfo_;
