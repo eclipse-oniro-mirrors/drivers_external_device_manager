@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +46,7 @@ constexpr uint64_t LABEL = HITRACE_TAG_OHOS;
 const string DRV_INFO_BUS = "bus";
 const string DRV_INFO_VENDOR = "vendor";
 const string DRV_INFO_DESC = "description";
+const string DRV_INFO_LAUNCHONBIND = "launchonbind";
 
 static constexpr const char *BUNDLE_RESET_TASK_NAME = "DRIVER_INFO_RESET";
 static constexpr const char *BUNDLE_UPDATE_TASK_NAME = "DRIVER_INFO_UPDATE";
@@ -82,6 +83,9 @@ void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, const map<strin
         }
         if (data.first == DRV_INFO_DESC) {
             tmpDrvInfo.description_ = data.second;
+        }
+        if (LowerStr(data.first) == DRV_INFO_LAUNCHONBIND) {
+            tmpDrvInfo.launchOnBind_ = (data.second == "true");
         }
     }
 }

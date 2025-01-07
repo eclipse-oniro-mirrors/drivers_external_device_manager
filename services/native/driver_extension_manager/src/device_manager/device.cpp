@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,15 @@ std::string Device::GetAbilityName(const std::string &bundleInfo)
     return bundleInfo.substr(pos + stiching_.length());
 }
 
+bool Device::IsLastCaller(uint32_t caller) const
+{
+    if (boundCallerInfos_.size() > 1) {
+        return false;
+    }
+
+    return boundCallerInfos_.find(caller) != boundCallerInfos_.end();
+}
+
 int32_t Device::Connect()
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
@@ -78,7 +87,7 @@ int32_t Device::Connect()
     return UsbErrCode::EDM_OK;
 }
 
-int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback)
+int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint32_t callingTokenId)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
@@ -90,6 +99,7 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback)
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
             return ret;
         }
+        boundCallerInfos_[callingTokenId] = CallerInfo{true};
         return ret;
     }
 
@@ -104,12 +114,14 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback)
     std::string bundleName = Device::GetBundleName(bundleInfo);
     std::string abilityName = Device::GetAbilityName(bundleInfo);
     AddDrvExtConnNotify();
+    boundCallerInfos_[callingTokenId] = CallerInfo{false};
     uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
     ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
         bundleName, abilityName, connectNofitier_, busDevId);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
         UnregisterDrvExtMgrCallback(connectCallback);
+        boundCallerInfos_.erase(callingTokenId);
         return ret;
     }
     return UsbErrCode::EDM_OK;
@@ -146,6 +158,9 @@ void Device::OnConnect(const sptr<IRemoteObject> &remote, int resultCode)
 
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     drvExtRemote_ = remote;
+    for (auto &[callingTokenId, callerInfo] : boundCallerInfos_) {
+        callerInfo.isBound = true;
+    }
 
     // notify application
     for (auto &callback : callbacks_) {
@@ -167,6 +182,7 @@ void Device::OnDisconnect(int resultCode)
         callback->OnUnBind(GetDeviceInfo()->GetDeviceId(), {static_cast<UsbErrCode>(resultCode), ""});
         callback->OnDisconnect(GetDeviceInfo()->GetDeviceId(), {static_cast<UsbErrCode>(resultCode), ""});
     }
+    ClearBoundCallerInfos();
     callbacks_.clear();
     if (IsUnRegisted()) {
         ExtDeviceManager::GetInstance().RemoveDeviceOfDeviceMap(shared_from_this());

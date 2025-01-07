@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -110,13 +110,10 @@ bool DriverPkgManager::SubscribeOsAccountSwitch()
     return true;
 }
 
-shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo> devInfo)
+shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo> devInfo)
 {
     EDM_LOGI(MODULE_PKG_MGR, "Enter QueryMatchDriver");
     shared_ptr<IBusExtension> extInstance = nullptr;
-    auto ret = make_shared<BundleInfoNames>();
-    ret->bundleName.clear();
-    ret->abilityName.clear();
     if (bundleStateCallback_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver bundleStateCallback_ null");
         return nullptr;
@@ -136,14 +133,11 @@ shared_ptr<BundleInfoNames> DriverPkgManager::QueryMatchDriver(shared_ptr<Device
     }
     EDM_LOGI(MODULE_PKG_MGR, "Total driverInfos number: %{public}zu", pkgInfos.size());
     for (const auto &pkgInfo : pkgInfos) {
-        DriverInfo driverInfo;
+        DriverInfo driverInfo(pkgInfo.bundleName, pkgInfo.driverName, pkgInfo.driverUid);
         driverInfo.UnSerialize(pkgInfo.driverInfo);
         extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(driverInfo.GetBusName());
         if (extInstance != nullptr && extInstance->MatchDriver(driverInfo, *devInfo)) {
-            ret->bundleName = pkgInfo.bundleName;
-            ret->abilityName = pkgInfo.driverName;
-            ret->driverUid = pkgInfo.driverUid;
-            return ret;
+            return std::make_shared<DriverInfo>(driverInfo);
         }
     }
     EDM_LOGI(MODULE_PKG_MGR, "QueryMatchDriver return null");

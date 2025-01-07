@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -88,6 +88,15 @@ int32_t ExtDeviceManager::AddDevIdOfBundleInfoMap(shared_ptr<Device> device, str
         }
     }
 
+    auto driverInfo = device->GetDriverInfo();
+    if (driverInfo == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "driverInfo is nullptr");
+        return EDM_NOK;
+    }
+    if (driverInfo->GetLaunchOnBind()) {
+        EDM_LOGI(MODULE_DEV_MGR, "driver is set to launch on client bind");
+        return EDM_OK;
+    }
     // start ability
     int32_t ret = device->Connect();
     if (ret != EDM_OK) {
@@ -192,14 +201,15 @@ void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
             if (device->IsUnRegisted() || device->GetDrvExtRemote() != nullptr) {
                 continue;
             }
-            auto bundleInfoNames = DriverPkgManager::GetInstance().QueryMatchDriver(device->GetDeviceInfo());
-            if (bundleInfoNames == nullptr) {
+            auto matchedDriverInfo = DriverPkgManager::GetInstance().QueryMatchDriver(device->GetDeviceInfo());
+            if (matchedDriverInfo == nullptr) {
                 EDM_LOGD(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "], not find driver", deviceId);
                 continue;
             }
-            std::string bundleInfo = bundleInfoNames->bundleName + Device::GetStiching() + bundleInfoNames->abilityName;
+            std::string bundleInfo = matchedDriverInfo->GetBundleName() + Device::GetStiching() +
+                matchedDriverInfo->GetDriverName();
             EDM_LOGI(MODULE_DEV_MGR, "MatchDriverInfo success, bundleInfo: %{public}s", bundleInfo.c_str());
-            device->AddBundleInfo(bundleInfo, bundleInfoNames->driverUid);
+            device->AddBundleInfo(bundleInfo, matchedDriverInfo);
             int32_t ret = AddDevIdOfBundleInfoMap(device, bundleInfo);
             if (ret != EDM_OK) {
                 EDM_LOGD(MODULE_DEV_MGR,
@@ -264,10 +274,11 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
     std::string bundleInfo = device->GetBundleInfo();
     // if device does not have a matching driver, match driver here
     if (bundleInfo.empty()) {
-        auto bundleInfoNames = DriverPkgManager::GetInstance().QueryMatchDriver(devInfo);
-        if (bundleInfoNames != nullptr) {
-            bundleInfo = bundleInfoNames->bundleName + Device::GetStiching() + bundleInfoNames->abilityName;
-            device->AddBundleInfo(bundleInfo, bundleInfoNames->driverUid);
+        auto matchedDriverInfo = DriverPkgManager::GetInstance().QueryMatchDriver(devInfo);
+        if (matchedDriverInfo != nullptr) {
+            bundleInfo = matchedDriverInfo->GetBundleName() + Device::GetStiching() +
+                matchedDriverInfo->GetDriverName();
+            device->AddBundleInfo(bundleInfo, matchedDriverInfo);
         }
     }
     unloadSelftimer_.Unregister(unloadSelftimerId_);
@@ -457,7 +468,8 @@ std::shared_ptr<Device> ExtDeviceManager::QueryDeviceByDeviceID(uint64_t deviceI
     return deviceIter->second;
 }
 
-int32_t ExtDeviceManager::ConnectDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)
+int32_t ExtDeviceManager::ConnectDevice(uint64_t deviceId, uint32_t callingTokenId,
+    const sptr<IDriverExtMgrCallback> &connectCallback)
 {
     // find device by deviceId
     lock_guard<mutex> lock(deviceMapMutex_);
@@ -466,10 +478,10 @@ int32_t ExtDeviceManager::ConnectDevice(uint64_t deviceId, const sptr<IDriverExt
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
         return EDM_NOK;
     }
-    return device->Connect(connectCallback);
+    return device->Connect(connectCallback, callingTokenId);
 }
 
-int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId)
+int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTokenId)
 {
     lock_guard<mutex> lock(deviceMapMutex_);
     std::shared_ptr<Device> device = QueryDeviceByDeviceID(deviceId);
@@ -477,7 +489,18 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId)
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
         return EDM_NOK;
     }
+    std::shared_ptr<DriverInfo> driverInfo = device->GetDriverInfo();
+    if (driverInfo == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
+        return EDM_NOK;
+    }
 
+    if (!driverInfo->GetLaunchOnBind() || !device->IsLastCaller(callingTokenId)) {
+        device->RemoveCaller(callingTokenId);
+        EDM_LOGI(MODULE_DEV_MGR, "driver not launching on bind or other client bound. Removing caller ID: %{public}u",
+            callingTokenId);
+        return EDM_OK;
+    }
     return device->Disconnect();
 }
 } // namespace ExternalDeviceManager

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -171,6 +171,136 @@ HWTEST_F(DeviceManagerTest, GetBusExtensionByNameTest, TestSize.Level1)
     core.busExtensions_.erase(BusType::BUS_TYPE_USB);
     extension = core.GetBusExtensionByName("USB");
     ASSERT_EQ(extension, nullptr);
+}
+
+class TestRemoteObjectStub : public IRemoteObject {
+public:
+    TestRemoteObjectStub() : IRemoteObject(u"IRemoteObject") {}
+    int32_t GetObjectRefCount() { return 0; };
+    int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) { return 0; };
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) { return true; };
+    bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) { return true; };
+    int Dump(int fd, const std::vector<std::u16string> &args) { return 0; };
+};
+
+class TestDriverExtMgrCallback : public IDriverExtMgrCallback {
+public:
+    TestDriverExtMgrCallback() {}
+    sptr<IRemoteObject> AsObject()
+    {
+        return sptr<TestRemoteObjectStub>::MakeSptr();
+    };
+    void OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
+    {
+        EDM_LOGD(MODULE_DEV_MGR, "TestDriverExtMgrCallback::OnConnect entry");
+    };
+    void OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
+    {
+        EDM_LOGD(MODULE_DEV_MGR, "TestDriverExtMgrCallback::OnConnect entry");
+    };
+    void OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
+    {
+        EDM_LOGD(MODULE_DEV_MGR, "TestDriverExtMgrCallback::OnConnect entry");
+    };
+};
+
+HWTEST_F(DeviceManagerTest, ConnectDeviceTest, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
+    uint64_t deviceId = 3;
+    const uint32_t tokenId1 = 1;
+    sptr<IDriverExtMgrCallback> connectCallback = sptr<TestDriverExtMgrCallback>::MakeSptr();
+    int32_t ret = extMgr.ConnectDevice(deviceId, tokenId1, connectCallback);
+    ASSERT_EQ(ret, EDM_NOK);
+    std::shared_ptr<Device> device = extMgr.QueryDeviceByDeviceID(deviceId);
+    ASSERT_EQ(device, nullptr);
+
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    std::shared_ptr<DeviceInfo> deviceInfo = std::make_shared<DeviceInfo>(deviceId,
+        BusType::BUS_TYPE_TEST, "testInfo1");
+    deviceInfo->devInfo_.deviceId = deviceId;
+    ret = callback->OnDeviceAdd(deviceInfo);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
+    device = extMgr.QueryDeviceByDeviceID(deviceId);
+    ASSERT_NE(device, nullptr);
+    device->driverInfo_ = make_shared<DriverInfo>("testBundleName1", "testDriverName1");
+    ASSERT_EQ(device->driverInfo_->launchOnBind_, false);
+    ret = extMgr.ConnectDevice(deviceId, tokenId1, connectCallback);
+    ASSERT_NE(ret, EDM_OK);
+
+    sptr<IRemoteObject> remote = sptr<TestRemoteObjectStub>::MakeSptr();
+    int resultCode = static_cast<int>(UsbErrCode::EDM_OK);
+    device->OnConnect(remote, resultCode);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 0);
+    ASSERT_NE(device->drvExtRemote_, nullptr);
+    ret = extMgr.ConnectDevice(deviceId, tokenId1, connectCallback);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+    const uint32_t tokenId2 = 2;
+    ret = extMgr.ConnectDevice(deviceId, tokenId2, connectCallback);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 2);
+    auto iter = device->boundCallerInfos_.find(tokenId1);
+    ASSERT_NE(iter, device->boundCallerInfos_.end());
+    ASSERT_EQ(iter->second.isBound, true);
+    iter = device->boundCallerInfos_.find(tokenId2);
+    ASSERT_NE(iter, device->boundCallerInfos_.end());
+    ASSERT_EQ(iter->second.isBound, true);
+}
+
+HWTEST_F(DeviceManagerTest, DisConnectDeviceTest, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
+    uint64_t deviceId = 3;
+    const uint32_t tokenId1 = 1;
+    sptr<IDriverExtMgrCallback> connectCallback = sptr<TestDriverExtMgrCallback>::MakeSptr();
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    std::shared_ptr<DeviceInfo> deviceInfo = std::make_shared<DeviceInfo>(deviceId,
+        BusType::BUS_TYPE_TEST, "testInfo2");
+    deviceInfo->devInfo_.deviceId = deviceId;
+    int32_t ret = callback->OnDeviceAdd(deviceInfo);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
+    std::shared_ptr<Device> device = extMgr.QueryDeviceByDeviceID(deviceId);
+    device->driverInfo_ = make_shared<DriverInfo>("testBundleName2", "testDriverName2");
+    ret = extMgr.ConnectDevice(deviceId, tokenId1, connectCallback);
+    ASSERT_NE(ret, EDM_OK);
+
+    sptr<IRemoteObject> remote = sptr<TestRemoteObjectStub>::MakeSptr();
+    device->OnConnect(remote, static_cast<int>(UsbErrCode::EDM_OK));
+    ASSERT_EQ(device->boundCallerInfos_.size(), 0);
+    ASSERT_NE(device->drvExtRemote_, nullptr);
+    ret = extMgr.ConnectDevice(deviceId, tokenId1, connectCallback);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+
+    const uint32_t tokenId2 = 2;
+    ret = extMgr.ConnectDevice(deviceId, tokenId2, connectCallback);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 2);
+    auto iter = device->boundCallerInfos_.find(tokenId1);
+    ASSERT_NE(iter, device->boundCallerInfos_.end());
+    ASSERT_EQ(iter->second.isBound, true);
+    iter = device->boundCallerInfos_.find(tokenId2);
+    ASSERT_NE(iter, device->boundCallerInfos_.end());
+    ASSERT_EQ(iter->second.isBound, true);
+    ret = extMgr.DisConnectDevice(deviceId, tokenId2);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+    iter = device->boundCallerInfos_.begin();
+    ASSERT_EQ(iter->first, tokenId1);
+    ASSERT_EQ(iter->second.isBound, true);
+    device->driverInfo_->launchOnBind_ = true;
+    ret = extMgr.DisConnectDevice(deviceId, tokenId1);
+    ASSERT_NE(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+    device->driverInfo_->launchOnBind_ = false;
+    ret = extMgr.DisConnectDevice(deviceId, tokenId1);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 0);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

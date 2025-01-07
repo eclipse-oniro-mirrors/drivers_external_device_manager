@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,7 +57,7 @@ public:
     int32_t Init();
     int32_t Init(shared_future<int32_t> bmsFuture, shared_future<int32_t> accountFuture,
         shared_future<int32_t> commEventFuture);
-    shared_ptr<BundleInfoNames> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo);
+    shared_ptr<DriverInfo> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo);
     int32_t QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driverInfos,
         bool isByDriverUid = false, const std::string &driverUid = "");
     int32_t RegisterOnBundleUpdate(PCALLBACKFUN pFun);

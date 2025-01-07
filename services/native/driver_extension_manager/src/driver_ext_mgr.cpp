@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -154,7 +154,9 @@ UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrC
         return UsbErrCode::EDM_ERR_NO_PERM;
     }
 
-    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, connectCallback));
+    uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
+    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, callingTokenId,
+        connectCallback));
 }
 
 UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
@@ -165,7 +167,8 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
         return UsbErrCode::EDM_ERR_NO_PERM;
     }
 
-    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId));
+    uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
+    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
 }
 
 static std::shared_ptr<DeviceInfoData> ParseToDeviceInfoData(const std::shared_ptr<Device> &device)

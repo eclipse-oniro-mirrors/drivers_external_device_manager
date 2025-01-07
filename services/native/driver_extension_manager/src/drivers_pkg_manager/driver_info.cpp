@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,7 @@ int32_t DriverInfo::Serialize(string &str)
     cJSON_AddStringToObject(root, "size", this->driverSize_.c_str());
     cJSON_AddStringToObject(root, "description", this->description_.c_str());
     cJSON_AddStringToObject(root, "ext_info", extInfo.c_str());
+    cJSON_AddBoolToObject(root, "launch_on_bind", this->launchOnBind_);
     str = cJSON_PrintUnformatted(root);
     EDM_LOGI(MODULE_COMMON, "DriverInfo Serialize Done, %{public}s", str.c_str());
     cJSON_Delete(root);
@@ -73,6 +74,16 @@ static int32_t checkJsonObj(const cJSON *jsonObj)
         return EDM_ERR_JSON_OBJ_ERR;
     }
     return EDM_OK;
+}
+
+static bool GetBoolValue(const cJSON *jsonObj, const std::string &key)
+{
+    cJSON* jsonItem = cJSON_GetObjectItem(jsonObj, key.c_str());
+    if (jsonItem == nullptr || !cJSON_IsBool(jsonItem)) {
+        EDM_LOGE(MODULE_COMMON, "value is not bool, key:%{public}s", key.c_str());
+        return false;
+    }
+    return cJSON_IsTrue(jsonItem);
 }
 
 static std::string GetStringValue(const cJSON *jsonObj, const std::string &key)
@@ -129,6 +140,7 @@ int32_t DriverInfo::UnSerialize(const string &str)
     this->version_ = GetStringValue(jsonObj, "version");
     this->driverSize_ = GetStringValue(jsonObj, "size");
     this->description_ = GetStringValue(jsonObj, "description");
+    this->launchOnBind_ = GetBoolValue(jsonObj, "launch_on_bind");
     cJSON_Delete(jsonObj);
     return EDM_OK;
 }
