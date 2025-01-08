@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,7 @@ static void PrintQueryMatchDriver()
     deviceInfo->idVendor_ = 0x0B57;
     deviceInfo->deviceClass_ = 0;
     deviceInfo->bcdUSB_ = 0x1122;
-    std::shared_ptr<BundleInfoNames> bundle = drvPkgMgrInstance.QueryMatchDriver(deviceInfo);
+    std::shared_ptr<DriverInfo> bundle = drvPkgMgrInstance.QueryMatchDriver(deviceInfo);
 
     if (bundle != nullptr) {
         cout << "Query Success" << endl;

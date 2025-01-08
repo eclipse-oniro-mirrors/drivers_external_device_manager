@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,8 +40,9 @@ public:
     vector<shared_ptr<DeviceInfo>> QueryDevice(const BusType busType);
     vector<shared_ptr<Device>> QueryAllDevices();
     vector<shared_ptr<Device>> QueryDevicesById(const uint64_t deviceId);
-    int32_t ConnectDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
-    int32_t DisConnectDevice(uint64_t deviceId);
+    int32_t ConnectDevice(uint64_t deviceId, uint32_t callingTokenId,
+        const sptr<IDriverExtMgrCallback> &connectCallback);
+    int32_t DisConnectDevice(uint64_t deviceId, uint32_t callingTokenId);
     void RemoveDeviceOfDeviceMap(shared_ptr<Device> device);
     std::unordered_set<uint64_t> DeleteBundlesOfBundleInfoMap(const std::string &bundleName = "");
     void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds);

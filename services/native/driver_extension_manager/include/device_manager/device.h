@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,19 +20,24 @@
 #include <mutex>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include "driver_extension_controller.h"
 #include "ext_object.h"
 #include "idriver_ext_mgr_callback.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+struct CallerInfo {
+    bool isBound = false;
+};
+
 class DrvExtConnNotify;
 class Device : public std::enable_shared_from_this<Device> {
 public:
     explicit Device(std::shared_ptr<DeviceInfo> info) : info_(info) {}
 
     int32_t Connect();
-    int32_t Connect(const sptr<IDriverExtMgrCallback> &connectCallback);
+    int32_t Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint32_t callingTokenId);
     int32_t Disconnect();
 
     bool HasDriver() const
@@ -40,15 +45,23 @@ public:
         return !bundleInfo_.empty();
     };
 
+    std::shared_ptr<DriverInfo> GetDriverInfo() const
+    {
+        return driverInfo_;
+    }
+
     std::shared_ptr<DeviceInfo> GetDeviceInfo() const
     {
         return info_;
     }
 
-    void AddBundleInfo(const std::string &bundleInfo, const std::string &driverUid = "")
+    void AddBundleInfo(const std::string &bundleInfo, const std::shared_ptr<DriverInfo> &driverInfo)
     {
         bundleInfo_ = bundleInfo;
-        driverUid_ = driverUid;
+        driverInfo_ = driverInfo;
+        if (driverInfo != nullptr) {
+            driverUid_ = driverInfo->GetDriverUid();
+        }
     }
 
     std::string GetDriverUid()
@@ -109,6 +122,18 @@ public:
         isUnRegisted = true;
     }
 
+    void RemoveCaller(uint32_t callingTokenId)
+    {
+        boundCallerInfos_.erase(callingTokenId);
+    }
+
+    void ClearBoundCallerInfos()
+    {
+        boundCallerInfos_.clear();
+    }
+
+    bool IsLastCaller(uint32_t caller) const;
+
     static std::string GetBundleName(const std::string &bundleInfo);
     static std::string GetAbilityName(const std::string &bundleInfo);
 
@@ -139,7 +164,7 @@ private:
     static std::string stiching_;
     std::string bundleInfo_;
     std::string driverUid_;
-    std::shared_ptr<DriverInfo> driver_;
+    std::shared_ptr<DriverInfo> driverInfo_;
     std::shared_ptr<DeviceInfo> info_;
 
     std::recursive_mutex deviceMutex_;
@@ -147,6 +172,7 @@ private:
     std::set<sptr<IDriverExtMgrCallback>, DrvExtMgrCallbackCompare> callbacks_;
     std::shared_ptr<DrvExtConnNotify> connectNofitier_;
     bool isUnRegisted = false;
+    std::unordered_map<uint32_t, CallerInfo> boundCallerInfos_;
 };
 
 class DriverExtMgrCallbackDeathRecipient : public IRemoteObject::DeathRecipient {

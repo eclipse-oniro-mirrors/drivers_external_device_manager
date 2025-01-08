@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -81,6 +81,10 @@ public:
     {
         return driverSize_;
     }
+    bool GetLaunchOnBind() const
+    {
+        return launchOnBind_;
+    }
     std::shared_ptr<DriverInfoExt> GetInfoExt() const
     {
         return driverInfoExt_;
@@ -96,6 +100,7 @@ private:
     std::string version_;
     std::string description_;
     std::string driverSize_;
+    bool launchOnBind_ = false;
     std::shared_ptr<DriverInfoExt> driverInfoExt_;
 };
 
