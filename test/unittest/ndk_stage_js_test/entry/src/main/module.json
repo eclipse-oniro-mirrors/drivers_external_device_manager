@@ -72,6 +72,16 @@
                     ],
                     "when": "inuse"
                 }
+            },
+            {
+                "name": "ohos.permission.ACCESS_DDK_USB_SERIAL",
+                "reason": "$string:reason_usb_serial_ddk",
+                "usedScene": {
+                    "abilities": [
+                        "EntryAbility"
+                    ],
+                    "when": "inuse"
+                }
             }
         ]
     }

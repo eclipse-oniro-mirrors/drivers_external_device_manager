@@ -102,3 +102,28 @@ ohos_shared_library("base_ddk_ndk_test") {
 
   output_extension = "so"
 }
+
+ohos_shared_library("serial_ddk_ndk_test") {
+  testonly = true
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+  sources = [ "./serial_ddk_ndk_test.cpp" ]
+  libs = [ rebase_path(libcxx_ndk_shared_file) ]
+
+  include_dirs = [
+    "${ext_mgr_path}/frameworks/ddk/usb_serial",
+    "${ext_mgr_path}/interfaces/ddk/usb_serial",
+    "./",
+  ]
+
+  configs = [ ":config" ]
+
+  deps = [ "${ext_mgr_path}/frameworks/ddk/usb_serial:usb_serial_ndk" ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
+
+  output_extension = "so"
+}
