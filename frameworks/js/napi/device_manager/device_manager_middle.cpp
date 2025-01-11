@@ -88,6 +88,8 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
     }
     auto task = [data, drvExtObj, errMsg]() {
         EDM_LOGE(MODULE_DEV_MGR, "OnConnect async task is run.");
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(data->env, &scope);
         napi_value result = GetCallbackResult(data->env, data->deviceId, drvExtObj);
         napi_value err = ConvertToBusinessError(data->env, errMsg);
         if (data->bindCallback != nullptr) {
@@ -105,6 +107,7 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
             }
             EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
         }
+        napi_close_handle_scope(data->env, scope);
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
@@ -130,6 +133,8 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
     auto task = [data, errMsg]() {
         EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect async task is run.");
         data->DecStrongRef(nullptr);
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(data->env, &scope);
         napi_value disConnCallback;
         napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
         if (napi_get_reference_value(data->env, data->onDisconnect, &disConnCallback) == napi_ok) {
@@ -149,13 +154,11 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
             napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
             EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
         } else if (data->unbindDeferred != nullptr) {
-            if (data->unBindErrMsg.IsOk()) {
-                napi_resolve_deferred(data->env, data->unbindDeferred, result);
-            } else {
+            data->unBindErrMsg.IsOk() ? napi_resolve_deferred(data->env, data->unbindDeferred, result) :
                 napi_reject_deferred(data->env, data->unbindDeferred, err);
-            }
             EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
         }
+        napi_close_handle_scope(data->env, scope);
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
