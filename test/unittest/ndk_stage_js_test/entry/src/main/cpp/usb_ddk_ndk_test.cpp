@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,7 @@ static uint8_t g_interfaceIndex = 0;
 static uint64_t g_interfaceHandle = 0;
 static uint8_t g_settingIndex = 0;
 static uint32_t g_timeout = 1000;
+constexpr size_t MAX_USB_DEVICE_NUM = 128;
 
 
 static bool IsInterruptInEndpoint(const UsbEndpointDescriptor &epDesc)
@@ -894,6 +895,42 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     return result;
 }
 
+static napi_value UsbGetDevicesOne(napi_env env, napi_callback_info info)
+{
+    int32_t usbInitReturnValue = OH_Usb_Init();
+    NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
+    struct Usb_DeviceArray deviceArray;
+    deviceArray.deviceIds = new uint64_t[MAX_USB_DEVICE_NUM];
+    int32_t returnValue = OH_Usb_GetDevices(&deviceArray);
+    OH_Usb_Release();
+    delete[] deviceArray.deviceIds;
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    return result;
+}
+
+static napi_value UsbGetDevicesTwo(napi_env env, napi_callback_info info)
+{
+    struct Usb_DeviceArray deviceArray;
+    deviceArray.deviceIds = new uint64_t[MAX_USB_DEVICE_NUM];
+    int32_t returnValue = OH_Usb_GetDevices(&deviceArray);
+    delete[] deviceArray.deviceIds;
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    return result;
+}
+
+static napi_value UsbGetDevicesThree(napi_env env, napi_callback_info info)
+{
+    int32_t usbInitReturnValue = OH_Usb_Init();
+    NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
+    int32_t returnValue = OH_Usb_GetDevices(nullptr);
+    OH_Usb_Release();
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    return result;
+}
+
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
@@ -936,6 +973,9 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemTwo", UsbSendPipeRequestWithAshmemTwo),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemThree", UsbSendPipeRequestWithAshmemThree),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemFour", UsbSendPipeRequestWithAshmemFour),
+        DECLARE_NAPI_FUNCTION("usbGetDevicesOne", UsbGetDevicesOne),
+        DECLARE_NAPI_FUNCTION("usbGetDevicesTwo", UsbGetDevicesTwo),
+        DECLARE_NAPI_FUNCTION("usbGetDevicesThree", UsbGetDevicesThree),
     };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);

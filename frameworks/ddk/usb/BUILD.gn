@@ -32,7 +32,7 @@ ohos_shared_library("usb_ndk") {
 
   external_deps = [
     "c_utils:utils",
-    "drivers_interface_usb:libusb_ddk_proxy_1.0",
+    "drivers_interface_usb:libusb_ddk_proxy_1.1",
     "hilog:libhilog",
     "ipc:ipc_core",
   ]

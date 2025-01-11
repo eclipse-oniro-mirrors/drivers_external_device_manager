@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,11 +26,11 @@
 #include "hilog_wrapper.h"
 #include "usb_config_desc_parser.h"
 #include "usb_ddk_types.h"
-#include "v1_0/usb_ddk_service.h"
+#include "v1_1/usb_ddk_service.h"
 
 using namespace OHOS::ExternalDeviceManager;
 namespace {
-OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_0::IUsbDdk> g_ddk = nullptr;
+OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> g_ddk = nullptr;
 std::unordered_map<int32_t, int32_t> g_errorMap = {
     {HDF_SUCCESS, USB_DDK_SUCCESS},
     {HDF_ERR_NOT_SUPPORT, USB_DDK_INVALID_OPERATION},
@@ -56,7 +56,7 @@ static int32_t TransToUsbCode(int32_t ret)
 
 int32_t OH_Usb_Init()
 {
-    g_ddk = OHOS::HDI::Usb::Ddk::V1_0::IUsbDdk::Get();
+    g_ddk = OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk::Get();
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "get ddk failed");
         return USB_DDK_INVALID_OPERATION;
@@ -100,7 +100,7 @@ int32_t OH_Usb_GetDeviceDescriptor(uint64_t deviceId, UsbDeviceDescriptor *desc)
         return USB_DDK_INVALID_PARAMETER;
     }
 
-    auto tmpDesc = reinterpret_cast<OHOS::HDI::Usb::Ddk::V1_0::UsbDeviceDescriptor *>(desc);
+    auto tmpDesc = reinterpret_cast<OHOS::HDI::Usb::Ddk::V1_1::UsbDeviceDescriptor *>(desc);
     int32_t ret = TransToUsbCode(g_ddk->GetDeviceDescriptor(deviceId, *tmpDesc));
     if (ret != USB_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "get device desc failed: %{public}d", ret);
@@ -197,7 +197,7 @@ int32_t OH_Usb_SendControlReadRequest(
         return USB_DDK_INVALID_PARAMETER;
     }
 
-    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbControlRequestSetup *>(setup);
+    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_1::UsbControlRequestSetup *>(setup);
     std::vector<uint8_t> dataTmp;
     int32_t ret = TransToUsbCode(g_ddk->SendControlReadRequest(interfaceHandle, *tmpSetUp, timeout, dataTmp));
     if (ret != 0) {
@@ -231,7 +231,7 @@ int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const UsbContro
         return USB_DDK_INVALID_PARAMETER;
     }
 
-    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbControlRequestSetup *>(setup);
+    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_1::UsbControlRequestSetup *>(setup);
     std::vector<uint8_t> dataTmp(data, data + dataLen);
     return TransToUsbCode(g_ddk->SendControlWriteRequest(interfaceHandle, *tmpSetUp, timeout, dataTmp));
 }
@@ -248,7 +248,7 @@ int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devM
         return USB_DDK_INVALID_PARAMETER;
     }
 
-    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbRequestPipe *>(pipe);
+    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_1::UsbRequestPipe *>(pipe);
     return TransToUsbCode(g_ddk->SendPipeRequest(
         *tmpSetUp, devMmap->size, devMmap->offset, devMmap->bufferLength, devMmap->transferedLength));
 }
@@ -265,9 +265,9 @@ int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem 
         return USB_DDK_INVALID_PARAMETER;
     }
 
-    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_0::UsbRequestPipe *>(pipe);
+    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_1::UsbRequestPipe *>(pipe);
     std::vector<uint8_t> address = std::vector<uint8_t>(ashmem->address, ashmem->address + ashmem->size);
-    OHOS::HDI::Usb::Ddk::V1_0::UsbAshmem usbAshmem = {ashmem->ashmemFd, address, ashmem->size, 0, ashmem->size, 0};
+    OHOS::HDI::Usb::Ddk::V1_1::UsbAshmem usbAshmem = {ashmem->ashmemFd, address, ashmem->size, 0, ashmem->size, 0};
     return TransToUsbCode(g_ddk->SendPipeRequestWithAshmem(*tmpSetUp, usbAshmem, ashmem->transferredLength));
 }
 
@@ -314,4 +314,30 @@ void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap)
         return;
     }
     delete devMmap;
+}
+
+int32_t OH_Usb_GetDevices(struct Usb_DeviceArray *devices)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
+        return USB_DDK_INVALID_OPERATION;
+    }
+    if (devices == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint64_t> deviceIds;
+    int32_t ret = TransToUsbCode(g_ddk->GetDevices(deviceIds));
+    if (ret != USB_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: get devices failed", __func__);
+        return ret;
+    }
+
+    devices->num = deviceIds.size();
+    for (size_t i = 0; i < deviceIds.size(); i++) {
+        devices->deviceIds[i] = deviceIds[i];
+    }
+
+    return USB_DDK_SUCCESS;
 }

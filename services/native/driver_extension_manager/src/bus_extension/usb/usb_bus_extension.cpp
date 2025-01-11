@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,7 +52,7 @@ void UsbBusExtension::SetUsbInferface(sptr<IUsbInterface> iusb)
     this->usbInterface_ = iusb;
 }
 
-void UsbBusExtension::SetUsbDdk(sptr<IUsbDdk> iUsbDdk)
+void UsbBusExtension::SetUsbDdk(sptr<V1_1::IUsbDdk> iUsbDdk)
 {
     this->iUsbDdk_ = iUsbDdk;
 }
@@ -60,6 +60,19 @@ void UsbBusExtension::SetUsbDdk(sptr<IUsbDdk> iUsbDdk)
 BusType UsbBusExtension::GetBusType()
 {
     return BusType::BUS_TYPE_USB;
+}
+
+shared_ptr<IDriverChangeCallback> UsbBusExtension::AcquireDriverChangeCallback()
+{
+    if (this->iUsbDdk_ == nullptr) {
+        this->iUsbDdk_ = V1_1::IUsbDdk::Get();
+        if (this->iUsbDdk_ == nullptr) {
+            EDM_LOGE(MODULE_BUS_USB, "driver get IUsbDdk error");
+            return nullptr;
+        }
+    }
+
+    return make_shared<UsbDriverChangeCallback>(this->iUsbDdk_);
 }
 
 int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> devCallback)
@@ -80,7 +93,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
     }
 
     if (this->iUsbDdk_ == nullptr) {
-        this->iUsbDdk_ = IUsbDdk::Get();
+        this->iUsbDdk_ = V1_1::IUsbDdk::Get();
         if (this->iUsbDdk_ == nullptr) {
             EDM_LOGE(MODULE_BUS_USB,  "get IUsbDdk error");
             return EDM_ERR_INVALID_OBJECT;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,14 +21,15 @@
 #include "ibus_extension.h"
 #include "usb_dev_subscriber.h"
 #include "usb_device_info.h"
+#include "usb_driver_change_callback.h"
 #include "v1_0/iusb_interface.h"
-#include "v1_0/iusb_ddk.h"
+#include "v1_1/iusb_ddk.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
 using namespace OHOS::HDI::Usb::V1_0;
-using namespace OHOS::HDI::Usb::Ddk::V1_0;
+using namespace OHOS::HDI::Usb::Ddk;
 class UsbBusExtension : public IBusExtension {
 public:
     UsbBusExtension();
@@ -38,8 +39,9 @@ public:
     shared_ptr<DriverInfoExt> ParseDriverInfo(const map<string, string> &metadata) override;
     shared_ptr<DriverInfoExt> GetNewDriverInfoExtObject() override;
     void SetUsbInferface(sptr<IUsbInterface> iusb);
-    void SetUsbDdk(sptr<IUsbDdk> iUsbDdk);
+    void SetUsbDdk(sptr<V1_1::IUsbDdk> iUsbDdk);
     BusType GetBusType() override;
+    shared_ptr<IDriverChangeCallback> AcquireDriverChangeCallback() override;
 
 private:
     class UsbdDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -48,7 +50,7 @@ private:
     };
     sptr<UsbDevSubscriber> subScriber_ = nullptr;
     sptr<IUsbInterface> usbInterface_ = nullptr; // in usb HDI;
-    sptr<IUsbDdk> iUsbDdk_ = nullptr;
+    sptr<V1_1::IUsbDdk> iUsbDdk_ = nullptr;
     vector<uint16_t> ParseCommaStrToVectorUint16(const string &str);
     sptr<IRemoteObject::DeathRecipient> recipient_;
 };

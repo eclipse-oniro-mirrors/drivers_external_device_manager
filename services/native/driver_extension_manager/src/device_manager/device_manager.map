@@ -9,6 +9,7 @@
         *DisConnectDevice*;
         *QueryDevicesById*;
         *QueryAllDevices*;
+        *SetDriverChangeCallback*;
       };
     local:
       *;

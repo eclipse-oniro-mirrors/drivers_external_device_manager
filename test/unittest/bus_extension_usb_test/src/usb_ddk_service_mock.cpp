@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@ namespace OHOS {
 namespace USB {
 using namespace OHOS;
 using namespace OHOS::HDI;
-using namespace OHOS::HDI::Usb::Ddk::V1_0;
+using namespace OHOS::HDI::Usb::Ddk::V1_1;
 std::vector<uint8_t> g_configDescBuf {
     9, 2, 59, 0, 2, 1, 0, 160, 250, 9, 4, 0, 0, 1, 3, 1, 1, 0, 9, 33, 17, 1, 0, 1, 34, 67, 0, 7, 5, 129, 3, 8, 0, 1, 9,
     4, 1, 0, 1, 3, 0, 0, 0, 9, 33, 17, 1, 0, 1, 34, 102, 0, 7, 5, 130, 3, 16, 0, 1

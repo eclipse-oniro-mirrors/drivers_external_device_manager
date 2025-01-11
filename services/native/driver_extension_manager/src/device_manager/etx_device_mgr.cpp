@@ -93,6 +93,9 @@ int32_t ExtDeviceManager::AddDevIdOfBundleInfoMap(shared_ptr<Device> device, str
         EDM_LOGE(MODULE_DEV_MGR, "driverInfo is nullptr");
         return EDM_NOK;
     }
+
+    UpdateDriverInfo(device);
+
     if (driverInfo->GetLaunchOnBind()) {
         EDM_LOGI(MODULE_DEV_MGR, "driver is set to launch on client bind");
         return EDM_OK;
@@ -144,8 +147,53 @@ int32_t ExtDeviceManager::RemoveDevIdOfBundleInfoMap(shared_ptr<Device> device, 
             deviceId, Device::GetAbilityName(bundleInfo).c_str(), ret);
         return ret;
     }
+
+    RemoveDriverInfo(device);
     PrintMatchDriverMap();
     return EDM_OK;
+}
+
+void ExtDeviceManager::UpdateDriverInfo(const shared_ptr<Device> &device)
+{
+    if (device == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "device is null");
+        return;
+    }
+
+    auto driverInfo = device->GetDriverInfo();
+    if (driverInfo == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "update driver info with null");
+        return;
+    }
+
+    if (driverChangeCallback_ == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "updated driverChangeCallback is null");
+        return;
+    }
+
+    driverChangeCallback_->OnDriverMatched(driverInfo);
+}
+
+void ExtDeviceManager::RemoveDriverInfo(const shared_ptr<Device> &device)
+{
+    if (device == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "device is null");
+        return;
+    }
+
+    auto driverInfo = device->GetDriverInfo();
+    if (driverInfo == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "remove driver info with null");
+        return;
+    }
+
+    if (driverChangeCallback_ == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "removed driverChangeCallback is null");
+        return;
+    }
+
+    driverChangeCallback_->OnDriverRemoved(driverInfo);
+    device->RemoveDriverInfo();
 }
 
 void ExtDeviceManager::RemoveDeviceOfDeviceMap(shared_ptr<Device> device)
@@ -197,6 +245,7 @@ void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
             if (deviceIds.find(deviceId) != deviceIds.end()) {
                 device->RemoveBundleInfo();
                 device->ClearDrvExtRemote();
+                RemoveDriverInfo(device);
             }
             if (device->IsUnRegisted() || device->GetDrvExtRemote() != nullptr) {
                 continue;
@@ -236,6 +285,7 @@ void ExtDeviceManager::ClearMatchedDrivers(const int32_t userId)
             if (device != nullptr && !device->IsUnRegisted()) {
                 device->RemoveBundleInfo();
                 device->ClearDrvExtRemote();
+                RemoveDriverInfo(device);
             }
         }
     }
@@ -502,6 +552,11 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
         return EDM_OK;
     }
     return device->Disconnect();
+}
+
+void ExtDeviceManager::SetDriverChangeCallback(shared_ptr<IDriverChangeCallback> &driverChangeCallback)
+{
+    driverChangeCallback_ = driverChangeCallback;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS
