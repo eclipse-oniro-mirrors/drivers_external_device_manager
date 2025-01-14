@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,26 @@
  * limitations under the License.
  */
 
+#include <algorithm>
+#include <cerrno>
 #include <cstdint>
 #include <cstring>
-#include <vector>
-#include <algorithm>
+#include <iproxy_broker.h>
+#include <memory.h>
+#include <securec.h>
 #include <unordered_map>
+#include <vector>
+
 #include "hid_ddk_api.h"
 #include "hid_ddk_types.h"
-#include "v1_0/ihid_ddk.h"
+#include "v1_1/ihid_ddk.h"
 #include "hilog_wrapper.h"
-#include <iproxy_broker.h>
+#include "ipc_error_code.h"
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
 namespace {
-static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_0::IHidDdk> g_ddk = nullptr;
+static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
 std::mutex g_mutex;
 
@@ -51,6 +56,37 @@ struct TempDevice {
     OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties tempProperties;
     uint32_t realId;
 };
+
+struct Hid_DeviceHandle {
+    OHOS::HDI::Input::Ddk::V1_1::HidDeviceHandle impl;
+
+    Hid_DeviceHandle()
+    {
+        impl.fd = -1;
+        impl.nonBlock = 0;
+    }
+} __attribute__ ((aligned(8)));
+
+Hid_DeviceHandle *NewHidDeviceHandle()
+{
+    return new Hid_DeviceHandle;
+}
+
+void DeleteHidDeviceHandle(Hid_DeviceHandle **dev)
+{
+    if (*dev != nullptr) {
+        delete *dev;
+        *dev = nullptr;
+    }
+}
+
+static int32_t TransToHidCode(int32_t ret)
+{
+    if (ret >= OH_IPC_ERROR_CODE_BASE && ret <= OH_IPC_ERROR_CODE_MAX) {
+        return HID_DDK_SERVICE_ERROR;
+    }
+    return ret;
+}
 
 class HidDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
@@ -83,7 +119,7 @@ static uint32_t GetRealDeviceId(int32_t deviceId)
 static int32_t Connect()
 {
     if (g_ddk == nullptr) {
-        g_ddk = OHOS::HDI::Input::Ddk::V1_0::IHidDdk::Get();
+        g_ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
         if (g_ddk == nullptr) {
             EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
             return HID_DDK_FAILURE;
@@ -94,7 +130,7 @@ static int32_t Connect()
             }
         }
         recipient_ = new HidDeathRecipient();
-        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_0::IHidDdk>(g_ddk);
+        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_1::IHidDdk>(g_ddk);
         if (!remote->AddDeathRecipient(recipient_)) {
             EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
             return HID_DDK_FAILURE;
@@ -321,6 +357,359 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
     g_deviceMap.erase(deviceId);
     return HID_DDK_SUCCESS;
 }
+
+int32_t OH_Hid_Init(void)
+{
+    g_ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "get ddk failed");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    return TransToHidCode(g_ddk->Init());
+}
+
+int32_t OH_Hid_Release(void)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "ddk is null");
+        return HID_DDK_INIT_ERROR;
+    }
+    int32_t ret = g_ddk->Release();
+    g_ddk.clear();
+
+    return TransToHidCode(ret);
+}
+
+int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle **dev)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+    if (dev == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    *dev = NewHidDeviceHandle();
+    if (*dev == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "malloc failed, errno=%{public}d", errno);
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return TransToHidCode(g_ddk->Open(deviceId, interfaceIndex, (*dev)->impl));
+}
+
+int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+    if (dev == nullptr || *dev == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    int32_t ret = g_ddk->Close((*dev)->impl);
+    DeleteHidDeviceHandle(dev);
+
+    return TransToHidCode(ret);
+}
+
+int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint32_t *bytesWritten)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || length == 0 || length > HID_MAX_REPORT_BUFFER_SIZE ||
+        bytesWritten == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> writeData(data, data + length);
+    int32_t ret =  TransToHidCode(g_ddk->Write(dev->impl, writeData, *bytesWritten));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "write failed");
+        *bytesWritten = 0;
+        return ret;
+    }
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, int timeout, uint32_t *bytesRead)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || bufSize == 0 || bufSize > HID_MAX_REPORT_BUFFER_SIZE ||
+        bytesRead == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> readData(bufSize);
+    int32_t ret = TransToHidCode(g_ddk->ReadTimeout(dev->impl, readData, bufSize, timeout, *bytesRead));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "read timeout failed");
+        return ret;
+    }
+    errno_t err = memcpy_s(data, bufSize, readData.data(), *bytesRead);
+    if (err != EOK) {
+        EDM_LOGE(MODULE_HID_DDK, "memcpy_s failed");
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint32_t *bytesRead)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || bufSize == 0 || bufSize > HID_MAX_REPORT_BUFFER_SIZE ||
+        bytesRead == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> readData(bufSize);
+    int32_t ret = TransToHidCode(g_ddk->ReadTimeout(dev->impl, readData, bufSize, (dev->impl.nonBlock) ? 0 : -1,
+        *bytesRead));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "read failed");
+        return ret;
+    }
+    errno_t err = memcpy_s(data, bufSize, readData.data(), *bytesRead);
+    if (err != EOK) {
+        EDM_LOGE(MODULE_HID_DDK, "memcpy_s failed");
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || !(nonBlock == 0 || nonBlock == 1)) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    int32_t ret = g_ddk->SetNonBlocking(dev->impl, nonBlock);
+    if (ret == HID_DDK_SUCCESS) {
+        dev->impl.nonBlock = nonBlock;
+    }
+    return TransToHidCode(ret);
+}
+
+int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || rawDevInfo == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    OHOS::HDI::Input::Ddk::V1_1::HidRawDevInfo tmpRawDevInfo;
+    int32_t ret = TransToHidCode(g_ddk->GetRawInfo(dev->impl, tmpRawDevInfo));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "get raw info failed");
+        return ret;
+    }
+
+    rawDevInfo->busType = tmpRawDevInfo.busType;
+    rawDevInfo->vendor = tmpRawDevInfo.vendor;
+    rawDevInfo->product = tmpRawDevInfo.product;
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || bufSize == 0 || bufSize > HID_MAX_REPORT_BUFFER_SIZE) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> tmpData(bufSize);
+    int32_t ret = TransToHidCode(g_ddk->GetRawName(dev->impl, tmpData, bufSize));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "get raw name failed");
+        return ret;
+    }
+
+    errno_t err = memcpy_s(data, bufSize, tmpData.data(), tmpData.size());
+    if (err != EOK) {
+        EDM_LOGE(MODULE_HID_DDK, "memcpy_s failed");
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || bufSize == 0 || bufSize > HID_MAX_REPORT_BUFFER_SIZE) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> tmpData(bufSize);
+    int32_t ret = TransToHidCode(g_ddk->GetPhysicalAddress(dev->impl, tmpData, bufSize));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "get physical address failed");
+        return ret;
+    }
+
+    errno_t err = memcpy_s(data, bufSize, tmpData.data(), tmpData.size());
+    if (err != EOK) {
+        EDM_LOGE(MODULE_HID_DDK, "memcpy_s failed");
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || bufSize == 0 || bufSize > HID_MAX_REPORT_BUFFER_SIZE) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> tmpData(bufSize);
+    int32_t ret = TransToHidCode(g_ddk->GetRawUniqueId(dev->impl, tmpData, bufSize));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "get raw unique id address failed");
+        return ret;
+    }
+
+    errno_t err = memcpy_s(data, tmpData.size(), tmpData.data(), tmpData.size());
+    if (err != EOK) {
+        EDM_LOGE(MODULE_HID_DDK, "memcpy_s failed");
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, const uint8_t *data, uint32_t length)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || length == 0 || length > HID_MAX_REPORT_BUFFER_SIZE) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    const std::vector<uint8_t> tmpData(data, data + length);
+    auto tmpReportType = static_cast<OHOS::HDI::Input::Ddk::V1_1::HidReportType>(reportType);
+    int32_t ret = TransToHidCode(g_ddk->SendReport(dev->impl, tmpReportType, tmpData));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "send report failed");
+        return ret;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8_t *data, uint32_t bufSize)
+{
+    EDM_LOGI(MODULE_HID_DDK, "OH_Hid_GetReport");
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || data == nullptr || bufSize == 0 || bufSize > HID_MAX_REPORT_BUFFER_SIZE) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> tmpData(bufSize);
+    auto reportNumber = data[0];
+    auto tmpReportType = static_cast<OHOS::HDI::Input::Ddk::V1_1::HidReportType>(reportType);
+    int32_t ret = TransToHidCode(g_ddk->GetReport(dev->impl, tmpReportType, reportNumber, tmpData, bufSize));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "get report failed");
+        return ret;
+    }
+
+    errno_t err = memcpy_s(data, bufSize, tmpData.data(), tmpData.size());
+    if (err != EOK) {
+        EDM_LOGE(MODULE_HID_DDK, "memcpy_s failed");
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
+int32_t OH_Hid_GetReportDescriptor(Hid_DeviceHandle *dev, uint8_t *buf, uint32_t bufSize, uint32_t *bytesRead)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid obj");
+        return HID_DDK_INIT_ERROR;
+    }
+
+    if (dev == nullptr || buf == nullptr || bufSize == 0 || bufSize > HID_MAX_REPORT_BUFFER_SIZE ||
+        bytesRead == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "invalid param");
+        return HID_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint8_t> tmpBuf(bufSize);
+    int32_t ret = TransToHidCode(g_ddk->GetReportDescriptor(dev->impl, tmpBuf, bufSize, *bytesRead));
+    if (ret != HID_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_HID_DDK, "get report descriptor failed");
+        return ret;
+    }
+
+    errno_t err = memcpy_s(buf, bufSize, tmpBuf.data(), *bytesRead);
+    if (err != EOK) {
+        EDM_LOGE(MODULE_HID_DDK, "memcpy_s failed");
+        return HID_DDK_MEMORY_ERROR;
+    }
+
+    return HID_DDK_SUCCESS;
+}
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

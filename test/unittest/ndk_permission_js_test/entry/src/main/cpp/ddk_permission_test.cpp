@@ -27,6 +27,17 @@
 constexpr size_t MAX_USB_DEVICE_NUM = 128;
 
 using namespace std;
+const uint32_t PARAM_0 = 0;
+const uint32_t PARAM_1 = 1;
+const uint32_t DATA_BUFF_SIZE  = 1024;
+const uint32_t READ_TIME_OUT = 10000;
+const uint32_t SIXTEEN_BIT = 16;
+const uint32_t THIRTYTWO_BIT = 32;
+const uint32_t BUS_NUM_MASK = 0xFFFF0000;
+const uint32_t DEVICE_NUM_MASK = 0x0000FFFF;
+
+extern "C" Hid_DeviceHandle *NewHidDeviceHandle();
+extern "C" void DeleteHidDeviceHandle(Hid_DeviceHandle **dev);
 
 static napi_value UsbInit(napi_env env, napi_callback_info info)
 {
@@ -238,6 +249,245 @@ static napi_value HidDestroyDevice(napi_env env, napi_callback_info info)
     return result;
 }
 
+static napi_value HidInit(napi_env env, napi_callback_info info)
+{
+    int32_t returnValue = OH_Hid_Init();
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    return result;
+}
+
+static napi_value HidRelease(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+    int32_t returnValue = OH_Hid_Release();
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    return result;
+}
+
+static napi_value HidOpen(napi_env env, napi_callback_info info)
+{
+    size_t argc = PARAM_1;
+    napi_value args[PARAM_1] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    int64_t deviceId64;
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
+    int32_t deviceId32 = (int32_t)(deviceId64 >> THIRTYTWO_BIT);
+    uint32_t busNum = ((deviceId32 & BUS_NUM_MASK) >> SIXTEEN_BIT);
+    uint32_t deviceNum = deviceId32 & DEVICE_NUM_MASK;
+    uint64_t deviceId = ((uint64_t)busNum << THIRTYTWO_BIT) | deviceNum;
+
+    struct Hid_DeviceHandle *dev = nullptr;
+    int32_t returnValue = OH_Hid_Open(deviceId, 0, &dev);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    OH_Hid_Close(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidClose(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    int32_t returnValue = OH_Hid_Close(&dev);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidWrite(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    uint8_t data[] = {0x02, 0x02};
+    uint32_t bytesWritten = 0;
+    int32_t returnValue = OH_Hid_Write(dev, data, sizeof(data), &bytesWritten);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidReadTimeout(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    uint8_t data[DATA_BUFF_SIZE] = {0};
+    uint32_t bytesRead = 0;
+    int32_t returnValue = OH_Hid_ReadTimeout(dev, data, DATA_BUFF_SIZE, READ_TIME_OUT, &bytesRead);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidRead(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    uint8_t data[DATA_BUFF_SIZE] = {0};
+    uint32_t bytesRead = 0;
+    int32_t returnValue = OH_Hid_Read(dev, data, DATA_BUFF_SIZE, &bytesRead);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidSetNonBlocking(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    int32_t returnValue = OH_Hid_SetNonBlocking(dev, 0);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidGetRawInfo(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    Hid_RawDevInfo rawDevInfo = {0};
+    int32_t returnValue = OH_Hid_GetRawInfo(dev, &rawDevInfo);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidGetRawName(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    char data[DATA_BUFF_SIZE] = {0};
+    int32_t returnValue = OH_Hid_GetRawName(dev, data, DATA_BUFF_SIZE);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidGetPhysicalAddress(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    char data[DATA_BUFF_SIZE] = {0};
+    int32_t returnValue = OH_Hid_GetPhysicalAddress(dev, data, DATA_BUFF_SIZE);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidGetRawUniqueId(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    uint8_t data[DATA_BUFF_SIZE] = {0};
+    int32_t returnValue = OH_Hid_GetRawUniqueId(dev, data, DATA_BUFF_SIZE);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidSendReport(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    uint8_t data[DATA_BUFF_SIZE] = {0};
+    int32_t returnValue = OH_Hid_SendReport(dev, HID_FEATURE_REPORT, data, DATA_BUFF_SIZE);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidGetReport(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    uint8_t data[DATA_BUFF_SIZE] = {0};
+    int32_t returnValue = OH_Hid_GetReport(dev, HID_FEATURE_REPORT, data, DATA_BUFF_SIZE);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
+static napi_value HidGetReportDescriptor(napi_env env, napi_callback_info info)
+{
+    int32_t initRetVal = OH_Hid_Init();
+    NAPI_ASSERT(env, initRetVal == USB_DDK_NO_PERM, "OH_Hid_Init failed, no permission");
+
+    Hid_DeviceHandle *dev = NewHidDeviceHandle();
+    uint8_t data[DATA_BUFF_SIZE] = {0};
+    uint32_t bytesRead = 0;
+    int32_t returnValue = OH_Hid_GetReportDescriptor(dev, data, DATA_BUFF_SIZE, &bytesRead);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    DeleteHidDeviceHandle(&dev);
+    int32_t releaseRetVal = OH_Hid_Release();
+    NAPI_ASSERT(env, releaseRetVal == USB_DDK_NO_PERM, "OH_Hid_Release failed, no permission");
+    return result;
+}
+
 EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
@@ -259,6 +509,21 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("hidCreateDevice", HidCreateDevice),
         DECLARE_NAPI_FUNCTION("hidEmitEvent", HidEmitEvent),
         DECLARE_NAPI_FUNCTION("hidDestroyDevice", HidDestroyDevice),
+        DECLARE_NAPI_FUNCTION("hidInit", HidInit),
+        DECLARE_NAPI_FUNCTION("hidRelease", HidRelease),
+        DECLARE_NAPI_FUNCTION("hidOpen", HidOpen),
+        DECLARE_NAPI_FUNCTION("hidClose", HidClose),
+        DECLARE_NAPI_FUNCTION("hidWrite", HidWrite),
+        DECLARE_NAPI_FUNCTION("hidReadTimeout", HidReadTimeout),
+        DECLARE_NAPI_FUNCTION("hidRead", HidRead),
+        DECLARE_NAPI_FUNCTION("hidSetNonBlocking", HidSetNonBlocking),
+        DECLARE_NAPI_FUNCTION("hidGetRawInfo", HidGetRawInfo),
+        DECLARE_NAPI_FUNCTION("hidGetRawName", HidGetRawName),
+        DECLARE_NAPI_FUNCTION("hidGetPhysicalAddress", HidGetPhysicalAddress),
+        DECLARE_NAPI_FUNCTION("hidGetRawUniqueId", HidGetRawUniqueId),
+        DECLARE_NAPI_FUNCTION("hidSendReport", HidSendReport),
+        DECLARE_NAPI_FUNCTION("hidGetReport", HidGetReport),
+        DECLARE_NAPI_FUNCTION("hidGetReportDescriptor", HidGetReportDescriptor),
     };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
