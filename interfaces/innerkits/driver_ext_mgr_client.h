@@ -30,6 +30,8 @@ public:
     UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices);
     UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
     UsbErrCode UnBindDevice(uint64_t deviceId);
+    UsbErrCode BindDriverWithDeviceId(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback);
+    UsbErrCode UnbindDriverWithDeviceId(uint64_t deviceId);
     UsbErrCode QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos);
     UsbErrCode QueryDeviceInfo(const uint64_t deviceId, std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos);
     UsbErrCode QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos);

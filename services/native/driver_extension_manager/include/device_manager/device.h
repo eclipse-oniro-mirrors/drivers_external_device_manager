@@ -138,6 +138,7 @@ public:
     }
 
     bool IsLastCaller(uint32_t caller) const;
+    bool IsBindCaller(uint32_t caller) const;
 
     static std::string GetBundleName(const std::string &bundleInfo);
     static std::string GetAbilityName(const std::string &bundleInfo);

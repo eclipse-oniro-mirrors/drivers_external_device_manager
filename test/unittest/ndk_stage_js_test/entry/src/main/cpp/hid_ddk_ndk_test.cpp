@@ -479,9 +479,12 @@ static napi_value HidWriteThree(napi_env env, napi_callback_info info)
     Hid_DeviceHandle *dev;
     int32_t returnValue = OH_Hid_Open(deviceId, 0, &dev);
 
-    uint8_t data[] = {0x00, 0x02};
-    uint32_t bytesWritten = 0;
-    returnValue = OH_Hid_Write(dev, data, sizeof(data), &bytesWritten);
+    if (IsUsbKeyboard(dev)) {
+        uint8_t data[] = {0x00, 0x02};
+        uint32_t bytesWritten = 0;
+        returnValue = OH_Hid_Write(dev, data, sizeof(data), &bytesWritten);
+    }
+
     OH_Hid_Close(&dev);
     int32_t releaseReturnValue = OH_Hid_Release();
     NAPI_ASSERT(env, releaseReturnValue == HID_DDK_SUCCESS, "OH_Hid_Release failed");

@@ -528,6 +528,7 @@ int32_t ExtDeviceManager::ConnectDevice(uint64_t deviceId, uint32_t callingToken
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
         return EDM_NOK;
     }
+
     return device->Connect(connectCallback, callingTokenId);
 }
 
@@ -539,6 +540,55 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
         return EDM_NOK;
     }
+
+    std::shared_ptr<DriverInfo> driverInfo = device->GetDriverInfo();
+    if (driverInfo == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
+        return EDM_NOK;
+    }
+
+    if (!driverInfo->GetLaunchOnBind() || !device->IsLastCaller(callingTokenId)) {
+        device->RemoveCaller(callingTokenId);
+        EDM_LOGI(MODULE_DEV_MGR, "driver not launching on bind or other client bound. Removing caller ID: %{public}u",
+            callingTokenId);
+        return EDM_OK;
+    }
+    return device->Disconnect();
+}
+
+int32_t ExtDeviceManager::ConnectDriverWithDeviceId(uint64_t deviceId, uint32_t callingTokenId,
+    const unordered_set<std::string> &accessibleBundles, const sptr<IDriverExtMgrCallback> &connectCallback)
+{
+    // find device by deviceId
+    lock_guard<mutex> lock(deviceMapMutex_);
+    std::shared_ptr<Device> device = QueryDeviceByDeviceID(deviceId);
+    if (device == nullptr) {
+        EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
+        return EDM_NOK;
+    }
+
+    int32_t ret = CheckAccessPermission(device->GetDriverInfo(), accessibleBundles);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to bind device verification with %{public}016" PRIX64 " deviceId", deviceId);
+        return ret;
+    }
+    return device->Connect(connectCallback, callingTokenId);
+}
+
+int32_t ExtDeviceManager::DisConnectDriverWithDeviceId(uint64_t deviceId, uint32_t callingTokenId)
+{
+    lock_guard<mutex> lock(deviceMapMutex_);
+    std::shared_ptr<Device> device = QueryDeviceByDeviceID(deviceId);
+    if (device == nullptr) {
+        EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
+        return EDM_NOK;
+    }
+
+    if (!device->IsBindCaller(callingTokenId)) {
+        EDM_LOGE(MODULE_DEV_MGR, "can not find binding relationship by %{public}u callerTokenId", callingTokenId);
+        return EDM_ERR_SERVICE_NOT_BOUND;
+    }
+
     std::shared_ptr<DriverInfo> driverInfo = device->GetDriverInfo();
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
@@ -557,6 +607,28 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
 void ExtDeviceManager::SetDriverChangeCallback(shared_ptr<IDriverChangeCallback> &driverChangeCallback)
 {
     driverChangeCallback_ = driverChangeCallback;
+}
+
+int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo> &driverInfo,
+    const unordered_set<std::string> &accessibleBundles) const
+{
+    if (driverInfo == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "the device does not have a matching driver");
+        return EDM_NOK;
+    }
+    if (!driverInfo->IsAccessAllowed()) {
+        EDM_LOGE(MODULE_DEV_MGR, "the driver service does not allow access");
+        return EDM_ERR_SERVICE_NOT_ALLOW_ACCESS;
+    }
+
+    std::string bundleName = driverInfo->GetBundleName();
+    auto driverIter = accessibleBundles.find(bundleName);
+    if (driverIter == accessibleBundles.end()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s does not exist in ohos.permission.ACCESS_DDK_DRIVERS configuration",
+            bundleName.c_str());
+        return EDM_ERR_NO_PERM;
+    }
+    return EDM_OK;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

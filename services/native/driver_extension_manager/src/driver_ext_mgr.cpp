@@ -34,6 +34,7 @@ namespace ExternalDeviceManager {
 const bool G_REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<DriverExtMgr>::GetInstance().get());
 static const std::string PERMISSION_NAME = "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER";
+static const std::string ACCESS_DDK_DRIVERS_PERMISSION = "ohos.permission.ACCESS_DDK_DRIVERS";
 
 DriverExtMgr::DriverExtMgr() : SystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID, true) {}
 DriverExtMgr::~DriverExtMgr() {}
@@ -173,6 +174,37 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
     return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
+}
+
+UsbErrCode DriverExtMgr::BindDriverWithDeviceId(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)
+{
+    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    if (!ExtPermissionManager::VerifyPermission(ACCESS_DDK_DRIVERS_PERMISSION)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+
+    uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
+    unordered_set<std::string> accessibleBundles;
+    if (!ExtPermissionManager::GetPermissionValues(ACCESS_DDK_DRIVERS_PERMISSION, accessibleBundles)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s failed to get permission value", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDriverWithDeviceId(deviceId, callingTokenId,
+        accessibleBundles, connectCallback));
+}
+
+UsbErrCode DriverExtMgr::UnbindDriverWithDeviceId(uint64_t deviceId)
+{
+    EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    if (!ExtPermissionManager::VerifyPermission(ACCESS_DDK_DRIVERS_PERMISSION)) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
+        return UsbErrCode::EDM_ERR_NO_PERM;
+    }
+
+    uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
+    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDriverWithDeviceId(deviceId,
+        callingTokenId));
 }
 
 static std::shared_ptr<DeviceInfoData> ParseToDeviceInfoData(const std::shared_ptr<Device> &device)

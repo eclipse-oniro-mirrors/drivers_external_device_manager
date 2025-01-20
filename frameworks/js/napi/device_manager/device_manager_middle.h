@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,7 +29,9 @@ enum ErrorCode : int32_t {
     PERMISSION_NOT_SYSTEM_APP = 202,
     PARAMETER_ERROR = 401, // Use this error code when the input parameter type or range does not match.
     SERVICE_EXCEPTION = 22900001, // Use this error code when the service is exception.
-    SERVICE_EXCEPTION_NEW = 26300001
+    SERVICE_EXCEPTION_NEW = 26300001, // Use this error code when the service is exception.
+    SERVICE_NOT_ALLOW_ACCESS = 26300002, // Use this error code when the service does not allow access.
+    SERVICE_NOT_BOUND = 26300003, // Use this error code when the service has no binding relationship.
 };
 
 class AsyncData : public RefBase {

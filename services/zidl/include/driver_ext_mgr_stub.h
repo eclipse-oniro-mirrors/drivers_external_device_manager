@@ -37,6 +37,8 @@ private:
     int32_t OnQueryDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
     int32_t OnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
     int32_t OnUnBindDevice(MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    int32_t OnBindDriverWithDeviceId(MessageParcel &data, MessageParcel &reply, MessageOption &option);
+    int32_t OnUnbindDriverWithDeviceId(MessageParcel &data, MessageParcel &reply, MessageOption &option);
     int32_t OnQueryDeviceInfo(MessageParcel &data, MessageParcel &reply, MessageOption &option);
     int32_t OnQueryDriverInfo(MessageParcel &data, MessageParcel &reply, MessageOption &option);
 };

@@ -41,6 +41,7 @@ int32_t DriverInfo::Serialize(string &str)
     cJSON_AddStringToObject(root, "description", this->description_.c_str());
     cJSON_AddStringToObject(root, "ext_info", extInfo.c_str());
     cJSON_AddBoolToObject(root, "launch_on_bind", this->launchOnBind_);
+    cJSON_AddBoolToObject(root, "access_allowed", this->accessAllowed_);
     str = cJSON_PrintUnformatted(root);
     EDM_LOGI(MODULE_COMMON, "DriverInfo Serialize Done, %{public}s", str.c_str());
     cJSON_Delete(root);
@@ -141,6 +142,7 @@ int32_t DriverInfo::UnSerialize(const string &str)
     this->driverSize_ = GetStringValue(jsonObj, "size");
     this->description_ = GetStringValue(jsonObj, "description");
     this->launchOnBind_ = GetBoolValue(jsonObj, "launch_on_bind");
+    this->accessAllowed_ = GetBoolValue(jsonObj, "access_allowed");
     cJSON_Delete(jsonObj);
     return EDM_OK;
 }
