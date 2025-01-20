@@ -652,7 +652,6 @@ int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, cons
 
 int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8_t *data, uint32_t bufSize)
 {
-    EDM_LOGI(MODULE_HID_DDK, "OH_Hid_GetReport");
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
