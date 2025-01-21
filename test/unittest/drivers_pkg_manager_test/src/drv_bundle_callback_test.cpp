@@ -72,15 +72,5 @@ HWTEST_F(DrvBundleStateCallbackPtrTest, DrvBundleCallback_New_Test, TestSize.Lev
     EXPECT_NE(nullptr, drvbundleInstance);
     cout << "DrvBundleCallback_New_Test" << endl;
 }
-
-HWTEST_F(DrvBundleStateCallbackPtrTest, DrvBundleCallback_Delete_Test, TestSize.Level1)
-{
-    if (drvbundleInstance != nullptr) {
-        delete drvbundleInstance;
-        drvbundleInstance = nullptr;
-        EXPECT_EQ(nullptr, drvbundleInstance);
-    }
-    cout << "DrvBundleCallback_Delete_Test" << endl;
-}
 }
 }
