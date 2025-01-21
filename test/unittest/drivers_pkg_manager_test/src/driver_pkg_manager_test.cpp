@@ -184,16 +184,5 @@ HWTEST_F(DriverPkgManagerPtrTest, DrvExt_New_Test, TestSize.Level1)
     EXPECT_NE(nullptr, &drvPkgMgrInstance);
     cout << "DrvExt_New_Test" << endl;
 }
-
-HWTEST_F(DriverPkgManagerPtrTest, DrvExt_Delete_Test, TestSize.Level1)
-{
-    auto drvPkgMgrInstance = &(DriverPkgManager::GetInstance());
-    if (drvPkgMgrInstance != nullptr) {
-        delete drvPkgMgrInstance;
-        drvPkgMgrInstance = nullptr;
-        EXPECT_EQ(nullptr, drvPkgMgrInstance);
-    }
-    cout << "DrvExt_Delete_Test" << endl;
-}
 }
 }

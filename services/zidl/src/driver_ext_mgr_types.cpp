@@ -352,7 +352,7 @@ std::shared_ptr<USBDeviceInfoData> USBDeviceInfoData::UnMarshalling(MessageParce
         }
         deviceInfo->interfaceDescList.push_back(desc);
     }
-        
+
     return deviceInfo;
 }
 
