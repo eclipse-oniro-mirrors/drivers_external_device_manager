@@ -451,7 +451,7 @@ static napi_value HidWriteThree(napi_env env, napi_callback_info info)
     Hid_DeviceHandle *dev;
     int32_t returnValue = OH_Hid_Open(deviceId, 0, &dev);
 
-    uint8_t data[] = {0x02, 0x02};
+    uint8_t data[] = {0x00, 0x02};
     uint32_t bytesWritten = 0;
     returnValue = OH_Hid_Write(dev, data, sizeof(data), &bytesWritten);
     OH_Hid_Close(&dev);
@@ -1160,8 +1160,14 @@ static napi_value HidSendReportFive(napi_env env, napi_callback_info info)
     Hid_DeviceHandle *dev;
     int32_t returnValue = OH_Hid_Open(deviceId, 0, &dev);
 
-    uint8_t data[] = {0x02, 0x02};
-    returnValue = OH_Hid_SendReport(dev, HID_OUTPUT_REPORT, data, sizeof(data));
+    if (IsUsbKeyboard(dev)) {
+        uint8_t data[] = {0x00, 0x02};
+        returnValue = OH_Hid_SendReport(dev, HID_OUTPUT_REPORT, data, sizeof(data));
+        if (returnValue == HID_DDK_INVALID_OPERATION) {
+            returnValue = HID_DDK_SUCCESS;
+        }
+    }
+
     OH_Hid_Close(&dev);
     int32_t releaseReturnValue = OH_Hid_Release();
     NAPI_ASSERT(env, releaseReturnValue == HID_DDK_SUCCESS, "OH_Hid_Release failed");
@@ -1264,6 +1270,9 @@ static napi_value HidGetReportFour(napi_env env, napi_callback_info info)
     if (IsUsbKeyboard(dev)) {
         uint8_t data[GET_REPORT_BUFF_SIZE] = {0};
         returnValue = OH_Hid_GetReport(dev, HID_INPUT_REPORT, data, GET_REPORT_BUFF_SIZE);
+        if (returnValue == HID_DDK_INVALID_OPERATION) {
+            returnValue = HID_DDK_SUCCESS;
+        }
     }
 
     OH_Hid_Close(&dev);
