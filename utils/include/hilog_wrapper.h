@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,6 +69,7 @@ enum UsbMgrSubModule {
     EDM_MODULE_TEST,
     MODULE_HID_DDK,
     MODULE_BASE_DDK,
+    MODULE_USB_SERIAL_DDK,
     EDM_MODULE_BUTT,
 };
 
@@ -94,6 +95,7 @@ static constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
     { LOG_CORE, EDM_FRAMEWORK_DOMAIN, "EdmTest" },
     { LOG_CORE, EDM_DDK_DOMAIN, "EdmHidDdk" },
     { LOG_CORE, EDM_DDK_DOMAIN, "EdmBaseDdk" },
+    { LOG_CORE, EDM_DDK_DOMAIN, "EdmUsbSerialDdk" },
 };
 
 #ifndef EDM_FILENAME

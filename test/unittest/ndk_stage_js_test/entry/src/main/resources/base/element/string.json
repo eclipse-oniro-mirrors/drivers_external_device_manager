@@ -47,6 +47,10 @@
         {
             "name": "reason_usb_ddk",
             "value": "usb_ddk ndk test"
+        },
+        {
+            "name": "reason_usb_serial_ddk",
+            "value": "usb_serial_ddk ndk test"
         }
     ]
 }

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { beforeAll, describe, it, expect } from "@ohos/hypium"
+import { beforeAll, describe, it, xit, expect } from "@ohos/hypium"
 import ddkPermissionTest from 'libddk_permission_js_test.so'
 import deviceManager from "@ohos.driver.deviceManager";
 
@@ -759,6 +759,253 @@ export default function DdkPermissionJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testHidGetReportDescriptor001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialInit001
+     * @tc.desc       : OH_UsbSerial_Init Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialInit001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialInit001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialInit();
+        console.info("Test Result testUsbSerialInit001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialInit001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    
+    /**
+     * @tc.name       : testUsbSerialRelease001
+     * @tc.desc       : OH_UsbSerial_Release Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialRelease001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialRelease001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialRelease();
+        console.info("Test Result testUsbSerialRelease001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialRelease001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+    
+    /**
+     * @tc.name       : testUsbSerialOpen001
+     * @tc.desc       : OH_UsbSerial_Open Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialOpen001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialOpen001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialOpen();
+        console.info("Test Result testUsbSerialOpen001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialOpen001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialClose001
+     * @tc.desc       : OH_UsbSerial_Close Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialClose001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialClose001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialClose();
+        console.info("Test Result testUsbSerialClose001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialClose001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialRead001
+     * @tc.desc       : OH_UsbSerial_Read Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialRead001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialRead001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialRead();
+        console.info("Test Result testUsbSerialRead001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialRead001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+  /**
+     * @tc.name       : testUsbSerialWrite001
+     * @tc.desc       : OH_UsbSerial_Write Interface testing
+     * @tc.type       : Function
+     */
+   xit('testUsbSerialWrite001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialWrite001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialWrite();
+        console.info("Test Result testUsbSerialWrite001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialWrite001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialSetBaudRate001
+     * @tc.desc       : OH_UsbSerial_SetBaudRate Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialSetBaudRate001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialSetBaudRate001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialSetBaudRate();
+        console.info("Test Result testUsbSerialSetBaudRate001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialSetBaudRate001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialSetParams001
+     * @tc.desc       : OH_UsbSerial_SetParams Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialSetParams001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialSetParams001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialSetParams();
+        console.info("Test Result testUsbSerialSetParams001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialSetParams001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialSetTimeout001
+     * @tc.desc       : OH_UsbSerial_SetTimeout Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialSetTimeout001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialSetTimeout001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialSetTimeout();
+        console.info("Test Result testUsbSerialSetTimeout001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialSetTimeout001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialSetFlowControl001
+     * @tc.desc       : OH_UsbSerial_SetFlowControl Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialSetFlowControl001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialSetFlowControl001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialSetFlowControl();
+        console.info("Test Result testUsbSerialSetFlowControl001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialSetFlowControl001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialFlush001
+     * @tc.desc       : OH_UsbSerial_Flush Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialFlush001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialFlush001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialFlush();
+        console.info("Test Result testUsbSerialFlush001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialFlush001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialFlushInput001
+     * @tc.desc       : OH_UsbSerial_FlushInput Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialFlushInput001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialFlushInput001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialFlushInput();
+        console.info("Test Result testUsbSerialFlushInput001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialFlushInput001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSerialFlushOutput001
+     * @tc.desc       : OH_UsbSerial_FlushOutput Interface testing
+     * @tc.type       : Function
+     */
+    xit('testUsbSerialFlushOutput001', 0, async (done: Function) => {
+      console.info('----------------------testUsbSerialFlushOutput001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbSerialFlushOutput();
+        console.info("Test Result testUsbSerialFlushOutput001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSerialFlushOutput001 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }

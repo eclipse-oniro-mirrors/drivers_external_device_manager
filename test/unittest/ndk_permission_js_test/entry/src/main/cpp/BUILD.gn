@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -37,6 +37,7 @@ ohos_shared_library("ddk_permission_js_test") {
     "${ext_mgr_path}/interfaces/ddk/base",
     "${ext_mgr_path}/interfaces/ddk/hid",
     "${ext_mgr_path}/interfaces/ddk/usb",
+    "${ext_mgr_path}/interfaces/ddk/usb_serial",
     "./",
   ]
 
@@ -46,6 +47,7 @@ ohos_shared_library("ddk_permission_js_test") {
     "${ext_mgr_path}/frameworks/ddk/base:ddk_base",
     "${ext_mgr_path}/frameworks/ddk/hid:hid",
     "${ext_mgr_path}/frameworks/ddk/usb:usb_ndk",
+    "${ext_mgr_path}/frameworks/ddk/usb_serial:usb_serial_ndk",
   ]
 
   external_deps = [

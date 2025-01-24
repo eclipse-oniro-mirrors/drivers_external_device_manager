@@ -16,5 +16,6 @@ group("ddk") {
     "base:ddk_base",
     "hid:hid",
     "usb:usb_ndk",
+    "usb_serial:usb_serial_ndk",
   ]
 }
