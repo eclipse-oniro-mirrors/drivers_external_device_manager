@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { beforeAll, describe, it, xit, expect } from "@ohos/hypium"
+import { beforeAll, describe, it, expect } from "@ohos/hypium"
 import ddkPermissionTest from 'libddk_permission_js_test.so'
 import deviceManager from "@ohos.driver.deviceManager";
 
@@ -769,7 +769,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_Init Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialInit001', 0, async (done: Function) => {
+    it('testUsbSerialInit001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialInit001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialInit();
@@ -788,7 +788,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_Release Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialRelease001', 0, async (done: Function) => {
+    it('testUsbSerialRelease001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialRelease001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialRelease();
@@ -807,7 +807,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_Open Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialOpen001', 0, async (done: Function) => {
+    it('testUsbSerialOpen001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialOpen001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialOpen();
@@ -826,7 +826,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_Close Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialClose001', 0, async (done: Function) => {
+    it('testUsbSerialClose001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialClose001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialClose();
@@ -845,7 +845,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_Read Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialRead001', 0, async (done: Function) => {
+    it('testUsbSerialRead001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialRead001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialRead();
@@ -864,7 +864,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_Write Interface testing
      * @tc.type       : Function
      */
-   xit('testUsbSerialWrite001', 0, async (done: Function) => {
+   it('testUsbSerialWrite001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialWrite001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialWrite();
@@ -883,7 +883,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_SetBaudRate Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialSetBaudRate001', 0, async (done: Function) => {
+    it('testUsbSerialSetBaudRate001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialSetBaudRate001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialSetBaudRate();
@@ -902,7 +902,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_SetParams Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialSetParams001', 0, async (done: Function) => {
+    it('testUsbSerialSetParams001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialSetParams001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialSetParams();
@@ -921,7 +921,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_SetTimeout Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialSetTimeout001', 0, async (done: Function) => {
+    it('testUsbSerialSetTimeout001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialSetTimeout001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialSetTimeout();
@@ -940,7 +940,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_SetFlowControl Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialSetFlowControl001', 0, async (done: Function) => {
+    it('testUsbSerialSetFlowControl001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialSetFlowControl001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialSetFlowControl();
@@ -959,7 +959,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_Flush Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialFlush001', 0, async (done: Function) => {
+    it('testUsbSerialFlush001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialFlush001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialFlush();
@@ -978,7 +978,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_FlushInput Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialFlushInput001', 0, async (done: Function) => {
+    it('testUsbSerialFlushInput001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialFlushInput001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialFlushInput();
@@ -997,7 +997,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_UsbSerial_FlushOutput Interface testing
      * @tc.type       : Function
      */
-    xit('testUsbSerialFlushOutput001', 0, async (done: Function) => {
+    it('testUsbSerialFlushOutput001', 0, async (done: Function) => {
       console.info('----------------------testUsbSerialFlushOutput001---------------------------');
       try {
         const ret = ddkPermissionTest.usbSerialFlushOutput();

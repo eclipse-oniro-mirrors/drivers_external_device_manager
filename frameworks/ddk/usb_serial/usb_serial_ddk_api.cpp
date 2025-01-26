@@ -59,6 +59,11 @@ void DeleteUsbSerialDeviceHandle(UsbSerial_Device **dev)
     }
 }
 
+void SetDdk(OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> &ddk)
+{
+    g_serialDdk = ddk;
+}
+
 static int32_t TransToUsbSerialCode(int32_t ret)
 {
     if (ret == HDF_SUCCESS) {
@@ -78,7 +83,7 @@ public:
 void UsbSerialDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
-    EDM_LOGI(MODULE_HID_DDK, "hid_ddk remote died");
+    EDM_LOGI(MODULE_USB_SERIAL_DDK, "usbSerial_ddk remote died");
     if (g_serialDdk == nullptr) {
         return;
     }

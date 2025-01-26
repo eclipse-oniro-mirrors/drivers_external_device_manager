@@ -46,7 +46,7 @@ export default function hidDdkNdkJsTest() {
             continue;
           }
           deviceId = device.deviceId;
-          console.info(`Device id is ${device.deviceId}`)
+          console.info(`Hid device id is ${device.deviceId}`);
         }
       } catch (error) {
         console.error(`Failed to query device. Code is ${error.code}, message is ${error.message}`);
