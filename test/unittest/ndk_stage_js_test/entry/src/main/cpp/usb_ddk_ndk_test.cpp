@@ -33,7 +33,7 @@
 #define USB_DDK_ENDPOINT_XFER_INT 0x03
 #define PARAM_0 0
 #define PARAM_1 1
-#define PARAM_5 51
+#define PARAM_5 5
 #define PARAM_10 10
 #define PARAM_32 32
 #define PARAM_48 48
