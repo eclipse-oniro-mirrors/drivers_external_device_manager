@@ -58,7 +58,7 @@ static napi_value IsUsbSerialDevice(napi_env env, napi_callback_info info)
     UsbSerial_Device *deviceHandle = nullptr;
 
     returnValue = OH_UsbSerial_Open(deviceId, 0, &deviceHandle);
-    bool boolRet = returnValue != USB_SERIAL_DDK_DEVICE_NOT_FOUND;
+    bool boolRet = (returnValue == USB_SERIAL_DDK_SUCCESS ? true : false);
     OH_UsbSerial_Close(&deviceHandle);
     OH_UsbSerial_Release();
     napi_value result = nullptr;
