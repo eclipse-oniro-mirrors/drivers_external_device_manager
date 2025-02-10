@@ -33,6 +33,7 @@
 #define USB_DDK_ENDPOINT_XFER_INT 0x03
 #define PARAM_0 0
 #define PARAM_1 1
+#define PARAM_5 51
 #define PARAM_10 10
 #define PARAM_32 32
 #define PARAM_48 48
@@ -486,7 +487,7 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     struct UsbControlRequestSetup setup;
-    setup.bRequest = 5;
+    setup.bRequest = PARAM_5;
     uint8_t data = PARAM_10;
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setup, g_timeout, &data, dataLen);
@@ -722,7 +723,7 @@ static napi_value UsbSendPipeRequestFive(napi_env env, napi_callback_info info)
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
-    pipe.timeout = 5000;
+    pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
