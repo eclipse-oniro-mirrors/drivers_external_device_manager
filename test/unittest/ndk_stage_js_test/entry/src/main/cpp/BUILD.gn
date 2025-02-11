@@ -1,4 +1,4 @@
-# Copyright (C) 2024 Huawei Device Co., Ltd.
+# Copyright (C) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -70,6 +70,31 @@ ohos_shared_library("usb_ddk_ndk_test") {
     "${ext_mgr_path}/frameworks/ddk/base:ddk_base",
     "${ext_mgr_path}/frameworks/ddk/usb:usb_ndk",
   ]
+
+  external_deps = [
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
+
+  output_extension = "so"
+}
+
+ohos_shared_library("scsi_ddk_ndk_test") {
+  testonly = true
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+  sources = [ "./scsi_ddk_ndk_test.cpp" ]
+  libs = [ rebase_path(libcxx_ndk_shared_file) ]
+
+  include_dirs = [
+    "${ext_mgr_path}/interfaces/ddk/scsi/",
+    "${ext_mgr_path}/frameworks/ddk/scsi/",
+    "./",
+  ]
+
+  configs = [ ":config" ]
+
+  deps = [ "${ext_mgr_path}/frameworks/ddk/scsi:scsi" ]
 
   external_deps = [
     "hilog:libhilog",

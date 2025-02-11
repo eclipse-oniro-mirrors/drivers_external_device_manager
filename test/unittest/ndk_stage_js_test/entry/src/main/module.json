@@ -64,6 +64,16 @@
                 }
             },
             {
+                "name": "ohos.permission.ACCESS_DDK_SCSI_PERIPHERAL",
+                "reason": "$string:reason_scsi_ddk",
+                "usedScene": {
+                    "abilities": [
+                        "EntryAbility"
+                    ],
+                    "when": "inuse"
+                }
+            },
+            {
                 "name": "ohos.permission.ACCESS_EXTENSIONAL_DEVICE_DRIVER",
                 "reason": "$string:reason_usb_ddk",
                 "usedScene": {

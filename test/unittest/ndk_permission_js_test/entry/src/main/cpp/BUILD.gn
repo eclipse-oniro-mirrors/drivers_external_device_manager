@@ -36,6 +36,7 @@ ohos_shared_library("ddk_permission_js_test") {
   include_dirs = [
     "${ext_mgr_path}/interfaces/ddk/base",
     "${ext_mgr_path}/interfaces/ddk/hid",
+    "${ext_mgr_path}/interfaces/ddk/scsi",
     "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/interfaces/ddk/usb_serial",
     "./",
@@ -46,6 +47,7 @@ ohos_shared_library("ddk_permission_js_test") {
   deps = [
     "${ext_mgr_path}/frameworks/ddk/base:ddk_base",
     "${ext_mgr_path}/frameworks/ddk/hid:hid",
+    "${ext_mgr_path}/frameworks/ddk/scsi:scsi",
     "${ext_mgr_path}/frameworks/ddk/usb:usb_ndk",
     "${ext_mgr_path}/frameworks/ddk/usb_serial:usb_serial_ndk",
   ]

@@ -33,6 +33,7 @@ ohos_js_stage_unittest("NdkStageJsTest") {
     "./entry/src/main/cpp:hid_ddk_ndk_test",
     "./entry/src/main/cpp:serial_ddk_ndk_test",
     "./entry/src/main/cpp:usb_ddk_ndk_test",
+    "./entry/src/main/cpp:scsi_ddk_ndk_test",
     ":libcppsharedso",
   ]
 }

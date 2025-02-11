@@ -1010,5 +1010,243 @@ export default function DdkPermissionJsTest() {
         done();
       }
     });
+
+    /**
+     * @tc.name       : testScsiPeripheralInit001
+     * @tc.desc       : OH_ScsiPeripheral_Init Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralInit001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralInit001---------------------------');
+      try {
+        const ret = ddkPermissionTest.scsiPeripheralInit();
+        console.info("Test result testScsiPeripheralInit001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralInit001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRelease001
+     * @tc.desc       : OH_ScsiPeripheral_Release Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralRelease001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRelease001---------------------------');
+      try {
+        const ret = ddkPermissionTest.scsiPeripheralRelease();
+        console.info("Test result testScsiPeripheralRelease001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRelease001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralOpen001
+     * @tc.desc       : OH_ScsiPeripheral_Open Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralOpen001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralOpen001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralOpen(deviceId);
+        console.info("Test Result testScsiPeripheralOpen001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralOpen001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralClose001
+     * @tc.desc       : OH_ScsiPeripheral_Close Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralClose001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralClose001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralClose(deviceId);
+        console.info("Test Result testScsiPeripheralClose001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralClose001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralTestUnitReady001
+     * @tc.desc       : OH_ScsiPeripheral_TestUnitReady Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralTestUnitReady001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralTestUnitReady001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralTestUnitReady(deviceId);
+        console.info("Test Result testScsiPeripheralTestUnitReady001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralTestUnitReady001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralInquiry001
+     * @tc.desc       : OH_ScsiPeripheral_Inquiry Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralInquiry001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralInquiry001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralInquiry(deviceId);
+        console.info("Test Result testScsiPeripheralInquiry001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralInquiry001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralReadCapacity10_001
+     * @tc.desc       : OH_ScsiPeripheral_ReadCapacity10 Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralReadCapacity10_001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralReadCapacity10_001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralReadCapacity10(deviceId);
+        console.info("Test Result testScsiPeripheralReadCapacity10_001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralReadCapacity10_001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRequestSense001
+     * @tc.desc       : OH_ScsiPeripheral_RequestSense Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralRequestSense001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRequestSense001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralRequestSense(deviceId);
+        console.info("Test Result testScsiPeripheralRequestSense001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRequestSense001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRead10_001
+     * @tc.desc       : OH_ScsiPeripheral_Read10 Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralRead10_001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRead10_001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralRead10(deviceId);
+        console.info("Test Result testScsiPeripheralRead10_001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRead10_001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralWrite10_001
+     * @tc.desc       : OH_ScsiPeripheral_Write10 Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralWrite10_001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralWrite10_001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralWrite10(deviceId);
+        console.info("Test Result testScsiPeripheralWrite10_001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralWrite10_001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralVerify10_001
+     * @tc.desc       : OH_ScsiPeripheral_Verify10 Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralVerify10_001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralVerify10_001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralVerify10(deviceId);
+        console.info("Test Result testScsiPeripheralVerify10_001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralVerify10_001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralSendRequestByCDB001
+     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCDB Interface testing
+     * @tc.type       : Function
+     */
+    xit('testScsiPeripheralSendRequestByCDB001', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralSendRequestByCDB001---------------------------');
+      try {
+        console.info("Test scsi deviceId = " + deviceId);
+        const ret = ddkPermissionTest.scsiPeripheralSendRequestByCDB(deviceId);
+        console.info("Test Result testScsiPeripheralSendRequestByCDB001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralSendRequestByCDB001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }

@@ -51,6 +51,34 @@ static uint64_t ConvertDeviceId(uint64_t deviceId64)
     return deviceId;
 }
 
+static uint64_t GetDeviceId(napi_env env, napi_callback_info info)
+{
+    size_t argc = PARAM_1;
+    napi_value args[PARAM_1];
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    int64_t tmpDeviceId;
+    napi_get_value_int64(env, args[0], &tmpDeviceId);
+    uint64_t deviceId = ConvertDeviceId(tmpDeviceId);
+    return deviceId;
+}
+
+static napi_value IsHidDevice(napi_env env, napi_callback_info info)
+{
+    uint64_t deviceId = GetDeviceId(env, info);
+    int32_t returnValue = OH_Hid_Init();
+    Hid_DeviceHandle *deviceHandle = nullptr;
+
+    returnValue = OH_Hid_Open(deviceId, 0, &deviceHandle);
+    bool boolRet = returnValue == HID_DDK_SUCCESS ? true : false;
+    OH_Hid_Close(&deviceHandle);
+    OH_Hid_Release();
+    napi_value result = nullptr;
+    napi_status status = napi_get_boolean(env, boolRet, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
 static bool CompareIgnoreCase(char a, char b)
 {
     return std::tolower(a) == std::tolower(b);
@@ -1395,6 +1423,7 @@ EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
+        {"IsHidDevice", nullptr, IsHidDevice, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidCreateDevice", nullptr, HidCreateDevice, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidCreateDeviceTwo", nullptr, HidCreateDeviceTwo, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidCreateDeviceThree", nullptr, HidCreateDeviceThree, nullptr, nullptr, nullptr, napi_default, nullptr},

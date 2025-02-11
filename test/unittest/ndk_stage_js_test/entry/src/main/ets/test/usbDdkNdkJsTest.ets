@@ -16,6 +16,7 @@
 import { beforeAll, describe, it, expect } from "@ohos/hypium"
 import usbDdkNdkTest from 'libusb_ddk_ndk_test.so'
 import serialDdkNdkTest from 'libserial_ddk_ndk_test.so'
+import scsiDdkNdkTest from 'libscsi_ddk_ndk_test.so'
 import deviceManager from "@ohos.driver.deviceManager";
 
 
@@ -34,12 +35,17 @@ export default function usbDdkNdkJsTest() {
         let devices: Array<deviceManager.Device> = deviceManager.queryDevices(deviceManager.BusType.USB);
         for (let item of devices) {
           let device: deviceManager.USBDevice = item as deviceManager.USBDevice;
+          console.info(`before Usb device id is ${device.deviceId}`)
           if (serialDdkNdkTest.isUsbSerialDevice(device.deviceId)) {
             console.info(`Since the device ${device.deviceId} is a USB Serial device, the NDK test cases are skipped`);
             continue;
           }
+          if (scsiDdkNdkTest.isScsiDevice(device.deviceId)) {
+            console.info(`Since the device ${device.deviceId} is a SCSI device, the NDK test cases are skipped`);
+            continue;
+          }
           deviceId = device.deviceId;
-          console.info(`Usb device id is ${device.deviceId}`)
+          console.info(`after Usb device id is ${deviceId}`)
         }
       } catch (error) {
         console.error(`Failed to query device. Code is ${error.code}, message is ${error.message}`);
