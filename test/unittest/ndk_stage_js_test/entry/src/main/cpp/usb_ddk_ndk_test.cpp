@@ -557,6 +557,28 @@ static napi_value UsbSendControlWriteRequestFour(napi_env env, napi_callback_inf
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
+
+static napi_value UsbSendControlWriteRequestFive(napi_env env, napi_callback_info info)
+{
+    size_t argc = PARAM_1;
+    napi_value args[PARAM_1] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
+    int64_t deviceId64;
+    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
+    uint64_t deviceId = static_cast<uint64_t>(deviceId64);
+    int32_t usbInitReturnValue = OH_Usb_Init();
+    NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
+    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
+    NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
+    struct UsbControlRequestSetup setup;
+    uint8_t data = PARAM_10;
+    uint32_t dataLen = PARAM_10;
+    int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setup, g_timeout, &data, dataLen);
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
+    return result;
+}
+
 uint64_t JsDeviceIdToNative(uint64_t deviceId)
 {
     uint32_t busNum = static_cast<uint32_t>(deviceId >> PARAM_48);
@@ -1043,6 +1065,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestTwo", UsbSendControlWriteRequestTwo),
         DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestThree", UsbSendControlWriteRequestThree),
         DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestFour", UsbSendControlWriteRequestFour),
+        DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestFive", UsbSendControlWriteRequestFive),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestOne", UsbSendPipeRequestOne),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestTwo", UsbSendPipeRequestTwo),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestThree", UsbSendPipeRequestThree),
