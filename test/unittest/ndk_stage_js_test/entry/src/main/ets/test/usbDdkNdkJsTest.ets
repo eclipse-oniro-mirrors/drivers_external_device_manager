@@ -728,6 +728,32 @@ export default function usbDdkNdkJsTest() {
     });
 
     /**
+     * @tc.name       : testUsbSendControlWriteRequest005
+     * @tc.desc       : OH_Usb_SendControlWriteRequest Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbSendControlWriteRequest005', 0, async (done: Function) => {
+      console.info('----------------------testUsbSendControlWriteRequest005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test USB deviceId = " + deviceId);
+        const ret = usbDdkNdkTest.usbSendControlWriteRequestFive(deviceId);
+        console.info("Test Result testUsbSendControlWriteRequest005 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSendControlWriteRequest005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testUsbSendPipeRequest001
      * @tc.desc       : OH_Usb_SendPipeRequest Interface testing
      * @tc.type       : Function
@@ -826,6 +852,32 @@ export default function usbDdkNdkJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testUsbSendPipeRequest004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSendPipeRequest005
+     * @tc.desc       : OH_Usb_SendPipeRequest Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbSendPipeRequest005', 0, async (done: Function) => {
+      console.info('----------------------testUsbSendPipeRequest005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test USB deviceId = " + deviceId);
+        const ret = usbDdkNdkTest.usbSendPipeRequestFive(deviceId);
+        console.info("Test Result testUsbSendPipeRequest005 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSendPipeRequest005 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -1005,6 +1057,32 @@ export default function usbDdkNdkJsTest() {
         const ret = usbDdkNdkTest.usbSendPipeRequestWithAshmemFour(deviceId);
         console.info("Test Result testUsbSendPipeRequestWithAshmem004 : " + ret);
         expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSendPipeRequestWithAshmem004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbSendPipeRequestWithAshmem005
+     * @tc.desc       : OH_Usb_SendPipeRequestWithAshmem Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbSendPipeRequestWithAshmem005', 0, async (done: Function) => {
+      console.info('----------------------testUsbSendPipeRequestWithAshmem005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test USB deviceId = " + deviceId);
+        const ret = usbDdkNdkTest.usbSendPipeRequestWithAshmemFive(deviceId);
+        console.info("Test Result testUsbSendPipeRequestWithAshmem005 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
         done();
       } catch (err) {
         console.error(TAG, `testUsbSendPipeRequestWithAshmem004 failed, message is ${err.message}`);
