@@ -67,10 +67,6 @@ void DriverExtMgr::OnStart()
 void DriverExtMgr::OnStop()
 {
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStop");
-    delete &(DriverPkgManager::GetInstance());
-    delete &(ExtDeviceManager::GetInstance());
-    delete &(BusExtensionCore::GetInstance());
-    delete &(DriverExtensionController::GetInstance());
 }
 
 int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
@@ -85,8 +81,8 @@ void DriverExtMgr::OnAddSystemAbility(int32_t systemAbilityId, const std::string
     switch (systemAbilityId) {
         case SUBSYS_ACCOUNT_SYS_ABILITY_ID_BEGIN: {
             EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility accountMgr");
-            DriverPkgManager::GetInstance().SubscribeOsAccountSwitch();
             if (!accountPromiseUsed_) {
+                DriverPkgManager::GetInstance().SubscribeOsAccountSwitch();
                 accountPromise_.set_value(systemAbilityId);
                 accountPromiseUsed_ = true;
             }

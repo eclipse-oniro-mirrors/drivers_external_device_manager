@@ -66,8 +66,8 @@ bool IDriverExtensionConnectCallback::IsConnectDone()
 }
 
 int32_t DriverExtensionController::StartDriverExtension(
-    std::string bundleName,
-    std::string abilityName)
+    const std::string& bundleName,
+    const std::string& abilityName)
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
@@ -89,8 +89,8 @@ int32_t DriverExtensionController::StartDriverExtension(
 }
 
 int32_t DriverExtensionController::StopDriverExtension(
-    std::string bundleName,
-    std::string abilityName,
+    const std::string& bundleName,
+    const std::string& abilityName,
     int32_t userId)
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to stop DriverExtension, bundle:%{public}s, ability:%{public}s", \
@@ -111,8 +111,8 @@ int32_t DriverExtensionController::StopDriverExtension(
     return EDM_OK;
 }
 int32_t DriverExtensionController::ConnectDriverExtension(
-    std::string bundleName,
-    std::string abilityName,
+    const std::string& bundleName,
+    const std::string& abilityName,
     std::shared_ptr<IDriverExtensionConnectCallback> callback,
     uint32_t deviceId
 )
@@ -153,8 +153,8 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     return EDM_OK;
 }
 int32_t DriverExtensionController::DisconnectDriverExtension(
-    std::string bundleName,
-    std::string abilityName,
+    const std::string& bundleName,
+    const std::string& abilityName,
     std::shared_ptr<IDriverExtensionConnectCallback> callback,
     uint32_t deviceId
 )
