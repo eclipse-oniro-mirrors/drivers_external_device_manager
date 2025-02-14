@@ -716,43 +716,6 @@ static napi_value UsbSendPipeRequestFour(napi_env env, napi_callback_info info)
     return result;
 }
 
-static napi_value UsbSendPipeRequestFive(napi_env env, napi_callback_info info)
-{
-    size_t argc = PARAM_1;
-    napi_value args[PARAM_1] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    int64_t deviceId64;
-    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
-    uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
-    int32_t usbInitReturnValue = OH_Usb_Init();
-    NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
-    struct UsbDeviceDescriptor devDesc;
-    int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
-    NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
-    struct UsbDdkConfigDescriptor *config = nullptr;
-    int32_t usbGetConfigDescriptorReturnValue = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
-    NAPI_ASSERT(env, usbGetConfigDescriptorReturnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
-    auto [result1, interface1, endpoint1, maxPktSize1] = GetEndpointInfo(config);
-    NAPI_ASSERT(env, result1 == true, "GetEndpointInfo failed");
-    OH_Usb_FreeConfigDescriptor(config);
-    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
-    NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
-    struct UsbDeviceMemMap *devMemMap = nullptr;
-    size_t bufferLen = PARAM_10;
-    int32_t usbCreateDeviceMemMapReturnValue = OH_Usb_CreateDeviceMemMap(deviceId, bufferLen, &devMemMap);
-    NAPI_ASSERT(env, usbCreateDeviceMemMapReturnValue == PARAM_0, "OH_Usb_CreateDeviceMemMap failed");
-    NAPI_ASSERT(env, devMemMap != nullptr, "OH_Usb_CreateDeviceMemMap failed");
-    struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = g_interfaceHandle;
-    pipe.endpoint = endpoint1;
-    pipe.timeout = UINT32_MAX;
-    int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
-    OH_Usb_DestroyDeviceMemMap(devMemMap);
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
-    return result;
-}
-
 static napi_value UsbCreateDeviceMemMapOne(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_1;
@@ -958,46 +921,6 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     return result;
 }
 
-static napi_value UsbSendPipeRequestWithAshmemFive(napi_env env, napi_callback_info info)
-{
-    size_t argc = PARAM_1;
-    napi_value args[PARAM_1] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    int64_t deviceId64;
-    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
-    uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
-    int32_t usbInitReturnValue = OH_Usb_Init();
-    NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
-    struct UsbDeviceDescriptor devDesc;
-    int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
-    NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
-    struct UsbDdkConfigDescriptor *config = nullptr;
-    int32_t usbGetConfigDescriptorReturnValue = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
-    NAPI_ASSERT(env, usbGetConfigDescriptorReturnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
-    auto [result1, interface1, endpoint1, maxPktSize1] = GetEndpointInfo(config);
-    NAPI_ASSERT(env, result1 == true, "GetEndpointInfo failed");
-    OH_Usb_FreeConfigDescriptor(config);
-    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
-    NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
-    size_t bufferLen = PARAM_10;
-    const uint8_t name[100] = "TestAshmem";
-    DDK_Ashmem *ashmem = nullptr;
-    int32_t createAshmemValue = OH_DDK_CreateAshmem(name, bufferLen, &ashmem);
-    NAPI_ASSERT(env, createAshmemValue == PARAM_0, "OH_DDK_CreateAshmem failed");
-    const uint8_t ashmemMapType = 0x03;
-    int32_t mapAshmemValue = OH_DDK_MapAshmem(ashmem, ashmemMapType);
-    NAPI_ASSERT(env, mapAshmemValue == PARAM_0, "OH_DDK_MapAshmem failed");
-    struct UsbRequestPipe pipe;
-    pipe.interfaceHandle = g_interfaceHandle;
-    pipe.endpoint = endpoint1;
-    pipe.timeout = UINT32_MAX;
-    int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
-    OH_DDK_DestroyAshmem(ashmem);
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
-    return result;
-}
-
 static napi_value UsbGetDevicesOne(napi_env env, napi_callback_info info)
 {
     int32_t usbInitReturnValue = OH_Usb_Init();
@@ -1070,7 +993,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestTwo", UsbSendPipeRequestTwo),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestThree", UsbSendPipeRequestThree),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestFour", UsbSendPipeRequestFour),
-        DECLARE_NAPI_FUNCTION("usbSendPipeRequestFive", UsbSendPipeRequestFive),
         DECLARE_NAPI_FUNCTION("usbCreateDeviceMemMapOne", UsbCreateDeviceMemMapOne),
         DECLARE_NAPI_FUNCTION("usbCreateDeviceMemMapTwo", UsbCreateDeviceMemMapTwo),
         DECLARE_NAPI_FUNCTION("usbDestroyDeviceMemMap", UsbDestroyDeviceMemMap),
@@ -1078,7 +1000,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemTwo", UsbSendPipeRequestWithAshmemTwo),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemThree", UsbSendPipeRequestWithAshmemThree),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemFour", UsbSendPipeRequestWithAshmemFour),
-        DECLARE_NAPI_FUNCTION("usbSendPipeRequestWithAshmemFive", UsbSendPipeRequestWithAshmemFive),
         DECLARE_NAPI_FUNCTION("usbGetDevicesOne", UsbGetDevicesOne),
         DECLARE_NAPI_FUNCTION("usbGetDevicesTwo", UsbGetDevicesTwo),
         DECLARE_NAPI_FUNCTION("usbGetDevicesThree", UsbGetDevicesThree),
