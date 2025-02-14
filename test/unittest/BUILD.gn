@@ -139,6 +139,7 @@ group("external_device_manager_ut") {
     ":driver_extension_manager_client_test",
     ":drivers_pkg_manager_test",
     "ddk_base_test:ddk_base_test",
+    "ddk_scsi_test:ddk_scsi_test",
     "device_manager_js_test:DeviceManagerJsTest",
     "device_manager_test:device_manager_test",
     "driver_extension_context_test:driver_extension_context_test",

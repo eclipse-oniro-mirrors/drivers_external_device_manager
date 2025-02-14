@@ -70,6 +70,7 @@ enum UsbMgrSubModule {
     MODULE_HID_DDK,
     MODULE_BASE_DDK,
     MODULE_USB_SERIAL_DDK,
+    MODULE_SCSIPERIPHERAL_DDK,
     EDM_MODULE_BUTT,
 };
 
@@ -96,6 +97,7 @@ static constexpr OHOS::HiviewDFX::HiLogLabel EDM_MGR_LABEL[EDM_MODULE_BUTT] = {
     { LOG_CORE, EDM_DDK_DOMAIN, "EdmHidDdk" },
     { LOG_CORE, EDM_DDK_DOMAIN, "EdmBaseDdk" },
     { LOG_CORE, EDM_DDK_DOMAIN, "EdmUsbSerialDdk" },
+    { LOG_CORE, EDM_DDK_DOMAIN, "EdmScsiDdk" },
 };
 
 #ifndef EDM_FILENAME

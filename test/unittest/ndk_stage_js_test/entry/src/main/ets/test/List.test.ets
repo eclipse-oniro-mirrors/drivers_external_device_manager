@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
+import scsiDdkNdkJsTest from './scsiDdkNdkJsTest.ets';
 import hidDdkNdkJsTest from './hidDdkNdkJsTest.ets';
 import usbDdkNdkJsTest from './usbDdkNdkJsTest.ets';
 import baseDdkNdkJsTest from './baseDdkNdkJsTest.ets';
 
 export default function testsuite() {
+  scsiDdkNdkJsTest();
   hidDdkNdkJsTest();
   usbDdkNdkJsTest();
   baseDdkNdkJsTest();
