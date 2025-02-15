@@ -96,6 +96,8 @@ public:
 
     void ResetInitOnce();
     void ResetMatchedBundles(const int32_t userId);
+    void ReportBundleSysEvent(const std::vector<ExtensionAbilityInfo> &driverInfos,
+        const std::string &bundleName, std::string driverEventName);
 
 private:
     std::mutex bundleMgrMutex_;
@@ -126,6 +128,7 @@ private:
     void OnBundleDrvUpdated(int bundleStatus);
     void OnBundleDrvRemoved(const std::string &bundleName);
     void ResetBundleMgr();
+    std::string ParseIdVector(std::vector<uint16_t> ids);
 };
 
 class BundleMgrDeathRecipient : public IRemoteObject::DeathRecipient {

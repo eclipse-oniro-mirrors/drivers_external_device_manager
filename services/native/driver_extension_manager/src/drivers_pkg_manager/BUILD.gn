@@ -26,6 +26,7 @@ ohos_shared_library("drivers_pkg_manager") {
     "drv_bundle_state_callback.cpp",
     "pkg_database.cpp",
     "pkg_db_helper.cpp",
+    "driver_report_sys_event.cpp",
   ]
   include_dirs = [
     "../../include/drivers_pkg_manager",
@@ -79,6 +80,7 @@ ohos_static_library("drivers_pkg_manager_test") {
     "drv_bundle_state_callback.cpp",
     "pkg_database.cpp",
     "pkg_db_helper.cpp",
+    "driver_report_sys_event.cpp",
   ]
   include_dirs = [
     "../../include/drivers_pkg_manager",
