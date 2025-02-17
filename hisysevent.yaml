@@ -19,7 +19,6 @@ DRIVER_PACKAGE_CYCLE_MANAGER:
   USER_ID: {type: INT32, desc: user id}
   DRIVER_UID: {type: STRING, desc: driver uid}
   VERSION_CODE: {type: INT32, desc: version code}
-  TIME: {type: STRING, desc: time}
-  VENDOR_ID: {type: INT32, desc: vendor id}
-  PRODUCT_ID: {type: INT32, desc: product id}
+  VENDOR_ID: {type: STRING, desc: vendor id}
+  PRODUCT_ID: {type: STRING, desc: product id}
   DRIVER_EVENT_NAME: {type: STRING, desc: driver event name}

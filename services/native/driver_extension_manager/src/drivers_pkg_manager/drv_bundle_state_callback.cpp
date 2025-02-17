@@ -510,24 +510,17 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
     uint32_t versionCode;
     for (const auto &pkgInfoTable : pkgInfoTables) {
         if (pkgInfoTable.bundleName == bundleName) {
-            DriverInfo tmpDrvInfo;
-            if (tmpDrvInfo.UnSerialize(pkgInfoTable.driverInfo) != EDM_OK) {
-                EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
-                continue;
-            }
             shared_ptr<UsbDriverInfo> usbDriverInfo = make_shared<UsbDriverInfo>();
             if (usbDriverInfo == nullptr) {
                 EDM_LOGE(MODULE_BUS_USB,  "creat UsbDriverInfo obj fail\n");
                 return;
             }
-            usbDriverInfo = std::static_pointer_cast<UsbDriverInfo>(tmpDrvInfo.driverInfoExt_);
-            if (usbDriverInfo == nullptr) {
-                EDM_LOGE(MODULE_BUS_USB,  "usbDriverInfo is null\n");
+            if (usbDriverInfo->UnSerialize(pkgInfoTable.driverInfo) != EDM_OK) {
+                EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
+                continue;
             }
-            if (usbDriverInfo != nullptr) {
-                productIds = usbDriverInfo->GetProductIds();
-                vendorIds = usbDriverInfo->GetVendorIds();
-            }
+            productIds = usbDriverInfo->GetProductIds();
+            vendorIds = usbDriverInfo->GetVendorIds();
             for (const auto &driverInfo : driverInfos) {
                 if (driverInfo.bundleName == bundleName) {
                 versionCode = driverInfo.applicationInfo.versionCode;
