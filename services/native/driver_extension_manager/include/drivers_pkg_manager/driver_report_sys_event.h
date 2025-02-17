@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DRIVER_PKG_MANAGER_H
-#define DRIVER_PKG_MANAGER_H
+#ifndef DRIVER_REPORT_SYS_EVENT_H
+#define DRIVER_REPORT_SYS_EVENT_H
 
 #include <string>
 #include <vector>
@@ -26,9 +26,10 @@ namespace ExternalDeviceManager {
 class ExtDevReportSysEvent
 {
 public:
-    static void ReportDriverPackageCycleMangeSysEvent(PkgInfoTable &pkgInfoTable, std::string pids,
+    static void ReportDriverPackageCycleMangeSysEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
         std::string vids, uint32_t versionCode, std::string driverEventName);
 };
 
-}
-}
+} // namespace ExternalDeviceManager
+} // namespace OHOS
+#endif // DRIVER_REPORT_SYS_EVENT_H

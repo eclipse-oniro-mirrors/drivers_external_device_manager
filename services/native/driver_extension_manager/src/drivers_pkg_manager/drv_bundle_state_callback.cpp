@@ -33,6 +33,9 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <thread>
+#include "driver_report_sys_event.h"
+#include "usb_driver_info.h"
+#include <memory.h>
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -502,32 +505,38 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
 {
     std::vector<PkgInfoTable> pkgInfoTables;
     ParseToPkgInfoTables(driverInfos, pkgInfoTables);
+    std::vector<uint16_t> productIds;
+    std::vector<uint16_t> vendorIds;
+    uint32_t versionCode;
     for (const auto &pkgInfoTable : pkgInfoTables) {
         if (pkgInfoTable.bundleName == bundleName) {
             DriverInfo tmpDrvInfo;
-            if (tmpDrvInfo.Unserialize(pkgInfoTable.driverInfo) != EDM_OK) {
+            if (tmpDrvInfo.UnSerialize(pkgInfoTable.driverInfo) != EDM_OK) {
                 EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
                 continue;
             }
             shared_ptr<UsbDriverInfo> usbDriverInfo = make_shared<UsbDriverInfo>();
             if (usbDriverInfo == nullptr) {
                 EDM_LOGE(MODULE_BUS_USB,  "creat UsbDriverInfo obj fail\n");
-                return nullptr;
+                return;
             }
-            usbDriverInfo = std::dynamic_pointer_cast<UsbDriverInfo>(tmpDrvInfo.driverInfoExt_);
+            usbDriverInfo = std::static_pointer_cast<UsbDriverInfo>(tmpDrvInfo.driverInfoExt_);
+            if (usbDriverInfo == nullptr) {
+                EDM_LOGE(MODULE_BUS_USB,  "usbDriverInfo is null\n");
+            }
             if (usbDriverInfo != nullptr) {
-                std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
-                std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
+                productIds = usbDriverInfo->GetProductIds();
+                vendorIds = usbDriverInfo->GetVendorIds();
             }
             for (const auto &driverInfo : driverInfos) {
                 if (driverInfo.bundleName == bundleName) {
-                uint32_t versionCode = driverInfo.applicationInfo.versionCode;
+                versionCode = driverInfo.applicationInfo.versionCode;
                 break;
                 }
             }
             std::string pids = ParseIdVector(productIds);
             std::string vids = ParseIdVector(vendorIds);
-            ReportDriverPackageCycleMangeSysEvent(pkgInfoTables, pids, vids, versionCode, driverEventName);
+            ExtDevReportSysEvent::ReportDriverPackageCycleMangeSysEvent(pkgInfoTable, pids, vids, versionCode, driverEventName);
         }
     }
 }
@@ -538,8 +547,9 @@ std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
         return "";
     }
     std::string str = "";
+    auto it = ids.begin();
     for (uint16_t id : ids) {
-        if (i == (ids.size() - 1)) {
+        if (it + 1 == ids.end()) {
             std::string copy = std::to_string(id);
             str.append(copy);
         } else {

@@ -16,21 +16,26 @@
 #include "driver_report_sys_event.h"
 #include "hilog_wrapper.h"
 #include "hisysevent.h"
-#include <ctime>
+#include "edm_errors.h"
+#include <time.h>
 
 using namespace OHOS::HiviewDFX;
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-    void ExtDevReportSysEvent::ReportDriverPackageCycleMangeSysEvent(PkgInfoTable &pkgInfoTable, std::string pids,
+    void ExtDevReportSysEvent::ReportDriverPackageCycleMangeSysEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
         std::string vids, uint32_t versionCode, std::string driverEventName)
     {
         EDM_LOGI(MODULE_PKG_MGR, "report driver package cycle sys event");
+        const struct tm * localTime = localtime(time(nullptr));
+        char buffer[20];
+        std::strftime(buffer, 20, "%Y-%m-%d %H:%M:%S", localTime);
+        std::string currentTime = buffer;
         int32_t hiRet = HiSysEventWrite(HiSysEvent::Domain::EXTERNAL_DEVICE, "DRIVER_PACKAGE_CYCLE_MANAGER",
             HiSysEvent::EventType::BEHAVIOR, "BUNDLE_NAME", pkgInfoTable.bundleName, "USER_ID", pkgInfoTable.userId,
-            "DRIVER_UID", pkgInfoTable.driverUid,"VERSION_CODE", versionCode, "TIME", ctime(time(0)),
+            "DRIVER_UID", pkgInfoTable.driverUid,"VERSION_CODE", versionCode, "TIME", currentTime,
             "VENDOR_ID", vids, "PRODUCT_ID", pids, "DRIVER_EVENT_NAME", driverEventName);
-        if (hiRet != UEC_OK) {
+        if (hiRet != EDM_OK) {
             EDM_LOGI(MODULE_PKG_MGR, "HiSysEventWrite ret: %{public}d", hiRet);
     }
     }
