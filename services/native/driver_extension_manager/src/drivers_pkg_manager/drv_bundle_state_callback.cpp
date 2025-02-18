@@ -547,7 +547,8 @@ std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
     return str;
 }
 
-int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName)
+int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos,
+        const std::string &bundleName)
 {
     uint32_t versionCode = 0;
     for (const auto &driverInfo : driverInfos) {
