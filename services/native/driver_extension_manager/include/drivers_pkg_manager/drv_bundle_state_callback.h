@@ -128,8 +128,8 @@ private:
     void OnBundleDrvUpdated(int bundleStatus);
     void OnBundleDrvRemoved(const std::string &bundleName);
     void ResetBundleMgr();
-    static std::string ParseIdVector(std::vector<uint16_t> ids);
-    static int ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName);
+    std::string ParseIdVector(std::vector<uint16_t> ids);
+    int ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName);
 };
 
 class BundleMgrDeathRecipient : public IRemoteObject::DeathRecipient {

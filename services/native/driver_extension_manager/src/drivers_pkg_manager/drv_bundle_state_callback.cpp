@@ -516,7 +516,7 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
                 EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
                 continue;
             }
-            uint32_t versionCode = ParseVersionCode(driverInfos, bundleName)
+            uint32_t versionCode = ParseVersionCode(driverInfos, bundleName);
             std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
             std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
             std::string pids = ParseIdVector(productIds);
@@ -527,7 +527,7 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
     }
 }
 
-static std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
+std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
 {
     if (ids.size() < 1) {
         return "";
@@ -547,7 +547,7 @@ static std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> i
     return str;
 }
 
-static int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName)
+int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName)
 {
     uint32_t versionCode = 0;
     for (const auto &driverInfo : driverInfos) {
