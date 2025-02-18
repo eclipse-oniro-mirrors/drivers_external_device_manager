@@ -505,9 +505,6 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
 {
     std::vector<PkgInfoTable> pkgInfoTables;
     ParseToPkgInfoTables(driverInfos, pkgInfoTables);
-    std::vector<uint16_t> productIds;
-    std::vector<uint16_t> vendorIds;
-    uint32_t versionCode;
     for (const auto &pkgInfoTable : pkgInfoTables) {
         if (pkgInfoTable.bundleName == bundleName) {
             shared_ptr<UsbDriverInfo> usbDriverInfo = make_shared<UsbDriverInfo>();
@@ -519,22 +516,18 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
                 EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
                 continue;
             }
-            productIds = usbDriverInfo->GetProductIds();
-            vendorIds = usbDriverInfo->GetVendorIds();
-            for (const auto &driverInfo : driverInfos) {
-                if (driverInfo.bundleName == bundleName) {
-                versionCode = driverInfo.applicationInfo.versionCode;
-                break;
-                }
-            }
+            uint32_t versionCode = ParseVersionCode(driverInfos, bundleName)
+            std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
+            std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
             std::string pids = ParseIdVector(productIds);
             std::string vids = ParseIdVector(vendorIds);
-            ExtDevReportSysEvent::ReportDriverPackageCycleMangeSysEvent(pkgInfoTable, pids, vids, versionCode, driverEventName);
+            ExtDevReportSysEvent::ReportDriverPackageCycleMangeSysEvent(pkgInfoTable, pids, vids,
+                versionCode, driverEventName);
         }
     }
 }
 
-std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
+static std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
 {
     if (ids.size() < 1) {
         return "";
@@ -552,6 +545,18 @@ std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
         }
     }
     return str;
+}
+
+static int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName)
+{
+    uint32_t versionCode = 0;
+    for (const auto &driverInfo : driverInfos) {
+        if (driverInfo.bundleName == bundleName) {
+            versionCode = driverInfo.applicationInfo.versionCode;
+            break;
+        }
+    }
+    return versionCode;
 }
 }
 }

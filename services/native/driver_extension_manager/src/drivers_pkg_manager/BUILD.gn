@@ -40,9 +40,9 @@ ohos_shared_library("drivers_pkg_manager") {
   public_configs = [ ":drvext_manager_public_config" ]
 
   # Component internal dependencies
-  deps = [ 
+  deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus"
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
   ]
 
   external_deps = [
@@ -98,9 +98,9 @@ ohos_static_library("drivers_pkg_manager_test") {
   public_configs = [ ":drvext_manager_public_config" ]
 
   # Component internal dependencies
-  deps = [ 
+  deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus"
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
   ]
 
   external_deps = [

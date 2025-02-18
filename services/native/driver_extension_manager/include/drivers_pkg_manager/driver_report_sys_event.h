@@ -23,8 +23,7 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 
-class ExtDevReportSysEvent
-{
+class ExtDevReportSysEvent {
 public:
     static void ReportDriverPackageCycleMangeSysEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
         std::string vids, uint32_t versionCode, std::string driverEventName);
