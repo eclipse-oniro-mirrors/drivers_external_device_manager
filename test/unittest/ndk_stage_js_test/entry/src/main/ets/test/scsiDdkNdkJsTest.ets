@@ -15,8 +15,8 @@
 
 import { beforeAll, describe, it, expect } from "@ohos/hypium"
 import scsiDdkNdkTest from 'libscsi_ddk_ndk_test.so'
+import scsiDdkNdkTest2 from 'libscsi_ddk_ndk_test2.so'
 import deviceManager from "@ohos.driver.deviceManager";
-
 
 export default function scsiDdkNdkJsTest() {
   let deviceId: number = -1;
@@ -46,7 +46,7 @@ export default function scsiDdkNdkJsTest() {
             continue;
           }
           deviceId = device.deviceId;
-          console.info(`Usb serial device id is ${device.deviceId}`)
+          console.info(`Scsi device id is ${device.deviceId}`)
         }
       } catch (error) {
         console.error(`Failed to query device. Code is ${error.code}, message is ${error.message}`);
@@ -233,6 +233,136 @@ export default function scsiDdkNdkJsTest() {
     });
 
     /**
+     * @tc.name       : testScsiPeripheralOpen005
+     * @tc.desc       : OH_SCSIPeripheral_Open Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralOpen005', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralOpen005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralOpenFive(deviceId);
+        console.info("Test Result testScsiPeripheralOpen005 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralOpen005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralOpen006
+     * @tc.desc       : OH_SCSIPeripheral_Open Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralOpen006', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralOpen006---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralOpenSix(deviceId);
+        console.info("Test Result testScsiPeripheralOpen006 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralOpen006 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralOpen007
+     * @tc.desc       : OH_SCSIPeripheral_Open Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralOpen007', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralOpen007---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralOpenSeven(deviceId);
+        console.info("Test Result testScsiPeripheralOpen007 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralOpen007 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralOpen008
+     * @tc.desc       : OH_SCSIPeripheral_Open Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralOpen008', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralOpen008---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralOpenEight(deviceId);
+        console.info("Test Result testScsiPeripheralOpen008 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralOpen008 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralOpen009
+     * @tc.desc       : OH_SCSIPeripheral_Open Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralOpen009', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralOpen009---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralOpenNine(deviceId);
+        console.info("Test Result testScsiPeripheralOpen009 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralOpen009 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testScsiPeripheralClose001
      * @tc.desc       : OH_ScsiPeripheral_Close Interface testing
      * @tc.type       : Function
@@ -389,6 +519,110 @@ export default function scsiDdkNdkJsTest() {
     });
 
     /**
+     * @tc.name       : testScsiPeripheralReadCapacity004
+     * @tc.desc       : OH_SCSIPeripheral_ReadCapacity10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralReadCapacity004', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralReadCapacity004---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadCapacityFour(deviceId);
+        console.info("Test Result testScsiPeripheralReadCapacity004 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralReadCapacity004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralReadCapacity005
+     * @tc.desc       : OH_SCSIPeripheral_ReadCapacity10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralReadCapacity005', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralReadCapacity005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadCapacityFive(deviceId);
+        console.info("Test Result testScsiPeripheralReadCapacity005 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralReadCapacity005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralReadCapacity006
+     * @tc.desc       : OH_SCSIPeripheral_ReadCapacity10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralReadCapacity006', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralReadCapacity006---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadCapacitySix(deviceId);
+        console.info("Test Result testScsiPeripheralReadCapacity006 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralReadCapacity006 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralReadCapacity007
+     * @tc.desc       : OH_SCSIPeripheral_ReadCapacity10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralReadCapacity007', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralReadCapacity007---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadCapacitySeven(deviceId);
+        console.info("Test Result testScsiPeripheralReadCapacity007 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralReadCapacity007 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testScsiPeripheralTestUnitReady001
      * @tc.desc       : OH_ScsiPeripheral_TestUnitReady Interface testing
      * @tc.type       : Function
@@ -461,6 +695,58 @@ export default function scsiDdkNdkJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testScsiPeripheralTestUnitReady003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralTestUnitReady004
+     * @tc.desc       : OH_SCSIPeripheral_TestUnitReady Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralTestUnitReady004', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralTestUnitReady004---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralTestUnitReadyFour(deviceId);
+        console.info("Test Result testScsiPeripheralTestUnitReady004 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralTestUnitReady004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralTestUnitReady005
+     * @tc.desc       : OH_SCSIPeripheral_TestUnitReady Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralTestUnitReady005', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralTestUnitReady005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralTestUnitReadyFive(deviceId);
+        console.info("Test Result testScsiPeripheralTestUnitReady005 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralTestUnitReady005 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -545,6 +831,136 @@ export default function scsiDdkNdkJsTest() {
     });
 
     /**
+     * @tc.name       : testScsiPeripheralInquiry004
+     * @tc.desc       : OH_SCSIPeripheral_Inquiry Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralInquiry004', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralInquiry004---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralInquiryFour(deviceId);
+        console.info("Test Result testScsiPeripheralInquiry004 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralInquiry004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralInquiry005
+     * @tc.desc       : OH_SCSIPeripheral_Inquiry Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralInquiry005', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralInquiry005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralInquiryFive(deviceId);
+        console.info("Test Result testScsiPeripheralInquiry005 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralInquiry005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralInquiry006
+     * @tc.desc       : OH_SCSIPeripheral_Inquiry Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralInquiry006', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralInquiry006---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralInquirySix(deviceId);
+        console.info("Test Result testScsiPeripheralInquiry006 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralInquiry006 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralInquiry007
+     * @tc.desc       : OH_SCSIPeripheral_Inquiry Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralInquiry007', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralInquiry007---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralInquirySeven(deviceId);
+        console.info("Test Result testScsiPeripheralInquiry007 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralInquiry007 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralInquiry008
+     * @tc.desc       : OH_SCSIPeripheral_Inquiry Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralInquiry008', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralInquiry008---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralInquiryEight(deviceId);
+        console.info("Test Result testScsiPeripheralInquiry008 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralInquiry008 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testScsiPeripheralRequestSense001
      * @tc.desc       : OH_ScsiPeripheral_RequestSense Interface testing
      * @tc.type       : Function
@@ -571,12 +987,12 @@ export default function scsiDdkNdkJsTest() {
     });
 
     /**
-     * @tc.name       : testRequestSense002
+     * @tc.name       : testScsiPeripheralRequestSense002
      * @tc.desc       : OH_ScsiPeripheral_RequestSense Interface testing
      * @tc.type       : Function
      */
-    it('testRequestSense002', 0, async (done: Function) => {
-      console.info('----------------------testRequestSense002---------------------------');
+    it('testScsiPeripheralRequestSense002', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRequestSense002---------------------------');
       try {
         if (deviceId < 0) {
           console.info("Test SCSI device not connected");
@@ -586,23 +1002,23 @@ export default function scsiDdkNdkJsTest() {
         }
         console.info("Test SCSI deviceId = " + deviceId);
         const ret = scsiDdkNdkTest.scsiPeripheralRequestSenseTwo(deviceId);
-        console.info("Test Result testRequestSense002 : " + ret);
+        console.info("Test Result testScsiPeripheralRequestSense002 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
         done();
       } catch (err) {
-        console.error(TAG, `testRequestSense002 failed, message is ${err.message}`);
+        console.error(TAG, `testScsiPeripheralRequestSense002 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
     });
 
     /**
-     * @tc.name       : testRequestSense003
+     * @tc.name       : testScsiPeripheralRequestSense003
      * @tc.desc       : OH_ScsiPeripheral_RequestSense Interface testing
      * @tc.type       : Function
      */
-    it('testRequestSense003', 0, async (done: Function) => {
-      console.info('----------------------testRequestSense003---------------------------');
+    it('testScsiPeripheralRequestSense003', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRequestSense003---------------------------');
       try {
         if (deviceId < 0) {
           console.info("Test SCSI device not connected");
@@ -612,11 +1028,89 @@ export default function scsiDdkNdkJsTest() {
         }
         console.info("Test SCSI deviceId = " + deviceId);
         const ret = scsiDdkNdkTest.scsiPeripheralRequestSenseThree(deviceId);
-        console.info("Test Result testRequestSense003 : " + ret);
+        console.info("Test Result testScsiPeripheralRequestSense003 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
         done();
       } catch (err) {
-        console.error(TAG, `testRequestSense003 failed, message is ${err.message}`);
+        console.error(TAG, `testScsiPeripheralRequestSense003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRequestSense004
+     * @tc.desc       : OH_SCSIPeripheral_RequestSense Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRequestSense004', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRequestSense004---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralRequestSenseFour(deviceId);
+        console.info("Test Result testScsiPeripheralRequestSense004 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRequestSense004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRequestSense005
+     * @tc.desc       : OH_SCSIPeripheral_RequestSense Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRequestSense005', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRequestSense005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralRequestSenseFive(deviceId);
+        console.info("Test Result testScsiPeripheralRequestSense005 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRequestSense005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRequestSense006
+     * @tc.desc       : OH_SCSIPeripheral_RequestSense Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRequestSense006', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRequestSense006---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralRequestSenseSix(deviceId);
+        console.info("Test Result testScsiPeripheralRequestSense006 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRequestSense006 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -701,6 +1195,163 @@ export default function scsiDdkNdkJsTest() {
     });
 
     /**
+     * @tc.name       : testScsiPeripheralRead004
+     * @tc.desc       : OH_SCSIPeripheral_Read10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRead004', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRead004---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadFour(deviceId);
+        console.info("Test Result testScsiPeripheralRead004 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRead004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRead005
+     * @tc.desc       : OH_SCSIPeripheral_Read10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRead005', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRead005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadFive(deviceId);
+        console.info("Test Result testScsiPeripheralRead005 : " + ret);
+        let exp = (ret == SCSIPERIPHERAL_DDK_IO_ERROR || ret == SCSIPERIPHERAL_DDK_SUCCESS)
+        expect(exp).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRead005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRead006
+     * @tc.desc       : OH_SCSIPeripheral_Read10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRead006', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRead006---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadSix(deviceId);
+        console.info("Test Result testScsiPeripheralRead006 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRead006 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRead007
+     * @tc.desc       : OH_SCSIPeripheral_Read10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRead007', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRead007---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadSeven(deviceId);
+        console.info("Test Result testScsiPeripheralRead007 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRead007 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRead008
+     * @tc.desc       : OH_SCSIPeripheral_Read10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRead008', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRead008---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadEight(deviceId);
+        console.info("Test Result testScsiPeripheralRead008 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRead008 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralRead009
+     * @tc.desc       : OH_SCSIPeripheral_Read10 Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralRead009', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralRead009---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest.scsiPeripheralReadNine(deviceId);
+        console.info("Test Result testScsiPeripheralRead009 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralRead009 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testScsiPeripheralWrite001
      * @tc.desc       : OH_ScsiPeripheral_RequestSense Interface testing
      * @tc.type       : Function
@@ -715,7 +1366,7 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralWriteOne(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralWriteOne(deviceId);
         console.info("Test Result testScsiPeripheralWrite001 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INIT_ERROR);
         done();
@@ -741,7 +1392,7 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralWriteTwo(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralWriteTwo(deviceId);
         console.info("Test Result testScsiPeripheralWrite002 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
         done();
@@ -767,12 +1418,91 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralWriteThree(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralWriteThree(deviceId);
         console.info("Test Result testScsiPeripheralWrite003 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
         done();
       } catch (err) {
         console.error(TAG, `testScsiPeripheralWrite003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralWrite004
+     * @tc.desc       : OH_SCSIPeripheral_RequestSense Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralWrite004', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralWrite004---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralWriteFour(deviceId);
+        console.info("Test Result testScsiPeripheralWrite004 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralWrite004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralWrite0041
+     * @tc.desc       : OH_SCSIPeripheral_RequestSense Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralWrite0041', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralWrite0041---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralWriteFour1(deviceId);
+        console.info("Test Result testScsiPeripheralWrite0041 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralWrite0041 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralWrite005
+     * @tc.desc       : OH_SCSIPeripheral_RequestSense Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralWrite005', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralWrite005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test SCSI deviceId = " + deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralWriteFive(deviceId);
+        console.info("Test Result testScsiPeripheralWrite005 : " + ret);
+        let exp = (ret == SCSIPERIPHERAL_DDK_IO_ERROR || ret == SCSIPERIPHERAL_DDK_SUCCESS)
+        expect(exp).assertTrue();
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralWrite005 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -793,7 +1523,7 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralVerifyOne(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralVerifyOne(deviceId);
         console.info("Test Result testScsiPeripheralVerify001 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INIT_ERROR);
         done();
@@ -819,7 +1549,7 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralVerifyTwo(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralVerifyTwo(deviceId);
         console.info("Test Result testScsiPeripheralVerify002 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
         done();
@@ -845,7 +1575,7 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralVerifyThree(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralVerifyThree(deviceId);
         console.info("Test Result testScsiPeripheralVerify003 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
         done();
@@ -871,7 +1601,7 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralSendRequestByCDBOne(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralSendRequestByCDBOne(deviceId);
         console.info("Test result testScsiPeripheralSendRequestByCDB001 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INIT_ERROR);
         done();
@@ -896,7 +1626,7 @@ export default function scsiDdkNdkJsTest() {
           done();
           return;
         }
-        const ret = scsiDdkNdkTest.scsiPeripheralSendRequestByCDBTwo();
+        const ret = scsiDdkNdkTest2.scsiPeripheralSendRequestByCDBTwo();
         console.info("Test result testScsiPeripheralSendRequestByCDB002 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
         done();
@@ -921,12 +1651,37 @@ export default function scsiDdkNdkJsTest() {
           done();
           return;
         }
-        const ret = scsiDdkNdkTest.scsiPeripheralSendRequestByCDBThree(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralSendRequestByCDBThree(deviceId);
         console.info("Test result testScsiPeripheralSendRequestByCDB003 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
         done();
       } catch (err) {
         console.error(TAG, `testScsiPeripheralSendRequestByCDB003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralSendRequestByCDB004
+     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCdb Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralSendRequestByCDB004', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralSendRequestByCDB004---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = scsiDdkNdkTest2.scsiPeripheralSendRequestByCDBFour(deviceId);
+        console.info("Test result testScsiPeripheralSendRequestByCDB004 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_IO_ERROR);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralSendRequestByCDB004 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -946,7 +1701,7 @@ export default function scsiDdkNdkJsTest() {
           done();
           return;
         }
-        const ret = scsiDdkNdkTest.scsiPeripheralCreateDeviceMemMapOne(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralCreateDeviceMemMapOne(deviceId);
         console.info("Test result testScsiPeripheralCreateDeviceMemMap001 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
         done();
@@ -971,12 +1726,37 @@ export default function scsiDdkNdkJsTest() {
           done();
           return;
         }
-        const ret = scsiDdkNdkTest.scsiPeripheralCreateDeviceMemMapTwo(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralCreateDeviceMemMapTwo(deviceId);
         console.info("Test result testScsiPeripheralCreateDeviceMemMap002 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
         done();
       } catch (err) {
         console.error(TAG, `testScsiPeripheralCreateDeviceMemMap002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testScsiPeripheralCreateDeviceMemMap003
+     * @tc.desc       : OH_SCSIPeripheral_CreateDeviceMemMap Interface testing
+     * @tc.type       : Function
+     */
+    it('testScsiPeripheralCreateDeviceMemMap003', 0, async (done: Function) => {
+      console.info('----------------------testScsiPeripheralCreateDeviceMemMap003---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test SCSI device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = scsiDdkNdkTest2.scsiPeripheralCreateDeviceMemMapThree(deviceId);
+        console.info("Test result testScsiPeripheralCreateDeviceMemMap003 : " + ret);
+        expect(ret).assertEqual(SCSIPERIPHERAL_DDK_MEMORY_ERROR);
+        done();
+      } catch (err) {
+        console.error(TAG, `testScsiPeripheralCreateDeviceMemMap003 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
@@ -997,7 +1777,7 @@ export default function scsiDdkNdkJsTest() {
           return;
         }
         console.info("Test SCSI deviceId = " + deviceId);
-        const ret = scsiDdkNdkTest.scsiPeripheralDestroyDeviceMemMapOne(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralDestroyDeviceMemMapOne(deviceId);
         console.info("Test result testScsiPeripheralDestroyDeviceMemMap001 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
         done();
@@ -1022,7 +1802,7 @@ export default function scsiDdkNdkJsTest() {
           done();
           return;
         }
-        const ret = scsiDdkNdkTest.scsiPeripheralDestroyDeviceMemMapTwo(deviceId);
+        const ret = scsiDdkNdkTest2.scsiPeripheralDestroyDeviceMemMapTwo(deviceId);
         console.info("Test result testScsiPeripheralDestroyDeviceMemMap002 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
         done();
@@ -1047,7 +1827,7 @@ export default function scsiDdkNdkJsTest() {
           done();
           return;
         }
-        const ret = scsiDdkNdkTest.scsiPeripheralParseBasicSenseInfoOne();
+        const ret = scsiDdkNdkTest2.scsiPeripheralParseBasicSenseInfoOne();
         console.info("Test result testScsiPeripheralParseBasicSenseInfo001 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
         done();
@@ -1072,7 +1852,7 @@ export default function scsiDdkNdkJsTest() {
           done();
           return;
         }
-        const ret = scsiDdkNdkTest.scsiPeripheralParseBasicSenseInfoTwo();
+        const ret = scsiDdkNdkTest2.scsiPeripheralParseBasicSenseInfoTwo();
         console.info("Test result testScsiPeripheralParseBasicSenseInfo002 : " + ret);
         expect(ret).assertEqual(SCSIPERIPHERAL_DDK_SUCCESS);
         done();

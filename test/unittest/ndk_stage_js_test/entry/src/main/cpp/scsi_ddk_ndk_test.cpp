@@ -21,30 +21,24 @@
 #include <cstdlib>
 #include <js_native_api_types.h>
 #include <unistd.h>
-#include <vector>
+#include <string>
 
 const uint32_t PARAM_0 = 0;
 const uint32_t PARAM_1 = 1;
 constexpr size_t DEVICE_MEM_MAP_SIZE = 10 * 1024; // 10K
-
+constexpr size_t DEVICE_MEM_MAP_MAX_SIZE = 1024 * 1024 * 10;
 const uint64_t SCSI_DDK_INVALID_DEVICE_ID = 0xFFFFFFFFFFFFFFFF;
 const uint32_t SIXTEEN_BIT = 16;
 const uint32_t THIRTYTWO_BIT = 32;
 const uint32_t BUS_NUM_MASK = 0xFFFF0000;
 const uint32_t DEVICE_NUM_MASK = 0x0000FFFF;
-constexpr uint8_t ONE_BYTE = 1;
+const uint8_t CONTROL_READY_DATA = 10;
+const uint8_t CONTROL_INQUIRY_DATA = 100;
+const uint16_t ALLOCATIONLENGTH_DATA = 16;
+const uint8_t READ10_DATA = 123;
 constexpr uint8_t TWO_BYTE = 2;
-constexpr uint8_t THREE_BYTE = 3;
-constexpr uint8_t FOUR_BYTE = 4;
-constexpr uint8_t FIVE_BYTE = 5;
-constexpr uint8_t SIX_BYTE = 6;
-constexpr uint8_t SEVEN_BYTE = 7;
-constexpr uint8_t EIGHT_BYTE = 8;
-constexpr uint8_t NINE_BYTE = 9;
-constexpr uint16_t MAX_MEM_LEN = 256;
 constexpr uint32_t TIMEOUT = 5000;
 constexpr uint32_t TIMEOUT2 = 20000;
-constexpr uint8_t CDB_LENGTH_TEN = 10;
 
 ScsiPeripheral_Device *NewScsiPeripheralDevice();
 void DeleteScsiPeripheralDevice(ScsiPeripheral_Device **dev);
@@ -186,6 +180,109 @@ static napi_value ScsiPeripheralOpenFour(napi_env env, napi_callback_info info)
     return result;
 }
 
+static napi_value ScsiPeripheralOpenFive(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+
+    uint64_t deviceId = 0; // Invalid deviceId
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND, "OH_ScsiPeripheral_Open failed");
+    if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+        OH_ScsiPeripheral_Close(&device);
+    }
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralOpenSix(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+
+    uint64_t deviceId = UINT64_MAX; // Invalid deviceId
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND, "OH_ScsiPeripheral_Open success");
+
+    if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+        OH_ScsiPeripheral_Close(&device);
+    }
+
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralOpenSeven(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+        OH_ScsiPeripheral_Close(&device);
+    }
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralOpenEight(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+
+    ret = OH_ScsiPeripheral_Open(deviceId, UINT8_MAX, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND, "OH_ScsiPeripheral_Open success");
+
+    if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+        OH_ScsiPeripheral_Close(&device);
+    }
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralOpenNine(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 1, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND, "OH_ScsiPeripheral_Open failed");
+
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
 static napi_value ScsiPeripheralCloseOne(napi_env env, napi_callback_info info)
 {
     ScsiPeripheral_Device *device = nullptr;
@@ -257,9 +354,9 @@ static napi_value ScsiPeripheralReadCapacityTwo(napi_env env, napi_callback_info
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
 
     ScsiPeripheral_Device *dev = nullptr;
-    ScsiPeripheral_ReadCapacityRequest req;
-    ScsiPeripheral_CapacityInfo capacityInfo;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_ReadCapacityRequest req = {0};
+    ScsiPeripheral_CapacityInfo capacityInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_ReadCapacity10(dev, &req, &capacityInfo, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_ReadCapacity10 failed");
 
@@ -269,25 +366,26 @@ static napi_value ScsiPeripheralReadCapacityTwo(napi_env env, napi_callback_info
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
 
     ScsiPeripheral_ReadCapacityRequest *req2 = nullptr;
-    ScsiPeripheral_CapacityInfo capacityInfo2;
-    ScsiPeripheral_Response resp2;
+    ScsiPeripheral_CapacityInfo capacityInfo2 = {0};
+    ScsiPeripheral_Response resp2 = {{0}};
     ret = OH_ScsiPeripheral_ReadCapacity10(dev2, req2, &capacityInfo2, &resp2);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_ReadCapacity10 failed");
 
     ScsiPeripheral_Device *dev3 = dev2;
-    ScsiPeripheral_ReadCapacityRequest req3;
+    ScsiPeripheral_ReadCapacityRequest req3 = {0};
     ScsiPeripheral_CapacityInfo *capacityInfo3 = nullptr;
-    ScsiPeripheral_Response resp3;
+    ScsiPeripheral_Response resp3 = {{0}};
     ret = OH_ScsiPeripheral_ReadCapacity10(dev3, &req3, capacityInfo3, &resp3);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_ReadCapacity10 failed");
 
     ScsiPeripheral_Device *dev4 = dev2;
-    ScsiPeripheral_ReadCapacityRequest req4;
-    ScsiPeripheral_CapacityInfo capacityInfo4;
+    ScsiPeripheral_ReadCapacityRequest req4 = {0};
+    ScsiPeripheral_CapacityInfo capacityInfo4 = {0};
     ScsiPeripheral_Response *resp4 = nullptr;
     ret = OH_ScsiPeripheral_ReadCapacity10(dev4, &req4, &capacityInfo4, resp4);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_ReadCapacity10 failed");
 
+    OH_ScsiPeripheral_Close(&dev2);
     OH_ScsiPeripheral_Release();
 
     napi_value result = nullptr;
@@ -306,13 +404,141 @@ static napi_value ScsiPeripheralReadCapacityThree(napi_env env, napi_callback_in
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
 
     const uint32_t timeOut = 2000;
-    ScsiPeripheral_ReadCapacityRequest req;
+    ScsiPeripheral_ReadCapacityRequest req = {0};
     req.lbAddress = 0;
     req.control = 0;
     req.byte8 = 0;
     req.timeout = timeOut;
-    ScsiPeripheral_CapacityInfo capacityInfo;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_CapacityInfo capacityInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadCapacityFour(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_ReadCapacityRequest req = {0};
+    req.lbAddress = 0;
+    ScsiPeripheral_CapacityInfo capacityInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    req.lbAddress = UINT32_MAX;
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    req.lbAddress = CONTROL_INQUIRY_DATA;
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadCapacityFive(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_ReadCapacityRequest req = {0};
+    req.control = 0;
+    ScsiPeripheral_CapacityInfo capacityInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    req.control = UINT8_MAX;
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    req.control = CONTROL_INQUIRY_DATA;
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadCapacitySix(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_ReadCapacityRequest req = {0};
+    req.byte8 = 0;
+    ScsiPeripheral_CapacityInfo capacityInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    req.byte8 = UINT8_MAX;
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    req.byte8 = CONTROL_INQUIRY_DATA;
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadCapacitySeven(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_ReadCapacityRequest req = {0};
+    req.timeout = UINT32_MAX;
+    ScsiPeripheral_CapacityInfo capacityInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
+
+    req.timeout = CONTROL_READY_DATA;
     ret = OH_ScsiPeripheral_ReadCapacity10(device, &req, &capacityInfo, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_ReadCapacity10 failed");
 
@@ -328,8 +554,8 @@ static napi_value ScsiPeripheralReadCapacityThree(napi_env env, napi_callback_in
 static napi_value ScsiPeripheralTestUnitReadyOne(napi_env env, napi_callback_info info)
 {
     ScsiPeripheral_Device *device = nullptr;
-    ScsiPeripheral_TestUnitReadyRequest req;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_TestUnitReadyRequest req = {0};
+    ScsiPeripheral_Response resp = {{0}};
     int32_t ret = OH_ScsiPeripheral_TestUnitReady(device, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_TestUnitReady failed");
 
@@ -345,8 +571,8 @@ static napi_value ScsiPeripheralTestUnitReadyTwo(napi_env env, napi_callback_inf
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
 
     ScsiPeripheral_Device *device = nullptr;
-    ScsiPeripheral_TestUnitReadyRequest req;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_TestUnitReadyRequest req = {0};
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_TestUnitReady(device, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_TestUnitReady failed");
 
@@ -357,8 +583,8 @@ static napi_value ScsiPeripheralTestUnitReadyTwo(napi_env env, napi_callback_inf
     ret = OH_ScsiPeripheral_TestUnitReady(dev, &req, nullptr);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_TestUnitReady failed");
 
-    OH_ScsiPeripheral_Release();
     DeleteScsiPeripheralDevice(&dev);
+    OH_ScsiPeripheral_Release();
 
     napi_value result = nullptr;
     napi_status status = napi_create_int32(env, ret, &result);
@@ -375,9 +601,65 @@ static napi_value ScsiPeripheralTestUnitReadyThree(napi_env env, napi_callback_i
     ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
 
-    ScsiPeripheral_TestUnitReadyRequest req;
+    ScsiPeripheral_TestUnitReadyRequest req = {0};
     req.timeout = TIMEOUT;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_TestUnitReady(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_TestUnitReady failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralTestUnitReadyFour(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_TestUnitReadyRequest req = {0};
+    req.control = 0;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_TestUnitReady(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_TestUnitReady failed");
+
+    req.control = UINT8_MAX;
+    ret = OH_ScsiPeripheral_TestUnitReady(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_TestUnitReady failed");
+
+    req.control = CONTROL_READY_DATA;
+    ret = OH_ScsiPeripheral_TestUnitReady(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_TestUnitReady failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralTestUnitReadyFive(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_TestUnitReadyRequest req = {0};
+    req.timeout = UINT32_MAX;
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_TestUnitReady(device, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_TestUnitReady failed");
 
@@ -392,9 +674,9 @@ static napi_value ScsiPeripheralTestUnitReadyThree(napi_env env, napi_callback_i
 
 static napi_value ScsiPeripheralInquiryOne(napi_env env, napi_callback_info info)
 {
-    ScsiPeripheral_InquiryRequest req;
-    ScsiPeripheral_InquiryInfo inquiryInfo;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_InquiryRequest req = {0};
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
     int32_t ret = OH_ScsiPeripheral_Inquiry(nullptr, &req, &inquiryInfo, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_Inquiry failed");
 
@@ -410,9 +692,9 @@ static napi_value ScsiPeripheralInquiryTwo(napi_env env, napi_callback_info info
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
 
     ScsiPeripheral_Device *dev = nullptr;
-    ScsiPeripheral_InquiryRequest req;
-    ScsiPeripheral_InquiryInfo inquiryInfo;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_InquiryRequest req = {0};
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_Inquiry(dev, &req, &inquiryInfo, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Inquiry failed");
 
@@ -422,25 +704,26 @@ static napi_value ScsiPeripheralInquiryTwo(napi_env env, napi_callback_info info
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
 
     ScsiPeripheral_InquiryRequest *req2 = nullptr;
-    ScsiPeripheral_InquiryInfo inquiryInfo2;
-    ScsiPeripheral_Response resp2;
+    ScsiPeripheral_InquiryInfo inquiryInfo2 = {0};
+    ScsiPeripheral_Response resp2 = {{0}};
     ret = OH_ScsiPeripheral_Inquiry(dev2, req2, &inquiryInfo2, &resp2);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Inquiry failed");
 
     ScsiPeripheral_Device *dev3 = dev2;
-    ScsiPeripheral_InquiryRequest req3;
+    ScsiPeripheral_InquiryRequest req3 = {0};
     ScsiPeripheral_InquiryInfo *inquiryInfo3 = nullptr;
-    ScsiPeripheral_Response resp3;
+    ScsiPeripheral_Response resp3 = {{0}};
     ret = OH_ScsiPeripheral_Inquiry(dev3, &req3, inquiryInfo3, &resp3);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Inquiry failed");
 
     ScsiPeripheral_Device *dev4 = dev2;
-    ScsiPeripheral_InquiryRequest req4;
-    ScsiPeripheral_InquiryInfo inquiryInfo4;
+    ScsiPeripheral_InquiryRequest req4 = {0};
+    ScsiPeripheral_InquiryInfo inquiryInfo4 = {0};
     ScsiPeripheral_Response *resp4 = nullptr;
     ret = OH_ScsiPeripheral_Inquiry(dev4, &req4, &inquiryInfo4, resp4);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Inquiry failed");
 
+    OH_ScsiPeripheral_Close(&dev2);
     OH_ScsiPeripheral_Release();
 
     napi_value result = nullptr;
@@ -461,14 +744,207 @@ static napi_value ScsiPeripheralInquiryThree(napi_env env, napi_callback_info in
     ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
     ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-    ScsiPeripheral_InquiryInfo inquiryInfo;
-    ScsiPeripheral_InquiryRequest req;
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_InquiryRequest req = {0};
     req.timeout = TIMEOUT;
     inquiryInfo.data = devMmap;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
 
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralInquiryFour(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_InquiryRequest req = {0};
+    req.pageCode = 0;
+    req.byte1 = 0;
+    inquiryInfo.data = devMmap;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.pageCode = UINT8_MAX;
+    req.byte1 = 0;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.pageCode = 1;
+    req.byte1 = 1;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralInquiryFive(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_MAX_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_InquiryRequest req = {0};
+    inquiryInfo.data = devMmap;
+    req.allocationLength = 0;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.allocationLength = UINT16_MAX;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.allocationLength = ALLOCATIONLENGTH_DATA;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralInquirySix(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_InquiryRequest req = {0};
+    inquiryInfo.data = devMmap;
+    req.control = 0;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.control = UINT8_MAX;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.control = CONTROL_INQUIRY_DATA;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralInquirySeven(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_InquiryRequest req = {0};
+    inquiryInfo.data = devMmap;
+    req.pageCode = TWO_BYTE;
+    req.byte1 = 0;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.pageCode = 0;
+    req.byte1 = UINT8_MAX;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.pageCode = TWO_BYTE;
+    req.byte1 = 1;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralInquiryEight(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_InquiryRequest req = {0};
+    inquiryInfo.data = devMmap;
+    req.timeout = UINT32_MAX;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    req.timeout = CONTROL_READY_DATA;
+    ret = OH_ScsiPeripheral_Inquiry(device, &req, &inquiryInfo, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Inquiry failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
     OH_ScsiPeripheral_Close(&device);
     OH_ScsiPeripheral_Release();
 
@@ -481,8 +957,8 @@ static napi_value ScsiPeripheralInquiryThree(napi_env env, napi_callback_info in
 static napi_value ScsiPeripheralRequestSenseOne(napi_env env, napi_callback_info info)
 {
     ScsiPeripheral_Device *device = nullptr;
-    ScsiPeripheral_RequestSenseRequest req;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_RequestSenseRequest req = {0};
+    ScsiPeripheral_Response resp = {{0}};
     int32_t ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_RequestSense failed");
 
@@ -497,8 +973,8 @@ static napi_value ScsiPeripheralRequestSenseTwo(napi_env env, napi_callback_info
     int32_t ret = OH_ScsiPeripheral_Init();
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
 
-    ScsiPeripheral_RequestSenseRequest req;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_RequestSenseRequest req = {0};
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_RequestSense(nullptr, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_RequestSense failed");
 
@@ -509,8 +985,8 @@ static napi_value ScsiPeripheralRequestSenseTwo(napi_env env, napi_callback_info
     ret = OH_ScsiPeripheral_RequestSense(dev, &req, nullptr);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_RequestSense failed");
 
-    OH_ScsiPeripheral_Release();
     DeleteScsiPeripheralDevice(&dev);
+    OH_ScsiPeripheral_Release();
 
     napi_value result = nullptr;
     napi_status status = napi_create_int32(env, ret, &result);
@@ -527,12 +1003,113 @@ static napi_value ScsiPeripheralRequestSenseThree(napi_env env, napi_callback_in
     ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
 
-    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
-    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-    ScsiPeripheral_RequestSenseRequest req;
+    ScsiPeripheral_RequestSenseRequest req = {0};
     req.timeout = TIMEOUT;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralRequestSenseFour(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_RequestSenseRequest req = {0};
+    req.allocationLength = 0;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.allocationLength = UINT8_MAX;
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.allocationLength = ALLOCATIONLENGTH_DATA;
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralRequestSenseFive(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_RequestSenseRequest req = {0};
+    req.control = 0;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.control = UINT8_MAX;
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.control = CONTROL_INQUIRY_DATA;
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralRequestSenseSix(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_RequestSenseRequest req = {0};
+    req.byte1 = 0;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.byte1 = UINT8_MAX;
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.byte1 = 1;
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.timeout = CONTROL_READY_DATA;
+    ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
+
+    req.timeout = UINT32_MAX;
     ret = OH_ScsiPeripheral_RequestSense(device, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_RequestSense failed");
 
@@ -548,8 +1125,8 @@ static napi_value ScsiPeripheralRequestSenseThree(napi_env env, napi_callback_in
 static napi_value ScsiPeripheralReadOne(napi_env env, napi_callback_info info)
 {
     ScsiPeripheral_Device *device = nullptr;
-    ScsiPeripheral_IORequest req;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_IORequest req = {0};
+    ScsiPeripheral_Response resp = {{0}};
     int32_t ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_Read10 failed");
 
@@ -564,8 +1141,8 @@ static napi_value ScsiPeripheralReadTwo(napi_env env, napi_callback_info info)
     int32_t ret = OH_ScsiPeripheral_Init();
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
 
-    ScsiPeripheral_IORequest req;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_IORequest req = {0};
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_Read10(nullptr, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Read10 failed");
 
@@ -582,8 +1159,8 @@ static napi_value ScsiPeripheralReadTwo(napi_env env, napi_callback_info info)
     ret = OH_ScsiPeripheral_Read10(dev, &req, nullptr);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Read10 failed");
 
-    OH_ScsiPeripheral_Release();
     DeleteScsiPeripheralDevice(&dev);
+    OH_ScsiPeripheral_Release();
 
     napi_value result = nullptr;
     napi_status status = napi_create_int32(env, ret, &result);
@@ -604,7 +1181,7 @@ static napi_value ScsiPeripheralReadThree(napi_env env, napi_callback_info info)
     ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
     NAPI_ASSERT(env, devMmap != nullptr, "devMmap is nullptr");
-    ScsiPeripheral_IORequest req;
+    ScsiPeripheral_IORequest req = {0};
 
     const uint32_t tmpTimeout = TIMEOUT2;
     req.lbAddress = 1;
@@ -614,10 +1191,11 @@ static napi_value ScsiPeripheralReadThree(napi_env env, napi_callback_info info)
     req.byte6 = 0;
     req.timeout = tmpTimeout;
     req.data = devMmap;
-    ScsiPeripheral_Response resp;
+    ScsiPeripheral_Response resp = {{0}};
     ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
 
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
     OH_ScsiPeripheral_Close(&device);
     OH_ScsiPeripheral_Release();
 
@@ -627,53 +1205,7 @@ static napi_value ScsiPeripheralReadThree(napi_env env, napi_callback_info info)
     return result;
 }
 
-static napi_value ScsiPeripheralWriteOne(napi_env env, napi_callback_info info)
-{
-    ScsiPeripheral_Device *device = nullptr;
-    ScsiPeripheral_IORequest req;
-    ScsiPeripheral_Response resp;
-    int32_t ret = OH_ScsiPeripheral_Write10(device, &req, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_Write10 failed");
-
-    napi_value result = nullptr;
-    napi_status status = napi_create_int32(env, ret, &result);
-    NAPI_CALL(env, status);
-    return result;
-}
-
-static napi_value ScsiPeripheralWriteTwo(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-
-    ScsiPeripheral_IORequest req;
-    ScsiPeripheral_Response resp;
-    ret = OH_ScsiPeripheral_Write10(nullptr, &req, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Write10 failed");
-
-    ScsiPeripheral_Device *dev = NewScsiPeripheralDevice();
-    ret = OH_ScsiPeripheral_Write10(dev, nullptr, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Write10 failed");
-
-    ret = OH_ScsiPeripheral_Write10(dev, &req, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Write10 failed");
-
-    uint8_t buff;
-    ScsiPeripheral_DeviceMemMap devMmap({&buff, sizeof(buff), 0, sizeof(buff), 0});
-    req.data = &devMmap;
-    ret = OH_ScsiPeripheral_Write10(dev, &req, nullptr);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Write10 failed");
-
-    OH_ScsiPeripheral_Release();
-    DeleteScsiPeripheralDevice(&dev);
-
-    napi_value result = nullptr;
-    napi_status status = napi_create_int32(env, ret, &result);
-    NAPI_CALL(env, status);
-    return result;
-}
-
-static napi_value ScsiPeripheralWriteThree(napi_env env, napi_callback_info info)
+static napi_value ScsiPeripheralReadFour(napi_env env, napi_callback_info info)
 {
     int32_t ret = OH_ScsiPeripheral_Init();
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
@@ -685,8 +1217,206 @@ static napi_value ScsiPeripheralWriteThree(napi_env env, napi_callback_info info
     ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
     ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-    ScsiPeripheral_IORequest req;
-    const uint32_t tmpTimeout = TIMEOUT2;
+    NAPI_ASSERT(env, devMmap != nullptr, "devMmap is nullptr");
+
+    ScsiPeripheral_IORequest req = {0};
+    req.lbAddress = 0;
+    req.data = devMmap;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.lbAddress = UINT32_MAX;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadFive(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_MAX_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+    NAPI_ASSERT(env, devMmap != nullptr, "devMmap is nullptr");
+
+    ScsiPeripheral_IORequest req = {0};
+    req.transferLength = 0;
+    req.data = devMmap;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.transferLength = UINT16_MAX;
+    req.lbAddress = 0;
+    req.byte1 = 0;
+    req.byte6 = 0;
+    req.control = 0;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_IO_ERROR || ret == SCSIPERIPHERAL_DDK_SUCCESS,
+        "OH_ScsiPeripheral_Read10 failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadSix(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+    NAPI_ASSERT(env, devMmap != nullptr, "devMmap is nullptr");
+
+    ScsiPeripheral_IORequest req = {0};
+    req.control = 0;
+    req.data = devMmap;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.control = UINT8_MAX;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.control = CONTROL_INQUIRY_DATA;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadSeven(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+    NAPI_ASSERT(env, devMmap != nullptr, "devMmap is nullptr");
+
+    ScsiPeripheral_IORequest req = {0};
+    req.byte1 = 0;
+    req.data = devMmap;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.byte1 = UINT8_MAX;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.byte1 = READ10_DATA;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadEight(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+    NAPI_ASSERT(env, devMmap != nullptr, "devMmap is nullptr");
+
+    ScsiPeripheral_IORequest req = {0};
+    req.byte6 = 0;
+    req.data = devMmap;
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.byte6 = UINT8_MAX;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.byte6 = READ10_DATA;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    req.timeout = UINT32_MAX;
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
+
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
+    OH_ScsiPeripheral_Close(&device);
+    OH_ScsiPeripheral_Release();
+
+    napi_value result = nullptr;
+    napi_status status = napi_create_int32(env, ret, &result);
+    NAPI_CALL(env, status);
+    return result;
+}
+
+static napi_value ScsiPeripheralReadNine(napi_env env, napi_callback_info info)
+{
+    int32_t ret = OH_ScsiPeripheral_Init();
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
+    uint64_t deviceId = GetDeviceId(env, info);
+    ScsiPeripheral_Device *device = nullptr;
+    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
+
+    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
+    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
+    NAPI_ASSERT(env, devMmap != nullptr, "devMmap is nullptr");
+    ScsiPeripheral_IORequest req = {0};
+
+    const uint32_t tmpTimeout = 10000;
     req.lbAddress = 1;
     req.transferLength = 1;
     req.control = 0;
@@ -694,327 +1424,17 @@ static napi_value ScsiPeripheralWriteThree(napi_env env, napi_callback_info info
     req.byte6 = 0;
     req.timeout = tmpTimeout;
     req.data = devMmap;
-    ScsiPeripheral_Response resp;
-    ret = OH_ScsiPeripheral_Write10(device, &req, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Write10 failed");
+    ScsiPeripheral_Response resp = {{0}};
+    ret = OH_ScsiPeripheral_Read10(device, &req, &resp);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Read10 failed");
 
+    OH_ScsiPeripheral_DestroyDeviceMemMap(devMmap);
     OH_ScsiPeripheral_Close(&device);
     OH_ScsiPeripheral_Release();
 
     napi_value result = nullptr;
     napi_status status = napi_create_int32(env, ret, &result);
     NAPI_CALL(env, status);
-    return result;
-}
-
-static napi_value ScsiPeripheralVerifyOne(napi_env env, napi_callback_info info)
-{
-    ScsiPeripheral_Device *device = nullptr;
-    ScsiPeripheral_VerifyRequest req;
-    ScsiPeripheral_Response resp;
-    int32_t ret = OH_ScsiPeripheral_Verify10(device, &req, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_Verify10 failed");
-
-    napi_value result = nullptr;
-    napi_status status = napi_create_int32(env, ret, &result);
-    NAPI_CALL(env, status);
-    return result;
-}
-
-static napi_value ScsiPeripheralVerifyTwo(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-
-    ScsiPeripheral_VerifyRequest req;
-    ScsiPeripheral_Response resp;
-    ret = OH_ScsiPeripheral_Verify10(nullptr, &req, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Verify10 failed");
-
-    ScsiPeripheral_Device *dev = NewScsiPeripheralDevice();
-    ret = OH_ScsiPeripheral_Verify10(dev, nullptr, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Verify10 failed");
-
-    ret = OH_ScsiPeripheral_Verify10(dev, &req, nullptr);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_Verify10 failed");
-
-    OH_ScsiPeripheral_Release();
-    DeleteScsiPeripheralDevice(&dev);
-
-    napi_value result = nullptr;
-    napi_status status = napi_create_int32(env, ret, &result);
-    NAPI_CALL(env, status);
-    return result;
-}
-
-static napi_value ScsiPeripheralVerifyThree(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-    uint64_t deviceId = GetDeviceId(env, info);
-    ScsiPeripheral_Device *device = nullptr;
-    ret = OH_ScsiPeripheral_Open(deviceId, 0, &device);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
-
-    ScsiPeripheral_DeviceMemMap *devMmap = nullptr;
-    ret = OH_ScsiPeripheral_CreateDeviceMemMap(device, DEVICE_MEM_MAP_SIZE, &devMmap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-    ScsiPeripheral_VerifyRequest req;
-    req.timeout = TIMEOUT;
-    ScsiPeripheral_Response resp;
-    ret = OH_ScsiPeripheral_Verify10(device, &req, &resp);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Verify10 failed");
-
-    OH_ScsiPeripheral_Close(&device);
-    OH_ScsiPeripheral_Release();
-
-    napi_value result = nullptr;
-    napi_status status = napi_create_int32(env, ret, &result);
-    NAPI_CALL(env, status);
-    return result;
-}
-
-static napi_value ScsiPeripheralSendRequestByCDBOne(napi_env env, napi_callback_info info)
-{
-    size_t argc = PARAM_1;
-    napi_value args[PARAM_1] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-
-    ScsiPeripheral_Device *dev = NewScsiPeripheralDevice();
-    ScsiPeripheral_Request request = {{0}};
-    ScsiPeripheral_Response response = {{0}};
-    int32_t ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_SendRequestByCdb failed");
-    DeleteScsiPeripheralDevice(&dev);
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralSendRequestByCDBTwo(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-
-    ScsiPeripheral_Request request = {{0}};
-    ScsiPeripheral_Response response = {{0}};
-    ret = OH_ScsiPeripheral_SendRequestByCdb(nullptr, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
-
-    ScsiPeripheral_Device *dev = NewScsiPeripheralDevice();
-    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, nullptr, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
-
-    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
-
-    uint8_t buff;
-    ScsiPeripheral_DeviceMemMap devMmap({&buff, sizeof(buff), 0, sizeof(buff), 0});
-    request.data = &devMmap;
-    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, nullptr);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
-
-    OH_ScsiPeripheral_Release();
-    DeleteScsiPeripheralDevice(&dev);
-
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralSendRequestByCDBThree(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-
-    uint64_t deviceId = GetDeviceId(env, info);
-    ScsiPeripheral_Device *dev = nullptr;
-    ret = OH_ScsiPeripheral_Open(deviceId, 0, &dev);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
-
-    ScsiPeripheral_DeviceMemMap *devMemMap = nullptr;
-    ret = OH_ScsiPeripheral_CreateDeviceMemMap(dev, DEVICE_MEM_MAP_SIZE, &devMemMap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-
-    ScsiPeripheral_Request request;
-    request.cdbLength = CDB_LENGTH_TEN;
-    const uint8_t tmpCommand = 28;
-    const int32_t tmpDataDirection = -3;
-    request.commandDescriptorBlock[0] = tmpCommand;
-    request.commandDescriptorBlock[ONE_BYTE] = 0;
-    request.commandDescriptorBlock[TWO_BYTE] = 0;
-    request.commandDescriptorBlock[THREE_BYTE] = 0;
-    request.commandDescriptorBlock[FOUR_BYTE] = 0;
-    request.commandDescriptorBlock[FIVE_BYTE] = 0;
-    request.commandDescriptorBlock[SIX_BYTE] = 0;
-    request.commandDescriptorBlock[SEVEN_BYTE] = 0;
-    request.commandDescriptorBlock[EIGHT_BYTE] = 1;
-    request.commandDescriptorBlock[NINE_BYTE] = 0;
-    request.dataTransferDirection = tmpDataDirection;
-    request.timeout = TIMEOUT;
-    request.data = devMemMap;
-    ScsiPeripheral_Response response;
-    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_SendRequestByCdb failed");
-
-    OH_ScsiPeripheral_Close(&dev);
-    OH_ScsiPeripheral_Release();
-
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralCreateDeviceMemMapOne(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-
-    ScsiPeripheral_DeviceMemMap *devMemMap = nullptr;
-    ret = OH_ScsiPeripheral_CreateDeviceMemMap(nullptr, DEVICE_MEM_MAP_SIZE, &devMemMap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER,
-        "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-
-    ScsiPeripheral_Device *dev = NewScsiPeripheralDevice();
-    ret = OH_ScsiPeripheral_CreateDeviceMemMap(dev, DEVICE_MEM_MAP_SIZE, nullptr);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER,
-        "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-
-    ret = OH_ScsiPeripheral_CreateDeviceMemMap(dev, DEVICE_MEM_MAP_SIZE, &devMemMap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER,
-        "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-
-    OH_ScsiPeripheral_Release();
-    DeleteScsiPeripheralDevice(&dev);
-
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralCreateDeviceMemMapTwo(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-
-    uint64_t deviceId = GetDeviceId(env, info);
-    ScsiPeripheral_Device *dev;
-    ret = OH_ScsiPeripheral_Open(deviceId, 0, &dev);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
-
-    struct ScsiPeripheral_DeviceMemMap *devMemMap = nullptr;
-    ret = OH_ScsiPeripheral_CreateDeviceMemMap(dev, MAX_MEM_LEN, &devMemMap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS,
-        "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-
-    ret = OH_ScsiPeripheral_DestroyDeviceMemMap(devMemMap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS,
-        "OH_ScsiPeripheral_DestroyDeviceMemMap failed");
-    OH_ScsiPeripheral_Close(&dev);
-    ret = OH_ScsiPeripheral_Release();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Release failed");
-
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralDestroyDeviceMemMapOne(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_DestroyDeviceMemMap(nullptr);
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralDestroyDeviceMemMapTwo(napi_env env, napi_callback_info info)
-{
-    int32_t ret = OH_ScsiPeripheral_Init();
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Init failed");
-
-    uint64_t deviceId = GetDeviceId(env, info);
-    ScsiPeripheral_Device *dev = nullptr;
-    ret = OH_ScsiPeripheral_Open(deviceId, 0, &dev);
-
-    ScsiPeripheral_DeviceMemMap *devMemMap = nullptr;
-    OH_ScsiPeripheral_CreateDeviceMemMap(dev, DEVICE_MEM_MAP_SIZE, &devMemMap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS,
-        "OH_ScsiPeripheral_CreateDeviceMemMap failed");
-
-    ret = OH_ScsiPeripheral_DestroyDeviceMemMap(devMemMap);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS,
-        "OH_ScsiPeripheral_DestroyDeviceMemMap failed");
-
-    OH_ScsiPeripheral_Close(&dev);
-    OH_ScsiPeripheral_Release();
-
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralParseBasicSenseInfoOne(napi_env env, napi_callback_info info)
-{
-    uint8_t senseData[SCSIPERIPHERAL_MAX_SENSE_DATA_LEN] = {0x00};
-    ScsiPeripheral_BasicSenseInfo senseInfo = {0};
-    int32_t ret = OH_ScsiPeripheral_ParseBasicSenseInfo(nullptr, sizeof(senseData), &senseInfo);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER,
-        "OH_ScsiPeripheral_ParseBasicSenseInfo failed");
-
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, 0, &senseInfo);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER,
-        "OH_ScsiPeripheral_ParseBasicSenseInfo failed");
-
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), nullptr);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER,
-        "OH_ScsiPeripheral_ParseBasicSenseInfo failed");
-
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
-    return result;
-}
-
-static napi_value ScsiPeripheralParseBasicSenseInfoTwo(napi_env env, napi_callback_info info)
-{
-    uint8_t senseData[SCSIPERIPHERAL_MAX_SENSE_DATA_LEN] = {0x00};
-    senseData[0] = 0x70 | 0x80;
-    ScsiPeripheral_BasicSenseInfo senseInfo = {0};
-    int32_t ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), &senseInfo);
-
-    senseData[0] = 0x71 | 0x80;
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), &senseInfo);
-
-    senseData[0] = 0x72;
-    senseData[SEVEN_BYTE] = THIRTYTWO_BIT;
-    senseData[EIGHT_BYTE] = 0x00;
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), &senseInfo);
-
-    senseData[0] = 0x73;
-    senseData[SEVEN_BYTE] = THIRTYTWO_BIT;
-    senseData[EIGHT_BYTE] = 0x00;
-    senseData[NINE_BYTE] = 0x0A;
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), &senseInfo);
-
-    senseData[0] = 0x73;
-    senseData[SEVEN_BYTE] = THIRTYTWO_BIT;
-    senseData[EIGHT_BYTE] = 0x01;
-    senseData[NINE_BYTE] = 0x0A;
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), &senseInfo);
-
-    senseData[0] = 0x73;
-    senseData[SEVEN_BYTE] = THIRTYTWO_BIT;
-    senseData[EIGHT_BYTE] = 0x02;
-    senseData[NINE_BYTE] = 0x06;
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), &senseInfo);
-
-    senseData[0] = 0x73;
-    senseData[SEVEN_BYTE] = THIRTYTWO_BIT;
-    senseData[EIGHT_BYTE] = 0x02;
-    senseData[NINE_BYTE] = THIRTYTWO_BIT;
-    ret = OH_ScsiPeripheral_ParseBasicSenseInfo(senseData, sizeof(senseData), &senseInfo);
-
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, ret, &result));
     return result;
 }
 
@@ -1030,18 +1450,26 @@ static napi_value InitOne(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("scsiPeripheralOpenTwo", ScsiPeripheralOpenTwo),
         DECLARE_NAPI_FUNCTION("scsiPeripheralOpenThree", ScsiPeripheralOpenThree),
         DECLARE_NAPI_FUNCTION("scsiPeripheralOpenFour", ScsiPeripheralOpenFour),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralOpenFive", ScsiPeripheralOpenFive),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralOpenSix", ScsiPeripheralOpenSix),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralOpenSeven", ScsiPeripheralOpenSeven),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralOpenEight", ScsiPeripheralOpenEight),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralOpenNine", ScsiPeripheralOpenNine),
         DECLARE_NAPI_FUNCTION("scsiPeripheralCloseOne", ScsiPeripheralCloseOne),
         DECLARE_NAPI_FUNCTION("scsiPeripheralCloseTwo", ScsiPeripheralCloseTwo),
         DECLARE_NAPI_FUNCTION("scsiPeripheralCloseThree", ScsiPeripheralCloseThree),
         DECLARE_NAPI_FUNCTION("scsiPeripheralReadCapacityOne", ScsiPeripheralReadCapacityOne),
         DECLARE_NAPI_FUNCTION("scsiPeripheralReadCapacityTwo", ScsiPeripheralReadCapacityTwo),
         DECLARE_NAPI_FUNCTION("scsiPeripheralReadCapacityThree", ScsiPeripheralReadCapacityThree),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadCapacityFour", ScsiPeripheralReadCapacityFour),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadCapacityFive", ScsiPeripheralReadCapacityFive),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadCapacitySix", ScsiPeripheralReadCapacitySix),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadCapacitySeven", ScsiPeripheralReadCapacitySeven),
         DECLARE_NAPI_FUNCTION("scsiPeripheralTestUnitReadyOne", ScsiPeripheralTestUnitReadyOne),
         DECLARE_NAPI_FUNCTION("scsiPeripheralTestUnitReadyTwo", ScsiPeripheralTestUnitReadyTwo),
         DECLARE_NAPI_FUNCTION("scsiPeripheralTestUnitReadyThree", ScsiPeripheralTestUnitReadyThree),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryOne", ScsiPeripheralInquiryOne),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryTwo", ScsiPeripheralInquiryTwo),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryThree", ScsiPeripheralInquiryThree),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralTestUnitReadyFour", ScsiPeripheralTestUnitReadyFour),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralTestUnitReadyFive", ScsiPeripheralTestUnitReadyFive),
     };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
@@ -1051,27 +1479,29 @@ static napi_value InitOne(napi_env env, napi_value exports)
 static napi_value InitTwo(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryOne", ScsiPeripheralInquiryOne),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryTwo", ScsiPeripheralInquiryTwo),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryThree", ScsiPeripheralInquiryThree),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryFour", ScsiPeripheralInquiryFour),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryFive", ScsiPeripheralInquiryFive),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquirySix", ScsiPeripheralInquirySix),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquirySeven", ScsiPeripheralInquirySeven),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralInquiryEight", ScsiPeripheralInquiryEight),
         DECLARE_NAPI_FUNCTION("scsiPeripheralRequestSenseOne", ScsiPeripheralRequestSenseOne),
         DECLARE_NAPI_FUNCTION("scsiPeripheralRequestSenseTwo", ScsiPeripheralRequestSenseTwo),
         DECLARE_NAPI_FUNCTION("scsiPeripheralRequestSenseThree", ScsiPeripheralRequestSenseThree),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralRequestSenseFour", ScsiPeripheralRequestSenseFour),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralRequestSenseFive", ScsiPeripheralRequestSenseFive),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralRequestSenseSix", ScsiPeripheralRequestSenseSix),
         DECLARE_NAPI_FUNCTION("scsiPeripheralReadOne", ScsiPeripheralReadOne),
         DECLARE_NAPI_FUNCTION("scsiPeripheralReadTwo", ScsiPeripheralReadTwo),
         DECLARE_NAPI_FUNCTION("scsiPeripheralReadThree", ScsiPeripheralReadThree),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralWriteOne", ScsiPeripheralWriteOne),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralWriteTwo", ScsiPeripheralWriteTwo),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralWriteThree", ScsiPeripheralWriteThree),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralVerifyOne", ScsiPeripheralVerifyOne),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralVerifyTwo", ScsiPeripheralVerifyTwo),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralVerifyThree", ScsiPeripheralVerifyThree),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralSendRequestByCDBOne", ScsiPeripheralSendRequestByCDBOne),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralSendRequestByCDBTwo", ScsiPeripheralSendRequestByCDBTwo),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralSendRequestByCDBThree", ScsiPeripheralSendRequestByCDBThree),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralCreateDeviceMemMapOne", ScsiPeripheralCreateDeviceMemMapOne),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralCreateDeviceMemMapTwo", ScsiPeripheralCreateDeviceMemMapTwo),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralDestroyDeviceMemMapOne", ScsiPeripheralDestroyDeviceMemMapOne),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralDestroyDeviceMemMapTwo", ScsiPeripheralDestroyDeviceMemMapTwo),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralParseBasicSenseInfoOne", ScsiPeripheralParseBasicSenseInfoOne),
-        DECLARE_NAPI_FUNCTION("scsiPeripheralParseBasicSenseInfoTwo", ScsiPeripheralParseBasicSenseInfoTwo),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadFour", ScsiPeripheralReadFour),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadFive", ScsiPeripheralReadFive),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadSix", ScsiPeripheralReadSix),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadSeven", ScsiPeripheralReadSeven),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadEight", ScsiPeripheralReadEight),
+        DECLARE_NAPI_FUNCTION("scsiPeripheralReadNine", ScsiPeripheralReadNine),
     };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);

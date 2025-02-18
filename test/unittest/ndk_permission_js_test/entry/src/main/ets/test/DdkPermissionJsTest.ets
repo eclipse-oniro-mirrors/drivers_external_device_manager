@@ -1016,7 +1016,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Init Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralInit001', 0, async (done: Function) => {
+    it('testScsiPeripheralInit001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralInit001---------------------------');
       try {
         const ret = ddkPermissionTest.scsiPeripheralInit();
@@ -1035,7 +1035,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Release Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralRelease001', 0, async (done: Function) => {
+    it('testScsiPeripheralRelease001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralRelease001---------------------------');
       try {
         const ret = ddkPermissionTest.scsiPeripheralRelease();
@@ -1054,7 +1054,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Open Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralOpen001', 0, async (done: Function) => {
+    it('testScsiPeripheralOpen001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralOpen001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1074,7 +1074,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Close Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralClose001', 0, async (done: Function) => {
+    it('testScsiPeripheralClose001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralClose001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1094,7 +1094,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_TestUnitReady Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralTestUnitReady001', 0, async (done: Function) => {
+    it('testScsiPeripheralTestUnitReady001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralTestUnitReady001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1114,7 +1114,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Inquiry Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralInquiry001', 0, async (done: Function) => {
+    it('testScsiPeripheralInquiry001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralInquiry001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1134,7 +1134,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_ReadCapacity10 Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralReadCapacity10_001', 0, async (done: Function) => {
+    it('testScsiPeripheralReadCapacity10_001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralReadCapacity10_001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1154,7 +1154,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_RequestSense Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralRequestSense001', 0, async (done: Function) => {
+    it('testScsiPeripheralRequestSense001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralRequestSense001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1174,7 +1174,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Read10 Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralRead10_001', 0, async (done: Function) => {
+    it('testScsiPeripheralRead10_001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralRead10_001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1194,7 +1194,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Write10 Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralWrite10_001', 0, async (done: Function) => {
+    it('testScsiPeripheralWrite10_001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralWrite10_001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1214,7 +1214,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_Verify10 Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralVerify10_001', 0, async (done: Function) => {
+    it('testScsiPeripheralVerify10_001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralVerify10_001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);
@@ -1234,7 +1234,7 @@ export default function DdkPermissionJsTest() {
      * @tc.desc       : OH_ScsiPeripheral_SendRequestByCdb Interface testing
      * @tc.type       : Function
      */
-    xit('testScsiPeripheralSendRequestByCDB001', 0, async (done: Function) => {
+    it('testScsiPeripheralSendRequestByCDB001', 0, async (done: Function) => {
       console.info('----------------------testScsiPeripheralSendRequestByCDB001---------------------------');
       try {
         console.info("Test scsi deviceId = " + deviceId);

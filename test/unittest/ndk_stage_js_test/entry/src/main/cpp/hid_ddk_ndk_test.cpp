@@ -1423,7 +1423,7 @@ EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
-        {"IsHidDevice", nullptr, IsHidDevice, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"isHidDevice", nullptr, IsHidDevice, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidCreateDevice", nullptr, HidCreateDevice, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidCreateDeviceTwo", nullptr, HidCreateDeviceTwo, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"hidCreateDeviceThree", nullptr, HidCreateDeviceThree, nullptr, nullptr, nullptr, napi_default, nullptr},
@@ -1488,7 +1488,6 @@ static napi_value Init(napi_env env, napi_value exports)
             nullptr},
         {"hidGetReportDescriptorThree", nullptr, HidGetReportDescriptorThree, nullptr, nullptr, nullptr, napi_default,
             nullptr},
-        {"IsHidDevice", nullptr, IsHidDevice, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
