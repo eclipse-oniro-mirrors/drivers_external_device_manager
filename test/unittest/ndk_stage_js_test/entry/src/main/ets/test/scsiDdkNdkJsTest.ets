@@ -858,7 +858,7 @@ export default function scsiDdkNdkJsTest() {
 
     /**
      * @tc.name       : testScsiPeripheralSendRequestByCDB001
-     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCDB Interface testing
+     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCdb Interface testing
      * @tc.type       : Function
      */
     it('testScsiPeripheralSendRequestByCDB001', 0, async (done: Function) => {
@@ -884,7 +884,7 @@ export default function scsiDdkNdkJsTest() {
 
     /**
      * @tc.name       : testScsiPeripheralSendRequestByCDB002
-     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCDB Interface testing
+     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCdb Interface testing
      * @tc.type       : Function
      */
     it('testScsiPeripheralSendRequestByCDB002', 0, async (done: Function) => {
@@ -909,7 +909,7 @@ export default function scsiDdkNdkJsTest() {
 
     /**
      * @tc.name       : testScsiPeripheralSendRequestByCDB003
-     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCDB Interface testing
+     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCdb Interface testing
      * @tc.type       : Function
      */
     it('testScsiPeripheralSendRequestByCDB003', 0, async (done: Function) => {

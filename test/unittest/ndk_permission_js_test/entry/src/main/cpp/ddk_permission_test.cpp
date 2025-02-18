@@ -841,7 +841,7 @@ static napi_value ScsiPeripheralSendRequestByCDB(napi_env env, napi_callback_inf
     request.data = &devMmap;
     request.cdbLength = CDB_LENGTH;
     ScsiPeripheral_Response response = {{0}};
-    int32_t returnValue = OH_ScsiPeripheral_SendRequestByCDB(dev, &request, &response);
+    int32_t returnValue = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     DeleteScsiPeripheralDevice(&dev);

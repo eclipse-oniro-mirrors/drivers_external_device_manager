@@ -420,7 +420,7 @@ HWTEST_F(ScsiPeripheralTest, SendRequestByCDBErrorTest001, TestSize.Level1)
     request.data = &memMap;
     request.cdbLength = CDB_LENGTH;
     ScsiPeripheral_Response response = {{0}};
-    ASSERT_EQ(OH_ScsiPeripheral_SendRequestByCDB(dev, &request, &response), SCSIPERIPHERAL_DDK_SERVICE_ERROR);
+    ASSERT_EQ(OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response), SCSIPERIPHERAL_DDK_SERVICE_ERROR);
 }
 
 HWTEST_F(ScsiPeripheralTest, SendRequestByCDBErrorTest002, TestSize.Level1)
@@ -438,7 +438,7 @@ HWTEST_F(ScsiPeripheralTest, SendRequestByCDBErrorTest002, TestSize.Level1)
     request.data = &memMap;
     request.cdbLength = CDB_LENGTH;
     ScsiPeripheral_Response response = {{0}};
-    ASSERT_EQ(OH_ScsiPeripheral_SendRequestByCDB(dev, &request, &response), SCSIPERIPHERAL_DDK_MEMORY_ERROR);
+    ASSERT_EQ(OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response), SCSIPERIPHERAL_DDK_MEMORY_ERROR);
 }
 
 HWTEST_F(ScsiPeripheralTest, SendRequestByCDBErrorTest003, TestSize.Level1)
@@ -456,6 +456,6 @@ HWTEST_F(ScsiPeripheralTest, SendRequestByCDBErrorTest003, TestSize.Level1)
     request.data = &memMap;
     request.cdbLength = CDB_LENGTH;
     ScsiPeripheral_Response response = {{0}};
-    ASSERT_EQ(OH_ScsiPeripheral_SendRequestByCDB(dev, &request, &response), SCSIPERIPHERAL_DDK_IO_ERROR);
+    ASSERT_EQ(OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response), SCSIPERIPHERAL_DDK_IO_ERROR);
 }
 } // namespace
