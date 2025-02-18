@@ -503,18 +503,25 @@ void DrvBundleStateCallback::ResetBundleMgr()
 void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbilityInfo> &driverInfos,
     const std::string &bundleName, std::string driverEventName)
 {
+    EDM_LOGI(MODULE_BUS_USB,  "ReportBundleSysEvent begin");
     std::vector<PkgInfoTable> pkgInfoTables;
     ParseToPkgInfoTables(driverInfos, pkgInfoTables);
     for (const auto &pkgInfoTable : pkgInfoTables) {
         if (pkgInfoTable.bundleName == bundleName) {
+            DriverInfo tmpDrvInfo;
+            if (tmpDrvInfo.UnSerialize(pkgInfoTable.driverInfo) != EDM_OK) {
+                EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
+                return;
+            }
             shared_ptr<UsbDriverInfo> usbDriverInfo = make_shared<UsbDriverInfo>();
             if (usbDriverInfo == nullptr) {
                 EDM_LOGE(MODULE_BUS_USB,  "creat UsbDriverInfo obj fail\n");
                 return;
             }
-            if (usbDriverInfo->UnSerialize(pkgInfoTable.driverInfo) != EDM_OK) {
-                EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
-                continue;
+            usbDriverInfo = std::static_pointer_cast<UsbDriverInfo>(tmpDrvInfo.driverInfoExt_);
+            if (usbDriverInfo == nullptr) {
+                EDM_LOGE(MODULE_BUS_USB,  "static_pointer_cast UsbDriverInfo fail\n");
+                return;
             }
             uint32_t versionCode = ParseVersionCode(driverInfos, bundleName);
             std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
