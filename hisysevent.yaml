@@ -14,7 +14,7 @@
 domain: EXTERNAL_DEVICE
 
 DRIVER_PACKAGE_CYCLE_MANAGER:
-  __BASE: {type: BEHAVIOR, level: MINOR, tag: UsbManager, desc: DriverPackageCycleManager}
+  __BASE: {type: STATISTIC, level: MINOR, tag: UsbManager, desc: DriverPackageCycleManager}
   BUNDLE_NAME: {type: STRING, desc: bundle name}
   USER_ID: {type: INT32, desc: user id}
   DRIVER_UID: {type: STRING, desc: driver uid}
