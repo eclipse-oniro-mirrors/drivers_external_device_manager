@@ -33,6 +33,9 @@
 #include <unordered_map>
 #include <pthread.h>
 #include <thread>
+#include "driver_report_sys_event.h"
+#include "usb_driver_info.h"
+#include <memory.h>
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -211,6 +214,7 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
         EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded error");
     }
     FinishTrace(LABEL);
+    ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_ADD");
 }
 /**
     * @brief Called when a new application package has been Updated on the device.
@@ -238,6 +242,7 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
         EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated error");
     }
     FinishTrace(LABEL);
+    ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_UPDATE");
 }
 
 /**
@@ -252,6 +257,9 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
     if (!IsCurrentUserId(userId)) {
         return;
     }
+    std::vector<ExtensionAbilityInfo> driverInfos;
+    (void)QueryDriverInfos(bundleName, userId, driverInfos);
+    ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_REMOVED");
     OnBundleDrvRemoved(bundleName);
     FinishTrace(LABEL);
 }
@@ -490,6 +498,73 @@ void DrvBundleStateCallback::ResetBundleMgr()
         bundleMgr_->AsObject()->RemoveDeathRecipient(bmsDeathRecipient_);
     }
     bundleMgr_ = nullptr;
+}
+
+void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbilityInfo> &driverInfos,
+    const std::string &bundleName, std::string driverEventName)
+{
+    EDM_LOGI(MODULE_BUS_USB,  "ReportBundleSysEvent begin");
+    std::vector<PkgInfoTable> pkgInfoTables;
+    ParseToPkgInfoTables(driverInfos, pkgInfoTables);
+    for (const auto &pkgInfoTable : pkgInfoTables) {
+        if (pkgInfoTable.bundleName == bundleName) {
+            DriverInfo tmpDrvInfo;
+            if (tmpDrvInfo.UnSerialize(pkgInfoTable.driverInfo) != EDM_OK) {
+                EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
+                return;
+            }
+            shared_ptr<UsbDriverInfo> usbDriverInfo = make_shared<UsbDriverInfo>();
+            if (usbDriverInfo == nullptr) {
+                EDM_LOGE(MODULE_BUS_USB,  "creat UsbDriverInfo obj fail\n");
+                return;
+            }
+            usbDriverInfo = std::static_pointer_cast<UsbDriverInfo>(tmpDrvInfo.driverInfoExt_);
+            if (usbDriverInfo == nullptr) {
+                EDM_LOGE(MODULE_BUS_USB,  "static_pointer_cast UsbDriverInfo fail\n");
+                return;
+            }
+            uint32_t versionCode = ParseVersionCode(driverInfos, bundleName);
+            std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
+            std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
+            std::string pids = ParseIdVector(productIds);
+            std::string vids = ParseIdVector(vendorIds);
+            ExtDevReportSysEvent::ReportDriverPackageCycleMangeSysEvent(pkgInfoTable, pids, vids,
+                versionCode, driverEventName);
+        }
+    }
+}
+
+std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
+{
+    if (ids.size() < 1) {
+        return "";
+    }
+    std::string str = "";
+    auto it = ids.begin();
+    for (uint16_t id : ids) {
+        if (it + 1 == ids.end()) {
+            std::string copy = std::to_string(id);
+            str.append(copy);
+        } else {
+            std::string copy = std::to_string(id);
+            str.append(copy);
+            str.append(",");
+        }
+    }
+    return str;
+}
+
+int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos,
+    const std::string &bundleName)
+{
+    uint32_t versionCode = 0;
+    for (const auto &driverInfo : driverInfos) {
+        if (driverInfo.bundleName == bundleName) {
+            versionCode = driverInfo.applicationInfo.versionCode;
+            break;
+        }
+    }
+    return versionCode;
 }
 }
 }
