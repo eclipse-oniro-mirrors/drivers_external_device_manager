@@ -783,8 +783,8 @@ static napi_value ScsiPeripheralSendRequestByCDBOne(napi_env env, napi_callback_
     ScsiPeripheral_Device *dev = NewScsiPeripheralDevice();
     ScsiPeripheral_Request request = {{0}};
     ScsiPeripheral_Response response = {{0}};
-    int32_t ret = OH_ScsiPeripheral_SendRequestByCDB(dev, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_SendRequestByCDB failed");
+    int32_t ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INIT_ERROR, "OH_ScsiPeripheral_SendRequestByCdb failed");
     DeleteScsiPeripheralDevice(&dev);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, ret, &result));
@@ -798,21 +798,21 @@ static napi_value ScsiPeripheralSendRequestByCDBTwo(napi_env env, napi_callback_
 
     ScsiPeripheral_Request request = {{0}};
     ScsiPeripheral_Response response = {{0}};
-    ret = OH_ScsiPeripheral_SendRequestByCDB(nullptr, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCDB failed");
+    ret = OH_ScsiPeripheral_SendRequestByCdb(nullptr, &request, &response);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
 
     ScsiPeripheral_Device *dev = NewScsiPeripheralDevice();
-    ret = OH_ScsiPeripheral_SendRequestByCDB(dev, nullptr, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCDB failed");
+    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, nullptr, &response);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
 
-    ret = OH_ScsiPeripheral_SendRequestByCDB(dev, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCDB failed");
+    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
 
     uint8_t buff;
     ScsiPeripheral_DeviceMemMap devMmap({&buff, sizeof(buff), 0, sizeof(buff), 0});
     request.data = &devMmap;
-    ret = OH_ScsiPeripheral_SendRequestByCDB(dev, &request, nullptr);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCDB failed");
+    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, nullptr);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_INVALID_PARAMETER, "OH_ScsiPeripheral_SendRequestByCdb failed");
 
     OH_ScsiPeripheral_Release();
     DeleteScsiPeripheralDevice(&dev);
@@ -854,8 +854,8 @@ static napi_value ScsiPeripheralSendRequestByCDBThree(napi_env env, napi_callbac
     request.timeout = TIMEOUT;
     request.data = devMemMap;
     ScsiPeripheral_Response response;
-    ret = OH_ScsiPeripheral_SendRequestByCDB(dev, &request, &response);
-    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_SendRequestByCDB failed");
+    ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
+    NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_SendRequestByCdb failed");
 
     OH_ScsiPeripheral_Close(&dev);
     OH_ScsiPeripheral_Release();

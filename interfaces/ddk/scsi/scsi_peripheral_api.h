@@ -16,10 +16,11 @@
 #define SCSI_PERIPHERAL_API_H
 
 /**
- * @addtogroup SCSIDdk
+ * @addtogroup ScsiPeripheralDDK
  * @{
  *
- * @brief Provides SCSI DDK APIs to open and close SCSI interfaces.
+ * @brief Provide ScsiPeripheral DDK interface, including initializing DDK, releasing DDK, opening devices,\n
+ * reading and writing devices, etc.
  *
  * @syscap SystemCapability.Driver.SCSI.Extension
  * @since 16
@@ -28,7 +29,7 @@
 /**
  * @file scsi_peripheral_api.h
  *
- * @brief Declares the SCSI DDK APIs used by the SCSI host to access SCSI devices.
+ * @brief Declares the ScsiPeripheral DDK APIs.
  *
  * @since 16
  */
@@ -77,10 +78,10 @@ int32_t OH_ScsiPeripheral_Release(void);
  *         {@link SCSIPERIPHERAL_DDK_INIT_ERROR} the ddk not init.
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} alloc memory of dev failed.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_DEVICE_NOT_FOUND} device not found by deviceId.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_Open(uint64_t deviceId, uint8_t interfaceIndex, ScsiPeripheral_Device **dev);
@@ -112,10 +113,10 @@ int32_t OH_ScsiPeripheral_Close(ScsiPeripheral_Device **dev);
  *         {@link SCSIPERIPHERAL_DDK_INIT_ERROR} the ddk not init.
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data set failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_TestUnitReady(ScsiPeripheral_Device *dev, ScsiPeripheral_TestUnitReadyRequest *request,
@@ -135,10 +136,10 @@ int32_t OH_ScsiPeripheral_TestUnitReady(ScsiPeripheral_Device *dev, ScsiPeripher
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or inquiryInfo is null or\n
  *             inquiryInfo->data is null or response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data copy failure or memory map failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_InquiryRequest *request,
@@ -158,10 +159,10 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or capacityInfo is null or\n
  *             response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data copy failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_ReadCapacity10(ScsiPeripheral_Device *dev, ScsiPeripheral_ReadCapacityRequest *request,
@@ -179,10 +180,10 @@ int32_t OH_ScsiPeripheral_ReadCapacity10(ScsiPeripheral_Device *dev, ScsiPeriphe
  *         {@link SCSIPERIPHERAL_DDK_INIT_ERROR} the ddk not init.
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data copy failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_RequestSense(ScsiPeripheral_Device *dev, ScsiPeripheral_RequestSenseRequest *request,
@@ -201,10 +202,10 @@ int32_t OH_ScsiPeripheral_RequestSense(ScsiPeripheral_Device *dev, ScsiPeriphera
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or request->data is null or\n
  *             response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data copy failure or memory map failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORequest *request,
@@ -223,10 +224,10 @@ int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORe
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or request->data is null or\n
  *             response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data copy failure or memory map failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORequest *request,
@@ -244,10 +245,10 @@ int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IOR
  *         {@link SCSIPERIPHERAL_DDK_INIT_ERROR} the ddk not init.
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data copy failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_Verify10(ScsiPeripheral_Device *dev, ScsiPeripheral_VerifyRequest *request,
@@ -266,13 +267,13 @@ int32_t OH_ScsiPeripheral_Verify10(ScsiPeripheral_Device *dev, ScsiPeripheral_Ve
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or request is null or request->data is null or\n
  *             request->cdbLength is 0 or response is null.
  *         {@link SCSIPERIPHERAL_DDK_SERVICE_ERROR} communication with ddk service failed.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data copy failure or memory map failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  *         {@link SCSIPERIPHERAL_DDK_IO_ERROR} i/o operation error.
  *         {@link SCSIPERIPHERAL_DDK_TIMEOUT} transmission timeout.
- *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} invalid operation.
+ *         {@link SCSIPERIPHERAL_DDK_INVALID_OPERATION} this operation is not supported.
  * @since 16
  */
-int32_t OH_ScsiPeripheral_SendRequestByCDB(ScsiPeripheral_Device *dev, ScsiPeripheral_Request *request,
+int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPeripheral_Request *request,
     ScsiPeripheral_Response *response);
 
 /**
@@ -284,7 +285,7 @@ int32_t OH_ScsiPeripheral_SendRequestByCDB(ScsiPeripheral_Device *dev, ScsiPerip
  * @param devMmap Data memory map, through which the created buffer is returned to the caller.
  * @return {@link SCSIPERIPHERAL_DDK_SUCCESS} the operation is successful.
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} dev is null or devMmap is null.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory map failure or alloc memory of devMmap failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_CreateDeviceMemMap(ScsiPeripheral_Device *dev, size_t size,
@@ -296,7 +297,7 @@ int32_t OH_ScsiPeripheral_CreateDeviceMemMap(ScsiPeripheral_Device *dev, size_t 
  * @param devMmap Device memory map created by calling <b>OH_ScsiPeripheral_CreateDeviceMemMap</b>.
  * @return {@link SCSIPERIPHERAL_DDK_SUCCESS} the operation is successful.
  *         {@link SCSIPERIPHERAL_DDK_INVALID_PARAMETER} devMmap is null.
- *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} munmap failure.
+ *         {@link SCSIPERIPHERAL_DDK_MEMORY_ERROR} memory data operation failed.
  * @since 16
  */
 int32_t OH_ScsiPeripheral_DestroyDeviceMemMap(ScsiPeripheral_DeviceMemMap *devMmap);

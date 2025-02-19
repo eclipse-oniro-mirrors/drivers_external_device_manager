@@ -16,11 +16,11 @@
 #ifndef SCSI_PERIPHERAL_TYPES_H
 #define SCSI_PERIPHERAL_TYPES_H
 /**
- * @addtogroup SCSIDdk
+ * @addtogroup ScsiPeripheralDDK
  * @{
  *
- * @brief Provides SCSI DDK types and declares the macros, enumerated variables, and\n
- * data structures required by the SCSI DDK APIs.
+ * @brief Provides ScsiPeripheral DDK types and declares macros, enumerations, and\n
+ * data structures used by the ScsiPeripheral DDK.
  *
  * @syscap SystemCapability.Driver.SCSI.Extension
  * @since 16
@@ -29,7 +29,7 @@
 /**
  * @file scsi_peripheral_types.h
  *
- * @brief Provides the enumerated variables, structures, and macros used in SCSI DDK APIs.
+ * @brief Provides the enums, structs, and macros used in SCSI Peripheral DDK APIs.
  *
  * @since 16
  */
@@ -68,7 +68,7 @@ typedef enum {
     /** @error The operation is successful. */
     SCSIPERIPHERAL_DDK_SUCCESS = 31700000,
     /** @error Memory-related error, for example, insufficient memory, memory data copy failure,\n
-     * or memory data set failure or memory map failure.
+     * memory data init failure, or memory map failure.
      */
     SCSIPERIPHERAL_DDK_MEMORY_ERROR = 31700001,
     /** @error Invalid operation. */

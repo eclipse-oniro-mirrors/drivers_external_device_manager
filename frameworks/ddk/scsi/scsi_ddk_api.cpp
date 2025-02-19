@@ -570,7 +570,7 @@ int32_t OH_ScsiPeripheral_Verify10(ScsiPeripheral_Device *dev, ScsiPeripheral_Ve
     return CopyResponse(hdiResponse, response);
 }
 
-int32_t OH_ScsiPeripheral_SendRequestByCDB(ScsiPeripheral_Device *dev, ScsiPeripheral_Request *request,
+int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPeripheral_Request *request,
     ScsiPeripheral_Response *response)
 {
     EDM_LOGD(MODULE_SCSIPERIPHERAL_DDK, "SendRequestByCDB start");
@@ -648,6 +648,7 @@ int32_t OH_ScsiPeripheral_DestroyDeviceMemMap(ScsiPeripheral_DeviceMemMap *devMm
         return SCSIPERIPHERAL_DDK_MEMORY_ERROR;
     }
     delete devMmap;
+    devMmap = nullptr;
     return SCSIPERIPHERAL_DDK_SUCCESS;
 }
 

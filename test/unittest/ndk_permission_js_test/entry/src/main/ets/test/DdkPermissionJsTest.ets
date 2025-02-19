@@ -1231,7 +1231,7 @@ export default function DdkPermissionJsTest() {
 
     /**
      * @tc.name       : testScsiPeripheralSendRequestByCDB001
-     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCDB Interface testing
+     * @tc.desc       : OH_ScsiPeripheral_SendRequestByCdb Interface testing
      * @tc.type       : Function
      */
     xit('testScsiPeripheralSendRequestByCDB001', 0, async (done: Function) => {
