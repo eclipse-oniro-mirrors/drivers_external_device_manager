@@ -292,6 +292,8 @@ static napi_value ConvertDeviceToJsDevice(napi_env& env, std::shared_ptr<DeviceD
     NAPI_CALL(env, napi_set_named_property(env, object, "busType", value));
     value = ConvertToJsDeviceId(env, device->deviceId);
     NAPI_CALL(env, napi_set_named_property(env, object, "deviceId", value));
+    NAPI_CALL(env, napi_create_string_utf8(env, device->descripton.c_str(), device->descripton.size(), &value));
+    NAPI_CALL(env, napi_set_named_property(env, object, "description", value));
     if (device->busType == BusType::BUS_TYPE_USB) {
         std::shared_ptr<USBDevice> usb = std::static_pointer_cast<USBDevice>(device);
         NAPI_CALL(env, napi_create_uint32(env, usb->vendorId, &value));
