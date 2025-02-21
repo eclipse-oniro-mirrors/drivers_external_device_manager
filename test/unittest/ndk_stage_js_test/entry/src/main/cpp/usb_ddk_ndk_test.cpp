@@ -579,6 +579,8 @@ static napi_value UsbSendControlWriteRequestTwo(napi_env env, napi_callback_info
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
+    int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
+    NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
     struct UsbControlRequestSetup setup;
     uint8_t data = PARAM_10;
@@ -604,6 +606,9 @@ static napi_value UsbSendControlWriteRequestThree(napi_env env, napi_callback_in
     uint8_t data = PARAM_10;
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, nullptr, g_timeout, &data, dataLen);
+    int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
+    NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
+    OH_Usb_Release();
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
@@ -624,27 +629,9 @@ static napi_value UsbSendControlWriteRequestFour(napi_env env, napi_callback_inf
     struct UsbControlRequestSetup setup;
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setup, g_timeout, nullptr, dataLen);
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
-    return result;
-}
-
-static napi_value UsbSendControlWriteRequestFive(napi_env env, napi_callback_info info)
-{
-    size_t argc = PARAM_1;
-    napi_value args[PARAM_1] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    int64_t deviceId64;
-    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
-    uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
-    int32_t usbInitReturnValue = OH_Usb_Init();
-    NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
-    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
-    NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
-    struct UsbControlRequestSetup setup;
-    uint8_t data = PARAM_10;
-    uint32_t dataLen = PARAM_10;
-    int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setup, g_timeout, &data, dataLen);
+    int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
+    NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
+    OH_Usb_Release();
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
@@ -1052,7 +1039,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestTwo", UsbSendControlWriteRequestTwo),
         DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestThree", UsbSendControlWriteRequestThree),
         DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestFour", UsbSendControlWriteRequestFour),
-        DECLARE_NAPI_FUNCTION("usbSendControlWriteRequestFive", UsbSendControlWriteRequestFive),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestOne", UsbSendPipeRequestOne),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestTwo", UsbSendPipeRequestTwo),
         DECLARE_NAPI_FUNCTION("usbSendPipeRequestThree", UsbSendPipeRequestThree),
