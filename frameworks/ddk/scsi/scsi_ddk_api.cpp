@@ -165,7 +165,7 @@ static int32_t CopyResponse(const OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralR
     errno_t err = memcpy_s(desResp->senseData, sizeof(desResp->senseData), srcResp.senseData.data(),
         srcResp.senseData.size());
     if (err != EOK) {
-        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "memcpy_s failed, err=%{public}d, srcSize=%{public}d, desSize=%{public}d",
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "memcpy_s failed, err=%{public}d, srcSize=%{public}zu, desSize=%{public}zu",
             err, srcResp.senseData.size(), sizeof(desResp->senseData));
         return SCSIPERIPHERAL_DDK_MEMORY_ERROR;
     }
