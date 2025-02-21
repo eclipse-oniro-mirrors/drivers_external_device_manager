@@ -29,6 +29,21 @@
 UsbSerial_Device *NewSerialDeviceHandle();
 void DeleteUsbSerialDeviceHandle(UsbSerial_Device **dev);
 
+const uint32_t SIXTEEN_BIT = 16;
+const uint32_t THIRTYTWO_BIT = 32;
+const uint32_t BUS_NUM_MASK = 0xFFFF0000;
+const uint32_t DEVICE_NUM_MASK = 0x0000FFFF;
+
+static uint64_t ConvertDeviceId(uint64_t deviceId64)
+{
+    int32_t deviceId32 = static_cast<uint32_t>(deviceId64 >> THIRTYTWO_BIT);
+    uint32_t busNum = (deviceId32 & BUS_NUM_MASK) >> SIXTEEN_BIT;
+    uint32_t deviceNum = deviceId32 & DEVICE_NUM_MASK;
+    uint64_t deviceId = ((static_cast<uint64_t>(busNum) << THIRTYTWO_BIT) | deviceNum);
+
+    return deviceId;
+}
+
 static uint64_t GetDeviceId(napi_env env, napi_callback_info info)
 {
     size_t argc = PARM_1;
@@ -37,7 +52,7 @@ static uint64_t GetDeviceId(napi_env env, napi_callback_info info)
 
     int64_t tmpDeviceId;
     napi_get_value_int64(env, args[0], &tmpDeviceId);
-    uint64_t deviceId = static_cast<uint64_t>(tmpDeviceId);
+    uint64_t deviceId = ConvertDeviceId(tmpDeviceId);
     return deviceId;
 }
 

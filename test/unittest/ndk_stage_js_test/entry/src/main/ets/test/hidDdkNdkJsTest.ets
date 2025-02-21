@@ -41,12 +41,12 @@ export default function hidDdkNdkJsTest() {
           let device: deviceManager.USBDevice = item as deviceManager.USBDevice;
           if ((device.vendorId == 0x2109 && device.productId == 0x888b) ||
             (device.vendorId == 0xbda && device.productId == 0x8153) ||
-            (!hidDdkNdkTest.IsHidDevice(device.deviceId))) {
+            (!hidDdkNdkTest.isHidDevice(device.deviceId))) {
             console.warning(`Device vid = ${device.vendorId} pid = ${device.productId}, is not hid device`);
             continue;
           }
           deviceId = device.deviceId;
-          console.info(`Device id is ${device.deviceId}`)
+          console.info(`Hid device id is ${device.deviceId}`);
         }
       } catch (error) {
         console.error(`Failed to query device. Code is ${error.code}, message is ${error.message}`);

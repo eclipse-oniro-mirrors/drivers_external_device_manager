@@ -14,12 +14,14 @@
  */
 
 import scsiDdkNdkJsTest from './scsiDdkNdkJsTest.ets';
+import serialDdkNdkJsTest from './serialDdkNdkJsTest.ets';
 import hidDdkNdkJsTest from './hidDdkNdkJsTest.ets';
 import usbDdkNdkJsTest from './usbDdkNdkJsTest.ets';
 import baseDdkNdkJsTest from './baseDdkNdkJsTest.ets';
 
 export default function testsuite() {
   scsiDdkNdkJsTest();
+  serialDdkNdkJsTest();
   hidDdkNdkJsTest();
   usbDdkNdkJsTest();
   baseDdkNdkJsTest();
