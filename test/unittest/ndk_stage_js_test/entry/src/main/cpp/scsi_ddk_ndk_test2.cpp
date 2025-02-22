@@ -1038,95 +1038,6 @@ static int32_t CheckCDB2(napi_env env, ScsiPeripheral_Device *device, ScsiPeriph
     return ret;
 }
 
-static int32_t CheckCDB3(napi_env env, ScsiPeripheral_Device *device, ScsiPeripheral_DeviceMemMap *devMemMap)
-{
-    ScsiPeripheral_Request request = {{0}};
-    request.cdbLength = 0x88;
-    const uint8_t tmpCommand = 28;
-    const int32_t tmpDataDirection = 1;
-    request.commandDescriptorBlock[0] = tmpCommand;
-    request.commandDescriptorBlock[ONE_BYTE] = 0;
-    request.commandDescriptorBlock[TWO_BYTE] = 0;
-    request.commandDescriptorBlock[THREE_BYTE] = 0;
-    request.commandDescriptorBlock[FOUR_BYTE] = 0;
-    request.commandDescriptorBlock[FIVE_BYTE] = 0;
-    request.commandDescriptorBlock[SIX_BYTE] = 0;
-    request.commandDescriptorBlock[SEVEN_BYTE] = 0;
-    request.commandDescriptorBlock[EIGHT_BYTE] = 1;
-    request.commandDescriptorBlock[NINE_BYTE] = 0;
-    request.dataTransferDirection = tmpDataDirection;
-    request.timeout = TIMEOUT;
-    request.data = devMemMap;
-    ScsiPeripheral_Response response = {{0}};
-    int32_t ret = OH_ScsiPeripheral_SendRequestByCdb(device, &request, &response);
-    char statusMsg[STATUS_MSG_LEN] = "CheckCDB3 failed ret: ";
-    AppendIntToString(statusMsg, ret);
-    if (ret != SCSIPERIPHERAL_DDK_IO_ERROR) {
-        napi_throw_error(env, nullptr, statusMsg);
-        return ret;
-    }
-    return ret;
-}
-
-static int32_t CheckCDB4(napi_env env, ScsiPeripheral_Device *device, ScsiPeripheral_DeviceMemMap *devMemMap)
-{
-    ScsiPeripheral_Request request = {{0}};
-    request.cdbLength = 0x88;
-    const uint8_t tmpCommand = 28;
-    request.commandDescriptorBlock[0] = tmpCommand;
-    request.commandDescriptorBlock[ONE_BYTE] = 0;
-    request.commandDescriptorBlock[TWO_BYTE] = 0;
-    request.commandDescriptorBlock[THREE_BYTE] = 0;
-    request.commandDescriptorBlock[FOUR_BYTE] = 0;
-    request.commandDescriptorBlock[FIVE_BYTE] = 0;
-    request.commandDescriptorBlock[SIX_BYTE] = 0;
-    request.commandDescriptorBlock[SEVEN_BYTE] = 0;
-    request.commandDescriptorBlock[EIGHT_BYTE] = 1;
-    request.commandDescriptorBlock[NINE_BYTE] = 0;
-    request.dataTransferDirection = UINT8_MAX;
-    request.timeout = TIMEOUT;
-    request.data = devMemMap;
-    ScsiPeripheral_Response response = {{0}};
-    int32_t ret = OH_ScsiPeripheral_SendRequestByCdb(device, &request, &response);
-    char statusMsg[STATUS_MSG_LEN] = "CheckCDB4 failed ret: ";
-    AppendIntToString(statusMsg, ret);
-    if (ret != SCSIPERIPHERAL_DDK_IO_ERROR) {
-        napi_throw_error(env, nullptr, statusMsg);
-        return ret;
-    }
-    return ret;
-}
-
-static int32_t CheckCDB5(napi_env env, ScsiPeripheral_Device *device, ScsiPeripheral_DeviceMemMap *devMemMap)
-{
-    ScsiPeripheral_Request request = {{0}};
-    request.cdbLength = 0x88;
-    const uint8_t tmpCommand = 28;
-    const int32_t tmpDataDirection = 5;
-    request.commandDescriptorBlock[0] = tmpCommand;
-    request.commandDescriptorBlock[ONE_BYTE] = 0;
-    request.commandDescriptorBlock[TWO_BYTE] = 0;
-    request.commandDescriptorBlock[THREE_BYTE] = 0;
-    request.commandDescriptorBlock[FOUR_BYTE] = 0;
-    request.commandDescriptorBlock[FIVE_BYTE] = 0;
-    request.commandDescriptorBlock[SIX_BYTE] = 0;
-    request.commandDescriptorBlock[SEVEN_BYTE] = 0;
-    request.commandDescriptorBlock[EIGHT_BYTE] = 1;
-    request.commandDescriptorBlock[NINE_BYTE] = 0;
-    request.dataTransferDirection = tmpDataDirection;
-    request.timeout = TIMEOUT;
-    request.data = devMemMap;
-    ScsiPeripheral_Response response = {{0}};
-    int32_t ret = OH_ScsiPeripheral_SendRequestByCdb(device, &request, &response);
-    char statusMsg[STATUS_MSG_LEN] = "CheckCDB5 failed ret: ";
-    AppendIntToString(statusMsg, ret);
-    if (ret != SCSIPERIPHERAL_DDK_IO_ERROR) {
-        napi_throw_error(env, nullptr, statusMsg);
-        return ret;
-    }
-    return ret;
-}
-
 static napi_value ScsiPeripheralSendRequestByCDBFour(napi_env env, napi_callback_info info)
 {
     int32_t ret = OH_ScsiPeripheral_Init();
@@ -1143,9 +1054,6 @@ static napi_value ScsiPeripheralSendRequestByCDBFour(napi_env env, napi_callback
 
     ret = CheckCDB1(env, dev, devMemMap);
     ret = CheckCDB2(env, dev, devMemMap);
-    ret = CheckCDB3(env, dev, devMemMap);
-    ret = CheckCDB4(env, dev, devMemMap);
-    ret = CheckCDB5(env, dev, devMemMap);
 
     OH_ScsiPeripheral_DestroyDeviceMemMap(devMemMap);
     OH_ScsiPeripheral_Close(&dev);
@@ -1227,22 +1135,6 @@ static int32_t CheckMemory1(napi_env env, ScsiPeripheral_Device *dev)
     return ret;
 }
 
-static int32_t CheckMemory2(napi_env env, ScsiPeripheral_Device *dev)
-{
-    ScsiPeripheral_DeviceMemMap *devMemMap = nullptr;
-    size_t memSize = UINT32_MAX;
-    int32_t ret = OH_ScsiPeripheral_CreateDeviceMemMap(dev, memSize, &devMemMap);
-    char statusMsg[STATUS_MSG_LEN] = "CheckMemory2 failed ret: ";
-    AppendIntToString(statusMsg, ret);
-    OH_ScsiPeripheral_DestroyDeviceMemMap(devMemMap);
-    if (ret != SCSIPERIPHERAL_DDK_MEMORY_ERROR) {
-        napi_throw_error(env, nullptr, statusMsg);
-        return ret;
-    }
-
-    return ret;
-}
-
 static napi_value ScsiPeripheralCreateDeviceMemMapThree(napi_env env, napi_callback_info info)
 {
     int32_t ret = OH_ScsiPeripheral_Init();
@@ -1254,7 +1146,6 @@ static napi_value ScsiPeripheralCreateDeviceMemMapThree(napi_env env, napi_callb
     NAPI_ASSERT(env, ret == SCSIPERIPHERAL_DDK_SUCCESS, "OH_ScsiPeripheral_Open failed");
 
     ret = CheckMemory1(env, dev);
-    ret = CheckMemory2(env, dev);
 
     OH_ScsiPeripheral_Close(&dev);
     OH_ScsiPeripheral_Release();
