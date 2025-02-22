@@ -595,7 +595,7 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     struct UsbControlRequestSetup setup = {PARAM_0};
     uint8_t dataw[USB_DDK_TEST_BUF_SIZE] = {PARAM_0};
-    uint32_t datalen = USB_DDK_TEST_BUF_SIZE;
+    uint32_t dataLen = USB_DDK_TEST_BUF_SIZE;
     setup.bmRequestType = 0x80;
     setup.bRequest = 0x06;
     setup.wValue = (0x03 << PARAM_8) | 0x01;
@@ -607,7 +607,7 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
     setupW.bmRequestType = 0x00;
     setupW.bRequest = 0x09;
     setupW.wValue = (0x03 << PARAM_8) | 0x01;
-    setupW.wIndex = 0
+    setupW.wIndex = 0;
     setupW.wLength = dataLen;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setupW, g_timeout, &dataW, dataLen);
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
