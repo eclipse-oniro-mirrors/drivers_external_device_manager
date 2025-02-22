@@ -275,7 +275,7 @@ static napi_value UsbClaimInterfaceThree(napi_env env, napi_callback_info info)
     bool result1 = ParseConfiguration(deviceId, source);
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
-    int32_t returnValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
+    int32_t returnValue = OH_Usb_ClaimInterface(deviceId, interface, nullptr);
     OH_Usb_Release();
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
