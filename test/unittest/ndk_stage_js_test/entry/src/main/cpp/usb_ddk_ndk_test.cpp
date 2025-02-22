@@ -601,7 +601,7 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
     setup.wValue = (0x03 << PARAM_8) | 0x01;
     setup.wIndex = 0x409;
     setup.wLength = dataLen;
-    int32_t returnValueR = OH_Usb_SendControlReadRequest(g_interfaceHandle, &setup, UINT32_MAX, dataw, &dataLen);
+    int32_t returnValueR = OH_Usb_SendControlReadRequest(g_interfaceHandle, &setup, g_timeout, dataw, &dataLen);
     NAPI_ASSERT(env, returnValueR == PARAM_0, "OH_Usb_SendControlReadRequest failed");
     struct UsbControlRequestSetup setupW = {PARAM_0};
     setupW.bmRequestType = 0x00;
@@ -609,7 +609,7 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
     setupW.wValue = (0x03 << PARAM_8) | 0x01;
     setupW.wIndex = 0;
     setupW.wLength = dataLen;
-    int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setupW, g_timeout, &dataw, dataLen);
+    int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setupW, g_timeout, dataw, dataLen);
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
