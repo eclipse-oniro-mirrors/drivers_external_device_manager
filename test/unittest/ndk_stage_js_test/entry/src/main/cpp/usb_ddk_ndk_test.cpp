@@ -993,7 +993,6 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     uint8_t endpoint1 = std::get<2>(source);
-    uint8_t maxPktSize1 = std::get<3>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     struct UsbRequestPipe pipe;
@@ -1001,6 +1000,9 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
     pipe.endpoint = endpoint1;
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, nullptr);
+    int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
+    NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
+    OH_Usb_Release();
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
@@ -1019,12 +1021,14 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     struct UsbDeviceDescriptor devDesc;
     int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
-    struct UsbDdkConfigDescriptor *config = nullptr;
-    int32_t usbGetConfigDescriptorReturnValue = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
-    NAPI_ASSERT(env, usbGetConfigDescriptorReturnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
-    OH_Usb_FreeConfigDescriptor(config);
-    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
+    std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    bool result1 = ParseConfiguration(deviceId, source);
+    NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
+    uint8_t interface = std::get<1>(source);
+    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
+    int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
+    NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
     size_t bufferLen = PARAM_10;
     const uint8_t name[100] = "TestAshmem";
