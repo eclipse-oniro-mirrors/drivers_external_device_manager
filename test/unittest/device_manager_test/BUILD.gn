@@ -35,6 +35,7 @@ ohos_unittest("device_manager_test") {
   ]
   external_deps = [
     "bundle_framework:appexecfwk_core",
+    "bundle_framework:libappexecfwk_common",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.0",
     "drivers_interface_usb:libusb_proxy_1.0",
