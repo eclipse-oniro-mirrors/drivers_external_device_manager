@@ -17,6 +17,7 @@
 #define OHOS_ABILITY_RUNTIME_DRIVER_EXTENSION_MODULE_LOADER_H
 
 #include "extension_module_loader.h"
+#include "runtime.h"
 
 namespace OHOS::AbilityRuntime {
 class DriverExtensionModuleLoader : public ExtensionModuleLoader, public Singleton<DriverExtensionModuleLoader> {
