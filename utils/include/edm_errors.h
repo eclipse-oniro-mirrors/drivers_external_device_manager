@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,6 +43,8 @@ enum UsbErrCode : int32_t {
     EDM_ERR_JSON_OBJ_ERR,
     EDM_ERR_USB_ERR,
     EDM_ERR_NOT_SYSTEM_APP,
+    EDM_ERR_SERVICE_NOT_ALLOW_ACCESS,
+    EDM_ERR_SERVICE_NOT_BOUND,
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

@@ -36,6 +36,10 @@ int DriverExtMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
             return OnBindDevice(data, reply, option);
         case static_cast<uint32_t>(DriverExtMgrInterfaceCode::UNBIND_DEVICE):
             return OnUnBindDevice(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::BIND_DRIVER_WITH_DEVICE_ID):
+            return OnBindDriverWithDeviceId(data, reply, option);
+        case static_cast<uint32_t>(DriverExtMgrInterfaceCode::UNBIND_DRIVER_WITH_DEVICE_ID):
+            return OnUnbindDriverWithDeviceId(data, reply, option);
         case static_cast<uint32_t>(DriverExtMgrInterfaceCode::QUERY_DEVICE_INFO):
             return OnQueryDeviceInfo(data, reply, option);
         case static_cast<uint32_t>(DriverExtMgrInterfaceCode::QUERY_DRIVER_INFO):
@@ -120,6 +124,54 @@ int32_t DriverExtMgrStub::OnUnBindDevice(MessageParcel &data, MessageParcel &rep
     UsbErrCode ret = UnBindDevice(deviceId);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_FRAMEWORK, "failed to call UnBindDevice function:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnBindDriverWithDeviceId(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    uint64_t deviceId = 0;
+    if (!data.ReadUint64(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    sptr<IRemoteObject> remote = data.ReadRemoteObject();
+    if (remote == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read remote object of connectCallback");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    sptr<IDriverExtMgrCallback> connectCallback = iface_cast<IDriverExtMgrCallback>(remote);
+    if (connectCallback == nullptr) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to create connectCallback object");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    UsbErrCode ret = BindDriverWithDeviceId(deviceId, connectCallback);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call BindDriverWithDeviceId function:%{public}d",
+            static_cast<int32_t>(ret));
+        return ret;
+    }
+
+    return UsbErrCode::EDM_OK;
+}
+
+int32_t DriverExtMgrStub::OnUnbindDriverWithDeviceId(MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    uint64_t deviceId = 0;
+    if (!data.ReadUint64(deviceId)) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to read deviceId");
+        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+    }
+
+    UsbErrCode ret = UnbindDriverWithDeviceId(deviceId);
+    if (ret != UsbErrCode::EDM_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "failed to call UnbindDriverWithDeviceId function:%{public}d",
+            static_cast<int32_t>(ret));
         return ret;
     }
 

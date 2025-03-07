@@ -120,6 +120,23 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
     return proxy_->UnBindDevice(deviceId);
 }
 
+UsbErrCode DriverExtMgrClient::BindDriverWithDeviceId(uint64_t deviceId,
+    const sptr<IDriverExtMgrCallback> &connectCallback)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->BindDriverWithDeviceId(deviceId, connectCallback);
+}
+
+UsbErrCode DriverExtMgrClient::UnbindDriverWithDeviceId(uint64_t deviceId)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+    return proxy_->UnbindDriverWithDeviceId(deviceId);
+}
+
 UsbErrCode DriverExtMgrClient::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos)
 {
     if (Connect() != UsbErrCode::EDM_OK) {

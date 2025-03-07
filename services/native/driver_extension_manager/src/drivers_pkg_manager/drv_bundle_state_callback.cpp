@@ -50,6 +50,7 @@ const string DRV_INFO_BUS = "bus";
 const string DRV_INFO_VENDOR = "vendor";
 const string DRV_INFO_DESC = "description";
 const string DRV_INFO_LAUNCHONBIND = "launchonbind";
+const string DRV_INFO_ALLOW_ACCESSED = "ohos.permission.ACCESS_DDK_ALLOWED";
 
 static constexpr const char *BUNDLE_RESET_TASK_NAME = "DRIVER_INFO_RESET";
 static constexpr const char *BUNDLE_UPDATE_TASK_NAME = "DRIVER_INFO_UPDATE";
@@ -89,6 +90,9 @@ void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, const map<strin
         }
         if (LowerStr(data.first) == DRV_INFO_LAUNCHONBIND) {
             tmpDrvInfo.launchOnBind_ = (data.second == "true");
+        }
+        if (data.first == DRV_INFO_ALLOW_ACCESSED) {
+            tmpDrvInfo.accessAllowed_ = (data.second == "true");
         }
     }
 }

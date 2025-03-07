@@ -49,7 +49,11 @@ bool Device::IsLastCaller(uint32_t caller) const
     if (boundCallerInfos_.size() > 1) {
         return false;
     }
+    return boundCallerInfos_.find(caller) != boundCallerInfos_.end();
+}
 
+bool Device::IsBindCaller(uint32_t caller) const
+{
     return boundCallerInfos_.find(caller) != boundCallerInfos_.end();
 }
 

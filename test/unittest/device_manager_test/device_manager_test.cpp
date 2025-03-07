@@ -30,6 +30,8 @@ namespace ExternalDeviceManager {
 using namespace std;
 using namespace testing::ext;
 
+const unordered_set<std::string> accessibleBundles = {"testBundleName1", "testBundleName2"};
+
 class DeviceManagerTest : public testing::Test {
 public:
     void SetUp() override
@@ -235,6 +237,7 @@ HWTEST_F(DeviceManagerTest, ConnectDeviceTest, TestSize.Level1)
     device->OnConnect(remote, resultCode);
     ASSERT_EQ(device->boundCallerInfos_.size(), 0);
     ASSERT_NE(device->drvExtRemote_, nullptr);
+    device->driverInfo_->accessAllowed_ = true;
     ret = extMgr.ConnectDevice(deviceId, tokenId1, connectCallback);
     ASSERT_EQ(ret, EDM_OK);
     ASSERT_EQ(device->boundCallerInfos_.size(), 1);
@@ -248,6 +251,60 @@ HWTEST_F(DeviceManagerTest, ConnectDeviceTest, TestSize.Level1)
     iter = device->boundCallerInfos_.find(tokenId2);
     ASSERT_NE(iter, device->boundCallerInfos_.end());
     ASSERT_EQ(iter->second.isBound, true);
+}
+
+HWTEST_F(DeviceManagerTest, ConnectDeviceTest1, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
+    uint64_t deviceId = 3;
+    const uint32_t tokenId = 1;
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    std::shared_ptr<DeviceInfo> deviceInfo = std::make_shared<DeviceInfo>(deviceId,
+        BusType::BUS_TYPE_TEST, "testInfo1");
+    deviceInfo->devInfo_.deviceId = deviceId;
+    int32_t ret = callback->OnDeviceAdd(deviceInfo);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
+    std::shared_ptr<Device> device = extMgr.QueryDeviceByDeviceID(deviceId);
+    ASSERT_NE(device, nullptr);
+    sptr<IDriverExtMgrCallback> connectCallback = sptr<TestDriverExtMgrCallback>::MakeSptr();
+
+    device->driverInfo_ = make_shared<DriverInfo>("testBundleName1", "testDriverName1");
+    device->driverInfo_->accessAllowed_ = false;
+    ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId, accessibleBundles, connectCallback);
+    ASSERT_EQ(ret, EDM_ERR_SERVICE_NOT_ALLOW_ACCESS);
+
+    device->driverInfo_->accessAllowed_ = true;
+    ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId, accessibleBundles, connectCallback);
+    ASSERT_NE(ret, EDM_ERR_SERVICE_NOT_ALLOW_ACCESS);
+}
+
+HWTEST_F(DeviceManagerTest, ConnectDeviceTest2, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
+    uint64_t deviceId = 3;
+    const uint32_t tokenId = 1;
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    std::shared_ptr<DeviceInfo> deviceInfo = std::make_shared<DeviceInfo>(deviceId,
+        BusType::BUS_TYPE_TEST, "testInfo1");
+    deviceInfo->devInfo_.deviceId = deviceId;
+    int32_t ret = callback->OnDeviceAdd(deviceInfo);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
+    std::shared_ptr<Device> device = extMgr.QueryDeviceByDeviceID(deviceId);
+    ASSERT_NE(device, nullptr);
+    sptr<IDriverExtMgrCallback> connectCallback = sptr<TestDriverExtMgrCallback>::MakeSptr();
+
+    device->driverInfo_ = make_shared<DriverInfo>("testBundleName3", "testDriverName3");
+    device->driverInfo_->accessAllowed_ = true;
+    ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId, accessibleBundles, connectCallback);
+    ASSERT_EQ(ret, EDM_ERR_NO_PERM);
+
+    device->driverInfo_->bundleName_ = "testBundleName1";
+    ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId, accessibleBundles, connectCallback);
+    ASSERT_NE(ret, EDM_ERR_NO_PERM);
 }
 
 HWTEST_F(DeviceManagerTest, DisConnectDeviceTest, TestSize.Level1)
@@ -273,6 +330,7 @@ HWTEST_F(DeviceManagerTest, DisConnectDeviceTest, TestSize.Level1)
     device->OnConnect(remote, static_cast<int>(UsbErrCode::EDM_OK));
     ASSERT_EQ(device->boundCallerInfos_.size(), 0);
     ASSERT_NE(device->drvExtRemote_, nullptr);
+    device->driverInfo_->accessAllowed_ = true;
     ret = extMgr.ConnectDevice(deviceId, tokenId1, connectCallback);
     ASSERT_EQ(ret, EDM_OK);
     ASSERT_EQ(device->boundCallerInfos_.size(), 1);
@@ -301,6 +359,39 @@ HWTEST_F(DeviceManagerTest, DisConnectDeviceTest, TestSize.Level1)
     ret = extMgr.DisConnectDevice(deviceId, tokenId1);
     ASSERT_EQ(ret, EDM_OK);
     ASSERT_EQ(device->boundCallerInfos_.size(), 0);
+}
+
+HWTEST_F(DeviceManagerTest, DisConnectDeviceTest1, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
+    uint64_t deviceId = 3;
+    const uint32_t tokenId1 = 1;
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    std::shared_ptr<DeviceInfo> deviceInfo = std::make_shared<DeviceInfo>(deviceId,
+        BusType::BUS_TYPE_TEST, "testInfo2");
+    deviceInfo->devInfo_.deviceId = deviceId;
+    int32_t ret = callback->OnDeviceAdd(deviceInfo);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_TEST]), 1);
+    std::shared_ptr<Device> device = extMgr.QueryDeviceByDeviceID(deviceId);
+    device->driverInfo_ = make_shared<DriverInfo>("testBundleName2", "testDriverName2");
+    sptr<IRemoteObject> remote = sptr<TestRemoteObjectStub>::MakeSptr();
+    device->OnConnect(remote, static_cast<int>(UsbErrCode::EDM_OK));
+    ASSERT_NE(device->drvExtRemote_, nullptr);
+    sptr<IDriverExtMgrCallback> connectCallback = sptr<TestDriverExtMgrCallback>::MakeSptr();
+
+    device->driverInfo_->accessAllowed_ = true;
+    ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId1, accessibleBundles, connectCallback);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+
+    const uint32_t tokenId2 = 2;
+    ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId2);
+    ASSERT_EQ(ret, EDM_ERR_SERVICE_NOT_BOUND);
+
+    ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId1);
+    ASSERT_NE(ret, EDM_ERR_SERVICE_NOT_BOUND);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

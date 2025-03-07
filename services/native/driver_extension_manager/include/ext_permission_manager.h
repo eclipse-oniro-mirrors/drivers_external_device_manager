@@ -17,6 +17,7 @@
 #define DRIVER_PERMISSION_MANAGER_H
 
 #include <iostream>
+#include <unordered_set>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -27,6 +28,9 @@ public:
     static bool IsSystemApp();
 
     static uint32_t GetCallingTokenID();
+
+    static bool GetPermissionValues(const std::string &permissionName,
+        std::unordered_set<std::string> &permissionValues);
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

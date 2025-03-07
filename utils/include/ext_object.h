@@ -89,6 +89,10 @@ public:
     {
         return driverInfoExt_;
     }
+    bool IsAccessAllowed() const
+    {
+        return accessAllowed_;
+    }
 private:
     friend class DrvBundleStateCallback;
     std::string bus_;
@@ -101,6 +105,7 @@ private:
     std::string description_;
     std::string driverSize_;
     bool launchOnBind_ = false;
+    bool accessAllowed_ = false;
     std::shared_ptr<DriverInfoExt> driverInfoExt_;
 };
 

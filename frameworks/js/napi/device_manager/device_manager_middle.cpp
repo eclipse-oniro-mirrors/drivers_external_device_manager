@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,7 +39,9 @@ static const std::map<int32_t, std::string> ERROR_MESSAGES = {
     {PERMISSION_DENIED,  "Permission denied."},
     {PERMISSION_NOT_SYSTEM_APP,  "Permission denied. A non-system application cannot call a system API."},
     {PARAMETER_ERROR,  "The parameter check failed."},
-    {SERVICE_EXCEPTION_NEW, "ExternalDeviceManager service exception."}
+    {SERVICE_EXCEPTION_NEW, "ExternalDeviceManager service exception."},
+    {SERVICE_NOT_ALLOW_ACCESS, "Driver does not allow application access."},
+    {SERVICE_NOT_BOUND, "There is no binding relationship between the application and the driver."}
 };
 
 static std::mutex mapMutex;
@@ -551,6 +553,105 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
     return promise;
 }
 
+static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
+{
+    size_t argc = PARAM_COUNT_3;
+    napi_value argv[PARAM_COUNT_3] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    if (argc < PARAM_COUNT_2) {
+        ThrowErr(env, PARAMETER_ERROR, "bindDevice parameter count not match");
+        return nullptr;
+    }
+
+    uint64_t deviceId;
+    if (!ParseDeviceId(env, argv[0], &deviceId)) {
+        ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
+        return nullptr;
+    }
+    EDM_LOGI(MODULE_DEV_MGR, "Enter bindDevice:%{public}016" PRIX64, deviceId);
+
+    if (!IsMatchType(env, argv[1], napi_function)) {
+        ThrowErr(env, PARAMETER_ERROR, "onDisconnect param is error");
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> mapLock(mapMutex);
+    UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
+    if (retCode != UsbErrCode::EDM_OK) {
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
+        } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
+            ThrowErr(env, SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
+        } else {
+            ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDevice service failed");
+        }
+        return nullptr;
+    }
+
+    sptr<AsyncData> data = new (std::nothrow) AsyncData {};
+    if (data == nullptr) {
+        ThrowErr(env, PARAMETER_ERROR, "malloc callback data fail");
+        return nullptr;
+    }
+    data->env = env;
+    data->deviceId = deviceId;
+    NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
+    napi_value promise = nullptr;
+    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
+        NAPI_CALL(env, napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback));
+    } else {
+        NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
+    }
+    g_callbackMap[data->deviceId] = data;
+
+    return promise;
+}
+
+static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info)
+{
+    size_t argc = PARAM_COUNT_2;
+    napi_value argv[PARAM_COUNT_2] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
+    if (argc < PARAM_COUNT_1) {
+        ThrowErr(env, PARAMETER_ERROR, "Param count error");
+        return nullptr;
+    }
+
+    uint64_t deviceId;
+    if (!ParseDeviceId(env, argv[0], &deviceId)) {
+        ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
+        return nullptr;
+    }
+    EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDevice:%{public}016" PRIX64, deviceId);
+
+    UsbErrCode retCode = g_edmClient.UnbindDriverWithDeviceId(deviceId);
+    if (retCode != UsbErrCode::EDM_OK) {
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            ThrowErr(env, PERMISSION_DENIED, "unbindDevice: no permission");
+        } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_BOUND) {
+            ThrowErr(env, SERVICE_NOT_BOUND, "unbindDevice: there is no binding relationship");
+        } else {
+            ThrowErr(env, SERVICE_EXCEPTION_NEW, "unbindDevice service failed");
+        }
+        return nullptr;
+    }
+
+    std::lock_guard<std::mutex> mapLock(mapMutex);
+    if (g_callbackMap.find(deviceId) == g_callbackMap.end()) {
+        ThrowErr(env, SERVICE_EXCEPTION, "Unbind callback does not exist");
+        return nullptr;
+    }
+    auto data = g_callbackMap[deviceId];
+    napi_value promise = nullptr;
+    if (argc > PARAM_COUNT_1 && IsMatchType(env, argv[1], napi_function)) {
+        NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->unbindCallback));
+    } else {
+        NAPI_CALL(env, napi_create_promise(env, &data->unbindDeferred, &promise));
+    }
+
+    return promise;
+}
+
 static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_COUNT_1;
@@ -669,6 +770,8 @@ static napi_value ExtDeviceManagerInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("bindDevice", BindDevice),
         DECLARE_NAPI_FUNCTION("bindDeviceDriver", BindDevice),
         DECLARE_NAPI_FUNCTION("unbindDevice", UnbindDevice),
+        DECLARE_NAPI_FUNCTION("bindDriverWithDeviceId", BindDriverWithDeviceId),
+        DECLARE_NAPI_FUNCTION("unbindDriverWithDeviceId", UnbindDriverWithDeviceId),
         DECLARE_NAPI_FUNCTION("queryDeviceInfo", QueryDeviceInfo),
         DECLARE_NAPI_FUNCTION("queryDriverInfo", QueryDriverInfo),
     };
