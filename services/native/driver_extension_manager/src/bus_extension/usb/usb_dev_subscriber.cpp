@@ -156,7 +156,6 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
         return ret;
     }
 
-    this->deviceInfos_[busDevId] = usbDevInfo;
     if (this->callback_ != nullptr) {
         this->callback_->OnDeviceAdd(usbDevInfo);
     }
@@ -168,16 +167,15 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
 int32_t UsbDevSubscriber::OnDeviceDisconnect(const UsbDev &usbDev)
 {
     EDM_LOGD(MODULE_BUS_USB,  "OnDeviceDisconnect enter");
-    uint32_t busDevId = ToBusDeivceId(usbDev);
     if (this->callback_ != nullptr) {
-        auto deviceInfo = this->deviceInfos_[busDevId];
+        uint32_t busDevId = ToBusDeivceId(usbDev);
+        auto deviceInfo = make_shared<UsbDeviceInfo>(busDevId);
         if (deviceInfo != nullptr) {
             this->callback_->OnDeviceRemove(deviceInfo);
         } else {
-            EDM_LOGW(MODULE_BUS_USB,  "no dev in map, busDevId=%{public}08X \n", busDevId);
+            EDM_LOGE(MODULE_BUS_USB,  "deviceInfo is nullptr");
         }
     }
-    this->deviceInfos_.erase(busDevId);
     return 0;
 }
 
@@ -193,23 +191,12 @@ int32_t UsbDevSubscriber::DeviceEvent(const USBDeviceInfo &usbDevInfo)
     } else {
         EDM_LOGW(MODULE_BUS_USB,  "status not support, %{public}d \n", usbDevInfo.status);
     }
-    EDM_LOGD(MODULE_BUS_USB,  "ret = %{public}d, %{public}s", ret, this->ToString().c_str());
     return ret;
 }
 
 int32_t UsbDevSubscriber::PortChangedEvent(const PortInfo &usbDevInfo)
 {
     return 0;
-}
-
-string UsbDevSubscriber::ToString(void)
-{
-    string str = "DeviceInfos: Device count:" + to_string(this->deviceInfos_.size()) + "\n";
-    int i = 0;
-    for (auto it = this->deviceInfos_.begin(); it != deviceInfos_.end(); it++) {
-        str += "[" +to_string(i++) + "]" + to_string(it->first) + "\n";
-    }
-    return str;
 }
 }
 }
