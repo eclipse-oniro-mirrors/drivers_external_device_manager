@@ -31,10 +31,8 @@ public:
     void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb, sptr<V1_1::IUsbDdk> iUsbDdk);
     int32_t DeviceEvent(const USBDeviceInfo &info) override;
     int32_t PortChangedEvent(const PortInfo &info) override;
-    string ToString(void);
 private:
     shared_ptr<IDevChangeCallback> callback_;
-    map<uint32_t, shared_ptr<UsbDeviceInfo>> deviceInfos_;
     sptr<IUsbInterface> iusb_;
     sptr<V1_1::IUsbDdk> iUsbDdk_;
     int32_t OnDeviceConnect(const UsbDev &usbDev);
