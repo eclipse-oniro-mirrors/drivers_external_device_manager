@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 
-module_output_path = "external_device_manager/unittest"
+module_output_path = "external_device_manager/extension_device_manager"
 
 ohos_unittest("driver_extension_context_test") {
   module_out_path = module_output_path

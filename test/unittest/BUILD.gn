@@ -13,7 +13,7 @@
 
 import("//build/test.gni")
 import("//drivers/external_device_manager/extdevmgr.gni")
-module_output_path = "external_device_manager/unittest"
+module_output_path = "external_device_manager/extension_device_manager"
 usb_bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
 ohos_unittest("bus_extension_usb_test") {
   module_out_path = "${module_output_path}"
