@@ -123,22 +123,22 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     if (this->iusb_ == nullptr) {
         return EDM_ERR_INVALID_OBJECT;
     }
-    vector<uint8_t> descData;
-    ret = this->iusb_->GetDeviceDescriptor(usbDev, descData);
-    if (ret != 0) {
-        EDM_LOGE(MODULE_BUS_USB,  "GetDeviceDescriptor fail, ret = %{public}d\n", ret);
+    ret = this->iusb_->OpenDevice(usbDev);
+    if (ret != EDM_OK) {
+        EDM_LOGE(MODULE_BUS_USB, "OpenDevice failed, ret = %{public}d", ret);
         return EDM_ERR_IO;
     }
-    uint8_t *buffer = descData.data();
-    uint32_t length = descData.size();
-    if (length == 0) {
-        EDM_LOGE(MODULE_BUS_USB,  "GetRawDescriptor failed len=%{public}d busNum:%{public}d devAddr:%{public}d",\
-            length, usbDev.busNum, usbDev.devAddr);
-        return EDM_ERR_USB_ERR;
+    vector<uint8_t> descData;
+    ret = this->iusb_->GetDeviceDescriptor(usbDev, descData);
+    if (ret != EDM_OK || descData.empty()) {
+        EDM_LOGE(MODULE_BUS_USB, "GetDeviceDescriptor failed, ret = %{public}d", ret);
+        (void)this->iusb_->CloseDevice(usbDev);
+        return EDM_ERR_IO;
     }
-    UsbDevDescLite deviceDescriptor = *(reinterpret_cast<const UsbDevDescLite *>(buffer));
+    UsbDevDescLite deviceDescriptor = *(reinterpret_cast<const UsbDevDescLite *>(descData.data()));
     if (deviceDescriptor.bLength != USB_DEV_DESC_SIZE) {
         EDM_LOGE(MODULE_BUS_USB,  "UsbdDeviceDescriptor size error");
+        (void)this->iusb_->CloseDevice(usbDev);
         return EDM_ERR_USB_ERR;
     }
     string desc = ToDeviceDesc(usbDev, deviceDescriptor);
@@ -153,31 +153,30 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     ret = GetInterfaceDescriptor(usbDev, usbDevInfo->interfaceDescList_);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB,  "GetInterfaceDescriptor fail, ret = %{public}d", ret);
+        (void)this->iusb_->CloseDevice(usbDev);
         return ret;
     }
+    (void)this->iusb_->CloseDevice(usbDev);
 
-    this->deviceInfos_[busDevId] = usbDevInfo;
     if (this->callback_ != nullptr) {
         this->callback_->OnDeviceAdd(usbDevInfo);
     }
-    EDM_LOGD(MODULE_BUS_USB,  "OnDeviceConnect:");
-    EDM_LOGD(MODULE_BUS_USB,  "%{public}s", desc.c_str());
+    EDM_LOGD(MODULE_BUS_USB,  "OnDeviceConnect:%{public}s", desc.c_str());
     return EDM_OK;
 };
 
 int32_t UsbDevSubscriber::OnDeviceDisconnect(const UsbDev &usbDev)
 {
     EDM_LOGD(MODULE_BUS_USB,  "OnDeviceDisconnect enter");
-    uint32_t busDevId = ToBusDeivceId(usbDev);
     if (this->callback_ != nullptr) {
-        auto deviceInfo = this->deviceInfos_[busDevId];
+        uint32_t busDevId = ToBusDeivceId(usbDev);
+        auto deviceInfo = make_shared<UsbDeviceInfo>(busDevId);
         if (deviceInfo != nullptr) {
             this->callback_->OnDeviceRemove(deviceInfo);
         } else {
-            EDM_LOGW(MODULE_BUS_USB,  "no dev in map, busDevId=%{public}08X \n", busDevId);
+            EDM_LOGE(MODULE_BUS_USB,  "deviceInfo is nullptr");
         }
     }
-    this->deviceInfos_.erase(busDevId);
     return 0;
 }
 
@@ -193,23 +192,12 @@ int32_t UsbDevSubscriber::DeviceEvent(const USBDeviceInfo &usbDevInfo)
     } else {
         EDM_LOGW(MODULE_BUS_USB,  "status not support, %{public}d \n", usbDevInfo.status);
     }
-    EDM_LOGD(MODULE_BUS_USB,  "ret = %{public}d, %{public}s", ret, this->ToString().c_str());
     return ret;
 }
 
 int32_t UsbDevSubscriber::PortChangedEvent(const PortInfo &usbDevInfo)
 {
     return 0;
-}
-
-string UsbDevSubscriber::ToString(void)
-{
-    string str = "DeviceInfos: Device count:" + to_string(this->deviceInfos_.size()) + "\n";
-    int i = 0;
-    for (auto it = this->deviceInfos_.begin(); it != deviceInfos_.end(); it++) {
-        str += "[" +to_string(i++) + "]" + to_string(it->first) + "\n";
-    }
-    return str;
 }
 }
 }
