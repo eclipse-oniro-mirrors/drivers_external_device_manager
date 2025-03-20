@@ -165,6 +165,26 @@ describe("PermissionJsTest", function () {
     });
 
     /*
+     * @tc.name:Permission_bindDriverWithDeviceId_001
+     * @tc.desc:verify permission of bindDriverWithDeviceId
+     * @tc.type: FUNC
+     */
+    it("Permission_bindDriverWithDeviceId_001", 0, async done => {
+        console.info('----------------------Permission_bindDriverWithDeviceId_001---------------------------');
+        if (!isDeviceConnected(done)) {
+            return;
+        }
+        try {
+            await deviceManager.bindDriverWithDeviceId(TEST_DEVICE_ID, TEST_FUNCTION);
+            expect(false).assertTrue();
+            done();
+        } catch (err) {
+            expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+            done();
+        }
+    });
+
+    /*
      * @tc.name:Permission_unbindDevice_001
      * @tc.desc:verify permission of unbindDevice
      * @tc.type: FUNC
@@ -196,6 +216,26 @@ describe("PermissionJsTest", function () {
         }
         try {
             await deviceManager.unbindDevice(TEST_DEVICE_ID);
+            expect(false).assertTrue();
+            done();
+        } catch (err) {
+            expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+            done();
+        }
+    });
+
+    /*
+     * @tc.name:Permission_unbindDriverWithDeviceId_001
+     * @tc.desc:verify permission of unbindDriverWithDeviceId
+     * @tc.type: FUNC
+     */
+    it("Permission_unbindDriverWithDeviceId", 0, async done => {
+        console.info('----------------------Permission_unbindDriverWithDeviceId_001---------------------------');
+        if (!isDeviceConnected(done)) {
+            return;
+        }
+        try {
+            await deviceManager.unbindDriverWithDeviceId(TEST_DEVICE_ID);
             expect(false).assertTrue();
             done();
         } catch (err) {
