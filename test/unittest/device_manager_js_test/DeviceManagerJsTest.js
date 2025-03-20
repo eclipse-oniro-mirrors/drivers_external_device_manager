@@ -381,293 +381,157 @@ describe("DeviceManagerJsTest", function () {
             done();
         }
     })
-/*
+
+    /*
+     * @tc.name:DeviceManager_bindDriverWithDeviceId_001
+     * @tc.desc:verify bindDriverWithDeviceId invalid param count
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_bindDriverWithDeviceId_001", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDriverWithDeviceId_001---------------------------');
+        try {
+            deviceManager.bindDriverWithDeviceId();
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+            done();
+        }
+    })
+
+	/*
+     * @tc.name:DeviceManager_bindDriverWithDeviceId_002
+     * @tc.desc:verify bindDriverWithDeviceId invalid param
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_bindDriverWithDeviceId_002", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDriverWithDeviceId_002---------------------------');
+        try {
+            deviceManager.bindDriverWithDeviceId(12345);
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+            done();
+        }
+    })
+
+    /*
      * @tc.name:DeviceManager_bindDriverWithDeviceId_003
      * @tc.desc:verify bindDriverWithDeviceId invalid param
      * @tc.type: FUNC
      */
-it("DeviceManager_bindDriverWithDeviceId_003", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDriverWithDeviceId_003---------------------------');
-    try {
-        deviceManager.bindDevice('fakeid', (error, data) => {
+    it("DeviceManager_bindDriverWithDeviceId_003", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDriverWithDeviceId_003---------------------------');
+        try {
+            deviceManager.bindDriverWithDeviceId(12345, 23456);
             expect(false).assertTrue();
             done();
-        }, (error, data) => {
-            expect(false).assertTrue();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
             done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
-        done();
-    }
-})
+        }
+    })
 
-/*
- * @tc.name:DeviceManager_bindDriverWithDeviceId_004
- * @tc.desc:verify bindDevice any device
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDriverWithDeviceId_004", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDriverWithDeviceId_004---------------------------');
-    try {
-        deviceManager.bindDevice(12345, (error, data) => {
-            expect(false).assertTrue();
-            done();
-        }, (error, data) => {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_bindDeviceDriver_005
- * @tc.desc:verify bindDeviceDriver any device
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDeviceDriver_005", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDeviceDriver_005---------------------------');
-    try {
-        deviceManager.bindDeviceDriver(12345, (error, data) => {
-            expect(false).assertTrue();
-            done();
-        }, (error, data) => {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_bindDriverWithDeviceId_006
- * @tc.desc:verify bindDevice invalid param count
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDriverWithDeviceId_006", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDriverWithDeviceId_006---------------------------');
-    try {
-        deviceManager.bindDevice();
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_bindDriverWithDeviceId_007
- * @tc.desc:verify bindDevice invalid param
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDriverWithDeviceId_007", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDriverWithDeviceId_007---------------------------');
-    try {
-        deviceManager.bindDevice(12345);
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_bindDriverWithDeviceId_008
- * @tc.desc:verify bindDevice invalid param
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDriverWithDeviceId_008", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDriverWithDeviceId_008---------------------------');
-    try {
-        deviceManager.bindDevice(12345, 23456);
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_bindDriverWithDeviceId_009
- * @tc.desc:verify bindDevice promise
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDriverWithDeviceId_009", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDriverWithDeviceId_009---------------------------');
-    try {
-        deviceManager.bindDevice('fakeid', (error, data) => {
-            expect(false).assertTrue();
-            done();
-        }).then(data => {
-            expect(false).assertTrue();
-            done();
-        }, error => {
-            expect(false).assertTrue();
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_bindDriverWithDeviceId_010
- * @tc.desc:verify bindDevice promise
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDriverWithDeviceId_010", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDriverWithDeviceId_010---------------------------');
-    try {
-        deviceManager.bindDevice(12345, (error, data) => {
-            expect(false).assertTrue();
-            done();
-        }).then(data => {
-            expect(false).assertTrue();
-            done();
-        }, error => {
-            expect(false).assertTrue();
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_bindDeviceDriver_011
- * @tc.desc:verify bindDeviceDriver promise
- * @tc.type: FUNC
- */
-it("DeviceManager_bindDeviceDriver_011", 0, async function (done) {
-    console.info('----------------------DeviceManager_bindDeviceDriver_011---------------------------');
-    try {
-        deviceManager.bindDeviceDriver(12345, (error, data) => {
-            expect(false).assertTrue();
-            done();
-        }).then(data => {
-            expect(data != null).assertTrue();
-            let remoteDeviceDriver = data;
-            expect(remoteDeviceDriver.deviceId != null).assertTrue();
-            expect(remoteDeviceDriver.remote != null).assertTrue();
-            done();
-        }, error => {
-            expect(false).assertTrue();
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_unbindDriverWithDeviceId_012
- * @tc.desc:verify unbindDevice any device
- * @tc.type: FUNC
- */
-it("DeviceManager_unbindDriverWithDeviceId_012", 0, async function (done) {
-    console.info('----------------------DeviceManager_unbindDriverWithDeviceId_012---------------------------');
-    try {
-        deviceManager.unbindDevice('fakeid', (error, data) => {
-            expect(false).assertTrue();
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_unbindDriverWithDeviceId_013
- * @tc.desc:verify unbindDevice any device
- * @tc.type: FUNC
- */
-it("DeviceManager_unbindDriverWithDeviceId_013", 0, async function (done) {
-    console.info('----------------------DeviceManager_unbindDriverWithDeviceId_013---------------------------');
-    try {
-        deviceManager.unbindDevice(12345, (error, data) => {
-            expect(false).assertTrue();
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_unbindDriverWithDeviceId_014
- * @tc.desc:verify unbindDevice invalid param
- * @tc.type: FUNC
- */
-it("DeviceManager_unbindDriverWithDeviceId_014", 0, async function (done) {
-    console.info('----------------------DeviceManager_unbindDriverWithDeviceId_014---------------------------');
-    try {
-        deviceManager.unbindDevice();
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
-        done();
-    }
-})
-
-/*
- * @tc.name:DeviceManager_unbindDriverWithDeviceId_015
- * @tc.desc:verify unbindDevice promise
- * @tc.type: FUNC
- */
-it("DeviceManager_unbindDriverWithDeviceId_015", 0, async function (done) {
-    console.info('----------------------DeviceManager_unbindDriverWithDeviceId_015---------------------------');
-    try {
-        deviceManager.unbindDevice(12345).then(data => {
-            expect(false).assertTrue();
-            done();
-        }, error => {
-            expect(false).assertTrue();
-            done();
-        });
-        expect(false).assertTrue();
-        done();
-    } catch (error) {
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
-        done();
-    }
-})
-    /*
-     * @tc.name:DeviceManager_unbindDriverWithDeviceId_016
-     * @tc.desc:verify unbindDevice promise
+	/*
+     * @tc.name:DeviceManager_bindDriverWithDeviceId_004
+     * @tc.desc:verify bindDriverWithDeviceId promise
      * @tc.type: FUNC
      */
-    it("DeviceManager_unbindDriverWithDeviceId_016", 0, async function (done) {
-        console.info('----------------------DeviceManager_unbindDriverWithDeviceId_016---------------------------');
+    it("DeviceManager_bindDriverWithDeviceId_004", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDriverWithDeviceId_004---------------------------');
+        try {
+            deviceManager.bindDriverWithDeviceId('fakeid', (error, data) => {
+                expect(false).assertTrue();
+                done();
+            }).then(data => {
+                expect(false).assertTrue();
+                done();
+            }, error => {
+                expect(false).assertTrue();
+                done();
+            });
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+            done();
+        }
+    })
+
+	/*
+     * @tc.name:DeviceManager_bindDriverWithDeviceId_005
+     * @tc.desc:verify bindDriverWithDeviceId promise
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_bindDriverWithDeviceId_005", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDriverWithDeviceId_005---------------------------');
+        try {
+            deviceManager.bindDriverWithDeviceId(12345, (error, data) => {
+                expect(false).assertTrue();
+                done();
+            }).then(data => {
+                expect(false).assertTrue();
+                done();
+            }, error => {
+                expect(false).assertTrue();
+                done();
+            });
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+            done();
+        }
+    })
+
+	/*
+     * @tc.name:DeviceManager_unbindDriverWithDeviceId_001
+     * @tc.desc:verify unbindDriverWithDeviceId invalid param
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_unbindDriverWithDeviceId_001", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDriverWithDeviceId_001---------------------------');
+        try {
+            deviceManager.unbindDriverWithDeviceId();
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(PARAMETER_ERROR_CODE);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_unbindDriverWithDeviceId_002
+     * @tc.desc:verify unbindDriverWithDeviceId promise
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_unbindDriverWithDeviceId_002", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDriverWithDeviceId_002---------------------------');
+        try {
+            deviceManager.unbindDriverWithDeviceId(12345).then(data => {
+                expect(false).assertTrue();
+                done();
+            }, error => {
+                expect(false).assertTrue();
+                done();
+            });
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_unbindDriverWithDeviceId_003
+     * @tc.desc:verify unbindDriverWithDeviceId promise
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_unbindDriverWithDeviceId_003", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDriverWithDeviceId_003---------------------------');
         try {
             if (deviceId == null) {
                 console.log('Device ID has not been set.');
@@ -679,32 +543,6 @@ it("DeviceManager_unbindDriverWithDeviceId_015", 0, async function (done) {
                 expect(false).assertTrue();
                 done();
             }, error => {
-                expect(false).assertTrue();
-                done();
-            });
-            expect(false).assertTrue();
-            done();
-        } catch (error) {
-            expect(error.code).assertEqual(SERVICE_NOT_BOUND);
-            done();
-        }
-    })
-
-    /*
-     * @tc.name:DeviceManager_unbindDriverWithDeviceId_017
-     * @tc.desc:verify unbindDevice promise
-     * @tc.type: FUNC
-     */
-    it("DeviceManager_unbindDriverWithDeviceId_017", 0, async function (done) {
-        console.info('----------------------DeviceManager_unbindDriverWithDeviceId_017---------------------------');
-        try {
-            if (deviceId == null) {
-                console.log('Device ID has not been set.');
-                expect(true).assertTrue();
-                done();
-                return;
-            }
-            deviceManager.unbindDriverWithDeviceId(deviceId, (error, data) => {
                 expect(false).assertTrue();
                 done();
             });
