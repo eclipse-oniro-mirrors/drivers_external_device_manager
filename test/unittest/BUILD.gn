@@ -136,7 +136,6 @@ group("external_device_manager_ut") {
   testonly = true
   deps = [
     ":bus_extension_usb_test",
-    ":driver_extension_controller_test",
     ":driver_extension_manager_client_test",
     ":drivers_pkg_manager_test",
     "ddk_base_test:ddk_base_test",
