@@ -261,7 +261,7 @@ std::string UsbDevSubscriber::GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
         EDM_LOGE(MODULE_BUS_USB, "GetStringDescriptor failed, ret = %{public}d", ret);
         (void)this->iusb_->CloseDevice(usbDev);
         return EDM_ERR_IO;
-    } 
+    }
     
     size_t length = strV.size();
     if ((length < DESCRIPTOR_VALUE_START_OFFSET) || (strV[1] != DESCRIPTOR_TYPE_STRING)) {

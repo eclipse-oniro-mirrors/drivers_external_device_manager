@@ -41,7 +41,7 @@ constexpr int LAST_FIVE = 5;
         EDM_LOGI(MODULE_PKG_MGR, "report external device event");
         if (extDevEvent -- nullptr) {
             EDM_LOGI(MODULE_PKG_MGR, "extDevEvent is null");
-            return; 
+            return;
         }
         std::string snNum = "";
         if (extDevEvent->snNum.length() > LAST_FIVE) {
@@ -81,7 +81,7 @@ constexpr int LAST_FIVE = 5;
     {
         if (deviceInfo != nullptr) {
             auto busType = deviceInfo->GetBusType();
-            switch (busType){
+            switch (busType) {
                 case BusType::BUS_TYPE_USB:{
                     std::shared_ptr<UsbDeviceInfo> usbDeviceInfo = std::static_pointer_cast<UsbDeviceInfo>(deviceInfo);
                     eventObj->deviceId = usbDeviceInfo->GetDeviceId();
@@ -100,7 +100,7 @@ constexpr int LAST_FIVE = 5;
 
         if (driverInfo != nullptr) {
             auto busType = driverInfo->GetBusType();
-            switch (busType){
+            switch (busType) {
                 case BusType::BUS_TYPE_USB:{
                     std::shared_ptr<UsbDriverInfo> usbDriverInfo =
                         std::static_pointer_cast<UsbDriverInfo>(driverInfo->GetInfoExt());
@@ -132,7 +132,6 @@ constexpr int LAST_FIVE = 5;
             return true;
         }
         return false;
-        
     }
 
     shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DeviceEventReport(const uint32_t deviceId)

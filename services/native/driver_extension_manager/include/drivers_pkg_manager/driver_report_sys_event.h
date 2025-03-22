@@ -38,7 +38,7 @@ enum EXTDEV_EXP_EVENT {  // 操作类型枚举
     DRIVER_DEVICE_MATCH,         // 设备与驱动匹配
 };
 
-struct ExtDevEvent{
+struct ExtDevEvent {
     int32_t deviceClass;       // 设备类型
     int32_t deviceSubClass;    // 设备子类型
     int_32t deviceProtocol     // 设备协议

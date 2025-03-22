@@ -55,6 +55,8 @@ const string DRV_INFO_ALLOW_ACCESSED = "ohos.permission.ACCESS_DDK_ALLOWED";
 static constexpr const char *BUNDLE_RESET_TASK_NAME = "DRIVER_INFO_RESET";
 static constexpr const char *BUNDLE_UPDATE_TASK_NAME = "DRIVER_INFO_UPDATE";
 static constexpr const char *GET_DRIVERINFO_TASK_NAME = "GET_DRIVERINFO_ASYNC";
+constexpr int RDB_ERR = -2;
+constexpr int QUERY_ERR = -3;
 
 std::string DrvBundleStateCallback::GetBundleSize(const std::string &bundleName)
 {
@@ -224,7 +226,7 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
 
     if (!UpdateToRdb(driverInfos, bundleName)) {
         EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded error");
-        eventPtr->errCode = -2;
+        eventPtr->errCode = RDB_ERR;
         ReportExternalDeviceEvent(eventPtr);
     }
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_ADD");
@@ -262,7 +264,7 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     }
     std::vector<ExtensionAbilityInfo> driverInfos;
     if (!QueryDriverInfos(bundleName, userId, driverInfos)) {
-        DriverPtr->errCode = -2;
+        DriverPtr->errCode = RDB_ERR;
         ReportExternalDeviceEvent(DriverPtr);
         return;
     }
@@ -273,7 +275,7 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     }
 
     if (!UpdateToRdb(driverInfos, bundleName)) {
-        DriverPtr->errCode = -3;
+        DriverPtr->errCode = QUERY_ERR;
         ReportExternalDeviceEvent(DriverPtr);
         EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated error");
     }
@@ -635,7 +637,7 @@ shared_ptr<DriverInfo> DrvBundleStateCallback::GetDriverInfo(const std::vector<E
             int ret = driverInfo->UnSerialize(pkgInfoTable.driverInfo);
             if (ret != EDM_OK) {
                 EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
-                return nullptr; 
+                return nullptr;
             }
             break;
         }
