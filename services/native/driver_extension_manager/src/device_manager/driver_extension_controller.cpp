@@ -18,6 +18,7 @@
 #include "ability_connect_callback_stub.h"
 #include "edm_errors.h"
 #include "driver_extension_controller.h"
+#include "driver_report_sys_event.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -120,6 +121,9 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     EDM_LOGI(MODULE_EA_MGR, "Begin to Connect DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
 
+    std::string interfaceName = std::string(__func__);
+    std::shared_ptr<ExtDevEvent> eventPtr = make_shared<ExtDevEvent>();
+    eventPtr = DeviceEventReport(deviceId);
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;
@@ -138,6 +142,10 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
+        eventPtr->interfaceName = interfaceName;
+        eventPtr->operatType = DRIVER_BIND;
+        eventPtr->errCode = EDM_ERR_INVALID_OBJECT;
+        ReportExternalDeviceEvent(eventPtr);
         return EDM_ERR_INVALID_OBJECT;
     }
     AAFwk::Want want;
@@ -146,6 +154,12 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     auto ret = abmc->ConnectAbility(want, callback->info_->connectInner_, -1);
     if (ret != 0) {
         EDM_LOGE(MODULE_EA_MGR, "ConnectExtensionAbility failed %{public}d", ret);
+        if (eventPtr != nullptr) {
+            eventPtr->interfaceName = interfaceName;
+            eventPtr->operatType = DRIVER_BIND;
+            eventPtr->errCode = ret;
+            ReportExternalDeviceEvent(eventPtr);
+        }
         return ret;
     }
 
@@ -161,6 +175,10 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to Disconnect DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
+    
+    std::shared_ptr<ExtDevEvent> devicePtr = make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
+    devicePtr = MatchEventReport(deviceId);
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;
@@ -178,11 +196,22 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
+        devicePtr->interfaceName = interfaceName;
+        devicePtr->operatType = DRIVER_BIND;
+        devicePtr->errCode = EDM_ERR_INVALID_OBJECT;
+        ReportExternalDeviceEvent(devicePtr);
         return EDM_ERR_INVALID_OBJECT;
     }
     auto ret = abmc->DisconnectAbility(callback->info_->connectInner_);
     if (ret != 0) {
         EDM_LOGE(MODULE_EA_MGR, "DisconnectExtensionAbility failed %{public}d", ret);
+        
+        if (eventPtr != nullptr) {
+            devicePtr->interfaceName = interfaceName;
+            devicePtr->operatType = DRIVER_BIND;
+            devicePtr->errCode = ret;
+            ReportExternalDeviceEvent(devicePtr);
+        }
         return ret;
     }
     EDM_LOGI(MODULE_EA_MGR, "DisconnectExtensionAbility success");

@@ -19,6 +19,8 @@
 #include "hilog_wrapper.h"
 #include "device.h"
 #include "etx_device_mgr.h"
+#include "os_account_manager.h"
+#include "driver_report_sys_event.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -96,11 +98,22 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     uint64_t deviceId = GetDeviceInfo()->GetDeviceId();
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    eventPtr = DeviceEventReport(deviceId);
+    std::string interfaceName = std::string(__func__);
     if (drvExtRemote_ != nullptr) {
         connectCallback->OnConnect(deviceId, drvExtRemote_, {UsbErrCode::EDM_OK, ""});
         int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
         if (ret != UsbErrCode::EDM_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
+            if (eventPtr == nullptr) {
+                EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
+                return ret;
+            }
+            eventPtr->interfaceName = interfaceName;
+            eventPtr->operatType = DRIVER_BIND;
+            eventPtr->errCode = ret;
+            ReportExternalDeviceEvent(eventPtr);
             return ret;
         }
         boundCallerInfos_[callingTokenId] = CallerInfo{true};
@@ -110,6 +123,14 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
     int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
+        if (eventPtr == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
+            return ret;
+        }
+        eventPtr->interfaceName = interfaceName;
+        eventPtr->operatType = DRIVER_BIND;
+        eventPtr->errCode = ret;
+        ReportExternalDeviceEvent(eventPtr);
         return ret;
     }
 
@@ -294,6 +315,17 @@ int32_t DrvExtConnNotify::OnDisconnectDone(int resultCode)
 
     device->OnDisconnect(resultCode);
     return UsbErrCode::EDM_OK;
+}
+
+int32_t DrvExtConnNotify::GetUserId()
+{
+    int32_t localId;
+    int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
+    if (ret != 0) {
+        EDM_LOGE(MODULE_DEV_MGR, "GetForegroundOsAccountLocalId failed ret:%{public}d", ret);
+        return Constants::INVALID_USERID;
+    }
+    return localId;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

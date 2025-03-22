@@ -160,8 +160,23 @@ UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrC
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
-    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, callingTokenId,
+    int ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, callingTokenId,
         connectCallback));
+    if (ret == UsbErrCode::EDM_OK) {
+        std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+        eventPtr = MatchEventReport(deviceId);
+        if (eventPtr == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
+            return ret;
+        }
+        std::string interfaceName = std::string(__func__);
+        eventPtr->interfaceName = interfaceName;
+        eventPtr->operatType = DRIVER_BIND;
+        eventPtr->errCode = ret;
+        ReportExternalDeviceEvent(eventPtr);
+        return ret;
+    }
+    return ret;
 }
 
 UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
@@ -173,7 +188,24 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
-    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
+    int ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
+    if (ret == UsbErrCode::EDM_OK) {
+        std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+        eventPtr = MatchEventReport(deviceId);
+        if (eventPtr == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
+            return ret;
+        }
+        std::string interfaceName = std::string(__func__);
+        eventPtr->interfaceName = interfaceName;
+        eventPtr->operatType = DRIVER_UNBIND;
+        eventPtr->errCode = ret;
+        ReportExternalDeviceEvent(eventPtr);
+        std::lock_guard<std::mutex> lock(hisyseventMutex_);
+        matchMap_.erase(deviceId);
+        return ret;
+    }
+    return ret;
 }
 
 UsbErrCode DriverExtMgr::BindDriverWithDeviceId(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)

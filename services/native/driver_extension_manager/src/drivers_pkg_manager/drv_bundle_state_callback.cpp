@@ -206,19 +206,39 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnBundleAdded");
     StartTrace(LABEL, "OnBundleAdded");
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
+    eventPtr->interfaceName = interfaceName;
+    eventPtr->operatType = DRIVER_PACKAGE_DATA_REFRESH;
+    eventPtr->userId = userId;
+    eventPtr->bundleName = bundleName;
     if (!IsCurrentUserId(userId)) {
         return;
     }
     std::vector<ExtensionAbilityInfo> driverInfos;
     if (!QueryDriverInfos(bundleName, userId, driverInfos) || driverInfos.empty()) {
+        eventPtr->errCode = -1;
+        ReportExternalDeviceEvent(eventPtr);
         return;
     }
 
     if (!UpdateToRdb(driverInfos, bundleName)) {
         EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded error");
+        eventPtr->errCode = -2;
+        ReportExternalDeviceEvent(eventPtr);
     }
-    FinishTrace(LABEL);
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_ADD");
+    if (driverMap_.size() >= MAP_SIZE_MAX) {
+        EDM_LOGE(MODULE_PKG_MGR,  "driverMap_ is full");
+        return;
+    }
+    std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
+    eventPtr = ExtDevEventInit(nullptr, driverInfo, eventPtr);
+    eventPtr->errCode = 0;
+    std::lock_guard<std::mutex> lock(hisyseventMutex_);
+    driverMap_.insert(driverInfo->GetDriverUid(), eventPtr);
+    ReportExternalDeviceEvent(eventPtr);
+    FinishTrace(LABEL);
 }
 /**
     * @brief Called when a new application package has been Updated on the device.
@@ -229,11 +249,21 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnBundleUpdated");
     StartTrace(LABEL, "OnBundleUpdated");
+    std::shared_ptr<ExtDevEvent> DriverPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
+    DriverPtr->interfaceName = interfaceName;
+    DriverPtr->operatType = DRIVER_PACKAGE_DATA_REFRESH;
+    DriverPtr->userId = userId;
+    DriverPtr->bundleName = bundleName;
     if (!IsCurrentUserId(userId)) {
+        DriverPtr->errCode = -1;
+        ReportExternalDeviceEvent(DriverPtr);
         return;
     }
     std::vector<ExtensionAbilityInfo> driverInfos;
     if (!QueryDriverInfos(bundleName, userId, driverInfos)) {
+        DriverPtr->errCode = -2;
+        ReportExternalDeviceEvent(DriverPtr);
         return;
     }
 
@@ -243,10 +273,20 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     }
 
     if (!UpdateToRdb(driverInfos, bundleName)) {
+        DriverPtr->errCode = -3;
+        ReportExternalDeviceEvent(DriverPtr);
         EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated error");
     }
-    FinishTrace(LABEL);
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_UPDATE");
+    std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
+    DriverPtr = ExtDevEventInit(nullptr, driverInfo, DriverPtr);
+    if (DriverPtr != nullptr) {
+        DriverPtr->errCode = 0;
+        std::lock_guard<std::mutex> lock(hisyseventMutex_);
+        driverMap_.insert(driverInfo->GetDriverUid(), DriverPtr);
+        ReportExternalDeviceEvent(DriverPtr);
+    }
+    FinishTrace(LABEL);
 }
 
 /**
@@ -263,6 +303,19 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
     }
     std::vector<ExtensionAbilityInfo> driverInfos;
     (void)QueryDriverInfos(bundleName, userId, driverInfos);
+    std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
+    std::shared_ptr<ExtDevEvent> DriverPtr = std::make_shared<ExtDevEvent>();
+    DriverPtr = DriverEventReport(driverInfo->GetDriverUid());
+    std::string interfaceName = std::string(__func__);
+    if (DriverPtr != nullptr) {
+        eventPtr->interfaceName = interfaceName;
+        eventPtr->operatType = DRIVER_PACKAGE_DATA_REFRESH;
+        eventPtr->userId = userId;
+        eventPtr->errCode = 0;
+        ReportExternalDeviceEvent(DriverPtr);
+        std::lock_guard<std::mutex> lock(hisyseventMutex_);
+        driverMap_.erase(driverInfo->GetDriverUid());
+    }
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_REMOVED");
     OnBundleDrvRemoved(bundleName);
     FinishTrace(LABEL);
@@ -532,7 +585,7 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
             std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
             std::string pids = ParseIdVector(productIds);
             std::string vids = ParseIdVector(vendorIds);
-            ExtDevReportSysEvent::ReportDriverPackageCycleMangeSysEvent(pkgInfoTable, pids, vids,
+            ExtDevReportSysEvent::ReportDriverPackageCycleManageSysEvent(pkgInfoTable, pids, vids,
                 versionCode, driverEventName);
         }
     }
@@ -569,6 +622,25 @@ int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityI
         }
     }
     return versionCode;
+}
+
+shared_ptr<DriverInfo> DrvBundleStateCallback::GetDriverInfo(const std::vector<ExtensionAbilityInfo> &driverInfos,
+    const std::string &bundleName)
+{
+    shared_ptr<DriverInfo> driverInfo = make_shared<DriverInfo>();
+    std::vector<PkgInfoTable> pkgInfoTables;
+    ParseToPkgInfoTables(driverInfos, pkgInfoTables);
+    for (const auto &pkgInfoTable : pkgInfoTables) {
+        if (pkgInfoTable.bundleName == bundleName) {
+            int ret = driverInfo->UnSerialize(pkgInfoTable.driverInfo);
+            if (ret != EDM_OK) {
+                EDM_LOGE(MODULE_PKG_MGR, "Unserialize driverInfo faild");
+                return nullptr; 
+            }
+            break;
+        }
+    }
+    return driverInfo;
 }
 }
 }

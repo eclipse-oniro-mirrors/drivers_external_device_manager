@@ -205,6 +205,7 @@ public:
     {
         info_ = nullptr;
     }
+    int32_t GetCurrentActiveUserId();
 
 private:
     std::weak_ptr<Device> device_;

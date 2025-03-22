@@ -35,6 +35,26 @@ public:
         return idProduct_;
     }
 
+    uint8_t GetDeviceSubClass() const
+    {
+        return deviceSubClass_;
+    }
+
+    uint8_t GetDeviceClass() const
+    {
+        return deviceClass_;
+    }
+
+    uint8_t GetDeviceProtocol() const
+    {
+        return deviceProtocol_;
+    }
+
+    std::string GetSnNum() const
+    {
+        return snNum_;
+    }
+
     std::vector<UsbInterfaceDescriptor> interfaceDescList_;
 
 private:
@@ -44,6 +64,9 @@ private:
     uint8_t  deviceClass_ = 0;
     uint16_t idVendor_ = 0;
     uint16_t idProduct_ = 0;
+    uint8_t deviceSubClass_ = 0;
+    uint8_t deviceProtocol_ = 0;
+    std::string snNum_ = "";
 };
 }
 }

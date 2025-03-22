@@ -26,6 +26,7 @@
 #include "usb_device_info.h"
 #include "usb_driver_info.h"
 #include "usb_bus_extension.h"
+#include "driver_report_sys_event.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -117,6 +118,9 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
 
 bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &device)
 {
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    eventPtr = DeviceEventReport(device->GetDeviceId());
+    std::string interfaceName = std::string(__func__);
     if (LowerStr(driver.GetBusName()) != "usb") {
         EDM_LOGW(MODULE_BUS_USB,  "driver bus not support by this module [UsbBusExtension]");
         return false;
@@ -125,6 +129,12 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     if (device.GetBusType() != BusType::BUS_TYPE_USB) {
         EDM_LOGW(MODULE_BUS_USB,  "deivce type not support %d != %d",
             (uint32_t)device.GetBusType(), (uint32_t)BusType::BUS_TYPE_USB);
+        if (eventPtr != nullptr) {
+            eventPtr->interfaceName = interfaceName;
+            eventPtr->operatType = DRIVER_DEVICE_MATCH;
+            eventPtr->errCode = EDM_NOK;
+            ReportExternalDeviceEvent(eventPtr);
+        }
         return false;
     }
     const UsbDriverInfo *usbDriverInfo = static_cast<const UsbDriverInfo *>(driver.GetInfoExt().get());
@@ -141,14 +151,29 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     auto vidFind = find(usbDriverInfo->vids_.begin(), usbDriverInfo->vids_.end(), usbDeviceInfo->idVendor_);
     if (vidFind == usbDriverInfo->vids_.end()) {
         EDM_LOGI(MODULE_BUS_USB,  "vid not match\n");
+        if (eventPtr != nullptr) {
+            eventPtr->interfaceName = interfaceName;
+            eventPtr->operatType = DRIVER_DEVICE_MATCH;
+            eventPtr->errCode = EDM_NOK;
+            ReportExternalDeviceEvent(eventPtr);
+        }
         return false;
     }
     auto pidFind = find(usbDriverInfo->pids_.begin(), usbDriverInfo->pids_.end(), usbDeviceInfo->idProduct_);
     if (pidFind == usbDriverInfo->pids_.end()) {
         EDM_LOGI(MODULE_BUS_USB,  "pid not match\n");
+        if (eventPtr != nullptr) {
+            eventPtr->interfaceName = interfaceName;
+            eventPtr->operatType = DRIVER_DEVICE_MATCH;
+            eventPtr->errCode = EDM_NOK;
+            ReportExternalDeviceEvent(eventPtr);
+        }
         return false;
     }
     EDM_LOGI(MODULE_BUS_USB,  "Driver and Device match sucess\n");
+    if (!IsMatched(deviceInfoPtr, driverInfoPtr)) {
+        EDM_LOGI(MODULE_PKG_MGR, "set matchMap failed");
+    }
     return true;
 }
 
