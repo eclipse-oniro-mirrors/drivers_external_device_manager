@@ -38,7 +38,7 @@ private:
     int32_t OnDeviceConnect(const UsbDev &usbDev);
     int32_t OnDeviceDisconnect(const UsbDev &usbDev);
     int32_t GetInterfaceDescriptor(const UsbDev &usbDev, std::vector<UsbInterfaceDescriptor> &interfaceList);
-    std::string GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
+    std::string GetDevStringVal(const UsbDev &usbDev, uint8_t idx);
 };
 }
 }
