@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include "pkg_tables.h"
+#include <memory.h>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -41,7 +42,7 @@ enum EXTDEV_EXP_EVENT {  // 操作类型枚举
 struct ExtDevEvent {
     int32_t deviceClass;       // 设备类型
     int32_t deviceSubClass;    // 设备子类型
-    int32_t deviceProtocol     // 设备协议
+    int32_t deviceProtocol;    // 设备协议
     std::string snNum;         // 设备SN号
     int32_t vendorId;          // 厂商Id
     int32_t productId;         // 产品Id

@@ -260,7 +260,7 @@ std::string UsbDevSubscriber::GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
     return strDesc;
 }
 
-static void UsbDevSubscriber::SetUsbDevInfoValue(const UsbDevDescLite &deviceDescriptor,
+void UsbDevSubscriber::SetUsbDevInfoValue(const UsbDevDescLite &deviceDescriptor,
     shared_ptr<UsbDeviceInfo> &usbDevInfo, std::string snNum)
 {
     usbDevInfo->bcdUSB_ = deviceDescriptor.bcdUSB;
