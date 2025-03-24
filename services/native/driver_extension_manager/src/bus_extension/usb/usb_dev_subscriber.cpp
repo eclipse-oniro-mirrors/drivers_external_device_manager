@@ -33,22 +33,6 @@ constexpr uint32_t USB_DEV_DESC_SIZE = 0x12;
 constexpr int32_t DESCRIPTOR_TYPE_STRING = 3;
 constexpr int32_t DESCRIPTOR_VALUE_START_OFFSET = 2;
 constexpr int32_t HALF = 2;
-struct UsbDevDescLite {
-    uint8_t bLength;
-    uint8_t bDescriptorType;
-    uint16_t bcdUSB;
-    uint8_t bDeviceClass;
-    uint8_t bDeviceSubClass;
-    uint8_t bDeviceProtocol;
-    uint8_t bMaxPacketSize0;
-    uint16_t idVendor;
-    uint16_t idProduct;
-    uint16_t bcdDevice;
-    uint8_t iManufacturer;
-    uint8_t iProduct;
-    uint8_t iSerialNumber;
-    uint8_t bNumConfigurations;
-} __attribute__((packed));
 
 static string ToDeviceDesc(const UsbDev& usbDev, const UsbDevDescLite& desc)
 {

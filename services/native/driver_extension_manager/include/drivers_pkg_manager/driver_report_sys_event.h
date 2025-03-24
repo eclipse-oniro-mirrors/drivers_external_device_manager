@@ -19,14 +19,14 @@
 #include <string>
 #include <vector>
 #include "pkg_tables.h"
-#include <memory.h>
+#include <mutex>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 
-extern std::map<uint32_t id, sptr<ExtDevEvent> event> g_matchMap_;
-extern std::map<uint32_t id, sptr<ExtDevEvent> event> g_deviceMap_;
-extern std::map<std::string id, sptr<ExtDevEvent> event> g_driverMap_;
+extern std::map<uint32_t id, std::shared_ptr<ExtDevEvent> event> g_matchMap_;
+extern std::map<uint32_t id, std::shared_ptr<ExtDevEvent> event> g_deviceMap_;
+extern std::map<std::string id, std::shared_ptr<ExtDevEvent> event> g_driverMap_;
 constexpr int MAP_SIZE_MAX = 1024;
 
 enum EXTDEV_EXP_EVENT {  // 操作类型枚举

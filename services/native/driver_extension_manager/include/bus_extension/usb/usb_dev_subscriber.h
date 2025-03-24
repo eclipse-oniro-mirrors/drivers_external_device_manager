@@ -26,6 +26,23 @@ namespace ExternalDeviceManager {
 using namespace OHOS::HDI::Usb::V1_0;
 using namespace OHOS::HDI::Usb::Ddk;
 
+struct UsbDevDescLite {
+    uint8_t bLength;
+    uint8_t bDescriptorType;
+    uint16_t bcdUSB;
+    uint8_t bDeviceClass;
+    uint8_t bDeviceSubClass;
+    uint8_t bDeviceProtocol;
+    uint8_t bMaxPacketSize0;
+    uint16_t idVendor;
+    uint16_t idProduct;
+    uint16_t bcdDevice;
+    uint8_t iManufacturer;
+    uint8_t iProduct;
+    uint8_t iSerialNumber;
+    uint8_t bNumConfigurations;
+} __attribute__((packed));
+
 class UsbDevSubscriber : public IUsbdSubscriber {
 public:
     void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb, sptr<V1_1::IUsbDdk> iUsbDdk);
