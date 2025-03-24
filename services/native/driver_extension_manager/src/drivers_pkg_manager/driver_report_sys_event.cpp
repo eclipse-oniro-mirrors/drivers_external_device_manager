@@ -27,12 +27,12 @@ namespace ExternalDeviceManager {
     {
         EDM_LOGI(MODULE_PKG_MGR, "report driver package cycle sys event");
         int32_t hiRet = HiSysEventWrite(HiSysEvent::Domain::EXTERNAL_DEVICE, "DRIVER_PACKAGE_CYCLE_MANAGER",
-            HiSysEvent::EventType::BEHAVIOR, "BUNDLE_NAME", pkgInfoTable.bundleName, "USER_ID", pkgInfoTable.userId,
+            HiSysEvent::EventType::STATISTIC, "BUNDLE_NAME", pkgInfoTable.bundleName, "USER_ID", pkgInfoTable.userId,
             "DRIVER_UID", pkgInfoTable.driverUid, "VERSION_CODE", versionCode,
             "VENDOR_ID", vids, "PRODUCT_ID", pids, "DRIVER_EVENT_NAME", driverEventName);
         if (hiRet != EDM_OK) {
             EDM_LOGI(MODULE_PKG_MGR, "HiSysEventWrite ret: %{public}d", hiRet);
-    }
+        }
     }
 }
 }
