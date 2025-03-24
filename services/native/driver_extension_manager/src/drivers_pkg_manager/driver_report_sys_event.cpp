@@ -170,7 +170,7 @@ constexpr int LAST_FIVE = 5;
         return nullptr;
     }
 
-    void ExtDevReportSysEvent::SetEventValue(const std::string interfaceName, const int32_t operatType, 
+    void ExtDevReportSysEvent::SetEventValue(const std::string interfaceName, const int32_t operatType,
         const int32_t errCode, std::shared_ptr<ExtDevEvent> eventPtr)
         {
             eventPtr->interfaceName = interfaceName;

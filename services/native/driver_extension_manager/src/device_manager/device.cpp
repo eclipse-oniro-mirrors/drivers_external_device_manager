@@ -63,6 +63,8 @@ int32_t Device::Connect()
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
     uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
     std::string bundleInfo = GetBundleInfo();
     std::string bundleName = Device::GetBundleName(bundleInfo);
@@ -88,6 +90,8 @@ int32_t Device::Connect()
     }
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
+        eventPtr = ExtDevEventInit(GetDeviceInfo(), GetDriverInfo());
+        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, ret, eventPtr);
         return ret;
     }
     return UsbErrCode::EDM_OK;

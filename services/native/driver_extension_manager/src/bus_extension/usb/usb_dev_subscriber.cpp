@@ -130,7 +130,6 @@ int32_t UsbDevSubscriber::GetInterfaceDescriptor(const UsbDev &usbDev,
 
 int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
 {
-    EDM_LOGD(MODULE_BUS_USB,  "OnDeviceConnect enter");
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
     int32_t ret = 0;
@@ -157,18 +156,8 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
         (void)this->iusb_->CloseDevice(usbDev);
         return EDM_ERR_USB_ERR;
     }
-    string desc = ToDeviceDesc(usbDev, deviceDescriptor);
-    uint32_t busDevId = ToBusDeivceId(usbDev);
-    auto usbDevInfo = make_shared<UsbDeviceInfo>(busDevId, desc);
-
-    usbDevInfo->bcdUSB_ = deviceDescriptor.bcdUSB;
-    usbDevInfo->idProduct_ = deviceDescriptor.idProduct;
-    usbDevInfo->idVendor_ = deviceDescriptor.idVendor;
-    usbDevInfo->deviceClass_ = deviceDescriptor.bDeviceClass;
-    usbDevInfo->deviceSubClass_ = deviceDescriptor.bDeviceSubClass;
-    usbDevInfo->deviceProtocol_ = deviceDescriptor.bDeviceProtocol;
-    usbDevInfo->snNum_ = GetDevStringVal(usbDev, deviceDescriptor.iSerialNumber);
-    
+    auto usbDevInfo = make_shared<UsbDeviceInfo>(ToBusDeivceId(usbDev), ToDeviceDesc(usbDev, deviceDescriptor));
+    SetUsbDevInfoValue(deviceDescriptor, usbDevInfo, GetDevStringVal(usbDev, deviceDescriptor.iSerialNumber));
     ret = GetInterfaceDescriptor(usbDev, usbDevInfo->interfaceDescList_);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB,  "GetInterfaceDescriptor fail, ret = %{public}d", ret);
@@ -178,20 +167,15 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
         return ret;
     }
     (void)this->iusb_->CloseDevice(usbDev);
-
     if (this->callback_ != nullptr) {
         this->callback_->OnDeviceAdd(usbDevInfo);
     }
-
-    if (deviceMap_.size() >= MAP_SIZE_MAX) {
-        EDM_LOGE(MODULE_BUS_USB,  "deviceMap_ is full");
-        return EDM_OK;
-    }
     eventPtr = ExtDevEventInit(usbDevInfo, nullptr, eventPtr);
+    if (deviceMap_.size() < MAP_SIZE_MAX) {
+        std::lock_guard<std::mutex> lock(hisyseventMutex_);
+        deviceMap_.insert(usbDevInfo->GetDeviceId(), eventPtr);
+    }
     SetEventValue(interfaceName, GET_DEVICE_INFO, EDM_OK, eventPtr);
-    std::lock_guard<std::mutex> lock(hisyseventMutex_);
-    deviceMap_.insert(usbDevInfo->GetDeviceId(), eventPtr);
-    EDM_LOGD(MODULE_BUS_USB,  "OnDeviceConnect:%{public}s", desc.c_str());
     return EDM_OK;
 };
 
@@ -274,6 +258,18 @@ std::string UsbDevSubscriber::GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
         idx, strDesc.length(), strDesc.c_str());
     delete[] tbuf;
     return strDesc;
+}
+
+void UsbDevSubscriber::SetUsbDevInfoValue(const UsbDevDescLite &deviceDescriptor,
+    shared_ptr<UsbDeviceInfo> &usbDevInfo, std::string snNum)
+{
+    usbDevInfo->bcdUSB_ = deviceDescriptor.bcdUSB;
+    usbDevInfo->idProduct_ = deviceDescriptor.idProduct;
+    usbDevInfo->idVendor_ = deviceDescriptor.idVendor;
+    usbDevInfo->deviceClass_ = deviceDescriptor.bDeviceClass;
+    usbDevInfo->deviceSubClass_ = deviceDescriptor.bDeviceSubClass;
+    usbDevInfo->deviceProtocol_ = deviceDescriptor.bDeviceProtocol;
+    usbDevInfo->snNum_ = snNum;
 }
 }
 }

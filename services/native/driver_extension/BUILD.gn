@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
+import("../../../../../../extdevmgr.gni")
 
 config("ability_config") {
   visibility = [ ":*" ]
@@ -22,7 +22,10 @@ config("ability_config") {
 }
 
 ohos_shared_library("driver_extension") {
-  include_dirs = [ "include" ]
+  include_dirs = [ 
+    "include",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
+  ]
 
   sources = [
     "src/driver_extension.cpp",

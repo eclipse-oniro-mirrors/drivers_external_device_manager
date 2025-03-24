@@ -186,15 +186,9 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
     if (ret == UsbErrCode::EDM_OK) {
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr = MatchEventReport(deviceId);
-        if (eventPtr == nullptr) {
-            EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
-            return ret;
+        if (eventPtr != nullptr) {
+            SetEventValue(interfaceName, DRIVER_UNBIND, ret, eventPtr);
         }
-        std::string interfaceName = std::string(__func__);
-        eventPtr->interfaceName = interfaceName;
-        eventPtr->operatType = DRIVER_UNBIND;
-        eventPtr->errCode = ret;
-        ReportExternalDeviceEvent(eventPtr);
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         matchMap_.erase(deviceId);
         return ret;

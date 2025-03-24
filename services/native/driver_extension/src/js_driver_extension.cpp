@@ -28,6 +28,7 @@
 #include "napi_common_configuration.h"
 #include "napi_common_want.h"
 #include "napi_remote_object.h"
+#include "driver_report_sys_event.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -213,8 +214,15 @@ void JsDriverExtension::OnStart(const AAFwk::Want &want)
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     napi_value argv[] = {napiWant};
-    CallObjectMethod(env, "onInit", argv, ARGC_ONE);
+    napi_value result = CallObjectMethod(env, "onInit", argv, ARGC_ONE);
     HILOG_INFO("%{public}s end.", __func__);
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
+    if (result == nullptr) {
+        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+        return;
+    }
+    SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 void JsDriverExtension::OnStop()
@@ -229,6 +237,13 @@ void JsDriverExtension::OnStop()
         HILOG_INFO("The driver extension connection is not disconnected.");
     }
     HILOG_INFO("%{public}s end.", __func__);
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
+    if (ret) {
+        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+        return;
+    }
+    SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 sptr<IRemoteObject> JsDriverExtension::OnConnect(const AAFwk::Want &want)
@@ -372,6 +387,13 @@ napi_value JsDriverExtension::CallOnConnect(const AAFwk::Want &want)
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     napi_value argv[] = {napiWant};
     return CallObjectMethod(env, "onConnect", argv, ARGC_ONE);
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
+    if (result == nullptr) {
+        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+        return;
+    }
+    SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 napi_value JsDriverExtension::CallOnDisconnect(const AAFwk::Want &want, bool withResult)
@@ -381,6 +403,13 @@ napi_value JsDriverExtension::CallOnDisconnect(const AAFwk::Want &want, bool wit
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     napi_value argv[] = { napiWant };
     napi_value result = CallObjectMethod(env, "onDisconnect", argv, ARGC_ONE);
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
+    if (result == nullptr) {
+        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+    } else {
+        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
+    }
     if (withResult) {
         return handleEscape.Escape(result);
     } else {

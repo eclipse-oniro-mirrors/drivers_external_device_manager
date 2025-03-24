@@ -83,7 +83,7 @@ public:
 
     shared_ptr<ExtDevEvent> MatchEventReport(const uint32_t deviceId);
 
-    void SetEventValue(const std::string interfaceName, const int32_t operatType, 
+    void SetEventValue(const std::string interfaceName, const int32_t operatType,
         const int32_t errCode, std::shared_ptr<ExtDevEvent> eventPtr);
 private:
     std::mutex hisyseventMutex_;
