@@ -11,8 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-ext_mgr_path = "//drivers/external_device_manager"
+import("../../../extdevmgr.gni")
 
 config("ability_config") {
   visibility = [ ":*" ]
