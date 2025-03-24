@@ -97,23 +97,17 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    uint64_t deviceId = GetDeviceInfo()->GetDeviceId();
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    eventPtr = DeviceEventReport(deviceId);
+    eventPtr = DeviceEventReport(GetDeviceInfo()->GetDeviceId());
     std::string interfaceName = std::string(__func__);
     if (drvExtRemote_ != nullptr) {
-        connectCallback->OnConnect(deviceId, drvExtRemote_, {UsbErrCode::EDM_OK, ""});
+        connectCallback->OnConnect(GetDeviceInfo()->GetDeviceId(), drvExtRemote_, {UsbErrCode::EDM_OK, ""});
         int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
         if (ret != UsbErrCode::EDM_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
-            if (eventPtr == nullptr) {
-                EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
-                return ret;
+            if (eventPtr != nullptr) {
+                SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
             }
-            eventPtr->interfaceName = interfaceName;
-            eventPtr->operatType = DRIVER_BIND;
-            eventPtr->errCode = ret;
-            ReportExternalDeviceEvent(eventPtr);
             return ret;
         }
         boundCallerInfos_[callingTokenId] = CallerInfo{true};
@@ -123,14 +117,9 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
     int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
-        if (eventPtr == nullptr) {
-            EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
-            return ret;
+        if (eventPtr != nullptr) {
+            SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
         }
-        eventPtr->interfaceName = interfaceName;
-        eventPtr->operatType = DRIVER_BIND;
-        eventPtr->errCode = ret;
-        ReportExternalDeviceEvent(eventPtr);
         return ret;
     }
 

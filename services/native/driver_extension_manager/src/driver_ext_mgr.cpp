@@ -165,15 +165,9 @@ UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrC
     if (ret == UsbErrCode::EDM_OK) {
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr = MatchEventReport(deviceId);
-        if (eventPtr == nullptr) {
-            EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
-            return ret;
+        if (eventPtr != nullptr) {
+            SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
         }
-        std::string interfaceName = std::string(__func__);
-        eventPtr->interfaceName = interfaceName;
-        eventPtr->operatType = DRIVER_BIND;
-        eventPtr->errCode = ret;
-        ReportExternalDeviceEvent(eventPtr);
         return ret;
     }
     return ret;

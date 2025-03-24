@@ -130,10 +130,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
         EDM_LOGW(MODULE_BUS_USB,  "deivce type not support %d != %d",
             (uint32_t)device.GetBusType(), (uint32_t)BusType::BUS_TYPE_USB);
         if (eventPtr != nullptr) {
-            eventPtr->interfaceName = interfaceName;
-            eventPtr->operatType = DRIVER_DEVICE_MATCH;
-            eventPtr->errCode = EDM_NOK;
-            ReportExternalDeviceEvent(eventPtr);
+            SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
         }
         return false;
     }
@@ -152,10 +149,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     if (vidFind == usbDriverInfo->vids_.end()) {
         EDM_LOGI(MODULE_BUS_USB,  "vid not match\n");
         if (eventPtr != nullptr) {
-            eventPtr->interfaceName = interfaceName;
-            eventPtr->operatType = DRIVER_DEVICE_MATCH;
-            eventPtr->errCode = EDM_NOK;
-            ReportExternalDeviceEvent(eventPtr);
+            SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
         }
         return false;
     }
@@ -163,10 +157,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     if (pidFind == usbDriverInfo->pids_.end()) {
         EDM_LOGI(MODULE_BUS_USB,  "pid not match\n");
         if (eventPtr != nullptr) {
-            eventPtr->interfaceName = interfaceName;
-            eventPtr->operatType = DRIVER_DEVICE_MATCH;
-            eventPtr->errCode = EDM_NOK;
-            ReportExternalDeviceEvent(eventPtr);
+            SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
         }
         return false;
     }

@@ -529,11 +529,8 @@ int32_t ExtDeviceManager::ConnectDevice(uint64_t deviceId, uint32_t callingToken
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr->deviceId = deviceId;
-        eventPtr->operatType = DRIVER_BIND;
-        eventPtr->errCode = EDM_NOK;
         std::string interfaceName = std::string(__func__);
-        eventPtr->interfaceName = interfaceName;
-        ReportExternalDeviceEvent(eventPtr);
+        SetEventValue(interfaceName, DRIVER_BIND, EDM_NOK, eventPtr);
         return EDM_NOK;
     }
 
@@ -548,11 +545,8 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr->deviceId = deviceId;
-        eventPtr->operatType = DRIVER_UNBIND;
-        eventPtr->errCode = EDM_NOK;
         std::string interfaceName = std::string(__func__);
-        eventPtr->interfaceName = interfaceName;
-        ReportExternalDeviceEvent(eventPtr);
+        SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
         return EDM_NOK;
     }
 
@@ -561,15 +555,10 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
         EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
         std::shared_ptr<ExtDevEvent> eventPtr = make_shared<ExtDevEvent>();
         eventPtr = DeviceEventReport(deviceId);
-        if (eventPtr == nullptr) {
-            EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
-            return EDM_NOK;
+        if (eventPtr != nullptr) {
+            std::string interfaceName = std::string(__func__);
+            SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
         }
-        std::string interfaceName = std::string(__func__);
-        eventPtr->interfaceName = interfaceName;
-        eventPtr->operatType = DRIVER_UNBIND;
-        eventPtr->errCode = EDM_NOK;
-        ReportExternalDeviceEvent(eventPtr);
         return EDM_NOK;
     }
 
