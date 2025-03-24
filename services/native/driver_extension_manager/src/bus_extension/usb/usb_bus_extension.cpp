@@ -119,7 +119,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
 bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &device)
 {
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    eventPtr = DeviceEventReport(device->GetDeviceId());
+    eventPtr = ExtDevReportSysEvent::DeviceEventReport(device->GetDeviceId());
     std::string interfaceName = std::string(__func__);
     if (LowerStr(driver.GetBusName()) != "usb") {
         EDM_LOGW(MODULE_BUS_USB,  "driver bus not support by this module [UsbBusExtension]");
@@ -130,7 +130,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
         EDM_LOGW(MODULE_BUS_USB,  "deivce type not support %d != %d",
             (uint32_t)device.GetBusType(), (uint32_t)BusType::BUS_TYPE_USB);
         if (eventPtr != nullptr) {
-            SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
         }
         return false;
     }
@@ -149,7 +149,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     if (vidFind == usbDriverInfo->vids_.end()) {
         EDM_LOGI(MODULE_BUS_USB,  "vid not match\n");
         if (eventPtr != nullptr) {
-            SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
         }
         return false;
     }
@@ -157,7 +157,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     if (pidFind == usbDriverInfo->pids_.end()) {
         EDM_LOGI(MODULE_BUS_USB,  "pid not match\n");
         if (eventPtr != nullptr) {
-            SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
         }
         return false;
     }

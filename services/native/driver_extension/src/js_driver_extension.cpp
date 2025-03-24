@@ -219,10 +219,10 @@ void JsDriverExtension::OnStart(const AAFwk::Want &want)
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
     if (result == nullptr) {
-        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
         return;
     }
-    SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
+    ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 void JsDriverExtension::OnStop()
@@ -240,10 +240,10 @@ void JsDriverExtension::OnStop()
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
     if (ret) {
-        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
         return;
     }
-    SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
+    ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 sptr<IRemoteObject> JsDriverExtension::OnConnect(const AAFwk::Want &want)
@@ -390,10 +390,10 @@ napi_value JsDriverExtension::CallOnConnect(const AAFwk::Want &want)
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
     if (result == nullptr) {
-        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
         return;
     }
-    SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
+    ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 napi_value JsDriverExtension::CallOnDisconnect(const AAFwk::Want &want, bool withResult)
@@ -406,9 +406,9 @@ napi_value JsDriverExtension::CallOnDisconnect(const AAFwk::Want &want, bool wit
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
     if (result == nullptr) {
-        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
     } else {
-        SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
     }
     if (withResult) {
         return handleEscape.Escape(result);

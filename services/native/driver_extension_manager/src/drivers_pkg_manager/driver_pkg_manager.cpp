@@ -115,11 +115,7 @@ shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo>
 {
     EDM_LOGI(MODULE_PKG_MGR, "Enter QueryMatchDriver");
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    eventPtr = DeviceEventReport(devInfo->GetDeviceId());
-    if (eventPtr == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "%{public}s:MatchEventReport failed", __func__);
-        return nullptr;
-    }
+    eventPtr = ExtDevReportSysEvent::DeviceEventReport(devInfo->GetDeviceId());
     std::string interfaceName = std::string(__func__);
     shared_ptr<IBusExtension> extInstance = nullptr;
     if (bundleStateCallback_ == nullptr) {
@@ -129,7 +125,9 @@ shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo>
 
     if (!bundleStateCallback_->GetAllDriverInfos()) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetAllDriverInfos Err");
-        SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
+        if (eventPtr != nullptr) {
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
+        }
         return nullptr;
     }
 
@@ -138,7 +136,9 @@ shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo>
     int32_t retRdb = helper->QueryPkgInfos(pkgInfos);
     if (retRdb <= 0) {
         /* error or empty record */
-        SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, retRdb, eventPtr);
+        if (eventPtr != nullptr) {
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
+        }
         return nullptr;
     }
     EDM_LOGI(MODULE_PKG_MGR, "Total driverInfos number: %{public}zu", pkgInfos.size());

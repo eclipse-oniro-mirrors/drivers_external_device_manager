@@ -22,6 +22,9 @@ using namespace OHOS::HiviewDFX;
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+static std::map<uint32_t id, sptr<ExtDevEvent> event> g_matchMap_;
+static std::map<uint32_t id, sptr<ExtDevEvent> event> g_deviceMap_;
+static std::map<std::string id, sptr<ExtDevEvent> event> g_driverMap_;
 constexpr int LAST_FIVE = 5;
     void ExtDevReportSysEvent::ReportDriverPackageCycleManageSysEvent(const PkgInfoTable &pkgInfoTable,
         std::string pids, std::string vids, uint32_t versionCode, std::string driverEventName)
@@ -124,11 +127,11 @@ constexpr int LAST_FIVE = 5;
     {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-        auto device = deviceMap_.find(deviceInfo->GetDeviceId());
-        auto driver = driverMap_.find(driverInfo->GetDriverUid());
-        if (device != deviceMap_.end() && driver != driverMap_.end()) {
-            matchPtr = ExtDevEventInit(deviceInfo, driverInfo, matchPtr);
-            matchMap_.insert(deviceInfo->GetDeviceId(), matchPtr);
+        auto device = g_deviceMap_.find(deviceInfo->GetDeviceId());
+        auto driver = g_driverMap_.find(driverInfo->GetDriverUid());
+        if (device != g_deviceMap_.end() && driver != g_driverMap_.end()) {
+            matchPtr = ExtDevReportSysEvent::ExtDevEventInit(deviceInfo, driverInfo, matchPtr);
+            g_matchMap_.insert(deviceInfo->GetDeviceId(), matchPtr);
             return true;
         }
         return false;
@@ -138,8 +141,8 @@ constexpr int LAST_FIVE = 5;
     {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-        auto device = deviceMap_.find(deviceId);
-        if (device != deviceMap_.end()) {
+        auto device = g_deviceMap_.find(deviceId);
+        if (device != g_deviceMap_.end()) {
             matchPtr = device->second;
             return matchPtr;
         }
@@ -150,7 +153,7 @@ constexpr int LAST_FIVE = 5;
     {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-        auto driver = driverMap_.find(driverUid);
+        auto driver = g_driverMap_.find(driverUid);
         if (driver != driverUidMap_.end()) {
             matchPtr = driver->second;
             return matchPtr;
@@ -162,8 +165,8 @@ constexpr int LAST_FIVE = 5;
     {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-        auto match = matchMap_.find(deviceId);
-        if (match != matchMap_.end()) {
+        auto match = g_matchMap_.find(deviceId);
+        if (match != g_matchMap_.end()) {
             matchPtr = match->second;
             return matchPtr;
         }

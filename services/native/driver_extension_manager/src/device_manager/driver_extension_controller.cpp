@@ -123,7 +123,7 @@ int32_t DriverExtensionController::ConnectDriverExtension(
 
     std::string interfaceName = std::string(__func__);
     std::shared_ptr<ExtDevEvent> eventPtr = make_shared<ExtDevEvent>();
-    eventPtr = DeviceEventReport(deviceId);
+    eventPtr = ExtDevReportSysEvent::DeviceEventReport(deviceId);
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;
@@ -142,7 +142,7 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
-        SetEventValue(interfaceName, DRIVER_BIND, EDM_ERR_INVALID_OBJECT, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, EDM_ERR_INVALID_OBJECT, eventPtr);
         return EDM_ERR_INVALID_OBJECT;
     }
     AAFwk::Want want;
@@ -152,7 +152,7 @@ int32_t DriverExtensionController::ConnectDriverExtension(
     if (ret != 0) {
         EDM_LOGE(MODULE_EA_MGR, "ConnectExtensionAbility failed %{public}d", ret);
         if (eventPtr != nullptr) {
-            SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
         }
         return ret;
     }
@@ -172,7 +172,7 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
     
     std::shared_ptr<ExtDevEvent> devicePtr = make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
-    devicePtr = MatchEventReport(deviceId);
+    devicePtr = ExtDevReportSysEvent::MatchEventReport(deviceId);
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;
@@ -190,7 +190,7 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
-        SetEventValue(interfaceName, DRIVER_BIND, EDM_ERR_INVALID_OBJECT, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, EDM_ERR_INVALID_OBJECT, eventPtr);
         return EDM_ERR_INVALID_OBJECT;
     }
     auto ret = abmc->DisconnectAbility(callback->info_->connectInner_);
@@ -198,7 +198,7 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
         EDM_LOGE(MODULE_EA_MGR, "DisconnectExtensionAbility failed %{public}d", ret);
         
         if (eventPtr != nullptr) {
-            SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
         }
         return ret;
     }

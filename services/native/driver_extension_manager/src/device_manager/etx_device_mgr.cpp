@@ -530,7 +530,7 @@ int32_t ExtDeviceManager::ConnectDevice(uint64_t deviceId, uint32_t callingToken
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr->deviceId = deviceId;
         std::string interfaceName = std::string(__func__);
-        SetEventValue(interfaceName, DRIVER_BIND, EDM_NOK, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, EDM_NOK, eventPtr);
         return EDM_NOK;
     }
 
@@ -546,7 +546,7 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr->deviceId = deviceId;
         std::string interfaceName = std::string(__func__);
-        SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
         return EDM_NOK;
     }
 
@@ -554,10 +554,10 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
         std::shared_ptr<ExtDevEvent> eventPtr = make_shared<ExtDevEvent>();
-        eventPtr = DeviceEventReport(deviceId);
+        eventPtr = ExtDevReportSysEvent::DeviceEventReport(deviceId);
         if (eventPtr != nullptr) {
             std::string interfaceName = std::string(__func__);
-            SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
         }
         return EDM_NOK;
     }
