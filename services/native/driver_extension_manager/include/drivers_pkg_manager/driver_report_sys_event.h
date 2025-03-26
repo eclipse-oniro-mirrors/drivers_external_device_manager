@@ -20,13 +20,18 @@
 #include <vector>
 #include "pkg_tables.h"
 #include <mutex>
+#include "ext_object.h"
+#include "usb_device_info.h"
+#include "usb_driver_info.h"
+#include <memory>
+#include <map>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 
-extern std::map<uint32_t id, std::shared_ptr<ExtDevEvent> event> g_matchMap_;
-extern std::map<uint32_t id, std::shared_ptr<ExtDevEvent> event> g_deviceMap_;
-extern std::map<std::string id, std::shared_ptr<ExtDevEvent> event> g_driverMap_;
+extern std::map<uint32_t, std::shared_ptr<struct ExtDevEvent>> g_matchMap_;
+extern std::map<uint32_t, std::shared_ptr<struct ExtDevEvent>> g_deviceMap_;
+extern std::map<std::string, std::shared_ptr<struct ExtDevEvent>> g_driverMap_;
 constexpr int MAP_SIZE_MAX = 1024;
 
 enum EXTDEV_EXP_EVENT {  // 操作类型枚举
@@ -49,7 +54,7 @@ struct ExtDevEvent {
     int32_t deviceId;          // 设备Id
     std::string driverUid;     // 驱动Uid
     std::string driverName;    // 驱动名称
-    int32_t versionCode;       // 驱动版本
+    std::string versionCode;   // 驱动版本
     std::string vids;          // 驱动配置的vid
     std::string pids;          // 驱动配置的pid
     int32_t userId;            // 用户Id
@@ -70,22 +75,32 @@ public:
     static void ReportExternalDeviceSaEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
         std::string vids, uint32_t versionCode, std::string driverEventName);
 
-    static shared_ptr<ExtDevEvent> ExtDevEventInit(const std::shared_ptr<DeviceInfo> &deviceInfo,
-        const std::shared_ptr<DriverInfo> &driverInfo);
+    static std::shared_ptr<ExtDevEvent> ExtDevEventInit(const std::shared_ptr<DeviceInfo> &deviceInfo,
+        const std::shared_ptr<DriverInfo> &driverInfo, std::shared_ptr<ExtDevEvent> eventObj);
 
     static bool IsMatched(const std::shared_ptr<DeviceInfo> &deviceInfo,
         const std::shared_ptr<DriverInfo> &driverInfo);
     
-    static shared_ptr<ExtDevEvent> DeviceEventReport(const uint32_t deviceId);
+    static std::shared_ptr<ExtDevEvent> DeviceEventReport(const uint32_t deviceId);
 
-    static shared_ptr<ExtDevEvent> DriverEventReport(const std::string driverUid);
+    static std::shared_ptr<ExtDevEvent> DriverEventReport(const std::string driverUid);
 
-    static shared_ptr<ExtDevEvent> MatchEventReport(const uint32_t deviceId);
+    static std::shared_ptr<ExtDevEvent> MatchEventReport(const uint32_t deviceId);
 
     static void SetEventValue(const std::string interfaceName, const int32_t operatType,
         const int32_t errCode, std::shared_ptr<ExtDevEvent> eventPtr);
-private:
-    std::mutex hisyseventMutex_;
+
+    static void DriverMapInsert(const std::string driverUid, std::shared_ptr<ExtDevEvent> eventPtr);
+
+    static void DeviceMapInsert(const uint32_t deviceId, std::shared_ptr<ExtDevEvent> eventPtr);
+
+    static void DriverMapErase(const std::string driverUid);
+
+    static void DeviceMapErase(const uint32_t deviceId);
+
+    static void MatchMapErase(const uint32_t deviceId);
+
+    static std::string ParseIdVector(std::vector<uint16_t> ids);
 };
 
 } // namespace ExternalDeviceManager

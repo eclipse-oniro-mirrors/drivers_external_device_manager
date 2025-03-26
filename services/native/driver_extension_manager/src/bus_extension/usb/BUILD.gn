@@ -17,6 +17,7 @@ ohos_shared_library("driver_extension_usb_bus") {
     "usb_dev_subscriber.cpp",
     "usb_driver_change_callback.cpp",
     "usb_driver_info.cpp",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager/driver_report_sys_event.cpp",
   ]
   include_dirs = [
     "${ext_mgr_path}/frameworks/ddk/usb",

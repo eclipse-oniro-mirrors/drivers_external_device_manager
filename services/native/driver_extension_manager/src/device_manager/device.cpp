@@ -19,7 +19,6 @@
 #include "hilog_wrapper.h"
 #include "device.h"
 #include "etx_device_mgr.h"
-#include "os_account_manager.h"
 #include "driver_report_sys_event.h"
 
 namespace OHOS {
@@ -90,7 +89,7 @@ int32_t Device::Connect()
     }
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
-        eventPtr = ExtDevReportSysEvent::ExtDevEventInit(GetDeviceInfo(), GetDriverInfo());
+        eventPtr = ExtDevReportSysEvent::ExtDevEventInit(GetDeviceInfo(), GetDriverInfo(), eventPtr);
         ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, ret, eventPtr);
         return ret;
     }
@@ -308,17 +307,6 @@ int32_t DrvExtConnNotify::OnDisconnectDone(int resultCode)
 
     device->OnDisconnect(resultCode);
     return UsbErrCode::EDM_OK;
-}
-
-int32_t DrvExtConnNotify::GetUserId()
-{
-    int32_t localId;
-    int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
-    if (ret != 0) {
-        EDM_LOGE(MODULE_DEV_MGR, "GetForegroundOsAccountLocalId failed ret:%{public}d", ret);
-        return Constants::INVALID_USERID;
-    }
-    return localId;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

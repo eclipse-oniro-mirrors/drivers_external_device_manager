@@ -22,9 +22,10 @@ using namespace OHOS::HiviewDFX;
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-static std::map<uint32_t id, sptr<ExtDevEvent> event> g_matchMap_;
-static std::map<uint32_t id, sptr<ExtDevEvent> event> g_deviceMap_;
-static std::map<std::string id, sptr<ExtDevEvent> event> g_driverMap_;
+std::map<uint32_t, std::shared_ptr<struct ExtDevEvent>> g_matchMap_;
+std::map<uint32_t, std::shared_ptr<struct ExtDevEvent>> g_deviceMap_;
+std::map<std::string, std::shared_ptr<struct ExtDevEvent>> g_driverMap_;
+std::mutex hisyseventMutex_;
 constexpr int LAST_FIVE = 5;
     void ExtDevReportSysEvent::ReportDriverPackageCycleManageSysEvent(const PkgInfoTable &pkgInfoTable,
         std::string pids, std::string vids, uint32_t versionCode, std::string driverEventName)
@@ -42,7 +43,7 @@ constexpr int LAST_FIVE = 5;
     void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent>& extDevEvent)
     {
         EDM_LOGI(MODULE_PKG_MGR, "report external device event");
-        if (extDevEvent -- nullptr) {
+        if (extDevEvent == nullptr) {
             EDM_LOGI(MODULE_PKG_MGR, "extDevEvent is null");
             return;
         }
@@ -58,8 +59,8 @@ constexpr int LAST_FIVE = 5;
             "DEVICE_ID", extDevEvent->deviceId, "DRIVER_UID", extDevEvent->driverUid, "DRIVER_NAME",
             extDevEvent->driverName, "VERSION_CODE", extDevEvent->versionCode, "VIDS", extDevEvent->vids,
             "PIDS", extDevEvent->pids, "USER_ID", extDevEvent->userId, "BUNDLE_NAME", extDevEvent->bundleName,
-            "OPERAT_TYPE", extDevEvent->operatType, "INTERFACE_NAME", extDevEvent->interfaceName, "FAIL_MESSAGE",
-            extDevEvent->failMessage, "ERR_CODE", extDevEvent->errCode);
+            "OPERAT_TYPE", extDevEvent->operatType, "INTERFACE_NAME", extDevEvent->interfaceName, "MESSAGE",
+            extDevEvent->message, "ERR_CODE", extDevEvent->errCode);
         if (hiRet != EDM_OK) {
             EDM_LOGI(MODULE_PKG_MGR, "HiSysEventWrite ret: %{public}d", hiRet);
         }
@@ -79,7 +80,7 @@ constexpr int LAST_FIVE = 5;
     }
 
 
-    shared_ptr<ExtDevEvent> ExtDevReportSysEvent::ExtDevEventInit(const std::shared_ptr<DeviceInfo> &deviceInfo,
+    std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::ExtDevEventInit(const std::shared_ptr<DeviceInfo> &deviceInfo,
         const std::shared_ptr<DriverInfo> &driverInfo, std::shared_ptr<ExtDevEvent> eventObj)
     {
         if (deviceInfo != nullptr) {
@@ -107,8 +108,10 @@ constexpr int LAST_FIVE = 5;
                 case BusType::BUS_TYPE_USB:{
                     std::shared_ptr<UsbDriverInfo> usbDriverInfo =
                         std::static_pointer_cast<UsbDriverInfo>(driverInfo->GetInfoExt());
-                    eventObj->vids = usbDriverInfo->GetVendorIds();
-                    eventObj->pids = usbDriverInfo->GetProductIds();
+                    std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
+                    std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
+                    eventObj->vids = ParseIdVector(vendorIds);
+                    eventObj->pids = ParseIdVector(productIds);
                     eventObj->driverUid = driverInfo->GetDriverUid();
                     eventObj->driverName = driverInfo->GetDriverName();
                     eventObj->versionCode = driverInfo->GetVersion();
@@ -125,19 +128,21 @@ constexpr int LAST_FIVE = 5;
     bool ExtDevReportSysEvent::IsMatched(const std::shared_ptr<DeviceInfo> &deviceInfo,
         const std::shared_ptr<DriverInfo> &driverInfo)
     {
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-        auto device = g_deviceMap_.find(deviceInfo->GetDeviceId());
-        auto driver = g_driverMap_.find(driverInfo->GetDriverUid());
-        if (device != g_deviceMap_.end() && driver != g_driverMap_.end()) {
-            matchPtr = ExtDevReportSysEvent::ExtDevEventInit(deviceInfo, driverInfo, matchPtr);
-            g_matchMap_.insert(deviceInfo->GetDeviceId(), matchPtr);
-            return true;
+        if (deviceInfo != nullptr && driverInfo != nullptr){
+            std::lock_guard<std::mutex> lock(hisyseventMutex_);
+            std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
+            auto device = g_deviceMap_.find(deviceInfo->GetDeviceId());
+            auto driver = g_driverMap_.find(driverInfo->GetDriverUid());
+            if (device != g_deviceMap_.end() && driver != g_driverMap_.end()) {
+                matchPtr = ExtDevReportSysEvent::ExtDevEventInit(deviceInfo, driverInfo, matchPtr);
+                g_matchMap_[deviceInfo->GetDeviceId()] = matchPtr;
+                return true;
+            }
         }
         return false;
     }
 
-    shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DeviceEventReport(const uint32_t deviceId)
+    std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DeviceEventReport(const uint32_t deviceId)
     {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
@@ -149,19 +154,19 @@ constexpr int LAST_FIVE = 5;
         return nullptr;
     }
 
-    shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DriverEventReport(const std::string driverUid)
+    std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DriverEventReport(const std::string driverUid)
     {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
         auto driver = g_driverMap_.find(driverUid);
-        if (driver != driverUidMap_.end()) {
+        if (driver != g_driverMap_.end()) {
             matchPtr = driver->second;
             return matchPtr;
         }
         return nullptr;
     }
 
-    shared_ptr<ExtDevEvent> ExtDevReportSysEvent::MatchEventReport(const uint32_t deviceId)
+    std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::MatchEventReport(const uint32_t deviceId)
     {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
         std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
@@ -175,11 +180,67 @@ constexpr int LAST_FIVE = 5;
 
     void ExtDevReportSysEvent::SetEventValue(const std::string interfaceName, const int32_t operatType,
         const int32_t errCode, std::shared_ptr<ExtDevEvent> eventPtr)
-        {
-            eventPtr->interfaceName = interfaceName;
-            eventPtr->operatType = operatType;
-            eventPtr->errCode = errCode;
-            ReportExternalDeviceEvent(eventPtr);
+    {
+        if (eventPtr != nullptr) {
+        eventPtr->interfaceName = interfaceName;
+        eventPtr->operatType = operatType;
+        eventPtr->errCode = errCode;
+        ReportExternalDeviceEvent(eventPtr);
         }
+    }
+
+    void ExtDevReportSysEvent::DriverMapInsert(const std::string driverUid, std::shared_ptr<ExtDevEvent> eventPtr)
+    {
+        if (eventPtr != nullptr) {
+            std::lock_guard<std::mutex> lock(hisyseventMutex_);
+            g_driverMap_[driverUid] = eventPtr;
+        }
+    }
+
+    void ExtDevReportSysEvent::DeviceMapInsert(const uint32_t deviceId, std::shared_ptr<ExtDevEvent> eventPtr)
+    {
+        if (eventPtr != nullptr) {
+            std::lock_guard<std::mutex> lock(hisyseventMutex_);
+            g_deviceMap_[deviceId] = eventPtr;
+        }
+    }
+
+    void ExtDevReportSysEvent::DriverMapErase(const std::string driverUid)
+    {
+            std::lock_guard<std::mutex> lock(hisyseventMutex_);
+            g_driverMap_.erase(driverUid);
+    }
+
+    void ExtDevReportSysEvent::DeviceMapErase(const uint32_t deviceId)
+    {
+            std::lock_guard<std::mutex> lock(hisyseventMutex_);
+            g_deviceMap_.erase(deviceId);
+    }
+
+    void ExtDevReportSysEvent::MatchMapErase(const uint32_t deviceId)
+    {
+            std::lock_guard<std::mutex> lock(hisyseventMutex_);
+            g_matchMap_.erase(deviceId);
+    }
+
+    std::string ExtDevReportSysEvent::ParseIdVector(std::vector<uint16_t> ids)
+    {
+        if (ids.size() < 1) {
+            return "";
+        }
+        std::string str = "";
+        auto it = ids.begin();
+        for (uint16_t id : ids) {
+            if (it + 1 == ids.end()) {
+                std::string copy = std::to_string(id);
+                str.append(copy);
+            } else {
+                std::string copy = std::to_string(id);
+                str.append(copy);
+                str.append(",");
+            }
+        }
+        return str;
+    }
 }
 }

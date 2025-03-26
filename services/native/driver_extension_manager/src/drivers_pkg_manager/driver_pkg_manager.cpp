@@ -148,7 +148,7 @@ shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo>
         extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(driverInfo.GetBusName());
         if (extInstance != nullptr && extInstance->MatchDriver(driverInfo, *devInfo)) {
             std::shared_ptr<DriverInfo> driverPtr= std::make_shared<DriverInfo>(driverInfo);
-            if (!IsMatched(driverPtr, devInfo)) {
+            if (!ExtDevReportSysEvent::IsMatched(devInfo, driverPtr)) {
                 EDM_LOGI(MODULE_PKG_MGR, "IsMatched failed");
             }
             return std::make_shared<DriverInfo>(driverInfo);

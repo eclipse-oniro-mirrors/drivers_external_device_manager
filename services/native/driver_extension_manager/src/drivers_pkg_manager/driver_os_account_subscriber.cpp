@@ -35,7 +35,9 @@ void DriverOsAccountSwitched::OnAccountsSwitch(const int &newId, const int &oldI
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnAccountsSwitched, newId=%{public}d, oldId=%{public}d", newId, oldId);
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    eventPtr->message = "oldId:" + oldId + "newId:" + newId;
+    std::string lastId = std::to_string(oldId);
+    std::string nextId = std::to_string(newId);
+    eventPtr->message = "oldId:" + lastId + "newId:" + nextId;
     std::string interfaceName = std::string(__func__);
     ExtDevReportSysEvent::SetEventValue(interfaceName, CHANGE_FUNC, 0, eventPtr);
     if (bundleStateCallback_ == nullptr) {

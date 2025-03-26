@@ -119,7 +119,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
 bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &device)
 {
     std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    eventPtr = ExtDevReportSysEvent::DeviceEventReport(device->GetDeviceId());
+    eventPtr = ExtDevReportSysEvent::DeviceEventReport(device.GetDeviceId());
     std::string interfaceName = std::string(__func__);
     if (LowerStr(driver.GetBusName()) != "usb") {
         EDM_LOGW(MODULE_BUS_USB,  "driver bus not support by this module [UsbBusExtension]");
@@ -162,7 +162,9 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
         return false;
     }
     EDM_LOGI(MODULE_BUS_USB,  "Driver and Device match sucess\n");
-    if (!IsMatched(deviceInfoPtr, driverInfoPtr)) {
+    shared_ptr<DeviceInfo> deviceInfoPtr = make_shared<DeviceInfo>(device);
+    shared_ptr<DriverInfo> driverInfoPtr = make_shared<DriverInfo>(driver);
+    if (!ExtDevReportSysEvent::IsMatched(deviceInfoPtr, driverInfoPtr)) {
         EDM_LOGI(MODULE_PKG_MGR, "set matchMap failed");
     }
     return true;

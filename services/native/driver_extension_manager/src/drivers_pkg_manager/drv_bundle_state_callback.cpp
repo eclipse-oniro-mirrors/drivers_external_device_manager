@@ -232,8 +232,7 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
     }
     std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
     eventPtr = ExtDevReportSysEvent::ExtDevEventInit(nullptr, driverInfo, eventPtr);
-    std::lock_guard<std::mutex> lock(hisyseventMutex_);
-    g_driverMap_.insert(driverInfo->GetDriverUid(), eventPtr);
+    ExtDevReportSysEvent::DriverMapInsert(driverInfo->GetDriverUid(), eventPtr);
     ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, 0, eventPtr);
     FinishTrace(LABEL);
 }
@@ -246,10 +245,10 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnBundleUpdated");
     StartTrace(LABEL, "OnBundleUpdated");
-    std::shared_ptr<ExtDevEvent> DriverPtr = std::make_shared<ExtDevEvent>();
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
-    DriverPtr->userId = userId;
-    DriverPtr->bundleName = bundleName;
+    eventPtr->userId = userId;
+    eventPtr->bundleName = bundleName;
     if (!IsCurrentUserId(userId)) {
         ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, -1, eventPtr);
         return;
@@ -271,10 +270,9 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     }
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_UPDATE");
     std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
-    DriverPtr = ExtDevReportSysEvent::ExtDevEventInit(nullptr, driverInfo, DriverPtr);
-    if (DriverPtr != nullptr) {
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        g_driverMap_.insert(driverInfo->GetDriverUid(), DriverPtr);
+    eventPtr = ExtDevReportSysEvent::ExtDevEventInit(nullptr, driverInfo, eventPtr);
+    if (eventPtr != nullptr) {
+        ExtDevReportSysEvent::DriverMapInsert(driverInfo->GetDriverUid(), eventPtr);
         ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, 0, eventPtr);
     }
     FinishTrace(LABEL);
@@ -295,13 +293,12 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
     std::vector<ExtensionAbilityInfo> driverInfos;
     (void)QueryDriverInfos(bundleName, userId, driverInfos);
     std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
-    std::shared_ptr<ExtDevEvent> DriverPtr = std::make_shared<ExtDevEvent>();
-    DriverPtr = ExtDevReportSysEvent::DeviceEventReport(driverInfo->GetDriverUid());
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    eventPtr = ExtDevReportSysEvent::DriverEventReport(driverInfo->GetDriverUid());
     std::string interfaceName = std::string(__func__);
-    if (DriverPtr != nullptr) {
+    if (eventPtr != nullptr) {
         eventPtr->userId = userId;
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        g_driverMap_.erase(driverInfo->GetDriverUid());
+        ExtDevReportSysEvent::DriverMapErase(driverInfo->GetDriverUid());
         ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, 0, eventPtr);
     }
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_REMOVED");
@@ -571,32 +568,12 @@ void DrvBundleStateCallback::ReportBundleSysEvent(const std::vector<ExtensionAbi
             uint32_t versionCode = ParseVersionCode(driverInfos, bundleName);
             std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
             std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
-            std::string pids = ParseIdVector(productIds);
-            std::string vids = ParseIdVector(vendorIds);
+            std::string pids = ExtDevReportSysEvent::ParseIdVector(productIds);
+            std::string vids = ExtDevReportSysEvent::ParseIdVector(vendorIds);
             ExtDevReportSysEvent::ReportDriverPackageCycleManageSysEvent(pkgInfoTable, pids, vids,
                 versionCode, driverEventName);
         }
     }
-}
-
-std::string DrvBundleStateCallback::ParseIdVector(std::vector<uint16_t> ids)
-{
-    if (ids.size() < 1) {
-        return "";
-    }
-    std::string str = "";
-    auto it = ids.begin();
-    for (uint16_t id : ids) {
-        if (it + 1 == ids.end()) {
-            std::string copy = std::to_string(id);
-            str.append(copy);
-        } else {
-            std::string copy = std::to_string(id);
-            str.append(copy);
-            str.append(",");
-        }
-    }
-    return str;
 }
 
 int DrvBundleStateCallback::ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos,

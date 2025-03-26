@@ -156,8 +156,7 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     }
     eventPtr = ExtDevReportSysEvent::ExtDevEventInit(usbDevInfo, nullptr, eventPtr);
     if (g_deviceMap_.size() < MAP_SIZE_MAX) {
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        g_deviceMap_.insert(usbDevInfo->GetDeviceId(), eventPtr);
+        ExtDevReportSysEvent::DeviceMapInsert(usbDevInfo->GetDeviceId(), eventPtr);
     }
     ExtDevReportSysEvent::SetEventValue(interfaceName, GET_DEVICE_INFO, EDM_OK, eventPtr);
     return EDM_OK;
@@ -174,6 +173,7 @@ int32_t UsbDevSubscriber::OnDeviceDisconnect(const UsbDev &usbDev)
         if (deviceInfo != nullptr) {
             eventPtr = ExtDevReportSysEvent::DeviceEventReport(deviceInfo->GetDeviceId());
             this->callback_->OnDeviceRemove(deviceInfo);
+            ExtDevReportSysEvent::DeviceMapErase(deviceInfo->GetDeviceId());
             ExtDevReportSysEvent::SetEventValue(interfaceName, GET_DEVICE_INFO, EDM_OK, eventPtr);
         } else {
             EDM_LOGE(MODULE_BUS_USB,  "deviceInfo is nullptr");
@@ -212,15 +212,15 @@ std::string UsbDevSubscriber::GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
         return strDesc;
     }
 
-    ret = this->iusb_->GetStringDescriptor(usbDev, idx, serial);
+    auto ret = this->iusb_->GetStringDescriptor(usbDev, idx, serial);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB, "GetStringDescriptor failed, ret = %{public}d", ret);
         (void)this->iusb_->CloseDevice(usbDev);
-        return EDM_ERR_IO;
+        return strDesc;
     }
     
-    size_t length = strV.size();
-    if ((length < DESCRIPTOR_VALUE_START_OFFSET) || (strV[1] != DESCRIPTOR_TYPE_STRING)) {
+    size_t length = serial.size();
+    if ((length < DESCRIPTOR_VALUE_START_OFFSET) || (serial[1] != DESCRIPTOR_TYPE_STRING)) {
         EDM_LOGE(MODULE_BUS_USB, "type or length error, len:%{public}zu", length);
         return strDesc;
     }
@@ -232,7 +232,7 @@ std::string UsbDevSubscriber::GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
     }
 
     for (uint32_t i = 0; i < length - DESCRIPTOR_VALUE_START_OFFSET; ++i) {
-        tbuf[i] = strV[i + DESCRIPTOR_VALUE_START_OFFSET];
+        tbuf[i] = serial[i + DESCRIPTOR_VALUE_START_OFFSET];
     }
     size_t bufLen = (length - DESCRIPTOR_VALUE_START_OFFSET) / HALF;
     size_t wstrLen = wcslen((wchar_t*)tbuf) <= bufLen ? wcslen((wchar_t*)tbuf) : bufLen;

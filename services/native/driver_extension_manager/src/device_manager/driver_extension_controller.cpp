@@ -170,9 +170,9 @@ int32_t DriverExtensionController::DisconnectDriverExtension(
     EDM_LOGI(MODULE_EA_MGR, "Begin to Disconnect DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
     
-    std::shared_ptr<ExtDevEvent> devicePtr = make_shared<ExtDevEvent>();
+    std::shared_ptr<ExtDevEvent> eventPtr = make_shared<ExtDevEvent>();
     std::string interfaceName = std::string(__func__);
-    devicePtr = ExtDevReportSysEvent::MatchEventReport(deviceId);
+    eventPtr = ExtDevReportSysEvent::MatchEventReport(deviceId);
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;

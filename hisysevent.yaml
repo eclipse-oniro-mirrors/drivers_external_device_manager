@@ -41,7 +41,7 @@ EXTERNAL_DEVICE_EVENT:
   BUNDLE_NAME: {type: STRING, desc: bundle name}
   OPERAT_TYPE: {type: INT32, desc: operat type}
   INTERFACE_NAME: {type: STRING, desc: interface name}
-  FAIL_MESSAGE: {type: STRING, desc: fail message}
+  MESSAGE: {type: STRING, desc: message}
   ERR_CODE: {type: INT32, desc: errCode}
 
 EXTERNAL_DEVICE_SA_EVENT:

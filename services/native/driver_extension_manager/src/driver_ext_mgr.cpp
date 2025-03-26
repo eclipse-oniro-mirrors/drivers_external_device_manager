@@ -28,6 +28,7 @@
 #include "system_ability_definition.h"
 #include "usb_device_info.h"
 #include "usb_driver_info.h"
+#include "driver_report_sys_event.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -160,11 +161,12 @@ UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrC
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
-    int ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, callingTokenId,
+    UsbErrCode ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDevice(deviceId, callingTokenId,
         connectCallback));
     if (ret == UsbErrCode::EDM_OK) {
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr = ExtDevReportSysEvent::MatchEventReport(deviceId);
+        std::string interfaceName = std::string(__func__);
         if (eventPtr != nullptr) {
             ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
         }
@@ -182,15 +184,15 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
-    int ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
+    UsbErrCode ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
     if (ret == UsbErrCode::EDM_OK) {
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr = ExtDevReportSysEvent::MatchEventReport(deviceId);
+        std::string interfaceName = std::string(__func__);
         if (eventPtr != nullptr) {
             ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_UNBIND, ret, eventPtr);
         }
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        g_matchMap_.erase(deviceId);
+        ExtDevReportSysEvent::MatchMapErase(deviceId);
         return ret;
     }
     return ret;

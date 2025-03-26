@@ -52,6 +52,7 @@ ohos_shared_library("driver_extension_manager") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "hisysevent:libhisysevent",
   ]
   cflags_cc = [
     "-fno-asynchronous-unwind-tables",
