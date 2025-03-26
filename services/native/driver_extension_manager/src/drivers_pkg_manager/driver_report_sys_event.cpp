@@ -128,7 +128,7 @@ constexpr int LAST_FIVE = 5;
     bool ExtDevReportSysEvent::IsMatched(const std::shared_ptr<DeviceInfo> &deviceInfo,
         const std::shared_ptr<DriverInfo> &driverInfo)
     {
-        if (deviceInfo != nullptr && driverInfo != nullptr){
+        if (deviceInfo != nullptr && driverInfo != nullptr) {
             std::lock_guard<std::mutex> lock(hisyseventMutex_);
             std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
             auto device = g_deviceMap_.find(deviceInfo->GetDeviceId());

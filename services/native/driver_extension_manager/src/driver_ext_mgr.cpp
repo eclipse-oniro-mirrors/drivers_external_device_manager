@@ -184,7 +184,7 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
-    UsbErrCode ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
+    auto ret = static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDevice(deviceId, callingTokenId));
     if (ret == UsbErrCode::EDM_OK) {
         std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
         eventPtr = ExtDevReportSysEvent::MatchEventReport(deviceId);
