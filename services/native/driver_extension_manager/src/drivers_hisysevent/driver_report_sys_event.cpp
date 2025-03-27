@@ -17,6 +17,10 @@
 #include "hilog_wrapper.h"
 #include "hisysevent.h"
 #include "edm_errors.h"
+#include "ext_object.h"
+#include "usb_device_info.h"
+#include "usb_driver_info.h"
+#include "pkg_tables.h"
 
 using namespace OHOS::HiviewDFX;
 

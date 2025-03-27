@@ -62,7 +62,8 @@
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
                 "//drivers/external_device_manager/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
-                "//drivers/external_device_manager/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus"
+                "//drivers/external_device_manager/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
+                "//drivers/external_device_manager/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event"
             ],
             "inner_kits": [
                 {

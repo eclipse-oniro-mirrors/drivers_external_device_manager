@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,16 +18,15 @@
 
 #include <string>
 #include <vector>
-#include "pkg_tables.h"
 #include <mutex>
-#include "ext_object.h"
-#include "usb_device_info.h"
-#include "usb_driver_info.h"
 #include <memory>
 #include <map>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+class DeviceInfo;
+class DriverInfo;
+struct PkgInfoTable;
 
 extern std::map<uint32_t, std::shared_ptr<struct ExtDevEvent>> g_matchMap_;
 extern std::map<uint32_t, std::shared_ptr<struct ExtDevEvent>> g_deviceMap_;

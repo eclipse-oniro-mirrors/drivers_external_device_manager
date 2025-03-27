@@ -162,7 +162,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
     }
     EDM_LOGI(MODULE_BUS_USB,  "Driver and Device match sucess\n");
     shared_ptr<DeviceInfo> deviceInfoPtr = make_shared<DeviceInfo>(device);
-    shared_ptr<DriverInfo> driverInfoPtr = make_shared<DriverInfo>(driver);
+    shared_ptr<DriverInfo> driverInfoPtr = static_pointer_cast<DriverInfo>(driver.GetInfoExt());
     if (!ExtDevReportSysEvent::IsMatched(deviceInfoPtr, driverInfoPtr)) {
         EDM_LOGI(MODULE_PKG_MGR, "set matchMap failed");
     }
