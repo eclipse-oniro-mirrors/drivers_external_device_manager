@@ -71,9 +71,9 @@ ohos_static_library("driver_extension_device_manager_test") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
   ]
   configs = [ "${utils_path}:utils_config" ]
-  deps = [ 
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
+  deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [
     "ability_base:want",
