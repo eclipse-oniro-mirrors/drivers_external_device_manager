@@ -14,18 +14,14 @@
 import("//drivers/external_device_manager/extdevmgr.gni")
 
 ohos_shared_library("report_sys_event") {
-  sources = [
-    "driver_report_sys_event.cpp",
-  ]
+  sources = [ "driver_report_sys_event.cpp" ]
   include_dirs = [
+    "../../include/bus_extension/usb",
     "../../include/drivers_hisysevent",
     "../../include/drivers_pkg_manager",
-    "../../include/bus_extension/usb",
     "${ext_mgr_path}/interfaces/ddk/usb",
   ]
-  configs = [
-    "${utils_path}:utils_config",
-  ]
+  configs = [ "${utils_path}:utils_config" ]
 
   external_deps = [
     "cJSON:cjson",
