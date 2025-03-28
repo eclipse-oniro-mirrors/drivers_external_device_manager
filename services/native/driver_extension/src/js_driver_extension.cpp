@@ -192,7 +192,7 @@ void JsDriverExtension::BindContext(napi_env env, napi_value obj)
     HILOG_INFO("JsDriverExtension::Init Bind.");
     context->Bind(jsRuntime_, shellContextRef_.get());
     HILOG_INFO("JsDriverExtension::SetProperty.");
-    napi_set_named_property(env, obj, "context", contextObj);
+    napi_set_named_property(env, obj, "context", nativeObj);
     HILOG_INFO("Set driver extension context");
     napi_status status = napi_wrap(env, nativeObj, workContext,
         [](napi_env, void* data, void*) {
