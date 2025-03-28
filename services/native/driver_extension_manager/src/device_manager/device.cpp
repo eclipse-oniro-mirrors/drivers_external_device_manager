@@ -19,6 +19,7 @@
 #include "hilog_wrapper.h"
 #include "device.h"
 #include "etx_device_mgr.h"
+#include "driver_report_sys_event.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -61,6 +62,8 @@ int32_t Device::Connect()
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string interfaceName = std::string(__func__);
     uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
     std::string bundleInfo = GetBundleInfo();
     std::string bundleName = Device::GetBundleName(bundleInfo);
@@ -86,6 +89,8 @@ int32_t Device::Connect()
     }
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
+        eventPtr = ExtDevReportSysEvent::ExtDevEventInit(GetDeviceInfo(), GetDriverInfo(), eventPtr);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, ret, eventPtr);
         return ret;
     }
     return UsbErrCode::EDM_OK;
@@ -95,12 +100,17 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    uint64_t deviceId = GetDeviceInfo()->GetDeviceId();
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    eventPtr = ExtDevReportSysEvent::DeviceEventReport(GetDeviceInfo()->GetDeviceId());
+    std::string interfaceName = std::string(__func__);
     if (drvExtRemote_ != nullptr) {
-        connectCallback->OnConnect(deviceId, drvExtRemote_, {UsbErrCode::EDM_OK, ""});
+        connectCallback->OnConnect(GetDeviceInfo()->GetDeviceId(), drvExtRemote_, {UsbErrCode::EDM_OK, ""});
         int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
         if (ret != UsbErrCode::EDM_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
+            if (eventPtr != nullptr) {
+                ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
+            }
             return ret;
         }
         boundCallerInfos_[callingTokenId] = CallerInfo{true};
@@ -110,6 +120,9 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
     int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
+        if (eventPtr != nullptr) {
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
+        }
         return ret;
     }
 

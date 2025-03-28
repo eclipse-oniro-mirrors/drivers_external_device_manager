@@ -23,6 +23,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "bundle_update_callback.h"
+#include "driver_report_sys_event.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -526,6 +527,10 @@ int32_t ExtDeviceManager::ConnectDevice(uint64_t deviceId, uint32_t callingToken
     std::shared_ptr<Device> device = QueryDeviceByDeviceID(deviceId);
     if (device == nullptr) {
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
+        std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+        eventPtr->deviceId = deviceId;
+        std::string interfaceName = std::string(__func__);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, EDM_NOK, eventPtr);
         return EDM_NOK;
     }
 
@@ -538,12 +543,22 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
     std::shared_ptr<Device> device = QueryDeviceByDeviceID(deviceId);
     if (device == nullptr) {
         EDM_LOGI(MODULE_DEV_MGR, "failed to find device with %{public}016" PRIX64 " deviceId", deviceId);
+        std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+        eventPtr->deviceId = deviceId;
+        std::string interfaceName = std::string(__func__);
+        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
         return EDM_NOK;
     }
 
     std::shared_ptr<DriverInfo> driverInfo = device->GetDriverInfo();
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
+        std::shared_ptr<ExtDevEvent> eventPtr = make_shared<ExtDevEvent>();
+        eventPtr = ExtDevReportSysEvent::DeviceEventReport(deviceId);
+        if (eventPtr != nullptr) {
+            std::string interfaceName = std::string(__func__);
+            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_UNBIND, EDM_NOK, eventPtr);
+        }
         return EDM_NOK;
     }
 

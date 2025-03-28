@@ -130,6 +130,8 @@ private:
     void ResetBundleMgr();
     std::string ParseIdVector(std::vector<uint16_t> ids);
     int ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName);
+    shared_ptr<DriverInfo> GetDriverInfo(const std::vector<ExtensionAbilityInfo> &driverInfos,
+        const std::string &bundleName);
 };
 
 class BundleMgrDeathRecipient : public IRemoteObject::DeathRecipient {

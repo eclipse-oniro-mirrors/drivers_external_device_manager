@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
+import("//drivers/external_device_manager/extdevmgr.gni")
 
 config("ability_config") {
   visibility = [ ":*" ]
@@ -22,7 +22,11 @@ config("ability_config") {
 }
 
 ohos_shared_library("driver_extension") {
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "${ext_mgr_path}/interfaces/ddk/usb",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
+  ]
 
   sources = [
     "src/driver_extension.cpp",
@@ -31,6 +35,7 @@ ohos_shared_library("driver_extension") {
     "src/js_driver_extension_context.cpp",
   ]
 
+  deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event" ]
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_connect_callback_stub",

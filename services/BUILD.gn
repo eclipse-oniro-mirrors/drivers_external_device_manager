@@ -28,6 +28,7 @@ ohos_shared_library("driver_extension_manager") {
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${ext_mgr_path}/interfaces/innerkits/",
     "${ext_mgr_path}/services/zidl/include/",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
@@ -37,6 +38,7 @@ ohos_shared_library("driver_extension_manager") {
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [
@@ -49,6 +51,7 @@ ohos_shared_library("driver_extension_manager") {
     "cJSON:cjson",
     "c_utils:utils",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -99,6 +102,7 @@ ohos_static_library("driver_extension_manager_test") {
   include_dirs = [
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
   ]
 
@@ -106,6 +110,7 @@ ohos_static_library("driver_extension_manager_test") {
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
   ]
   external_deps = [

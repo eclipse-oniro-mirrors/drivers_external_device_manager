@@ -23,6 +23,7 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
   ]
   configs = [
     "${utils_path}:coverage_flags",
@@ -31,6 +32,7 @@ ohos_shared_library("driver_extension_usb_bus") {
   deps = [
     "${ext_mgr_path}/frameworks/ddk/usb:usb_ndk",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
   ]
   external_deps = [
     "cJSON:cjson",

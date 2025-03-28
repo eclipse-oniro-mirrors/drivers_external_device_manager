@@ -15,6 +15,7 @@
 
 #include "driver_os_account_subscriber.h"
 #include "hilog_wrapper.h"
+#include "driver_report_sys_event.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -33,6 +34,12 @@ void DriverOsAccountSwitched::OnAccountsChanged(const int &id)
 void DriverOsAccountSwitched::OnAccountsSwitch(const int &newId, const int &oldId)
 {
     EDM_LOGI(MODULE_PKG_MGR, "OnAccountsSwitched, newId=%{public}d, oldId=%{public}d", newId, oldId);
+    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
+    std::string lastId = std::to_string(oldId);
+    std::string nextId = std::to_string(newId);
+    eventPtr->message = "oldId:" + lastId + "newId:" + nextId;
+    std::string interfaceName = std::string(__func__);
+    ExtDevReportSysEvent::SetEventValue(interfaceName, CHANGE_FUNC, 0, eventPtr);
     if (bundleStateCallback_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "OnAccountsSwitched bundleStateCallback_ is null");
         return;
