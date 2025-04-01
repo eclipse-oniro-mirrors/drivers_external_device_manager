@@ -23,7 +23,6 @@ ohos_fuzztest("BindDeviceFuzzTest") {
 
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/",
-    "${ext_mgr_path}/services/zidl/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
   ]
 

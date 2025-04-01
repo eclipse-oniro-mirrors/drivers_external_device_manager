@@ -15,6 +15,7 @@
 
 #include "unbinddevice_fuzzer.h"
 #include "driver_ext_mgr.h"
+#include "hdf_ext_devmgr_interface_code.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {

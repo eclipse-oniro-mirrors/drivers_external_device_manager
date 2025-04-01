@@ -63,11 +63,11 @@ struct AsyncDataWorker {
 
 class DeviceManagerCallback : public DriverExtMgrCallbackStub {
 public:
-    void OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg) override;
+    ErrCode OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg) override;
 
-    void OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg) override;
+    ErrCode OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg) override;
 
-    void OnUnBind(uint64_t deviceId, const ErrMsg &errMsg) override;
+    ErrCode OnUnBind(uint64_t deviceId, const ErrMsg &errMsg) override;
 };
 }
 }

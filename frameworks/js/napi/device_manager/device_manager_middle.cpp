@@ -25,6 +25,7 @@
 
 #include "napi_remote_object.h"
 #include "device_manager_middle.h"
+#include "edm_errors.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -47,7 +48,7 @@ static const std::map<int32_t, std::string> ERROR_MESSAGES = {
 static std::mutex mapMutex;
 static std::map<uint64_t, sptr<AsyncData>> g_callbackMap = {};
 static DriverExtMgrClient &g_edmClient = DriverExtMgrClient::GetInstance();
-static sptr<DeviceManagerCallback> g_edmCallback = new (std::nothrow) DeviceManagerCallback {};
+static sptr<DeviceManagerCallback> g_edmCallback = new (std::nothrow) DeviceManagerCallback;
 
 static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errMsg);
 static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId);
@@ -75,13 +76,13 @@ void AsyncData::DeleteNapiRef()
     }
 }
 
-void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
+ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
     EDM_LOGE(MODULE_DEV_MGR, "bind device callback: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device OnConnect is null");
-        return;
+        return EDM_NOK;
     }
 
     auto data = g_callbackMap[deviceId];
@@ -113,23 +114,25 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
+        return EDM_NOK;
     }
+    return EDM_OK;
 }
 
-void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
+ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device callback map is null");
-        return;
+        return EDM_NOK;
     }
 
     auto data = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
     if (data->onDisconnect == nullptr && data->unbindCallback == nullptr && data->unbindDeferred == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "device callback is null");
-        return;
+        return EDM_NOK;
     }
     data->IncStrongRef(nullptr);
     auto task = [data, errMsg]() {
@@ -165,24 +168,27 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
         data->DecStrongRef(nullptr);
+        return EDM_NOK;
     }
+    return EDM_OK;
 }
 
-void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
+ErrCode DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGI(MODULE_DEV_MGR, "unbind device callback: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind map is null");
-        return;
+        return EDM_NOK;
     }
 
     auto asyncData = g_callbackMap[deviceId];
     if (asyncData == nullptr || (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr)) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
-        return;
+        return EDM_NOK;
     }
     asyncData->unBindErrMsg = errMsg;
+    return EDM_OK;
 }
 
 static bool IsMatchType(const napi_env &env, const napi_value &value, const napi_valuetype &type)
