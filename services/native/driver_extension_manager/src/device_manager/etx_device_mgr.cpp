@@ -251,7 +251,8 @@ void ExtDeviceManager::MatchDriverInfos(std::unordered_set<uint64_t> deviceIds)
             if (device->IsUnRegisted() || device->GetDrvExtRemote() != nullptr) {
                 continue;
             }
-            auto matchedDriverInfo = DriverPkgManager::GetInstance().QueryMatchDriver(device->GetDeviceInfo());
+            auto matchedDriverInfo = DriverPkgManager::GetInstance().QueryMatchDriver(device->GetDeviceInfo(),
+                "[BUNDLE_UPDATE]");
             if (matchedDriverInfo == nullptr) {
                 EDM_LOGD(MODULE_DEV_MGR, "deviceId[%{public}016" PRIX64 "], not find driver", deviceId);
                 continue;
@@ -325,7 +326,7 @@ int32_t ExtDeviceManager::RegisterDevice(shared_ptr<DeviceInfo> devInfo)
     std::string bundleInfo = device->GetBundleInfo();
     // if device does not have a matching driver, match driver here
     if (bundleInfo.empty()) {
-        auto matchedDriverInfo = DriverPkgManager::GetInstance().QueryMatchDriver(devInfo);
+        auto matchedDriverInfo = DriverPkgManager::GetInstance().QueryMatchDriver(devInfo, "[DEVICE_ADD]");
         if (matchedDriverInfo != nullptr) {
             bundleInfo = matchedDriverInfo->GetBundleName() + Device::GetStiching() +
                 matchedDriverInfo->GetDriverName();
