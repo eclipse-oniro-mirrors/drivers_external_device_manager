@@ -83,6 +83,7 @@ void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, const map<strin
     for (auto data : metadata) {
         if (data.first == DRV_INFO_BUS) {
             tmpDrvInfo.bus_ = data.second;
+            tmpDrvInfo.busType_ = BusExtensionCore::GetBusTypeByName(tmpDrvInfo.bus_);
         }
         if (data.first == DRV_INFO_VENDOR) {
             tmpDrvInfo.vendor_ = data.second;
@@ -99,11 +100,12 @@ void DrvBundleStateCallback::ChangeValue(DriverInfo &tmpDrvInfo, const map<strin
     }
 }
 
-void DrvBundleStateCallback::ParseToPkgInfoTables(const std::vector<ExtensionAbilityInfo> &driverInfos,
-    std::vector<PkgInfoTable> &pkgInfoTables)
+std::vector<DriverObj> DrvBundleStateCallback::ParseToPkgInfoTables(
+    const std::vector<ExtensionAbilityInfo> &driverInfos, std::vector<PkgInfoTable> &pkgInfoTables)
 {
     std::unordered_map<std::string, std::string> bundlesSize;
     shared_ptr<IBusExtension> extInstance = nullptr;
+    std::vector<DriverObj> ret;
     for (const auto &driverInfo : driverInfos) {
         if (driverInfo.type != ExtensionAbilityType::DRIVER || driverInfo.metadata.empty()) {
             continue;
@@ -140,7 +142,9 @@ void DrvBundleStateCallback::ParseToPkgInfoTables(const std::vector<ExtensionAbi
 
         PkgInfoTable pkgInfo = CreatePkgInfoTable(driverInfo, driverInfoStr);
         pkgInfoTables.emplace_back(pkgInfo);
+        ret.emplace_back(DriverObj{pkgInfo, tmpDrvInfo});
     }
+    return ret;
 }
 
 PkgInfoTable DrvBundleStateCallback::CreatePkgInfoTable(const ExtensionAbilityInfo &driverInfo, string driverInfoStr)
@@ -226,14 +230,6 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
         ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, RDB_ERR, eventPtr);
     }
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_ADD");
-    if (g_driverMap_.size() >= MAP_SIZE_MAX) {
-        EDM_LOGE(MODULE_PKG_MGR,  "g_driverMap_ is full");
-        return;
-    }
-    std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
-    eventPtr = ExtDevReportSysEvent::ExtDevEventInit(nullptr, driverInfo, eventPtr);
-    ExtDevReportSysEvent::DriverMapInsert(driverInfo->GetDriverUid(), eventPtr);
-    ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, 0, eventPtr);
     FinishTrace(LABEL);
 }
 /**
@@ -269,12 +265,6 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
         ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, QUERY_ERR, eventPtr);
     }
     ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_UPDATE");
-    std::shared_ptr<DriverInfo> driverInfo = GetDriverInfo(driverInfos, bundleName);
-    eventPtr = ExtDevReportSysEvent::ExtDevEventInit(nullptr, driverInfo, eventPtr);
-    if (eventPtr != nullptr) {
-        ExtDevReportSysEvent::DriverMapInsert(driverInfo->GetDriverUid(), eventPtr);
-        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, 0, eventPtr);
-    }
     FinishTrace(LABEL);
 }
 
@@ -301,8 +291,9 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
         ExtDevReportSysEvent::DriverMapErase(driverInfo->GetDriverUid());
         ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_DATA_REFRESH, 0, eventPtr);
     }
-    ReportBundleSysEvent(driverInfos, bundleName, "BUNDLE_REMOVED");
+    ExtDevReportSysEvent::ReportDelPkgsCycleManageSysEvent(bundleName, "BUNDLE_REMOVED");
     OnBundleDrvRemoved(bundleName);
+    ExtDevReportSysEvent::DriverMapDelete(bundleName);
     FinishTrace(LABEL);
 }
 
@@ -439,16 +430,43 @@ void DrvBundleStateCallback::ClearDriverInfo(DriverInfo &tmpDrvInfo)
     tmpDrvInfo.driverInfoExt_ = nullptr;
 }
 
+static void ReportPkgsEvent(const std::vector<DriverObj> &driverObjs, const std::string &bundleName)
+{
+    EDM_LOGI(MODULE_PKG_MGR, "ReportPkgsEvent enter, %{public}zu", driverObjs.size());
+    ExtDevReportSysEvent::DriverMapDelete(bundleName);
+    for (const auto &driverObj : driverObjs) {
+        if (driverObj.driverInfo.GetBusType() != BusType::BUS_TYPE_USB) {
+            continue;
+        }
+        auto eventObj = std::make_shared<ExtDevEvent>();
+        std::shared_ptr<UsbDriverInfo> usbDriverInfo =
+            std::static_pointer_cast<UsbDriverInfo>(driverObj.driverInfo.GetInfoExt());
+        std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
+        std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
+        eventObj->vids = ExtDevReportSysEvent::ParseIdVector(vendorIds);
+        eventObj->pids = ExtDevReportSysEvent::ParseIdVector(productIds);
+        eventObj->driverUid = driverObj.pkgInfoTable.driverUid;
+        eventObj->driverName = driverObj.pkgInfoTable.driverName;
+        eventObj->versionCode = driverObj.driverInfo.GetVersion();
+        eventObj->userId = driverObj.pkgInfoTable.userId;
+        eventObj->bundleName = driverObj.pkgInfoTable.bundleName;
+        ExtDevReportSysEvent::DriverMapInsert(eventObj->driverUid, eventObj);
+        ExtDevReportSysEvent::SetEventValue(std::string(__func__), DRIVER_PACKAGE_DATA_REFRESH, 0, eventObj);
+    }
+}
+
 bool DrvBundleStateCallback::UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos,
     const std::string &bundleName)
 {
     std::vector<PkgInfoTable> pkgInfoTables;
-    ParseToPkgInfoTables(driverInfos, pkgInfoTables);
+    auto driverObjs = ParseToPkgInfoTables(driverInfos, pkgInfoTables);
     std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
     if (helper->AddOrUpdatePkgInfo(pkgInfoTables, bundleName) < PKG_OK) {
         EDM_LOGE(MODULE_PKG_MGR, "add or update failed,bundleName:%{public}s", bundleName.c_str());
         return false;
     }
+
+    ReportPkgsEvent(driverObjs, bundleName);
 
     if (bundleUpdateCallback_ != nullptr) {
         std::thread taskThread([bundleName, this]() {

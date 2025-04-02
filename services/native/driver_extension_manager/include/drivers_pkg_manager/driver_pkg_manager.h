@@ -57,7 +57,7 @@ public:
     int32_t Init();
     int32_t Init(shared_future<int32_t> bmsFuture, shared_future<int32_t> accountFuture,
         shared_future<int32_t> commEventFuture);
-    shared_ptr<DriverInfo> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo);
+    shared_ptr<DriverInfo> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo, const std::string &type = "");
     int32_t QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driverInfos,
         bool isByDriverUid = false, const std::string &driverUid = "");
     int32_t RegisterOnBundleUpdate(PCALLBACKFUN pFun);

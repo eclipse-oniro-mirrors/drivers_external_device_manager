@@ -29,7 +29,7 @@ public:
     virtual ~IBusExtension() = default;
     virtual shared_ptr<DriverInfoExt> ParseDriverInfo(const map<string, string> &metadata) = 0;
     virtual shared_ptr<DriverInfoExt> GetNewDriverInfoExtObject() = 0;
-    virtual bool MatchDriver(const DriverInfo &driver, const DeviceInfo &device) = 0;
+    virtual bool MatchDriver(const DriverInfo &driver, const DeviceInfo &device, const std::string &type = "") = 0;
     virtual int32_t SetDevChangeCallback(shared_ptr<IDevChangeCallback> callback) = 0;
     virtual BusType GetBusType() = 0;
     virtual shared_ptr<IDriverChangeCallback> AcquireDriverChangeCallback() = 0;

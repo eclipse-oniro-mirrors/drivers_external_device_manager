@@ -150,13 +150,11 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
         ExtDevReportSysEvent::SetEventValue(interfaceName, GET_DEVICE_INFO, ret, eventPtr);
         return ret;
     }
+    eventPtr = ExtDevReportSysEvent::ExtDevEventInit(usbDevInfo, nullptr, eventPtr);
+    ExtDevReportSysEvent::DeviceMapInsert(usbDevInfo->GetDeviceId(), eventPtr);
     (void)this->iusb_->CloseDevice(usbDev);
     if (this->callback_ != nullptr) {
         this->callback_->OnDeviceAdd(usbDevInfo);
-    }
-    eventPtr = ExtDevReportSysEvent::ExtDevEventInit(usbDevInfo, nullptr, eventPtr);
-    if (g_deviceMap_.size() < MAP_SIZE_MAX) {
-        ExtDevReportSysEvent::DeviceMapInsert(usbDevInfo->GetDeviceId(), eventPtr);
     }
     ExtDevReportSysEvent::SetEventValue(interfaceName, GET_DEVICE_INFO, EDM_OK, eventPtr);
     return EDM_OK;

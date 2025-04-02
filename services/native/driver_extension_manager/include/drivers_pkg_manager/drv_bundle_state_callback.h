@@ -51,6 +51,11 @@ enum ON_BUNDLE_STATUS {
 
 typedef int32_t(*PCALLBACKFUN)(int, int, const string &, const string &);
 
+typedef struct DriverObj {
+    PkgInfoTable pkgInfoTable;
+    DriverInfo driverInfo;
+} DriverObj;
+
 class DrvBundleStateCallback : public IBundleStatusCallback {
 public:
     DrvBundleStateCallback();
@@ -119,7 +124,7 @@ private:
     int32_t GetCurrentActiveUserId();
     void ChangeValue(DriverInfo &tmpDrvInfo, const map<string, string> &metadata);
     std::string GetBundleSize(const std::string &bundleName);
-    void ParseToPkgInfoTables(
+    std::vector<DriverObj> ParseToPkgInfoTables(
         const std::vector<ExtensionAbilityInfo> &driverInfos, std::vector<PkgInfoTable> &pkgInfoTables);
     PkgInfoTable CreatePkgInfoTable(const ExtensionAbilityInfo &driverInfo, string driverInfoStr);
     bool IsCurrentUserId(const int userId);

@@ -23,7 +23,7 @@ DRIVER_PACKAGE_CYCLE_MANAGER:
   PRODUCT_ID: {type: STRING, desc: product id}
   DRIVER_EVENT_NAME: {type: STRING, desc: driver event name}
 
-EXTERNAL_DEVICE_EVENT:
+EXT_DEVICE_EVENT:
   __BASE: {type: STATISTIC, level: CRITICAL, tag: ExternalDevice, desc: ExternalDeviceEvent}
   DEVICE_CLASS: {type: INT32, desc: device class}
   DEVICE_SUBCLASS: {type: INT32, desc: device subclass}
@@ -31,10 +31,10 @@ EXTERNAL_DEVICE_EVENT:
   SN_NUM: {type: STRING, desc: snNum}
   VENDOR_ID: {type: INT32, desc: vendor id}
   PRODUCT_ID: {type: INT32, desc: product id}
-  DEVICE_ID: {type: INT32, desc: device id}
+  DEVICE_ID: {type: UINT64, desc: device id}
   DRIVER_UID: {type: STRING, desc: driver uid}
   DRIVER_NAME: {type: STRING, desc: driver name}
-  VERSION_CODE: {type: INT32, desc: version code}
+  VERSION_CODE: {type: STRING, desc: version code}
   VIDS: {type: STRING, desc: vids}
   PIDS: {type: STRING, desc: pids}
   USER_ID: {type: INT32, desc: user id}
