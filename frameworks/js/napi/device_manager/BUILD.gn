@@ -15,8 +15,8 @@ import("//drivers/external_device_manager/extdevmgr.gni")
 
 ohos_shared_library("devicemanager_napi") {
   sources = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",
     "device_manager_middle.cpp",
-    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp"
   ]
 
   include_dirs = [

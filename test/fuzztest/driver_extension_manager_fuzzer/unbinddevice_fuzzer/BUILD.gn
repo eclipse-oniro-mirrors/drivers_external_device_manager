@@ -24,6 +24,7 @@ ohos_fuzztest("UnBindDeviceFuzzTest") {
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
+
     #"${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
     #"${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
     #"${ext_mgr_path}/services/native/driver_extension_manager/include/driver_controller",

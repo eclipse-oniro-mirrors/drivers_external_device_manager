@@ -18,8 +18,8 @@ module_output_path = "external_device_manager/extension_device_manager"
 ohos_unittest("device_manager_test") {
   module_out_path = "${module_output_path}"
   sources = [
-    "device_manager_test.cpp",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",
+    "device_manager_test.cpp",
   ]
   include_dirs = [
     "${ext_mgr_path}/frameworks/ddk/usb/",
@@ -31,11 +31,11 @@ ohos_unittest("device_manager_test") {
     "${ext_mgr_path}/interfaces/innerkits/",
   ]
   deps = [
+    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager_test",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager_test",
-    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
   ]
   external_deps = [
     "bundle_framework:appexecfwk_core",

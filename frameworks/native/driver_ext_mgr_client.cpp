@@ -33,6 +33,23 @@ DriverExtMgrClient::~DriverExtMgrClient()
     }
 }
 
+static UsbErrCode ProxyRetTranslate(int32_t proxyRet)
+{
+    UsbErrCode ret = UsbErrCode::EDM_OK;
+    switch (proxyRet) {
+        case ERR_INVALID_VALUE:
+            ret = UsbErrCode::EDM_ERR_INVALID_OBJECT;
+            break;
+        case ERR_INVALID_DATA:
+            ret = UsbErrCode::EDM_ERR_INVALID_PARAM;
+            break;
+        default:
+            ret = static_cast<UsbErrCode>(proxyRet);
+            break;
+    }
+    return ret;
+}
+
 UsbErrCode DriverExtMgrClient::Connect()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -102,7 +119,10 @@ UsbErrCode DriverExtMgrClient::QueryDevice(uint32_t busType, std::vector<std::sh
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->QueryDevice(busType, devices, ret);
+    int32_t proxyRet = proxy_->QueryDevice(ret, busType, devices);
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -112,7 +132,11 @@ UsbErrCode DriverExtMgrClient::BindDevice(uint64_t deviceId, const sptr<IDriverE
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->BindDevice(deviceId, connectCallback, ret);
+    int32_t proxyRet = proxy_->BindDevice(ret, deviceId, connectCallback);
+    if (proxyRet != ERR_OK) {
+        EDM_LOGI(MODULE_FRAMEWORK, "proxyRet = %{public}d", proxyRet);
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -122,7 +146,10 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->UnBindDevice(deviceId, ret);
+    int32_t proxyRet = proxy_->UnBindDevice(ret, deviceId);
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -133,7 +160,10 @@ UsbErrCode DriverExtMgrClient::BindDriverWithDeviceId(uint64_t deviceId,
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->BindDriverWithDeviceId(deviceId, connectCallback, ret);
+    int32_t proxyRet = proxy_->BindDriverWithDeviceId(ret, deviceId, connectCallback);
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -143,7 +173,10 @@ UsbErrCode DriverExtMgrClient::UnbindDriverWithDeviceId(uint64_t deviceId)
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->UnBindDriverWithDeviceId(deviceId, ret);
+    int32_t proxyRet = proxy_->UnBindDriverWithDeviceId(ret, deviceId);
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -153,7 +186,10 @@ UsbErrCode DriverExtMgrClient::QueryDeviceInfo(std::vector<std::shared_ptr<Devic
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->QueryDeviceInfo(deviceInfos, ret, false, 0);
+    int32_t proxyRet = proxy_->QueryDeviceInfo(ret, deviceInfos, false, 0);
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -164,7 +200,10 @@ UsbErrCode DriverExtMgrClient::QueryDeviceInfo(const uint64_t deviceId,
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->QueryDeviceInfo(deviceInfos, ret, true, deviceId);
+    int32_t proxyRet = proxy_->QueryDeviceInfo(ret, deviceInfos, true, deviceId);
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -174,7 +213,10 @@ UsbErrCode DriverExtMgrClient::QueryDriverInfo(std::vector<std::shared_ptr<Drive
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->QueryDriverInfo(driverInfos, ret, false, "");
+    int32_t proxyRet = proxy_->QueryDriverInfo(ret, driverInfos, false, "");
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 
@@ -185,7 +227,10 @@ UsbErrCode DriverExtMgrClient::QueryDriverInfo(const std::string &driverUid,
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
     int32_t ret = EDM_OK;
-    proxy_->QueryDriverInfo(driverInfos, ret, true, driverUid);
+    int32_t proxyRet = proxy_->QueryDriverInfo(ret, driverInfos, true, driverUid);
+    if (proxyRet != ERR_OK) {
+        return ProxyRetTranslate(proxyRet);
+    }
     return static_cast<UsbErrCode>(ret);
 }
 

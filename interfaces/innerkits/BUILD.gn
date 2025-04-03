@@ -55,12 +55,6 @@ ohos_shared_library("driver_ext_mgr_client") {
 }
 
 ohos_source_set("external_device_manager_stub") {
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   public_configs = [ ":ext_dvc_mgr_public_config" ]
   output_values = get_target_outputs(":external_device_manager_interface")
   sources = filter_include(output_values, [ "*mgr_stub.cpp" ])

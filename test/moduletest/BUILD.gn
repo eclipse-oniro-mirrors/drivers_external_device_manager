@@ -63,9 +63,9 @@ ohos_executable("bus_extension_core_mt") {
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [
+    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
-    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
   ]
   external_deps = [
     "c_utils:utils",
@@ -87,10 +87,10 @@ ohos_executable("ext_device_manager_mt") {
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [
+    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
-    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
   ]
   external_deps = [
     "ability_runtime:ability_manager",

@@ -20,11 +20,11 @@ sequenceable DriverExtMgrTypes..OHOS.ExternalDeviceManager.DeviceInfoData;
 sequenceable DriverExtMgrTypes..OHOS.ExternalDeviceManager.DriverInfoData;
 
 interface OHOS.ExternalDeviceManager.IDriverExtMgr {
-    void QueryDevice([in] unsigned int busType, [out] sharedptr<DeviceData>[] devices, [out] int errorCode);
-    void BindDevice([in] unsigned long deviceId, [in] IDriverExtMgrCallback connectCallback, [out] int errorCode);
-    void UnBindDevice([in] unsigned long deviceId, [out] int errorCode);
-    void BindDriverWithDeviceId([in] unsigned long deviceId, [in] IDriverExtMgrCallback connectCallback, [out] int errorCode);
-    void UnBindDriverWithDeviceId([in] unsigned long deviceId, [out] int errorCode);
-    void QueryDeviceInfo([out] sharedptr<DeviceInfoData>[] deviceInfos, [out] int errorCode, [in] boolean isByDeviceId, [in] unsigned long deviceId);
-    void QueryDriverInfo([out] sharedptr<DriverInfoData>[] driverInfos, [out] int errorCode, [in] boolean isByDriverUid, [in] String driverUid);
+    void QueryDevice([out] int errorCode, [in] unsigned int busType, [out] sharedptr<DeviceData>[] devices);
+    void BindDevice([out] int errorCode, [in] unsigned long deviceId, [in] IDriverExtMgrCallback connectCallback);
+    void UnBindDevice([out] int errorCode, [in] unsigned long deviceId);
+    void BindDriverWithDeviceId([out] int errorCode, [in] unsigned long deviceId, [in] IDriverExtMgrCallback connectCallback);
+    void UnBindDriverWithDeviceId([out] int errorCode, [in] unsigned long deviceId);
+    void QueryDeviceInfo([out] int errorCode, [out] sharedptr<DeviceInfoData>[] deviceInfos, [in] boolean isByDeviceId, [in] unsigned long deviceId);
+    void QueryDriverInfo([out] int errorCode, [out] sharedptr<DriverInfoData>[] driverInfos, [in] boolean isByDriverUid, [in] String driverUid);
 }
