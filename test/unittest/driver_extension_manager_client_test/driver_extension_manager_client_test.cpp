@@ -29,6 +29,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "system_ability_load_callback_stub.h"
+#include "hdf_ext_devmgr_interface_code.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -186,38 +187,42 @@ HWTEST_F(DrvExtMgrClientTest, BindDevice001, TestSize.Level1)
 
 class DriverExtMgrCallbackTest : public DriverExtMgrCallbackStub {
 public:
-    void OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg) override;
+    ErrCode OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg) override;
 
-    void OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg) override;
+    ErrCode OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg) override;
 
-    void OnUnBind(uint64_t deviceId, const ErrMsg &errMsg) override;
+    ErrCode OnUnBind(uint64_t deviceId, const ErrMsg &errMsg) override;
 };
 
-void DriverExtMgrCallbackTest::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
+ErrCode DriverExtMgrCallbackTest::OnConnect(
+    uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
     EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}016" PRIX64 "",
         static_cast<UsbErrCode>(errMsg.errCode), errMsg.msg.c_str(), deviceId);
     std::cout << "OnConnect {errCode:" << static_cast<UsbErrCode>(errMsg.errCode) << ", ";
     std::cout << "msg:" << errMsg.msg << ", ";
     std::cout << "deviceId:" << deviceId << "}" << std::endl;
+    return EDM_OK;
 }
 
-void DriverExtMgrCallbackTest::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
+ErrCode DriverExtMgrCallbackTest::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}016" PRIX64 "",
         static_cast<UsbErrCode>(errMsg.errCode), errMsg.msg.c_str(), deviceId);
     std::cout << "OnDisconnect {errCode:" << static_cast<UsbErrCode>(errMsg.errCode) << ", ";
     std::cout << "msg:" << errMsg.msg << ", ";
     std::cout << "deviceId:" << deviceId << "}" << std::endl;
+    return EDM_OK;
 }
 
-void DriverExtMgrCallbackTest::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
+ErrCode DriverExtMgrCallbackTest::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGE(EDM_MODULE_TEST, "ErrMsg:%{public}d:%{public}s, deviceId:%{public}016" PRIX64 "",
         static_cast<UsbErrCode>(errMsg.errCode), errMsg.msg.c_str(), deviceId);
     std::cout << "OnUnBind {errCode:" << static_cast<UsbErrCode>(errMsg.errCode) << ", ";
     std::cout << "msg:" << errMsg.msg << ", ";
     std::cout << "deviceId:" << deviceId << "}" << std::endl;
+    return EDM_OK;
 }
 
 HWTEST_F(DrvExtMgrClientTest, BindDevice002, TestSize.Level1)

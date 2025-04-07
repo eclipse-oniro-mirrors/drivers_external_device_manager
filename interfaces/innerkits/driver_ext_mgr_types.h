@@ -19,12 +19,13 @@
 #include <memory>
 #include <string>
 
+#include "parcel.h"
 #include "ext_object.h"
 #include "message_parcel.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-struct ErrMsg {
+struct ErrMsg : public Parcelable {
     ErrMsg(UsbErrCode code = UsbErrCode::EDM_NOK, const std::string &message = "") : errCode(code), msg(message) {}
 
     inline bool IsOk() const
@@ -32,19 +33,19 @@ struct ErrMsg {
         return errCode == UsbErrCode::EDM_OK;
     }
 
-    bool Marshalling(MessageParcel &parcel) const;
-    static bool UnMarshalling(MessageParcel &parcel, ErrMsg &data);
+    bool Marshalling(Parcel &parcel) const override;
+    static ErrMsg* Unmarshalling(Parcel &data);
 
     UsbErrCode errCode;
     std::string msg;
 };
 
-class DeviceData {
+class DeviceData : public Parcelable {
 public:
     virtual ~DeviceData() = default;
 
-    virtual bool Marshalling(MessageParcel &parcel) const;
-    static std::shared_ptr<DeviceData> UnMarshalling(MessageParcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const;
+    static DeviceData* Unmarshalling(Parcel &data);
     virtual std::string Dump();
 
     BusType busType;
@@ -56,21 +57,19 @@ class USBDevice : public DeviceData {
 public:
     virtual ~USBDevice() = default;
 
-    bool Marshalling(MessageParcel &parcel) const override;
-    static std::shared_ptr<DeviceData> UnMarshalling(MessageParcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static USBDevice* Unmarshalling(Parcel &data);
     std::string Dump() override;
 
     uint16_t productId;
     uint16_t vendorId;
 };
 
-class DeviceInfoData {
+class DeviceInfoData : public Parcelable {
 public:
     virtual ~DeviceInfoData() = default;
-    virtual bool Marshalling(MessageParcel &parcel) const;
-    static std::shared_ptr<DeviceInfoData> UnMarshalling(MessageParcel &parcel);
-    static bool DeviceInfosUnMarshalling(MessageParcel &parcel,
-        std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos);
+    virtual bool Marshalling(Parcel &parcel) const;
+    static DeviceInfoData* Unmarshalling(Parcel &data);
     static BusType GetBusTypeByDeviceId(uint64_t deviceId);
 
     uint64_t deviceId;
@@ -82,8 +81,8 @@ class USBInterfaceDesc {
 public:
     virtual ~USBInterfaceDesc() = default;
 
-    bool Marshalling(MessageParcel &parcel) const;
-    static std::shared_ptr<USBInterfaceDesc> UnMarshalling(MessageParcel &parcel);
+    bool Marshalling(Parcel &parcel) const;
+    static std::shared_ptr<USBInterfaceDesc> Unmarshalling(Parcel &data);
 
     uint8_t bInterfaceNumber;
     uint8_t bClass;
@@ -95,22 +94,20 @@ class USBDeviceInfoData : public DeviceInfoData {
 public:
     virtual ~USBDeviceInfoData() = default;
 
-    bool Marshalling(MessageParcel &parcel) const override;
-    static std::shared_ptr<USBDeviceInfoData> UnMarshalling(MessageParcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static USBDeviceInfoData* Unmarshalling(Parcel &data);
   
     uint16_t productId;
     uint16_t vendorId;
     std::vector<std::shared_ptr<USBInterfaceDesc>> interfaceDescList;
 };
 
-class DriverInfoData {
+class DriverInfoData : public Parcelable {
 public:
     virtual ~DriverInfoData() = default;
-    virtual bool Marshalling(MessageParcel &parcel) const;
-    static std::shared_ptr<DriverInfoData> UnMarshalling(MessageParcel &parcel);
-    static bool DriverInfosUnMarshalling(MessageParcel &parcel,
-        std::vector<std::shared_ptr<DriverInfoData>> &driverInfos);
-    
+    virtual bool Marshalling(Parcel &parcel) const;
+    static DriverInfoData* Unmarshalling(Parcel &data);
+
     BusType busType;
     std::string driverUid;
     std::string driverName;
@@ -123,8 +120,8 @@ class USBDriverInfoData : public DriverInfoData {
 public:
     virtual ~USBDriverInfoData() = default;
 
-    bool Marshalling(MessageParcel &parcel) const override;
-    static std::shared_ptr<USBDriverInfoData> UnMarshalling(MessageParcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static USBDriverInfoData* Unmarshalling(Parcel &data);
     std::vector<uint16_t> pids;
     std::vector<uint16_t> vids;
 };

@@ -16,18 +16,15 @@ import("../extdevmgr.gni")
 ohos_shared_library("driver_extension_manager") {
   install_enable = true
   sources = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",
     "native/driver_extension_manager/src/driver_ext_mgr.cpp",
     "native/driver_extension_manager/src/ext_permission_manager.cpp",
-    "zidl/src/driver_ext_mgr_callback_proxy.cpp",
-    "zidl/src/driver_ext_mgr_stub.cpp",
-    "zidl/src/driver_ext_mgr_types.cpp",
   ]
 
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include",
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${ext_mgr_path}/interfaces/innerkits/",
-    "${ext_mgr_path}/services/zidl/include/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
@@ -36,6 +33,7 @@ ohos_shared_library("driver_extension_manager") {
   ]
   configs = [ "${utils_path}:utils_config" ]
   deps = [
+    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
@@ -82,7 +80,6 @@ config("driver_extension_manager_test_public_config") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include",
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${ext_mgr_path}/interfaces/innerkits/",
-    "${ext_mgr_path}/services/zidl/include/",
     "${ext_mgr_path}/utils/include/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
   ]
@@ -90,11 +87,9 @@ config("driver_extension_manager_test_public_config") {
 
 ohos_static_library("driver_extension_manager_test") {
   sources = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",
     "native/driver_extension_manager/src/driver_ext_mgr.cpp",
     "native/driver_extension_manager/src/ext_permission_manager.cpp",
-    "zidl/src/driver_ext_mgr_callback_proxy.cpp",
-    "zidl/src/driver_ext_mgr_stub.cpp",
-    "zidl/src/driver_ext_mgr_types.cpp",
   ]
 
   public_configs = [ ":driver_extension_manager_test_public_config" ]
@@ -108,6 +103,7 @@ ohos_static_library("driver_extension_manager_test") {
 
   configs = [ "${utils_path}:utils_config" ]
   deps = [
+    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/device_manager:driver_extension_device_manager",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",

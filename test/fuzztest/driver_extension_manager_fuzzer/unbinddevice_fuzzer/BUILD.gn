@@ -23,7 +23,6 @@ ohos_fuzztest("UnBindDeviceFuzzTest") {
 
   include_dirs = [
     "${ext_mgr_path}/services/native/driver_extension_manager/include/",
-    "${ext_mgr_path}/services/zidl/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
 
     #"${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
@@ -34,7 +33,10 @@ ohos_fuzztest("UnBindDeviceFuzzTest") {
 
   sources = [ "unbinddevice_fuzzer.cpp" ]
 
-  deps = [ "${ext_mgr_path}/services:driver_extension_manager_test" ]
+  deps = [
+    "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
+    "${ext_mgr_path}/services:driver_extension_manager_test",
+  ]
 
   external_deps = [
     "c_utils:utils",

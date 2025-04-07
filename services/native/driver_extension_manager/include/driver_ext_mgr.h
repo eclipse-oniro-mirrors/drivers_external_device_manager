@@ -32,14 +32,17 @@ public:
     void OnStop() override;
     int Dump(int fd, const std::vector<std::u16string> &args) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
-    UsbErrCode QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
-    UsbErrCode BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
-    UsbErrCode UnBindDevice(uint64_t deviceId) override;
-    UsbErrCode BindDriverWithDeviceId(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
-    UsbErrCode UnbindDriverWithDeviceId(uint64_t deviceId) override;
-    UsbErrCode QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos,
+    virtual ErrCode QueryDevice(int32_t &errorCode, uint32_t busType,
+        std::vector<std::shared_ptr<DeviceData>> &devices) override;
+    virtual ErrCode BindDevice(int32_t &errorCode, uint64_t deviceId,
+        const sptr<IDriverExtMgrCallback> &connectCallback) override;
+    virtual ErrCode UnBindDevice(int32_t &errorCode, uint64_t deviceId) override;
+    virtual ErrCode BindDriverWithDeviceId(int32_t &errorCode, uint64_t deviceId,
+        const sptr<IDriverExtMgrCallback> &connectCallback) override;
+    virtual ErrCode UnBindDriverWithDeviceId(int32_t &errorCode, uint64_t deviceId) override;
+    virtual ErrCode QueryDeviceInfo(int32_t &errorCode, std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos,
         bool isByDeviceId = false, const uint64_t deviceId = 0) override;
-    UsbErrCode QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
+    virtual ErrCode QueryDriverInfo(int32_t &errorCode, std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
         bool isByDriverUid = false, const std::string &driverUid = "") override;
 
 private:

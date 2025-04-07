@@ -116,16 +116,19 @@ void DriverExtMgr::OnAddSystemAbility(int32_t systemAbilityId, const std::string
     }
 }
 
-UsbErrCode DriverExtMgr::QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices)
+ErrCode DriverExtMgr::QueryDevice(int32_t &errorCode, uint32_t busType,
+    std::vector<std::shared_ptr<DeviceData>> &devices)
 {
     if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     if (busType == BusType::BUS_TYPE_INVALID) {
         EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}d", static_cast<int32_t>(busType));
-        return UsbErrCode::EDM_ERR_INVALID_PARAM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_INVALID_PARAM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     std::vector<std::shared_ptr<DeviceInfo>> deviceInfos =
@@ -148,16 +151,18 @@ UsbErrCode DriverExtMgr::QueryDevice(uint32_t busType, std::vector<std::shared_p
             }
         }
     }
-
-    return UsbErrCode::EDM_OK;
+    errorCode = static_cast<int32_t>(UsbErrCode::EDM_OK);
+    return errorCode;
 }
 
-UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)
+ErrCode DriverExtMgr::BindDevice(int32_t &errorCode, uint64_t deviceId,
+    const sptr<IDriverExtMgrCallback> &connectCallback)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
@@ -170,17 +175,20 @@ UsbErrCode DriverExtMgr::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrC
         if (eventPtr != nullptr) {
             ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
         }
-        return ret;
+        errorCode = static_cast<int32_t>(ret);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
-    return ret;
+    errorCode = static_cast<int32_t>(ret);
+    return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 
-UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
+ErrCode DriverExtMgr::UnBindDevice(int32_t &errorCode, uint64_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
     if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
@@ -193,40 +201,48 @@ UsbErrCode DriverExtMgr::UnBindDevice(uint64_t deviceId)
             ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_UNBIND, ret, eventPtr);
         }
         ExtDevReportSysEvent::MatchMapErase(deviceId);
-        return ret;
+        errorCode = static_cast<int32_t>(ret);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
-    return ret;
+    errorCode = static_cast<int32_t>(ret);
+    return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 
-UsbErrCode DriverExtMgr::BindDriverWithDeviceId(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)
+ErrCode DriverExtMgr::BindDriverWithDeviceId(int32_t &errorCode, uint64_t deviceId,
+    const sptr<IDriverExtMgrCallback> &connectCallback)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     if (!ExtPermissionManager::VerifyPermission(ACCESS_DDK_DRIVERS_PERMISSION)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
     unordered_set<std::string> accessibleBundles;
     if (!ExtPermissionManager::GetPermissionValues(ACCESS_DDK_DRIVERS_PERMISSION, accessibleBundles)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s failed to get permission value", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
-    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().ConnectDriverWithDeviceId(deviceId, callingTokenId,
+    errorCode = static_cast<int32_t>(ExtDeviceManager::GetInstance().ConnectDriverWithDeviceId(deviceId, callingTokenId,
         accessibleBundles, connectCallback));
+    return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 
-UsbErrCode DriverExtMgr::UnbindDriverWithDeviceId(uint64_t deviceId)
+ErrCode DriverExtMgr::UnBindDriverWithDeviceId(int32_t &errorCode, uint64_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
     if (!ExtPermissionManager::VerifyPermission(ACCESS_DDK_DRIVERS_PERMISSION)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
-    return static_cast<UsbErrCode>(ExtDeviceManager::GetInstance().DisConnectDriverWithDeviceId(deviceId,
+    errorCode = static_cast<int32_t>(ExtDeviceManager::GetInstance().DisConnectDriverWithDeviceId(deviceId,
         callingTokenId));
+    return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 
 static std::shared_ptr<DeviceInfoData> ParseToDeviceInfoData(const std::shared_ptr<Device> &device)
@@ -315,18 +331,20 @@ static std::shared_ptr<DriverInfoData> ParseToDriverInfoData(const std::shared_p
     return tempDriverInfo;
 }
 
-UsbErrCode DriverExtMgr::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos,
+ErrCode DriverExtMgr::QueryDeviceInfo(int32_t &errorCode, std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos,
     bool isByDeviceId, const uint64_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
     if (!ExtPermissionManager::IsSystemApp()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
-        return UsbErrCode::EDM_ERR_NOT_SYSTEM_APP;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SYSTEM_APP);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     vector<shared_ptr<Device>> devices;
@@ -342,26 +360,30 @@ UsbErrCode DriverExtMgr::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoD
             deviceInfos.push_back(tempDeviceInfo);
         }
     }
-    return UsbErrCode::EDM_OK;
+    errorCode = static_cast<int32_t>(UsbErrCode::EDM_OK);
+    return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 
-UsbErrCode DriverExtMgr::QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
+ErrCode DriverExtMgr::QueryDriverInfo(int32_t &errorCode, std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
     bool isByDriverUid, const std::string &driverUid)
 {
     if (!ExtPermissionManager::IsSystemApp()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
-        return UsbErrCode::EDM_ERR_NOT_SYSTEM_APP;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SYSTEM_APP);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     if (!ExtPermissionManager::VerifyPermission(PERMISSION_NAME)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s no permission", __func__);
-        return UsbErrCode::EDM_ERR_NO_PERM;
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
 
     vector<shared_ptr<DriverInfo>> tempDriverInfos;
     int32_t ret = DriverPkgManager::GetInstance().QueryDriverInfo(tempDriverInfos, isByDriverUid, driverUid);
     if (ret != UsbErrCode::EDM_OK) {
-        return static_cast<UsbErrCode>(ret);
+        errorCode = static_cast<int32_t>(ret);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
     for (const auto &driverInfo : tempDriverInfos) {
         auto tempDriverInfo = ParseToDriverInfoData(driverInfo);
@@ -371,7 +393,8 @@ UsbErrCode DriverExtMgr::QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoD
     }
     EDM_LOGD(MODULE_DEV_MGR, "driverInfos size: %{public}zu enter", driverInfos.size());
 
-    return UsbErrCode::EDM_OK;
+    errorCode = static_cast<int32_t>(UsbErrCode::EDM_OK);
+    return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

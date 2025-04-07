@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 enum class DriverExtMgrInterfaceCode : uint32_t {
-    QUERY_DEVICE = 0,
+    QUERY_DEVICE = 1,
     BIND_DEVICE,
     UNBIND_DEVICE,
     BIND_DRIVER_WITH_DEVICE_ID,
