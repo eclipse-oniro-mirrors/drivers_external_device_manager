@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,11 @@
 #include "gtest/gtest.h"
 #include "map"
 #include "gmock/gmock.h"
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+#include "usb_host_impl_mock.h"
+#else
 #include "usb_impl_mock.h"
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 #include "usb_ddk_service_mock.h"
 #define private public
 #include "ibus_extension.h"
@@ -37,7 +41,11 @@ public:
         cout << "UsbSubscriberTest SetUp" << endl;
         busExt = make_shared<UsbBusExtension>();
         usbBusExt = static_cast<UsbBusExtension*>(busExt.get());
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+        mockUsb = sptr<UsbHostImplMock>(new UsbHostImplMock());
+#else
         mockUsb = sptr<UsbImplMock>(new UsbImplMock());
+#endif // EXTDEVMGR_USB_PASS_THROUGH
         mockUsbDdk = sptr<UsbDdkServiceMock>(new UsbDdkServiceMock());
         usbBusExt->SetUsbInferface(mockUsb);
         usbBusExt->SetUsbDdk(mockUsbDdk);
@@ -50,7 +58,11 @@ public:
     }
 
     shared_ptr<IBusExtension> busExt;
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+    sptr<UsbHostImplMock> mockUsb;
+#else
     sptr<UsbImplMock> mockUsb;
+#endif // EXTDEVMGR_USB_PASS_THROUGH
     sptr<UsbDdkServiceMock> mockUsbDdk;
     UsbBusExtension *usbBusExt;
 };
@@ -152,6 +164,7 @@ HWTEST_F(UsbSubscriberTest, UsbDevCallbackErrorTest, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 }
 
+#ifndef EXTDEVMGR_USB_PASS_THROUGH
 HWTEST_F(UsbSubscriberTest, PortChangEeventTest, TestSize.Level1)
 {
     int ret = 0;
@@ -159,5 +172,6 @@ HWTEST_F(UsbSubscriberTest, PortChangEeventTest, TestSize.Level1)
     ret = mockUsb->SetPortRole(0, 0, 0);
     ASSERT_EQ(ret, 0);
 }
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 }
 }

@@ -57,7 +57,15 @@ static uint64_t ToDdkDeviceId(const UsbDev& usbDev)
     return ((uint64_t)usbDev.busNum << SHIFT_32) + usbDev.devAddr;
 }
 
-
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbHostInterface> iusb,
+    sptr<V1_1::IUsbDdk> iUsbDdk)
+{
+    this->iusb_ = iusb;
+    this->callback_ = callback;
+    this->iUsbDdk_ = iUsbDdk;
+};
+#else
 void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb,
     sptr<V1_1::IUsbDdk> iUsbDdk)
 {
@@ -65,6 +73,7 @@ void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbIn
     this->callback_ = callback;
     this->iUsbDdk_ = iUsbDdk;
 };
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 
 int32_t UsbDevSubscriber::GetInterfaceDescriptor(const UsbDev &usbDev,
     std::vector<UsbInterfaceDescriptor> &interfaceList)

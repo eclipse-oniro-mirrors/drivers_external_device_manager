@@ -17,13 +17,21 @@
 #define USB_DEV_SUBSCRIBER_H
 #include "ibus_extension.h"
 #include "usb_device_info.h"
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+#include "v2_0/iusb_host_interface.h"
+#else
 #include "v1_0/iusbd_subscriber.h"
 #include "v1_0/iusb_interface.h"
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 #include "v1_1/iusb_ddk.h"
 #include "usb_config_desc_parser.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+using namespace OHOS::HDI::Usb::V2_0;
+#else
 using namespace OHOS::HDI::Usb::V1_0;
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 using namespace OHOS::HDI::Usb::Ddk;
 
 struct UsbDevDescLite {
@@ -45,12 +53,20 @@ struct UsbDevDescLite {
 
 class UsbDevSubscriber : public IUsbdSubscriber {
 public:
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+    void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbHostInterface> iusb, sptr<V1_1::IUsbDdk> iUsbDdk);
+#else
     void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb, sptr<V1_1::IUsbDdk> iUsbDdk);
+#endif // EXTDEVMGR_USB_PASS_THROUGH
     int32_t DeviceEvent(const USBDeviceInfo &info) override;
     int32_t PortChangedEvent(const PortInfo &info) override;
 private:
     shared_ptr<IDevChangeCallback> callback_;
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+    sptr<IUsbHostInterface> iusb_;
+#else
     sptr<IUsbInterface> iusb_;
+#endif // EXTDEVMGR_USB_PASS_THROUGH
     sptr<V1_1::IUsbDdk> iUsbDdk_;
     int32_t OnDeviceConnect(const UsbDev &usbDev);
     int32_t OnDeviceDisconnect(const UsbDev &usbDev);

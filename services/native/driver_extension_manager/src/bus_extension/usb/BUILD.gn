@@ -34,15 +34,23 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
   ]
+  defines = []
+  if (extdevmgr_usb_pass_through) {
+    defines += [ " EXTDEVMGR_USB_PASS_THROUGH" ]
+  }
   external_deps = [
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.1",
-    "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+  if (extdevmgr_usb_pass_through) {
+    external_deps += [ "drivers_interface_usb:libusb_proxy_2.0" ]
+  } else {
+    external_deps += [ "drivers_interface_usb:libusb_proxy_1.0" ]
+  }
   cflags_cc = [
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",
