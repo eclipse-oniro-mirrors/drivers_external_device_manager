@@ -37,6 +37,27 @@ constexpr size_t ARGC_ONE = 1;
 }
 
 namespace {
+using namespace OHOS::ExternalDeviceManager;
+
+static void ParseToExtDevEvent(const std::shared_ptr<AppExecFwk::AbilityInfo> &abilityInfo,
+    const std::shared_ptr<ExtDevEvent> &extDevEvent)
+{
+    if (abilityInfo == nullptr || extDevEvent == nullptr) {
+        return;
+    }
+    extDevEvent->bundleName = abilityInfo->applicationInfo.bundleName;
+    extDevEvent->driverName = abilityInfo->name;
+    extDevEvent->driverUid = abilityInfo->name + "-" + std::to_string(abilityInfo->applicationInfo.accessTokenId);
+    extDevEvent->versionCode = abilityInfo->applicationInfo.versionName;
+    for (const auto &meta : abilityInfo->metadata) {
+        if (LowerStr(meta.name) == "vid") {
+            extDevEvent->vids = meta.value;
+        } else if (LowerStr(meta.name) == "pid") {
+            extDevEvent->pids = meta.value;
+        }
+    }
+}
+
 napi_value PromiseCallback(napi_env env, napi_callback_info info)
 {
     if (info == nullptr) {
@@ -214,18 +235,8 @@ void JsDriverExtension::OnStart(const AAFwk::Want &want)
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     napi_value argv[] = {napiWant};
-    napi_value result = CallObjectMethod(env, "onInit", argv, ARGC_ONE);
+    CallObjectMethod(env, "onInit", argv, ARGC_ONE);
     HILOG_INFO("%{public}s end.", __func__);
-    std::shared_ptr<ExternalDeviceManager::ExtDevEvent> eventPtr =
-        std::make_shared<ExternalDeviceManager::ExtDevEvent>();
-    std::string interfaceName = std::string(__func__);
-    if (result == nullptr) {
-        ExternalDeviceManager::ExtDevReportSysEvent::SetEventValue(interfaceName,
-            ExternalDeviceManager::DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
-        return;
-    }
-    ExternalDeviceManager::ExtDevReportSysEvent::SetEventValue(interfaceName,
-        ExternalDeviceManager::DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 void JsDriverExtension::OnStop()
@@ -240,16 +251,6 @@ void JsDriverExtension::OnStop()
         HILOG_INFO("The driver extension connection is not disconnected.");
     }
     HILOG_INFO("%{public}s end.", __func__);
-    std::shared_ptr<ExternalDeviceManager::ExtDevEvent> eventPtr =
-        std::make_shared<ExternalDeviceManager::ExtDevEvent>();
-    std::string interfaceName = std::string(__func__);
-    if (ret) {
-        ExternalDeviceManager::ExtDevReportSysEvent::SetEventValue(interfaceName,
-            ExternalDeviceManager::DRIVER_PACKAGE_CYCLE_MANAGE, -1, eventPtr);
-        return;
-    }
-    ExternalDeviceManager::ExtDevReportSysEvent::SetEventValue(interfaceName,
-        ExternalDeviceManager::DRIVER_PACKAGE_CYCLE_MANAGE, 0, eventPtr);
 }
 
 sptr<IRemoteObject> JsDriverExtension::OnConnect(const AAFwk::Want &want)
@@ -357,9 +358,17 @@ napi_value JsDriverExtension::CallObjectMethod(napi_env env, const char* name, c
         HILOG_ERROR("Failed to get '%{public}s' from DriverExtension object", name);
         return nullptr;
     }
-    HILOG_INFO("JsDriverExtension::CallFunction(%{public}s), success", name);
+    auto extDevEvent = std::make_shared<ExtDevEvent>(name, ExternalDeviceManager::DRIVER_PACKAGE_CYCLE_MANAGE);
+    ParseToExtDevEvent(Extension::abilityInfo_, extDevEvent);
     napi_value result = nullptr;
-    napi_call_function(env, obj, method, argc, argv, &result);
+    napi_status status = napi_call_function(env, obj, method, argc, argv, &result);
+    if (status != napi_ok) {
+        HILOG_ERROR("Failed to call '%{public}s' from DriverExtension object", name);
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, -1, "Failed to call callback");
+        return nullptr;
+    }
+    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, 0, "Success to call callback");
+    HILOG_INFO("JsDriverExtension::CallFunction(%{public}s), success", name);
     return result;
 }
 
