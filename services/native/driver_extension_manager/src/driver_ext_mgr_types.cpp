@@ -250,7 +250,7 @@ DeviceInfoData* DeviceInfoData::Unmarshalling(Parcel &data)
     }
 
     std::string driverUid = "";
-    if (!parcel.ReadString(driverUid)) {
+    if (!data.ReadString(driverUid)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read driverUid");
         return nullptr;
     }
