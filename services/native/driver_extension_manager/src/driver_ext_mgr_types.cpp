@@ -231,7 +231,11 @@ bool USBInterfaceDesc::Marshalling(Parcel &parcel) const
 
 DeviceInfoData* DeviceInfoData::Unmarshalling(Parcel &data)
 {
-    uint64_t deviceId = data.ReadUint64();
+    uint64_t deviceId = 0;
+    if (!data.ReadUint64(deviceId)) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to read deviceId");
+        return nullptr;
+    }
 
     BusType busType = DeviceInfoData::GetBusTypeByDeviceId(deviceId);
     if (busType <= BusType::BUS_TYPE_INVALID || busType >= BusType::BUS_TYPE_MAX) {
@@ -239,13 +243,17 @@ DeviceInfoData* DeviceInfoData::Unmarshalling(Parcel &data)
         return nullptr;
     }
 
-    bool isDriverMatched = data.ReadBool();
-    if (!isDriverMatched) {
+    bool isDriverMatched = false;
+    if (!data.ReadBool(isDriverMatched)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read isDriverMatched");
         return nullptr;
     }
 
-    std::string driverUid = data.ReadString();
+    std::string driverUid = "";
+    if (!data.ReadString(driverUid)) {
+        EDM_LOGE(MODULE_DEV_MGR, "failed to read driverUid");
+        return nullptr;
+    }
 
     DeviceInfoData *deviceInfoData = nullptr;
     switch (busType) {
