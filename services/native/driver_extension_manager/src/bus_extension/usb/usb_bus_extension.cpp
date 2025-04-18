@@ -31,6 +31,9 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+const std::string SERVICE_NAME = "usb_host_interface_service";
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 
 UsbBusExtension::UsbBusExtension()
 {
@@ -40,18 +43,31 @@ UsbBusExtension::UsbBusExtension()
 
 UsbBusExtension::~UsbBusExtension()
 {
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+    if (this->usbInterface_ != nullptr && this->subScriber_ != nullptr) {
+        this->usbInterface_->UnbindUsbdHostSubscriber(this->subScriber_);
+    }
+#else
     if (this->usbInterface_ != nullptr && this->subScriber_ != nullptr && this->recipient_ != nullptr) {
         this->usbInterface_->UnbindUsbdSubscriber(this->subScriber_);
         sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<HDI::Usb::V1_0::IUsbInterface>(usbInterface_);
         remote->RemoveDeathRecipient(recipient_);
         recipient_.clear();
     }
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 }
 
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+void UsbBusExtension::SetUsbInferface(sptr<IUsbHostInterface> iusb)
+{
+    this->usbInterface_ = iusb;
+}
+#else
 void UsbBusExtension::SetUsbInferface(sptr<IUsbInterface> iusb)
 {
     this->usbInterface_ = iusb;
 }
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 
 void UsbBusExtension::SetUsbDdk(sptr<V1_1::IUsbDdk> iUsbDdk)
 {
@@ -78,6 +94,16 @@ shared_ptr<IDriverChangeCallback> UsbBusExtension::AcquireDriverChangeCallback()
 
 int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> devCallback)
 {
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+    if (this->usbInterface_ == nullptr) {
+        this->usbInterface_ = IUsbHostInterface::Get(SERVICE_NAME, true);
+        if (this->usbInterface_ == nullptr) {
+            EDM_LOGE(MODULE_BUS_USB,  "get IUsbHostInterface error");
+            return EDM_ERR_INVALID_OBJECT;
+        }
+        EDM_LOGD(MODULE_BUS_USB,  "get IUsbHostInterface sucess");
+    }
+#else
     if (this->usbInterface_ == nullptr) {
         this->usbInterface_ = IUsbInterface::Get();
         if (this->usbInterface_ == nullptr) {
@@ -92,6 +118,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
             return EDM_NOK;
         }
     }
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 
     if (this->iUsbDdk_ == nullptr) {
         this->iUsbDdk_ = V1_1::IUsbDdk::Get();
@@ -111,8 +138,11 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
     }
 
     this->subScriber_->Init(devCallback, usbInterface_, iUsbDdk_);
+#ifdef EXTDEVMGR_USB_PASS_THROUGH
+    this->usbInterface_->BindUsbdHostSubscriber(subScriber_);
+#else
     this->usbInterface_->BindUsbdSubscriber(subScriber_);
-
+#endif // EXTDEVMGR_USB_PASS_THROUGH
     return 0;
 };
 
@@ -200,6 +230,8 @@ vector<uint16_t> UsbBusExtension::ParseCommaStrToVectorUint16(const string &str)
     }
     return ret;
 }
+
+#ifndef EXTDEVMGR_USB_PASS_THROUGH
 void UsbBusExtension::UsbdDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -213,6 +245,7 @@ void UsbBusExtension::UsbdDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>
         EDM_LOGE(MODULE_BUS_USB, "unload failed");
     }
 }
+#endif // EXTDEVMGR_USB_PASS_THROUGH
 
 shared_ptr<DriverInfoExt> UsbBusExtension::GetNewDriverInfoExtObject()
 {
