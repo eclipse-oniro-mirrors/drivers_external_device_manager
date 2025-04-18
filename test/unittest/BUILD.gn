@@ -21,9 +21,13 @@ ohos_unittest("bus_extension_usb_test") {
     "bus_extension_usb_test/src/usb_bus_extension_test.cpp",
     "bus_extension_usb_test/src/usb_ddk_service_mock.cpp",
     "bus_extension_usb_test/src/usb_driver_info_test.cpp",
-    "bus_extension_usb_test/src/usb_impl_mock.cpp",
     "bus_extension_usb_test/src/usb_subscriber_test.cpp",
   ]
+  if (extdevmgr_usb_pass_through) {
+    sources += [ "bus_extension_usb_test/src/usb_host_impl_mock.cpp" ]
+  } else {
+    sources += [ "bus_extension_usb_test/src/usb_impl_mock.cpp" ]
+  }
   include_dirs = [
     "bus_extension_usb_test/include",
     "${ext_mgr_path}/frameworks/ddk/usb/",
@@ -36,16 +40,24 @@ ohos_unittest("bus_extension_usb_test") {
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
+  defines = []
+  if (extdevmgr_usb_pass_through) {
+    defines += [ "EXTDEVMGR_USB_PASS_THROUGH" ]
+  }
   external_deps = [
     "bundle_framework:appexecfwk_base",
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.1",
-    "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
   ]
+  if (extdevmgr_usb_pass_through) {
+    external_deps += [ "drivers_interface_usb:libusb_proxy_2.0" ]
+  } else {
+    external_deps += [ "drivers_interface_usb:libusb_proxy_1.0" ]
+  }
   configs = [ "${utils_path}:utils_config" ]
 }
 
