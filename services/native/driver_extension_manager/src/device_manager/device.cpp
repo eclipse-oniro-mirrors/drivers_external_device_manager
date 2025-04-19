@@ -62,8 +62,6 @@ int32_t Device::Connect()
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    std::string interfaceName = std::string(__func__);
     uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
     std::string bundleInfo = GetBundleInfo();
     std::string bundleName = Device::GetBundleName(bundleInfo);
@@ -89,28 +87,23 @@ int32_t Device::Connect()
     }
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
-        eventPtr = ExtDevReportSysEvent::ExtDevEventInit(GetDeviceInfo(), GetDriverInfo(), eventPtr);
-        ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_PACKAGE_CYCLE_MANAGE, ret, eventPtr);
-        return ret;
     }
-    return UsbErrCode::EDM_OK;
+    return ret;
 }
 
 int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint32_t callingTokenId)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    eventPtr = ExtDevReportSysEvent::DeviceEventReport(GetDeviceInfo()->GetDeviceId());
-    std::string interfaceName = std::string(__func__);
+    auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_BIND);
+    ExtDevReportSysEvent::ParseToExtDevEvent(GetDeviceInfo(), GetDriverInfo(), extDevEvent);
     if (drvExtRemote_ != nullptr) {
         connectCallback->OnConnect(GetDeviceInfo()->GetDeviceId(), drvExtRemote_, {UsbErrCode::EDM_OK, ""});
         int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
         if (ret != UsbErrCode::EDM_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
-            if (eventPtr != nullptr) {
-                ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
-            }
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, UsbErrCode::EDM_ERR_INVALID_OBJECT,
+                "failed to register callback object");
             return ret;
         }
         boundCallerInfos_[callingTokenId] = CallerInfo{true};
@@ -120,9 +113,8 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
     int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
-        if (eventPtr != nullptr) {
-            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_BIND, ret, eventPtr);
-        }
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, UsbErrCode::EDM_ERR_INVALID_OBJECT,
+            "failed to register callback object");
         return ret;
     }
 
@@ -139,17 +131,24 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
         EDM_LOGE(MODULE_DEV_MGR, "failed to connect driver extension");
         UnregisterDrvExtMgrCallback(connectCallback);
         boundCallerInfos_.erase(callingTokenId);
-        return ret;
     }
-    return UsbErrCode::EDM_OK;
+    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ret,
+        ret != UsbErrCode::EDM_OK ? "failed to connect driver extension" : "");
+    return ret;
 }
 
-int32_t Device::Disconnect()
+int32_t Device::Disconnect(const bool isFromBind)
 {
-    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter, isFromBind:%{public}d", __func__, isFromBind);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
+    auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_UNBIND);
+    ExtDevReportSysEvent::ParseToExtDevEvent(GetDeviceInfo(), GetDriverInfo(), extDevEvent);
     if (connectNofitier_ != nullptr && connectNofitier_->IsInvalidDrvExtConnectionInfo()) {
         EDM_LOGI(MODULE_DEV_MGR, "driver extension has been disconnected");
+        if (isFromBind) {
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, UsbErrCode::EDM_OK,
+                "driver extension has been disconnected");
+        }
         return UsbErrCode::EDM_OK;
     }
     uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
@@ -160,10 +159,13 @@ int32_t Device::Disconnect()
         bundleName, abilityName, connectNofitier_, busDevId);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to disconnect driver extension");
-        return ret;
+    }
+    if (isFromBind) {
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ret,
+            ret != UsbErrCode::EDM_OK ? "failed to disconnect driver extension" : "");
     }
 
-    return UsbErrCode::EDM_OK;
+    return ret;
 }
 
 void Device::OnConnect(const sptr<IRemoteObject> &remote, int resultCode)

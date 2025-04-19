@@ -59,6 +59,10 @@ typedef struct ExtDevEvent {
     std::string interfaceName; // 接口名称
     std::string message;       // 信息
     int32_t errCode;           // 故障码
+
+    ExtDevEvent(std::string interfaceName = "", const int32_t operatType = 0, const uint64_t deviceId = 0)
+        : deviceClass(0), deviceSubClass(0), deviceProtocol(0), vendorId(0), productId(0), deviceId(deviceId),
+          userId(0), operatType(operatType), interfaceName(std::move(interfaceName)), errCode(0) {}
 } ExtDevEvent;
 
 class ExtDevReportSysEvent {
@@ -69,42 +73,36 @@ public:
     static void ReportDelPkgsCycleManageSysEvent(const std::string &bundleName, const std::string &driverEventName);
 
     static void ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent);
+
+    static void ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent, const int32_t errCode,
+        const std::string &message);
     
     static void ReportExternalDeviceSaEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
         std::string vids, uint32_t versionCode, std::string driverEventName);
 
-    static std::shared_ptr<ExtDevEvent> ExtDevEventInit(const std::shared_ptr<DeviceInfo> &deviceInfo,
-        const std::shared_ptr<DriverInfo> &driverInfo, std::shared_ptr<ExtDevEvent> eventObj);
+    static void ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
+        const std::shared_ptr<ExtDevEvent> &eventObj);
 
-    static bool IsMatched(const std::shared_ptr<DeviceInfo> &deviceInfo,
-        const std::shared_ptr<DriverInfo> &driverInfo, const std::string &type, const std::string &interfaceName);
-    
-    static std::shared_ptr<ExtDevEvent> DeviceEventReport(const uint64_t deviceId, const std::string &message = "");
+    static void ParseToExtDevEvent(const std::shared_ptr<DriverInfo> &driverInfo,
+        const std::shared_ptr<ExtDevEvent> &eventObj);
+
+    static void ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
+        const std::shared_ptr<DriverInfo> &driverInfo, const std::shared_ptr<ExtDevEvent> &eventObj);
 
     static std::shared_ptr<ExtDevEvent> DriverEventReport(const std::string driverUid);
-
-    static std::shared_ptr<ExtDevEvent> MatchEventReport(const uint64_t deviceId);
 
     static void SetEventValue(const std::string interfaceName, const int32_t operatType,
         const int32_t errCode, std::shared_ptr<ExtDevEvent> eventPtr);
 
     static void DriverMapInsert(const std::string driverUid, std::shared_ptr<ExtDevEvent> eventPtr);
 
-    static void DeviceMapInsert(const uint64_t deviceId, std::shared_ptr<ExtDevEvent> eventPtr);
-
     static void DriverMapErase(const std::string driverUid);
 
     static void DriverMapDelete(const std::string &bundleName);
 
-    static void DeviceMapErase(const uint64_t deviceId);
-
-    static void MatchMapErase(const uint64_t deviceId);
-
     static std::string ParseIdVector(std::vector<uint16_t> ids);
 
 private:
-    static std::map<uint64_t, std::shared_ptr<ExtDevEvent>> matchMap_;
-    static std::map<uint64_t, std::shared_ptr<ExtDevEvent>> deviceMap_;
     static std::map<std::string, std::shared_ptr<ExtDevEvent>> driverMap_;
     static std::mutex hisyseventMutex_;
 };

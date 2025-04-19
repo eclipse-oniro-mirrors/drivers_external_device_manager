@@ -38,8 +38,8 @@ public:
 class DriverInfo : public DriverInfoExt {
 public:
     DriverInfo() = default;
-    DriverInfo(const std::string &bundleName, const std::string &driverName, const std::string &driverUid = "")
-        : bundleName_(bundleName), driverName_(driverName)
+    DriverInfo(const std::string &bundleName, const std::string &driverName, const std::string &driverUid = "",
+        const int32_t userId = -1) : userId_(userId), bundleName_(bundleName), driverName_(driverName)
     {
         if (driverUid.empty()) {
             driverUid_ = bundleName + "-" + driverName;
@@ -60,6 +60,10 @@ public:
     std::string GetDriverUid() const
     {
         return driverUid_;
+    }
+    int32_t GetUserId() const
+    {
+        return userId_;
     }
     std::string GetBundleName() const
     {
@@ -98,6 +102,7 @@ private:
     std::string bus_;
     BusType busType_{0};
     std::string driverUid_;
+    int32_t userId_ = -1;
     std::string bundleName_;
     std::string driverName_;
     std::string vendor_;

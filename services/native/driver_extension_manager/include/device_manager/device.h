@@ -38,7 +38,7 @@ public:
 
     int32_t Connect();
     int32_t Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint32_t callingTokenId);
-    int32_t Disconnect();
+    int32_t Disconnect(const bool isFromBind);
 
     bool HasDriver() const
     {

@@ -113,14 +113,7 @@ bool DriverPkgManager::SubscribeOsAccountSwitch()
 
 shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo> devInfo, const std::string &type)
 {
-    EDM_LOGI(MODULE_PKG_MGR, "Enter QueryMatchDriver");
-    std::shared_ptr<ExtDevEvent> eventPtr = std::make_shared<ExtDevEvent>();
-    eventPtr = ExtDevReportSysEvent::DeviceEventReport(devInfo->GetDeviceId());
-    if (eventPtr != nullptr) {
-        eventPtr->message = type;
-    }
-    std::string interfaceName = std::string(__func__);
-    shared_ptr<IBusExtension> extInstance = nullptr;
+    EDM_LOGI(MODULE_PKG_MGR, "Enter QueryMatchDriver %{public}s", type.c_str());
     if (bundleStateCallback_ == nullptr) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver bundleStateCallback_ null");
         return nullptr;
@@ -128,38 +121,37 @@ shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo>
 
     if (!bundleStateCallback_->GetAllDriverInfos()) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver GetAllDriverInfos Err");
-        if (eventPtr != nullptr) {
-            eventPtr->message += "QueryMatchDriver GetAllDriverInfos Err";
-            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
-        }
         return nullptr;
     }
-
+    auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_DEVICE_MATCH);
+    ExtDevReportSysEvent::ParseToExtDevEvent(devInfo, extDevEvent);
     std::vector<PkgInfoTable> pkgInfos;
     std::shared_ptr<PkgDbHelper> helper = PkgDbHelper::GetInstance();
     int32_t retRdb = helper->QueryPkgInfos(pkgInfos);
-    if (retRdb <= 0) {
-        /* error or empty record */
-        if (eventPtr != nullptr) {
-            eventPtr->message += (retRdb < 0 ? "QueryPkgInfos err" : "pkgTable is empty");
-            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_NOK, eventPtr);
-        }
+    if (retRdb < 0) {
+        EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver QueryPkgInfos failed");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "QueryPkgInfos failed");
+        return nullptr;
+    } else if (retRdb == 0) {
+        EDM_LOGD(MODULE_PKG_MGR, "QueryMatchDriver no driver installed");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "no driver installed");
         return nullptr;
     }
     EDM_LOGI(MODULE_PKG_MGR, "Total driverInfos number: %{public}zu", pkgInfos.size());
+    shared_ptr<IBusExtension> extInstance = nullptr;
     for (const auto &pkgInfo : pkgInfos) {
-        DriverInfo driverInfo(pkgInfo.bundleName, pkgInfo.driverName, pkgInfo.driverUid);
+        DriverInfo driverInfo(pkgInfo.bundleName, pkgInfo.driverName, pkgInfo.driverUid, pkgInfo.userId);
         driverInfo.UnSerialize(pkgInfo.driverInfo);
         extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(driverInfo.GetBusName());
         if (extInstance != nullptr && extInstance->MatchDriver(driverInfo, *devInfo, type)) {
             std::shared_ptr<DriverInfo> driverPtr= std::make_shared<DriverInfo>(driverInfo);
-            if (!ExtDevReportSysEvent::IsMatched(devInfo, driverPtr, type, interfaceName)) {
-                EDM_LOGI(MODULE_PKG_MGR, "IsMatched failed");
-            }
-            return std::make_shared<DriverInfo>(driverInfo);
+            ExtDevReportSysEvent::ParseToExtDevEvent(driverPtr, extDevEvent);
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_OK, "MatchDriver success");
+            return driverPtr;
         }
     }
     EDM_LOGI(MODULE_PKG_MGR, "QueryMatchDriver return null");
+    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "no driver match");
     return nullptr;
 }
 
@@ -186,7 +178,7 @@ int32_t DriverPkgManager::QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driver
     }
     for (const auto &pkgInfo : pkgInfos) {
         std::shared_ptr<DriverInfo> driverInfo
-            = std::make_shared<DriverInfo>(pkgInfo.bundleName, pkgInfo.driverName, pkgInfo.driverUid);
+            = std::make_shared<DriverInfo>(pkgInfo.bundleName, pkgInfo.driverName, pkgInfo.driverUid, pkgInfo.userId);
         if (driverInfo->UnSerialize(pkgInfo.driverInfo) != EDM_OK) {
             return EDM_NOK;
         }

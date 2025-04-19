@@ -26,8 +26,6 @@ using namespace OHOS::HiviewDFX;
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-std::map<uint64_t, std::shared_ptr<ExtDevEvent>> ExtDevReportSysEvent::matchMap_;
-std::map<uint64_t, std::shared_ptr<ExtDevEvent>> ExtDevReportSysEvent::deviceMap_;
 std::map<std::string, std::shared_ptr<ExtDevEvent>> ExtDevReportSysEvent::driverMap_;
 std::mutex ExtDevReportSysEvent::hisyseventMutex_;
 constexpr int LAST_FIVE = 5;
@@ -66,11 +64,11 @@ void ExtDevReportSysEvent::ReportDelPkgsCycleManageSysEvent(const std::string &b
     }
 }
 
-void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent>& extDevEvent)
+void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent)
 {
     EDM_LOGI(MODULE_PKG_MGR, "report external device event");
     if (extDevEvent == nullptr) {
-        EDM_LOGI(MODULE_PKG_MGR, "extDevEvent is null");
+        EDM_LOGI(MODULE_PKG_MGR, "%{public}s, extDevEvent is null", __func__);
         return;
     }
     std::string snNum = "";
@@ -92,6 +90,19 @@ void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDe
     }
 }
 
+void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent,
+    const int32_t errCode, const std::string &message)
+{
+    EDM_LOGI(MODULE_PKG_MGR, "report external device event with error code");
+    if (extDevEvent == nullptr) {
+        EDM_LOGI(MODULE_PKG_MGR, "%{public}s, extDevEvent is null", __func__);
+        return;
+    }
+    extDevEvent->errCode = errCode;
+    extDevEvent->message = message;
+    ReportExternalDeviceEvent(extDevEvent);
+}
+
 void ExtDevReportSysEvent::ReportExternalDeviceSaEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
     std::string vids, uint32_t versionCode, std::string driverEventName)
 {
@@ -105,83 +116,63 @@ void ExtDevReportSysEvent::ReportExternalDeviceSaEvent(const PkgInfoTable &pkgIn
     }
 }
 
-
-std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::ExtDevEventInit(const std::shared_ptr<DeviceInfo> &deviceInfo,
-    const std::shared_ptr<DriverInfo> &driverInfo, std::shared_ptr<ExtDevEvent> eventObj)
+void ExtDevReportSysEvent::ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
+    const std::shared_ptr<ExtDevEvent> &eventObj)
 {
-    if (deviceInfo != nullptr) {
-        auto busType = deviceInfo->GetBusType();
-        switch (busType) {
-            case BusType::BUS_TYPE_USB:{
-                std::shared_ptr<UsbDeviceInfo> usbDeviceInfo = std::static_pointer_cast<UsbDeviceInfo>(deviceInfo);
-                eventObj->deviceId = usbDeviceInfo->GetDeviceId();
-                eventObj->deviceClass = usbDeviceInfo->GetDeviceClass();
-                eventObj->deviceSubClass = usbDeviceInfo->GetDeviceSubClass();
-                eventObj->deviceProtocol = usbDeviceInfo->GetDeviceProtocol();
-                eventObj->snNum = usbDeviceInfo->GetSnNum();
-                eventObj->vendorId = usbDeviceInfo->GetVendorId();
-                eventObj->productId = usbDeviceInfo->GetProductId();
-                break;
-            }
-            default:
-                break;
-        }
+    if (deviceInfo == nullptr || eventObj == nullptr) {
+        return;
     }
-
-    if (driverInfo != nullptr) {
-        auto busType = driverInfo->GetBusType();
-        switch (busType) {
-            case BusType::BUS_TYPE_USB:{
-                std::shared_ptr<UsbDriverInfo> usbDriverInfo =
-                    std::static_pointer_cast<UsbDriverInfo>(driverInfo->GetInfoExt());
-                std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
-                std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
-                eventObj->vids = ParseIdVector(vendorIds);
-                eventObj->pids = ParseIdVector(productIds);
-                eventObj->driverUid = driverInfo->GetDriverUid();
-                eventObj->driverName = driverInfo->GetDriverName();
-                eventObj->versionCode = driverInfo->GetVersion();
-                eventObj->bundleName = driverInfo->GetBundleName();
-                break;
-            }
-            default:
-                break;
+    switch (deviceInfo->GetBusType()) {
+        case BusType::BUS_TYPE_USB:{
+            std::shared_ptr<UsbDeviceInfo> usbDeviceInfo = std::static_pointer_cast<UsbDeviceInfo>(deviceInfo);
+            eventObj->deviceId = usbDeviceInfo->GetDeviceId();
+            eventObj->deviceClass = usbDeviceInfo->GetDeviceClass();
+            eventObj->deviceSubClass = usbDeviceInfo->GetDeviceSubClass();
+            eventObj->deviceProtocol = usbDeviceInfo->GetDeviceProtocol();
+            eventObj->snNum = usbDeviceInfo->GetSnNum();
+            eventObj->vendorId = usbDeviceInfo->GetVendorId();
+            eventObj->productId = usbDeviceInfo->GetProductId();
+            break;
         }
+        default:
+            break;
     }
-    return eventObj;
 }
 
-bool ExtDevReportSysEvent::IsMatched(const std::shared_ptr<DeviceInfo> &deviceInfo,
-    const std::shared_ptr<DriverInfo> &driverInfo, const std::string &type, const std::string &interfaceName)
+void ExtDevReportSysEvent::ParseToExtDevEvent(const std::shared_ptr<DriverInfo> &driverInfo,
+    const std::shared_ptr<ExtDevEvent> &eventObj)
 {
-    if (deviceInfo != nullptr && driverInfo != nullptr) {
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-        auto device = deviceMap_.find(deviceInfo->GetDeviceId());
-        auto driver = driverMap_.find(driverInfo->GetDriverUid());
-        if (device != deviceMap_.end() && driver != driverMap_.end()) {
-            matchPtr = ExtDevReportSysEvent::ExtDevEventInit(deviceInfo, driverInfo, matchPtr);
-            matchPtr->message = type;
-            ExtDevReportSysEvent::SetEventValue(interfaceName, DRIVER_DEVICE_MATCH, EDM_OK, matchPtr);
-            matchMap_[deviceInfo->GetDeviceId()] = matchPtr;
-            return true;
-        }
+    if (driverInfo == nullptr || eventObj == nullptr) {
+        return;
     }
-    return false;
+    switch (driverInfo->GetBusType()) {
+        case BusType::BUS_TYPE_USB:{
+            std::shared_ptr<UsbDriverInfo> usbDriverInfo =
+                std::static_pointer_cast<UsbDriverInfo>(driverInfo->GetInfoExt());
+            std::vector<uint16_t> productIds = usbDriverInfo->GetProductIds();
+            std::vector<uint16_t> vendorIds = usbDriverInfo->GetVendorIds();
+            eventObj->vids = ParseIdVector(vendorIds);
+            eventObj->pids = ParseIdVector(productIds);
+            eventObj->driverUid = driverInfo->GetDriverUid();
+            eventObj->userId = driverInfo->GetUserId();
+            eventObj->driverName = driverInfo->GetDriverName();
+            eventObj->versionCode = driverInfo->GetVersion();
+            eventObj->bundleName = driverInfo->GetBundleName();
+            break;
+        }
+        default:
+            break;
+    }
 }
 
-std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DeviceEventReport(const uint64_t deviceId,
-    const std::string &message)
+void ExtDevReportSysEvent::ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
+    const std::shared_ptr<DriverInfo> &driverInfo, const std::shared_ptr<ExtDevEvent> &eventObj)
 {
-    std::lock_guard<std::mutex> lock(hisyseventMutex_);
-    if (auto it = deviceMap_.find(deviceId); it != deviceMap_.end()) {
-        auto &deviceEvent = it->second;
-        if (deviceEvent != nullptr) {
-            deviceEvent->message = message;
-        }
-        return deviceEvent;
+    if (deviceInfo == nullptr || driverInfo == nullptr || eventObj == nullptr) {
+        return;
     }
-    return nullptr;
+    ExtDevReportSysEvent::ParseToExtDevEvent(deviceInfo, eventObj);
+    ExtDevReportSysEvent::ParseToExtDevEvent(driverInfo, eventObj);
 }
 
 std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DriverEventReport(const std::string driverUid)
@@ -191,18 +182,6 @@ std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DriverEventReport(const std::
     auto driver = driverMap_.find(driverUid);
     if (driver != driverMap_.end()) {
         matchPtr = driver->second;
-        return matchPtr;
-    }
-    return nullptr;
-}
-
-std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::MatchEventReport(const uint64_t deviceId)
-{
-    std::lock_guard<std::mutex> lock(hisyseventMutex_);
-    std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-    auto match = matchMap_.find(deviceId);
-    if (match != matchMap_.end()) {
-        matchPtr = match->second;
         return matchPtr;
     }
     return nullptr;
@@ -227,14 +206,6 @@ void ExtDevReportSysEvent::DriverMapInsert(const std::string driverUid, std::sha
     }
 }
 
-void ExtDevReportSysEvent::DeviceMapInsert(const uint64_t deviceId, std::shared_ptr<ExtDevEvent> eventPtr)
-{
-    if (eventPtr != nullptr) {
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        deviceMap_[deviceId] = eventPtr;
-    }
-}
-
 void ExtDevReportSysEvent::DriverMapErase(const std::string driverUid)
 {
         std::lock_guard<std::mutex> lock(hisyseventMutex_);
@@ -255,18 +226,6 @@ void ExtDevReportSysEvent::DriverMapDelete(const std::string &bundleName)
             ++it;
         }
     }
-}
-
-void ExtDevReportSysEvent::DeviceMapErase(const uint64_t deviceId)
-{
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        deviceMap_.erase(deviceId);
-}
-
-void ExtDevReportSysEvent::MatchMapErase(const uint64_t deviceId)
-{
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        matchMap_.erase(deviceId);
 }
 
 std::string ExtDevReportSysEvent::ParseIdVector(std::vector<uint16_t> ids)
