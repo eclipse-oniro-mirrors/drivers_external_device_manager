@@ -26,43 +26,38 @@ using namespace OHOS::HiviewDFX;
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-std::map<std::string, std::shared_ptr<ExtDevEvent>> ExtDevReportSysEvent::driverMap_;
-std::mutex ExtDevReportSysEvent::hisyseventMutex_;
-constexpr int LAST_FIVE = 5;
+constexpr int32_t LAST_FIVE = 5;
 
-void ExtDevReportSysEvent::ReportDriverPackageCycleManageSysEvent(const PkgInfoTable &pkgInfoTable,
-    std::string pids, std::string vids, uint32_t versionCode, std::string driverEventName)
-{
-    EDM_LOGI(MODULE_PKG_MGR, "report driver package cycle sys event");
-    int32_t hiRet = HiSysEventWrite(HiSysEvent::Domain::EXTERNAL_DEVICE, "DRIVER_PACKAGE_CYCLE_MANAGER",
-        HiSysEvent::EventType::STATISTIC, "BUNDLE_NAME", pkgInfoTable.bundleName, "USER_ID", pkgInfoTable.userId,
-        "DRIVER_UID", pkgInfoTable.driverUid, "VERSION_CODE", versionCode,
-        "VENDOR_ID", vids, "PRODUCT_ID", pids, "DRIVER_EVENT_NAME", driverEventName);
-    if (hiRet != EDM_OK) {
-        EDM_LOGI(MODULE_PKG_MGR, "HiSysEventWrite ret: %{public}d", hiRet);
-    }
-}
-
-void ExtDevReportSysEvent::ReportDelPkgsCycleManageSysEvent(const std::string &bundleName,
-    const std::string &driverEventName)
-{
-    EDM_LOGI(MODULE_PKG_MGR, "ReportDelPkgsCycleManageSysEvent enter");
-    std::lock_guard<std::mutex> lock(hisyseventMutex_);
-    for (const auto &[driverId, extDevEvent] : driverMap_) {
-        if (extDevEvent == nullptr) {
-            EDM_LOGI(MODULE_PKG_MGR, "extDevEvent of %{public}s is null", driverId.c_str());
-            continue;
-        }
-        int32_t hiRet = HiSysEventWrite(HiSysEvent::Domain::EXTERNAL_DEVICE, "DRIVER_PACKAGE_CYCLE_MANAGER",
-            HiSysEvent::EventType::STATISTIC, "BUNDLE_NAME", extDevEvent->bundleName, "USER_ID",
-            extDevEvent->userId, "DRIVER_UID", extDevEvent->driverUid, "VERSION_CODE",
-            extDevEvent->versionCode, "VENDOR_ID", extDevEvent->vids, "PRODUCT_ID", extDevEvent->pids,
-            "DRIVER_EVENT_NAME", driverEventName);
-        if (hiRet != EDM_OK) {
-            EDM_LOGI(MODULE_PKG_MGR, "HiSysEventWrite ret: %{public}d", hiRet);
-        }
-    }
-}
+const std::map<ExtDevReportSysEvent::EventErrCode, std::string> ExtDevReportSysEvent::ErrMsgs = {
+    {ExtDevReportSysEvent::EventErrCode::SUCCESS, "Success"},
+    {ExtDevReportSysEvent::EventErrCode::BIND_JS_CALLBACK_FAILED, "Failed to register JS callback"},
+    {ExtDevReportSysEvent::EventErrCode::CONNECT_DRIVER_EXTENSION_FAILED,
+        "Failed to connect DriverExtensionAbility"},
+    {ExtDevReportSysEvent::EventErrCode::BIND_ACCESS_NOT_ALLOWED, "Bind access is not allowed"},
+    {ExtDevReportSysEvent::EventErrCode::UNBIND_DRIVER_EMPTY, "No driver matched for the device"},
+    {ExtDevReportSysEvent::EventErrCode::UNBIND_RELATION_NOT_FOUND,
+        "Binding relationship between client and driver not found"},
+    {ExtDevReportSysEvent::EventErrCode::DISCONNECT_DRIVER_EXTENSION_FAILED,
+        "Failed to disconnect DriverExtensionAbility"},
+    {ExtDevReportSysEvent::EventErrCode::QUERY_DRIVER_EXTENSION_FAILED,
+        "Failed to query DriverExtensionAbility"},
+    {ExtDevReportSysEvent::EventErrCode::UPDATE_DATABASE_FAILED, "Failed to update database"},
+    {ExtDevReportSysEvent::EventErrCode::LIFECYCLE_FUNCTION_FAILED,
+        "Lifecycle function execution failed"},
+    {ExtDevReportSysEvent::EventErrCode::OPEN_DEVICE_FAILED, "Failed to open device"},
+    {ExtDevReportSysEvent::EventErrCode::GET_DEVICE_DESCRIPTOR_FAILED,
+        "Failed to get device descriptor"},
+    {ExtDevReportSysEvent::EventErrCode::DEVICE_DESCRIPTOR_LENGTH_INVALID,
+        "Device descriptor length is invalid"},
+    {ExtDevReportSysEvent::EventErrCode::GET_INTERFACE_DESCRIPTOR_FAILED,
+        "Failed to get interface descriptor"},
+    {ExtDevReportSysEvent::EventErrCode::STOP_DRIVER_EXTENSION_FAILED,
+        "Failed to stop DriverExtensionAbility"},
+    {ExtDevReportSysEvent::EventErrCode::QUERY_DRIVER_INFO_FAILED,
+        "Failed to query driver information"},
+    {ExtDevReportSysEvent::EventErrCode::NO_MATCHING_DRIVER_FOUND,
+        "No matching driver found for the device"}
+};
 
 void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent)
 {
@@ -91,29 +86,19 @@ void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDe
 }
 
 void ExtDevReportSysEvent::ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent,
-    const int32_t errCode, const std::string &message)
+    const ExtDevReportSysEvent::EventErrCode errCode)
 {
     EDM_LOGI(MODULE_PKG_MGR, "report external device event with error code");
     if (extDevEvent == nullptr) {
         EDM_LOGI(MODULE_PKG_MGR, "%{public}s, extDevEvent is null", __func__);
         return;
     }
-    extDevEvent->errCode = errCode;
-    extDevEvent->message = message;
-    ReportExternalDeviceEvent(extDevEvent);
-}
-
-void ExtDevReportSysEvent::ReportExternalDeviceSaEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
-    std::string vids, uint32_t versionCode, std::string driverEventName)
-{
-    EDM_LOGI(MODULE_PKG_MGR, "report external device sa event");
-    int32_t hiRet = HiSysEventWrite(HiSysEvent::Domain::EXTERNAL_DEVICE, "DRIVER_PACKAGE_CYCLE_MANAGER",
-        HiSysEvent::EventType::STATISTIC, "BUNDLE_NAME", pkgInfoTable.bundleName, "USER_ID", pkgInfoTable.userId,
-        "DRIVER_UID", pkgInfoTable.driverUid, "VERSION_CODE", versionCode,
-        "VENDOR_ID", vids, "PRODUCT_ID", pids, "DRIVER_EVENT_NAME", driverEventName);
-    if (hiRet != EDM_OK) {
-        EDM_LOGI(MODULE_PKG_MGR, "HiSysEventWrite ret: %{public}d", hiRet);
+    extDevEvent->errCode = static_cast<int32_t>(errCode);
+    auto it = ExtDevReportSysEvent::ErrMsgs.find(errCode);
+    if (it != ExtDevReportSysEvent::ErrMsgs.end()) {
+        extDevEvent->message = it->second;
     }
+    ReportExternalDeviceEvent(extDevEvent);
 }
 
 void ExtDevReportSysEvent::ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
@@ -173,59 +158,6 @@ void ExtDevReportSysEvent::ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> 
     }
     ExtDevReportSysEvent::ParseToExtDevEvent(deviceInfo, eventObj);
     ExtDevReportSysEvent::ParseToExtDevEvent(driverInfo, eventObj);
-}
-
-std::shared_ptr<ExtDevEvent> ExtDevReportSysEvent::DriverEventReport(const std::string driverUid)
-{
-    std::lock_guard<std::mutex> lock(hisyseventMutex_);
-    std::shared_ptr<ExtDevEvent> matchPtr = std::make_shared<ExtDevEvent>();
-    auto driver = driverMap_.find(driverUid);
-    if (driver != driverMap_.end()) {
-        matchPtr = driver->second;
-        return matchPtr;
-    }
-    return nullptr;
-}
-
-void ExtDevReportSysEvent::SetEventValue(const std::string interfaceName, const int32_t operatType,
-    const int32_t errCode, std::shared_ptr<ExtDevEvent> eventPtr)
-{
-    if (eventPtr != nullptr) {
-    eventPtr->interfaceName = interfaceName;
-    eventPtr->operatType = operatType;
-    eventPtr->errCode = errCode;
-    ReportExternalDeviceEvent(eventPtr);
-    }
-}
-
-void ExtDevReportSysEvent::DriverMapInsert(const std::string driverUid, std::shared_ptr<ExtDevEvent> eventPtr)
-{
-    if (eventPtr != nullptr) {
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        driverMap_[driverUid] = eventPtr;
-    }
-}
-
-void ExtDevReportSysEvent::DriverMapErase(const std::string driverUid)
-{
-        std::lock_guard<std::mutex> lock(hisyseventMutex_);
-        driverMap_.erase(driverUid);
-}
-
-void ExtDevReportSysEvent::DriverMapDelete(const std::string &bundleName)
-{
-    std::lock_guard<std::mutex> lock(hisyseventMutex_);
-    if (bundleName.empty()) {
-        driverMap_.clear();
-        return;
-    }
-    for (auto it = driverMap_.begin(); it != driverMap_.end();) {
-        if (it->second != nullptr && it->second->bundleName == bundleName) {
-            it = driverMap_.erase(it);
-        } else {
-            ++it;
-        }
-    }
 }
 
 std::string ExtDevReportSysEvent::ParseIdVector(std::vector<uint16_t> ids)

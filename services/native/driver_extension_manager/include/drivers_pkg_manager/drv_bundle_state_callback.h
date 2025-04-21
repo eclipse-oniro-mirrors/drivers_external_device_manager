@@ -51,11 +51,6 @@ enum ON_BUNDLE_STATUS {
 
 typedef int32_t(*PCALLBACKFUN)(int, int, const string &, const string &);
 
-typedef struct DriverObj {
-    PkgInfoTable pkgInfoTable;
-    DriverInfo driverInfo;
-} DriverObj;
-
 class DrvBundleStateCallback : public IBundleStatusCallback {
 public:
     DrvBundleStateCallback();
@@ -101,8 +96,6 @@ public:
 
     void ResetInitOnce();
     void ResetMatchedBundles(const int32_t userId);
-    void ReportBundleSysEvent(const std::vector<ExtensionAbilityInfo> &driverInfos,
-        const std::string &bundleName, std::string driverEventName);
 
 private:
     std::mutex bundleMgrMutex_;
@@ -118,25 +111,19 @@ private:
 
     bool QueryDriverInfos(const std::string &bundleName, const int userId,
         std::vector<ExtensionAbilityInfo> &driverInfos);
-    bool UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName = "");
+    bool UpdateToRdb(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName = "",
+        const std::string &interfaceName = "");
     void ClearDriverInfo(DriverInfo &tmpDrvInfo);
     bool GetBundleMgrProxy();
     int32_t GetCurrentActiveUserId();
     void ChangeValue(DriverInfo &tmpDrvInfo, const map<string, string> &metadata);
     std::string GetBundleSize(const std::string &bundleName);
-    std::vector<DriverObj> ParseToPkgInfoTables(
+    std::vector<DriverInfo> ParseToPkgInfoTables(
         const std::vector<ExtensionAbilityInfo> &driverInfos, std::vector<PkgInfoTable> &pkgInfoTables);
     PkgInfoTable CreatePkgInfoTable(const ExtensionAbilityInfo &driverInfo, string driverInfoStr);
     bool IsCurrentUserId(const int userId);
-
-    void OnBundleDrvAdded(int bundleStatus);
-    void OnBundleDrvUpdated(int bundleStatus);
-    void OnBundleDrvRemoved(const std::string &bundleName);
+    void OnBundleDrvRemoved(const std::string &bundleName, const std::string &interfaceName);
     void ResetBundleMgr();
-    std::string ParseIdVector(std::vector<uint16_t> ids);
-    int ParseVersionCode(const std::vector<ExtensionAbilityInfo> &driverInfos, const std::string &bundleName);
-    shared_ptr<DriverInfo> GetDriverInfo(const std::vector<ExtensionAbilityInfo> &driverInfos,
-        const std::string &bundleName);
 };
 
 class BundleMgrDeathRecipient : public IRemoteObject::DeathRecipient {

@@ -130,11 +130,13 @@ shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo>
     int32_t retRdb = helper->QueryPkgInfos(pkgInfos);
     if (retRdb < 0) {
         EDM_LOGE(MODULE_PKG_MGR, "QueryMatchDriver QueryPkgInfos failed");
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "QueryPkgInfos failed");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::QUERY_DRIVER_INFO_FAILED);
         return nullptr;
     } else if (retRdb == 0) {
         EDM_LOGD(MODULE_PKG_MGR, "QueryMatchDriver no driver installed");
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "no driver installed");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::NO_MATCHING_DRIVER_FOUND);
         return nullptr;
     }
     EDM_LOGI(MODULE_PKG_MGR, "Total driverInfos number: %{public}zu", pkgInfos.size());
@@ -144,14 +146,15 @@ shared_ptr<DriverInfo> DriverPkgManager::QueryMatchDriver(shared_ptr<DeviceInfo>
         driverInfo.UnSerialize(pkgInfo.driverInfo);
         extInstance = BusExtensionCore::GetInstance().GetBusExtensionByName(driverInfo.GetBusName());
         if (extInstance != nullptr && extInstance->MatchDriver(driverInfo, *devInfo, type)) {
-            std::shared_ptr<DriverInfo> driverPtr= std::make_shared<DriverInfo>(driverInfo);
+            std::shared_ptr<DriverInfo> driverPtr = std::make_shared<DriverInfo>(driverInfo);
             ExtDevReportSysEvent::ParseToExtDevEvent(driverPtr, extDevEvent);
-            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_OK, "MatchDriver success");
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ExtDevReportSysEvent::EventErrCode::SUCCESS);
             return driverPtr;
         }
     }
     EDM_LOGI(MODULE_PKG_MGR, "QueryMatchDriver return null");
-    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "no driver match");
+    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+        ExtDevReportSysEvent::EventErrCode::NO_MATCHING_DRIVER_FOUND);
     return nullptr;
 }
 
