@@ -565,7 +565,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     napi_value argv[PARAM_COUNT_3] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_2) {
-        ThrowErr(env, PARAMETER_ERROR, "bindDevice parameter count not match");
+        ThrowErr(env, PARAMETER_ERROR, "bindDriver parameter count not match");
         return nullptr;
     }
 
@@ -574,7 +574,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
         return nullptr;
     }
-    EDM_LOGI(MODULE_DEV_MGR, "Enter bindDevice:%{public}016" PRIX64, deviceId);
+    EDM_LOGI(MODULE_DEV_MGR, "Enter bindDriver:%{public}016" PRIX64, deviceId);
 
     if (!IsMatchType(env, argv[1], napi_function)) {
         ThrowErr(env, PARAMETER_ERROR, "onDisconnect param is error");
@@ -585,11 +585,12 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
-            ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
+            ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
-            ThrowErr(env, SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
+            ThrowErr(env, SERVICE_NOT_ALLOW_ACCESS,
+                "bindDriver: The driver service does not allow any client to bind.");
         } else {
-            ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDevice service failed");
+            ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver service failed");
         }
         return nullptr;
     }
@@ -628,16 +629,16 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
         ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
         return nullptr;
     }
-    EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDevice:%{public}016" PRIX64, deviceId);
+    EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDriver:%{public}016" PRIX64, deviceId);
 
     UsbErrCode retCode = g_edmClient.UnbindDriverWithDeviceId(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
-            ThrowErr(env, PERMISSION_DENIED, "unbindDevice: no permission");
+            ThrowErr(env, PERMISSION_DENIED, "unbindDriver: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_BOUND) {
-            ThrowErr(env, SERVICE_NOT_BOUND, "unbindDevice: there is no binding relationship");
+            ThrowErr(env, SERVICE_NOT_BOUND, "unbindDriver: there is no binding relationship");
         } else {
-            ThrowErr(env, SERVICE_EXCEPTION_NEW, "unbindDevice service failed");
+            ThrowErr(env, SERVICE_EXCEPTION_NEW, "unbindDriver service failed");
         }
         return nullptr;
     }
