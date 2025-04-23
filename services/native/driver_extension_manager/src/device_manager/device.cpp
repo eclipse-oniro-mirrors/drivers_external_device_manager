@@ -102,19 +102,20 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
         int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
         if (ret != UsbErrCode::EDM_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
-            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, UsbErrCode::EDM_ERR_INVALID_OBJECT,
-                "failed to register callback object");
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+                ExtDevReportSysEvent::EventErrCode::BIND_JS_CALLBACK_FAILED);
             return ret;
         }
         boundCallerInfos_[callingTokenId] = CallerInfo{true};
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ExtDevReportSysEvent::EventErrCode::SUCCESS);
         return ret;
     }
 
     int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
     if (ret != UsbErrCode::EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, UsbErrCode::EDM_ERR_INVALID_OBJECT,
-            "failed to register callback object");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::BIND_JS_CALLBACK_FAILED);
         return ret;
     }
 
@@ -132,8 +133,9 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
         UnregisterDrvExtMgrCallback(connectCallback);
         boundCallerInfos_.erase(callingTokenId);
     }
-    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ret,
-        ret != UsbErrCode::EDM_OK ? "failed to connect driver extension" : "");
+    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+        ret != UsbErrCode::EDM_OK ? ExtDevReportSysEvent::EventErrCode::CONNECT_DRIVER_EXTENSION_FAILED :
+                                    ExtDevReportSysEvent::EventErrCode::SUCCESS);
     return ret;
 }
 
@@ -146,8 +148,8 @@ int32_t Device::Disconnect(const bool isFromBind)
     if (connectNofitier_ != nullptr && connectNofitier_->IsInvalidDrvExtConnectionInfo()) {
         EDM_LOGI(MODULE_DEV_MGR, "driver extension has been disconnected");
         if (isFromBind) {
-            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, UsbErrCode::EDM_OK,
-                "driver extension has been disconnected");
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+                ExtDevReportSysEvent::EventErrCode::SUCCESS);
         }
         return UsbErrCode::EDM_OK;
     }
@@ -161,8 +163,9 @@ int32_t Device::Disconnect(const bool isFromBind)
         EDM_LOGE(MODULE_DEV_MGR, "failed to disconnect driver extension");
     }
     if (isFromBind) {
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ret,
-            ret != UsbErrCode::EDM_OK ? "failed to disconnect driver extension" : "");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ret != UsbErrCode::EDM_OK ?
+            ExtDevReportSysEvent::EventErrCode::DISCONNECT_DRIVER_EXTENSION_FAILED :
+            ExtDevReportSysEvent::EventErrCode::SUCCESS);
     }
 
     return ret;

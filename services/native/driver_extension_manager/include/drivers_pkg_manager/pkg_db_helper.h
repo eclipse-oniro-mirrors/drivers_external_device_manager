@@ -38,6 +38,7 @@ public:
     int32_t QueryAllDriverInfos(std::vector<std::string> &driverInfos);
     int32_t QueryPkgInfos(std::vector<PkgInfoTable> &pkgInfos,
         bool isByDriverUid = false, const std::string &driverUid = "");
+    int32_t QueryPkgInfos(const std::string &bundleName, std::vector<PkgInfoTable> &pkgInfos);
     /* add or update (user, device, app) record */
     int32_t AddOrUpdateRightRecord(
         const std::string &bundleName, const std::string &bundleAbility, const std::string &driverInfo);
@@ -59,6 +60,9 @@ private:
     int32_t QueryAndGetResultColumnValues(const OHOS::NativeRdb::RdbPredicates &rdbPredicates,
         const std::vector<std::string> &columns, const std::string &columnName, std::vector<std::string> &columnValues);
     int32_t DeleteAndNoOtherOperation(const std::string &whereClause, const std::vector<std::string> &whereArgs);
+
+    int32_t QueryPkgInfos(const std::string &whereKey, const std::string &whereValue,
+        std::vector<PkgInfoTable> &pkgInfos);
 
     static std::shared_ptr<PkgDbHelper> instance_;
     std::mutex databaseMutex_;

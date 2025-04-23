@@ -261,14 +261,14 @@ static bool ParseToPkgInfos(const std::shared_ptr<ResultSet> &resultSet, std::ve
     return true;
 }
 
-int32_t PkgDbHelper::QueryPkgInfos(std::vector<PkgInfoTable> &pkgInfos,
-    bool isByDriverUid, const std::string &driverUid)
+int32_t PkgDbHelper::QueryPkgInfos(const std::string &whereKey, const std::string &whereValue,
+    std::vector<PkgInfoTable> &pkgInfos)
 {
     std::lock_guard<std::mutex> guard(databaseMutex_);
     std::vector<std::string> columns = { "driverUid", "bundleName", "driverName", "driverInfo" };
     RdbPredicates rdbPredicates(PKG_TABLE_NAME);
-    if (isByDriverUid) {
-        rdbPredicates.EqualTo("driverUid", driverUid);
+    if (!whereKey.empty()) {
+        rdbPredicates.EqualTo(whereKey, whereValue);
     }
     int32_t ret = rightDatabase_->BeginTransaction();
     if (ret < PKG_OK) {
@@ -293,6 +293,17 @@ int32_t PkgDbHelper::QueryPkgInfos(std::vector<PkgInfoTable> &pkgInfos,
     }
 
     return static_cast<int32_t>(pkgInfos.size());
+}
+
+int32_t PkgDbHelper::QueryPkgInfos(std::vector<PkgInfoTable> &pkgInfos,
+    bool isByDriverUid, const std::string &driverUid)
+{
+    return QueryPkgInfos(isByDriverUid ? "driverUid" : "", driverUid, pkgInfos);
+}
+
+int32_t PkgDbHelper::QueryPkgInfos(const std::string &bundleName, std::vector<PkgInfoTable> &pkgInfos)
+{
+    return QueryPkgInfos(bundleName.empty() ? "" : "bundleName", bundleName, pkgInfos);
 }
 
 int32_t PkgDbHelper::QueryAllSize(std::vector<std::string> &allBundleAbility)

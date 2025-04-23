@@ -28,8 +28,6 @@ class DeviceInfo;
 class DriverInfo;
 struct PkgInfoTable;
 
-constexpr int MAP_SIZE_MAX = 1024;
-
 enum EXTDEV_EXP_EVENT {  // 操作类型枚举
     DRIVER_BIND = 1,             // 绑定设备驱动
     DRIVER_UNBIND,               // 解绑设备驱动
@@ -67,18 +65,31 @@ typedef struct ExtDevEvent {
 
 class ExtDevReportSysEvent {
 public:
-    static void ReportDriverPackageCycleManageSysEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
-        std::string vids, uint32_t versionCode, std::string driverEventName);
+    enum class EventErrCode {
+        SUCCESS = 0,
+        BIND_JS_CALLBACK_FAILED = 10001,
+        CONNECT_DRIVER_EXTENSION_FAILED,
+        BIND_ACCESS_NOT_ALLOWED,
+        UNBIND_DRIVER_EMPTY = 20001,
+        UNBIND_RELATION_NOT_FOUND,
+        DISCONNECT_DRIVER_EXTENSION_FAILED,
+        QUERY_DRIVER_EXTENSION_FAILED = 30001,
+        UPDATE_DATABASE_FAILED,
+        LIFECYCLE_FUNCTION_FAILED = 40001,
+        OPEN_DEVICE_FAILED = 50001,
+        GET_DEVICE_DESCRIPTOR_FAILED,
+        DEVICE_DESCRIPTOR_LENGTH_INVALID,
+        GET_INTERFACE_DESCRIPTOR_FAILED,
+        STOP_DRIVER_EXTENSION_FAILED = 60001,
+        QUERY_DRIVER_INFO_FAILED = 70001,
+        NO_MATCHING_DRIVER_FOUND
+    };
 
-    static void ReportDelPkgsCycleManageSysEvent(const std::string &bundleName, const std::string &driverEventName);
+    static const std::map<EventErrCode, std::string> ErrMsgs;
 
     static void ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent);
 
-    static void ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent, const int32_t errCode,
-        const std::string &message);
-    
-    static void ReportExternalDeviceSaEvent(const PkgInfoTable &pkgInfoTable, std::string pids,
-        std::string vids, uint32_t versionCode, std::string driverEventName);
+    static void ReportExternalDeviceEvent(const std::shared_ptr<ExtDevEvent> &extDevEvent, const EventErrCode errCode);
 
     static void ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
         const std::shared_ptr<ExtDevEvent> &eventObj);
@@ -89,22 +100,7 @@ public:
     static void ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
         const std::shared_ptr<DriverInfo> &driverInfo, const std::shared_ptr<ExtDevEvent> &eventObj);
 
-    static std::shared_ptr<ExtDevEvent> DriverEventReport(const std::string driverUid);
-
-    static void SetEventValue(const std::string interfaceName, const int32_t operatType,
-        const int32_t errCode, std::shared_ptr<ExtDevEvent> eventPtr);
-
-    static void DriverMapInsert(const std::string driverUid, std::shared_ptr<ExtDevEvent> eventPtr);
-
-    static void DriverMapErase(const std::string driverUid);
-
-    static void DriverMapDelete(const std::string &bundleName);
-
     static std::string ParseIdVector(std::vector<uint16_t> ids);
-
-private:
-    static std::map<std::string, std::shared_ptr<ExtDevEvent>> driverMap_;
-    static std::mutex hisyseventMutex_;
 };
 
 } // namespace ExternalDeviceManager

@@ -292,12 +292,11 @@ void ExtDeviceManager::ClearMatchedDrivers(const int32_t userId)
             ExtDevReportSysEvent::ParseToExtDevEvent(device->GetDeviceInfo(), driverInfo, extDevEvent);
             auto ret = DriverExtensionController::GetInstance().StopDriverExtension(driverInfo->GetBundleName(),
                 driverInfo->GetDriverName(), userId);
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+                ret != EDM_OK ? ExtDevReportSysEvent::EventErrCode::STOP_DRIVER_EXTENSION_FAILED :
+                                ExtDevReportSysEvent::EventErrCode::SUCCESS);
             if (ret != EDM_OK) {
-                ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ret, "StopDriverExtension failed");
                 EDM_LOGE(MODULE_DEV_MGR, "StopDriverExtension failed, ret=%{public}d", ret);
-            } else {
-                ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_OK, "StopDriverExtension success");
-                EDM_LOGI(MODULE_DEV_MGR, "StopDriverExtension success");
             }
             bundleMatchMap_.erase(bundleInfo);
             device->RemoveBundleInfo();
@@ -564,7 +563,8 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
     std::shared_ptr<DriverInfo> driverInfo = device->GetDriverInfo();
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "failed to find driverInfo");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::UNBIND_DRIVER_EMPTY);
         return EDM_NOK;
     }
 
@@ -572,8 +572,7 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
         device->RemoveCaller(callingTokenId);
         EDM_LOGI(MODULE_DEV_MGR, "driver not launching on bind or other client bound. Removing caller ID: %{public}u",
             callingTokenId);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_OK,
-            "driver not launching on bind or other client bound");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ExtDevReportSysEvent::EventErrCode::SUCCESS);
         return EDM_OK;
     }
     return device->Disconnect(true);
@@ -595,7 +594,9 @@ int32_t ExtDeviceManager::ConnectDriverWithDeviceId(uint64_t deviceId, uint32_t 
         EDM_LOGE(MODULE_DEV_MGR, "failed to bind device verification with %{public}016" PRIX64 " deviceId", deviceId);
         auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_BIND);
         ExtDevReportSysEvent::ParseToExtDevEvent(device->GetDeviceInfo(), device->GetDriverInfo(), extDevEvent);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ret, "failed to bind device verification");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ret != EDM_OK ? ExtDevReportSysEvent::EventErrCode::BIND_ACCESS_NOT_ALLOWED :
+                            ExtDevReportSysEvent::EventErrCode::SUCCESS);
         return ret;
     }
     return device->Connect(connectCallback, callingTokenId);
@@ -615,15 +616,16 @@ int32_t ExtDeviceManager::DisConnectDriverWithDeviceId(uint64_t deviceId, uint32
 
     if (!device->IsBindCaller(callingTokenId)) {
         EDM_LOGE(MODULE_DEV_MGR, "can not find binding relationship by %{public}u callerTokenId", callingTokenId);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_ERR_SERVICE_NOT_BOUND,
-            "can not find binding relationship");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::UNBIND_RELATION_NOT_FOUND);
         return EDM_ERR_SERVICE_NOT_BOUND;
     }
 
     std::shared_ptr<DriverInfo> driverInfo = device->GetDriverInfo();
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to find driverInfo for device with %{public}016" PRIX64 " deviceId", deviceId);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_NOK, "failed to find driverInfo");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::UNBIND_DRIVER_EMPTY);
         return EDM_NOK;
     }
 
@@ -631,8 +633,7 @@ int32_t ExtDeviceManager::DisConnectDriverWithDeviceId(uint64_t deviceId, uint32
         device->RemoveCaller(callingTokenId);
         EDM_LOGI(MODULE_DEV_MGR, "driver not launching on bind or other client bound. Removing caller ID: %{public}u",
             callingTokenId);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_OK,
-            "driver not launching on bind or other client bound");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ExtDevReportSysEvent::EventErrCode::SUCCESS);
         return EDM_OK;
     }
     return device->Disconnect(true);

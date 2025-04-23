@@ -148,7 +148,8 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     ret = this->iusb_->OpenDevice(usbDev);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB, "OpenDevice failed, ret = %{public}d", ret);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_ERR_IO, "OpenDevice failed");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::OPEN_DEVICE_FAILED);
         return EDM_ERR_IO;
     }
     vector<uint8_t> descData;
@@ -156,14 +157,16 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     if (ret != EDM_OK || descData.empty()) {
         EDM_LOGE(MODULE_BUS_USB, "GetDeviceDescriptor failed, ret = %{public}d", ret);
         (void)this->iusb_->CloseDevice(usbDev);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_ERR_IO, "GetDeviceDescriptor failed");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::GET_DEVICE_DESCRIPTOR_FAILED);
         return EDM_ERR_IO;
     }
     UsbDevDescLite deviceDescriptor = *(reinterpret_cast<const UsbDevDescLite *>(descData.data()));
     if (deviceDescriptor.bLength != USB_DEV_DESC_SIZE) {
         EDM_LOGE(MODULE_BUS_USB,  "UsbdDeviceDescriptor size error");
         (void)this->iusb_->CloseDevice(usbDev);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_ERR_IO, "UsbdDeviceDescriptor size error");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::DEVICE_DESCRIPTOR_LENGTH_INVALID);
         return EDM_ERR_USB_ERR;
     }
     auto usbDevInfo = make_shared<UsbDeviceInfo>(ToBusDeivceId(usbDev), ToDeviceDesc(usbDev, deviceDescriptor));
@@ -173,10 +176,11 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB,  "GetInterfaceDescriptor fail, ret = %{public}d", ret);
         (void)this->iusb_->CloseDevice(usbDev);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_ERR_IO, "GetInterfaceDescriptor failed");
+        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            ExtDevReportSysEvent::EventErrCode::GET_INTERFACE_DESCRIPTOR_FAILED);
         return ret;
     }
-    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, EDM_OK, "GetDescriptorInfo success");
+    ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent, ExtDevReportSysEvent::EventErrCode::SUCCESS);
     (void)this->iusb_->CloseDevice(usbDev);
     if (this->callback_ != nullptr) {
         this->callback_->OnDeviceAdd(usbDevInfo);
