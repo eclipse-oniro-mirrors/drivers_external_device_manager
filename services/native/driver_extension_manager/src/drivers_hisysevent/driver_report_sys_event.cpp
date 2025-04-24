@@ -153,9 +153,6 @@ void ExtDevReportSysEvent::ParseToExtDevEvent(const std::shared_ptr<DriverInfo> 
 void ExtDevReportSysEvent::ParseToExtDevEvent(const std::shared_ptr<DeviceInfo> &deviceInfo,
     const std::shared_ptr<DriverInfo> &driverInfo, const std::shared_ptr<ExtDevEvent> &eventObj)
 {
-    if (deviceInfo == nullptr || driverInfo == nullptr || eventObj == nullptr) {
-        return;
-    }
     ExtDevReportSysEvent::ParseToExtDevEvent(deviceInfo, eventObj);
     ExtDevReportSysEvent::ParseToExtDevEvent(driverInfo, eventObj);
 }
