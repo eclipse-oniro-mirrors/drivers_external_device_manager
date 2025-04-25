@@ -164,6 +164,31 @@ HWTEST_F(UsbSubscriberTest, UsbDevCallbackErrorTest, TestSize.Level1)
     EXPECT_EQ(ret, 0);
 }
 
+HWTEST_F(UsbSubscriberTest, UsbDevCallbackErrorTest1, TestSize.Level1)
+{
+    USBDeviceInfo info = {ACT_DEVUP, BUS_NUM_OK, DEV_ADDR_OK};
+    int ret = 0;
+    usbBusExt->SetDevChangeCallback(nullptr);
+
+    info.busNum = BUS_NUM_ERR;
+    info.devNum = DEV_ADDR_ERR;
+    ret = mockUsb->SubscriberDeviceEvent(info);
+    EXPECT_NE(ret, 0);
+    info.busNum = BUS_NUM_OK;
+    info.devNum = DEV_ADDR_INVALID;
+    ret = mockUsb->SubscriberDeviceEvent(info);
+    EXPECT_NE(ret, 0);
+    info.busNum = BUS_NUM_OK;
+    info.devNum = DEV_ADDR_OK_ERR_DESC;
+    ret = mockUsb->SubscriberDeviceEvent(info);
+    EXPECT_NE(ret, 0);
+
+    info.busNum = BUS_NUM_OK;
+    info.devNum = DEV_ADDR_INTERFACE_ERR;
+    ret = mockUsb->SubscriberDeviceEvent(info);
+    EXPECT_EQ(ret, 0);
+}
+
 #ifndef EXTDEVMGR_USB_PASS_THROUGH
 HWTEST_F(UsbSubscriberTest, PortChangEeventTest, TestSize.Level1)
 {

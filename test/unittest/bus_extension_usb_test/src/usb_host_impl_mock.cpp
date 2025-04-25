@@ -51,7 +51,7 @@ int32_t UsbHostImplMock::GetRawDescriptor(const UsbDev &dev, std::vector<uint8_t
         && (DEV_ADDR_OK_2 != dev.devAddr)\
         && (DEV_ADDR_OK_ERR_DESC != dev.devAddr)\
         && (DEV_ADDR_OK_NULL_DESC != dev.devAddr)\
-        ) {
+        && (DEV_ADDR_INTERFACE_ERR != dev.devAddr)) {
         return HDF_DEV_ERR_NO_DEVICE;
     }
     if (dev.devAddr == DEV_ADDR_OK_ERR_DESC) {
@@ -60,6 +60,14 @@ int32_t UsbHostImplMock::GetRawDescriptor(const UsbDev &dev, std::vector<uint8_t
         // do nothing
     } else {
         descriptor = g_descBuf;
+    }
+    return HDF_SUCCESS;
+}
+
+int32_t UsbHostImplMock::OpenDevice(const UsbDev &dev)
+{
+    if (BUS_NUM_ERR == dev.busNum && DEV_ADDR_ERR == dev.devAddr) {
+        return HDF_DEV_ERR_NO_DEVICE;
     }
     return HDF_SUCCESS;
 }

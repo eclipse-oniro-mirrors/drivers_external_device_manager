@@ -46,6 +46,9 @@ constexpr int32_t DEV_ADDR_INVALID = 255;
 constexpr int32_t BUS_NUM_INVALID = 255;
 constexpr int32_t DEFAULT_PORT_ID = 1;
 constexpr int32_t RETVAL_INVALID = -1;
+constexpr int32_t BUS_NUM_ERR = 8;
+constexpr int32_t DEV_ADDR_ERR = 8;
+constexpr int32_t DEV_ADDR_INTERFACE_ERR = 9;
 
 class UsbHostImplMock : public IUsbHostInterface {
 public:
@@ -58,7 +61,7 @@ public:
     int32_t GetRawDescriptor(const UsbDev &dev, std::vector<uint8_t> &decriptor) override;
     int32_t GetStringDescriptor(const UsbDev &dev, uint8_t descId, std::vector<uint8_t> &decriptor) override;
     int32_t GetConfig(const UsbDev &dev, uint8_t &configIndex) override;
-    MOCK_METHOD1(OpenDevice, int32_t(const UsbDev &dev));
+    int32_t OpenDevice(const UsbDev &dev) override;
     MOCK_METHOD1(CloseDevice, int32_t(const UsbDev &dev));
     MOCK_METHOD3(GetConfigDescriptor, int32_t(const UsbDev &dev, uint8_t descId, std::vector<uint8_t> &decriptor));
     MOCK_METHOD2(GetFileDescriptor, int32_t(const UsbDev &dev, int32_t &fd));

@@ -19,6 +19,9 @@ namespace USB {
 using namespace OHOS;
 using namespace OHOS::HDI;
 using namespace OHOS::HDI::Usb::Ddk::V1_1;
+constexpr int32_t DEV_ADDR_INTERFACE_ERR = 9;
+constexpr uint64_t BUS_NUM_OK = 6;
+constexpr int32_t SHIFT_32 = 16;
 std::vector<uint8_t> g_configDescBuf {
     9, 2, 59, 0, 2, 1, 0, 160, 250, 9, 4, 0, 0, 1, 3, 1, 1, 0, 9, 33, 17, 1, 0, 1, 34, 67, 0, 7, 5, 129, 3, 8, 0, 1, 9,
     4, 1, 0, 1, 3, 0, 0, 0, 9, 33, 17, 1, 0, 1, 34, 102, 0, 7, 5, 130, 3, 16, 0, 1
@@ -26,6 +29,9 @@ std::vector<uint8_t> g_configDescBuf {
 
 int32_t UsbDdkServiceMock::GetConfigDescriptor(uint64_t deviceId, uint8_t configIndex, std::vector<uint8_t> &configDesc)
 {
+    if (deviceId == ((BUS_NUM_OK << SHIFT_32) + DEV_ADDR_INTERFACE_ERR)) {
+        return HDF_DEV_ERR_NO_DEVICE;
+    }
     configDesc = g_configDescBuf;
     return HDF_SUCCESS;
 }

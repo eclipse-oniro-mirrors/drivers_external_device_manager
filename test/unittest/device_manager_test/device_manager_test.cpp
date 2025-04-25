@@ -23,6 +23,8 @@
 #include "usb_bus_extension.h"
 #include "bus_extension_core.h"
 #include "driver_pkg_manager.h"
+#include "usb_device_info.h"
+#include "usb_driver_info.h"
 #undef private
 
 namespace OHOS {
@@ -310,6 +312,45 @@ HWTEST_F(DeviceManagerTest, ConnectDeviceTest2, TestSize.Level1)
     ASSERT_NE(ret, EDM_ERR_NO_PERM);
 }
 
+HWTEST_F(DeviceManagerTest, ConnectDeviceTest3, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
+    uint32_t busDeviceId = 3;
+    const uint32_t tokenId1 = 1;
+    sptr<IDriverExtMgrCallback> connectCallback = nullptr;
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    auto usbDeviceInfo = std::make_shared<UsbDeviceInfo>(busDeviceId, "testInfo1");
+    auto deviceId = usbDeviceInfo->GetDeviceId();
+    usbDeviceInfo->deviceClass_ = 1;
+    usbDeviceInfo->deviceSubClass_ = 2;
+    usbDeviceInfo->deviceProtocol_ = 3;
+    usbDeviceInfo->idVendor_ = 4;
+    usbDeviceInfo->idProduct_ = 5;
+    usbDeviceInfo->snNum_ = "testSnNum";
+    auto ret = callback->OnDeviceAdd(usbDeviceInfo);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_USB]), 1);
+    auto device = extMgr.QueryDeviceByDeviceID(deviceId);
+    ASSERT_NE(device, nullptr);
+    device->driverInfo_ = make_shared<DriverInfo>("testBundleName1", "testDriverName1", "testDriverUid1", 123);
+    device->driverInfo_->version_ = "testVersion1";
+    device->driverInfo_->driverSize_ = "testDriverSize1";
+    device->driverInfo_->busType_ = BusType::BUS_TYPE_USB;
+    auto driverExt = make_shared<UsbDriverInfo>();
+    driverExt->pids_ = std::vector<uint16_t>{6};
+    driverExt->vids_ = std::vector<uint16_t>{7};
+    device->driverInfo_->driverInfoExt_ = driverExt;
+    device->driverInfo_->accessAllowed_ = false;
+    ret = device->Connect(connectCallback, tokenId1);
+    ASSERT_EQ(ret, EDM_ERR_INVALID_OBJECT);
+    connectCallback = sptr<TestDriverExtMgrCallback>::MakeSptr();
+    ret = device->Connect(connectCallback, tokenId1);
+    ASSERT_NE(ret, EDM_OK);
+    ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId1, accessibleBundles, connectCallback);
+    ASSERT_EQ(ret, EDM_ERR_SERVICE_NOT_ALLOW_ACCESS);
+}
+
 HWTEST_F(DeviceManagerTest, DisConnectDeviceTest, TestSize.Level1)
 {
     ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
@@ -395,6 +436,51 @@ HWTEST_F(DeviceManagerTest, DisConnectDeviceTest1, TestSize.Level1)
 
     ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId1);
     ASSERT_NE(ret, EDM_ERR_SERVICE_NOT_BOUND);
+}
+
+HWTEST_F(DeviceManagerTest, DisConnectDeviceTest2, TestSize.Level1)
+{
+    ExtDeviceManager &extMgr = ExtDeviceManager::GetInstance();
+    clearDeviceMap(extMgr);
+    uint32_t busDeviceId = 3;
+    const uint32_t tokenId1 = 1;
+    std::shared_ptr<DevChangeCallback> callback = std::make_shared<DevChangeCallback>();
+    auto usbDeviceInfo = std::make_shared<UsbDeviceInfo>(busDeviceId, "testInfo1");
+    auto deviceId = usbDeviceInfo->GetDeviceId();
+    usbDeviceInfo->deviceClass_ = 1;
+    usbDeviceInfo->deviceSubClass_ = 2;
+    usbDeviceInfo->deviceProtocol_ = 3;
+    usbDeviceInfo->idVendor_ = 4;
+    usbDeviceInfo->idProduct_ = 5;
+    usbDeviceInfo->snNum_ = "testSnNum";
+    auto ret = callback->OnDeviceAdd(usbDeviceInfo);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(getDeviceNum(extMgr.deviceMap_[BusType::BUS_TYPE_USB]), 1);
+    auto device = extMgr.QueryDeviceByDeviceID(deviceId);
+    ASSERT_NE(device, nullptr);
+    ret = extMgr.DisConnectDevice(deviceId, tokenId1);
+    ASSERT_NE(ret, EDM_OK);
+    device->driverInfo_ = make_shared<DriverInfo>("testBundleName1", "testDriverName1", "testDriverUid1", 123);
+    device->driverInfo_->version_ = "testVersion1";
+    device->driverInfo_->driverSize_ = "testDriverSize1";
+    device->driverInfo_->busType_ = BusType::BUS_TYPE_USB;
+    auto driverExt = make_shared<UsbDriverInfo>();
+    driverExt->pids_ = std::vector<uint16_t>{6};
+    driverExt->vids_ = std::vector<uint16_t>{7};
+    device->driverInfo_->driverInfoExt_ = driverExt;
+    sptr<IRemoteObject> remote = sptr<TestRemoteObjectStub>::MakeSptr();
+    device->OnConnect(remote, static_cast<int>(UsbErrCode::EDM_OK));
+    ASSERT_NE(device->drvExtRemote_, nullptr);
+    sptr<IDriverExtMgrCallback> connectCallback = sptr<TestDriverExtMgrCallback>::MakeSptr();
+
+    device->driverInfo_->accessAllowed_ = true;
+    ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId1, accessibleBundles, connectCallback);
+    ASSERT_EQ(ret, EDM_OK);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+
+    const uint32_t tokenId2 = 2;
+    ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId2);
+    ASSERT_EQ(ret, EDM_ERR_SERVICE_NOT_BOUND);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

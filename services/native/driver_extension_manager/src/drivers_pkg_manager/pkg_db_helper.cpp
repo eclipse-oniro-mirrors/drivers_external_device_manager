@@ -229,11 +229,13 @@ static bool ParseToPkgInfos(const std::shared_ptr<ResultSet> &resultSet, std::ve
     }
     int32_t rowCount = 0;
     int32_t driverUidIndex = 0;
+    int32_t userIdIndex = 0;
     int32_t bundleNameIndex = 0;
     int32_t driverNameIndex = 0;
     int32_t driverInfoIndex = 0;
     if (resultSet->GetRowCount(rowCount) != E_OK
         || resultSet->GetColumnIndex("driverUid", driverUidIndex) != E_OK
+        || resultSet->GetColumnIndex("userId", userIdIndex) != E_OK
         || resultSet->GetColumnIndex("bundleName", bundleNameIndex) != E_OK
         || resultSet->GetColumnIndex("driverName", driverNameIndex) != E_OK
         || resultSet->GetColumnIndex("driverInfo", driverInfoIndex) != E_OK) {
@@ -250,6 +252,7 @@ static bool ParseToPkgInfos(const std::shared_ptr<ResultSet> &resultSet, std::ve
         
         PkgInfoTable pkgInfo;
         if (resultSet->GetString(driverUidIndex, pkgInfo.driverUid) != E_OK
+            || resultSet->GetLong(userIdIndex, pkgInfo.userId) != E_OK
             || resultSet->GetString(bundleNameIndex, pkgInfo.bundleName) != E_OK
             || resultSet->GetString(driverNameIndex, pkgInfo.driverName) != E_OK
             || resultSet->GetString(driverInfoIndex, pkgInfo.driverInfo) != E_OK) {
@@ -265,7 +268,7 @@ int32_t PkgDbHelper::QueryPkgInfos(const std::string &whereKey, const std::strin
     std::vector<PkgInfoTable> &pkgInfos)
 {
     std::lock_guard<std::mutex> guard(databaseMutex_);
-    std::vector<std::string> columns = { "driverUid", "bundleName", "driverName", "driverInfo" };
+    std::vector<std::string> columns = { "driverUid", "userId", "bundleName", "driverName", "driverInfo" };
     RdbPredicates rdbPredicates(PKG_TABLE_NAME);
     if (!whereKey.empty()) {
         rdbPredicates.EqualTo(whereKey, whereValue);
