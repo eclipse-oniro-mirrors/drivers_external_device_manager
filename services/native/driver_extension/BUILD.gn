@@ -77,6 +77,7 @@ ohos_shared_library("driver_extension_module") {
     "ability_runtime:ability_manager",
     "ability_runtime:extensionkit_native",
     "ability_runtime:runtime",
+    "ipc:ipc_napi",
     "napi:ace_napi",
   ]
 

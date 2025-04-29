@@ -30,6 +30,7 @@ ohos_executable("bus_extension_usb_mt") {
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
   ]
+  subsystem_name = "hdf"
   part_name = "external_device_manager"
   install_enable = false
 }
@@ -49,6 +50,7 @@ ohos_executable("driver_extension_controller_mt") {
     "hilog:libhilog",
     "samgr:samgr_proxy",
   ]
+  subsystem_name = "hdf"
   part_name = "external_device_manager"
   install_enable = false
 }
@@ -71,7 +73,9 @@ ohos_executable("bus_extension_core_mt") {
     "c_utils:utils",
     "drivers_interface_usb:libusb_proxy_1.0",
     "hilog:libhilog",
+    "ipc:ipc_core",
   ]
+  subsystem_name = "hdf"
   part_name = "external_device_manager"
   install_enable = false
 }
@@ -104,6 +108,7 @@ ohos_executable("ext_device_manager_mt") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  subsystem_name = "hdf"
   part_name = "external_device_manager"
   install_enable = false
 }
@@ -139,6 +144,7 @@ ohos_executable("drivers_pkg_manager_mt") {
     "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
+  subsystem_name = "hdf"
   part_name = "external_device_manager"
   install_enable = false
 }

@@ -26,11 +26,7 @@ ohos_unittest("driver_extension_context_test") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [
-    "../../../services/native/driver_extension:driver_extension",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "../../../services/native/driver_extension:driver_extension" ]
 
   external_deps = [
     "ability_base:want",
@@ -44,6 +40,8 @@ ohos_unittest("driver_extension_context_test") {
     "background_task_mgr:bgtaskmgr_innerkits",
     "c_utils:utils",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbeget_proxy",

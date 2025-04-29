@@ -37,8 +37,6 @@ ohos_unittest("bus_extension_usb_test") {
   deps = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/usb:driver_extension_usb_bus",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager_test",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
   defines = []
   if (extdevmgr_usb_pass_through) {
@@ -49,6 +47,8 @@ ohos_unittest("bus_extension_usb_test") {
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.1",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
@@ -76,8 +76,6 @@ ohos_unittest("drivers_pkg_manager_test") {
   deps = [
     "${ext_mgr_path}/interfaces/innerkits:driver_ext_mgr_client",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager_test",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
   external_deps = [
     "ability_base:want",
@@ -88,6 +86,8 @@ ohos_unittest("drivers_pkg_manager_test") {
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "drivers_interface_usb:libusb_proxy_1.0",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
