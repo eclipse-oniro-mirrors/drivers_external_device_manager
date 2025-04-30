@@ -177,10 +177,7 @@ HWTEST_F(DriverPkgManagerPtrTest, DrvExt_New_Test, TestSize.Level1)
 {
     DriverPkgManager &drvPkgMgrInstance = DriverPkgManager::GetInstance();
     bool ret = drvPkgMgrInstance.Init();
-    if (ret != 0) {
-        EXPECT_EQ(0, ret);
-        return;
-    }
+    EXPECT_EQ(0, ret);
     EXPECT_NE(nullptr, &drvPkgMgrInstance);
     cout << "DrvExt_New_Test" << endl;
 }
