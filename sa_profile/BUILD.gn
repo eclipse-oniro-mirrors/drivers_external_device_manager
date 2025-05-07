@@ -22,6 +22,7 @@ ohos_sa_profile("etxdevmgr_sa_profile") {
 ohos_prebuilt_etc("hdf_ext_devmgr.init") {
   source = "hdf_ext_devmgr.cfg"
   relative_install_dir = "init"
+  subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
 
