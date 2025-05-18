@@ -49,6 +49,7 @@ ohos_executable("driver_extension_controller_mt") {
     "c_utils:utils",
     "hilog:libhilog",
     "samgr:samgr_proxy",
+    "selinux_adapter:librestorecon",
   ]
   subsystem_name = "hdf"
   part_name = "external_device_manager"
