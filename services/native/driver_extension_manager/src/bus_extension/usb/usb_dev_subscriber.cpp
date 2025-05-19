@@ -236,7 +236,6 @@ std::string UsbDevSubscriber::GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
     auto ret = this->iusb_->GetStringDescriptor(usbDev, idx, serial);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_BUS_USB, "GetStringDescriptor failed, ret = %{public}d", ret);
-        (void)this->iusb_->CloseDevice(usbDev);
         return strDesc;
     }
     
@@ -259,7 +258,7 @@ std::string UsbDevSubscriber::GetDevStringVal(const UsbDev &usbDev, uint8_t idx)
     size_t wstrLen = wcslen((wchar_t*)tbuf) <= bufLen ? wcslen((wchar_t*)tbuf) : bufLen;
     std::wstring wstr(reinterpret_cast<wchar_t *>(tbuf), wstrLen);
     strDesc = std::string(wstr.begin(), wstr.end());
-    EDM_LOGE(MODULE_BUS_USB, "getString idx:%{public}d length:%{public}zu, str: %{public}s",
+    EDM_LOGI(MODULE_BUS_USB, "getString idx:%{public}d length:%{public}zu, str: %{public}s",
         idx, strDesc.length(), strDesc.c_str());
     delete[] tbuf;
     return strDesc;
