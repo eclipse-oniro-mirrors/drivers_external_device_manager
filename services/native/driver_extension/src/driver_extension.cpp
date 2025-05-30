@@ -15,6 +15,7 @@
 
 #include "driver_extension.h"
 
+#include "ani_driver_extension.h"
 #include "configuration_utils.h"
 #include "connection_manager.h"
 #include "hilog_wrapper.h"
@@ -46,7 +47,8 @@ DriverExtension* DriverExtension::Create(const std::unique_ptr<Runtime>& runtime
     switch (runtime->GetLanguage()) {
         case Runtime::Language::JS:
             return JsDriverExtension::Create(runtime);
-
+        case Runtime::Language::STS:
+            return AniDriverExtension::Create(runtime);
         default:
             return new DriverExtension();
     }
