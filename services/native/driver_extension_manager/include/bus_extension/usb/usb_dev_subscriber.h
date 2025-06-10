@@ -74,6 +74,7 @@ private:
     std::string GetDevStringVal(const UsbDev &usbDev, uint8_t idx);
     void SetUsbDevInfoValue(const UsbDevDescLite &deviceDescriptor, shared_ptr<UsbDeviceInfo> &usbDevInfo,
         std::string snNum);
+    int32_t GetUsbDeviceDescriptor(const UsbDev &usbDev, UsbDevDescLite &deviceDescriptor);
 };
 }
 }

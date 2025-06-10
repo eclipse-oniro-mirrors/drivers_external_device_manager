@@ -33,6 +33,7 @@ constexpr uint32_t USB_DEV_DESC_SIZE = 0x12;
 constexpr int32_t DESCRIPTOR_TYPE_STRING = 3;
 constexpr int32_t DESCRIPTOR_VALUE_START_OFFSET = 2;
 constexpr int32_t HALF = 2;
+constexpr uint8_t USB_CLASS_HUB = 0x09;
 
 static string ToDeviceDesc(const UsbDev& usbDev, const UsbDevDescLite& desc)
 {
@@ -137,6 +138,22 @@ int32_t UsbDevSubscriber::GetInterfaceDescriptor(const UsbDev &usbDev,
     return EDM_OK;
 }
 
+int32_t UsbDevSubscriber::GetUsbDeviceDescriptor(const UsbDev &usbDev, UsbDevDescLite &deviceDescriptor)
+{
+    vector<uint8_t> descData;
+    int32_t ret = iusb_->GetDeviceDescriptor(usbDev, descData);
+    if (ret != EDM_OK || descData.empty()) {
+        EDM_LOGE(MODULE_BUS_USB, "GetDeviceDescriptor failed, ret = %{public}d", ret);
+        return EDM_ERR_IO;
+    }
+    deviceDescriptor = *(reinterpret_cast<const UsbDevDescLite *>(descData.data()));
+    if (deviceDescriptor.bLength != USB_DEV_DESC_SIZE) {
+        EDM_LOGE(MODULE_BUS_USB, "UsbdDeviceDescriptor size error");
+        return EDM_ERR_USB_ERR;
+    }
+    return EDM_OK;
+}
+
 int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
 {
     std::shared_ptr<ExtDevEvent> extDevEvent = std::make_shared<ExtDevEvent>(__func__, GET_DEVICE_INFO,
@@ -152,23 +169,24 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
             ExtDevReportSysEvent::EventErrCode::OPEN_DEVICE_FAILED);
         return EDM_ERR_IO;
     }
-    vector<uint8_t> descData;
-    ret = this->iusb_->GetDeviceDescriptor(usbDev, descData);
-    if (ret != EDM_OK || descData.empty()) {
-        EDM_LOGE(MODULE_BUS_USB, "GetDeviceDescriptor failed, ret = %{public}d", ret);
+
+    UsbDevDescLite deviceDescriptor;
+    ret = GetUsbDeviceDescriptor(usbDev, deviceDescriptor);
+    if (ret != EDM_OK) {
         (void)this->iusb_->CloseDevice(usbDev);
         ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+            (ret == EDM_ERR_USB_ERR) ?
+            ExtDevReportSysEvent::EventErrCode::DEVICE_DESCRIPTOR_LENGTH_INVALID :
             ExtDevReportSysEvent::EventErrCode::GET_DEVICE_DESCRIPTOR_FAILED);
-        return EDM_ERR_IO;
+        return ret;
     }
-    UsbDevDescLite deviceDescriptor = *(reinterpret_cast<const UsbDevDescLite *>(descData.data()));
-    if (deviceDescriptor.bLength != USB_DEV_DESC_SIZE) {
-        EDM_LOGE(MODULE_BUS_USB,  "UsbdDeviceDescriptor size error");
+
+    if (deviceDescriptor.bDeviceClass == USB_CLASS_HUB) {
+        EDM_LOGW(MODULE_BUS_USB, "USB device class is HUB, not supported");
         (void)this->iusb_->CloseDevice(usbDev);
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
-            ExtDevReportSysEvent::EventErrCode::DEVICE_DESCRIPTOR_LENGTH_INVALID);
-        return EDM_ERR_USB_ERR;
+        return EDM_OK;
     }
+    
     auto usbDevInfo = make_shared<UsbDeviceInfo>(ToBusDeivceId(usbDev), ToDeviceDesc(usbDev, deviceDescriptor));
     SetUsbDevInfoValue(deviceDescriptor, usbDevInfo, GetDevStringVal(usbDev, deviceDescriptor.iSerialNumber));
     ExtDevReportSysEvent::ParseToExtDevEvent(usbDevInfo, extDevEvent);
