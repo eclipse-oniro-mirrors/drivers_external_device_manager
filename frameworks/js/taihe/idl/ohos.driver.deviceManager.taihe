@@ -1,0 +1,104 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@!sts_inject_into_module("import type { AsyncCallback } from '@ohos.base';")
+@!sts_inject_into_module("import type rpc from '@ohos.rpc';")
+
+@!namespace("@ohos.driver.deviceManager", "deviceManager")
+
+@!sts_inject("""
+static { loadLibrary("device_manager_taihe_native.z") }
+""")
+
+function queryDevices(busType: Optional<f64>): Array<DeviceUnion>;
+
+function queryDeviceInfo(deviceId: Optional<f64>): Array<DeviceInfoUnion>;
+
+function queryDriverInfo(driverUid: Optional<String>): Array<DriverInfoUnion>;
+
+@!sts_inject("export native function bindDriverWithDeviceId(deviceId: number, onDisconnect: AsyncCallback<number>): Promise<RemoteDeviceDriver>;")
+@gen_promise("unbindDriverWithDeviceId")
+function UnbindDriverWithDeviceIdSync(deviceId: f64): f64;
+
+enum BusType : i32 {
+  USB = 1,
+}
+
+struct Device {
+  busType: BusType;
+  deviceId: f64;
+  description: String;
+}
+
+struct USBDevice {
+  @extends base: Device;
+  vendorId: f64;
+  productId: f64;
+}
+
+union DeviceUnion {
+  t1: USBDevice;
+  t: Device;
+}
+
+struct RemoteDeviceDriver {
+  deviceId: f64;
+  remote: @sts_type("rpc.IRemoteObject") Opaque;
+}
+
+struct USBInterfaceDesc {
+  bInterfaceNumber: f64;
+  bClass: f64;
+  bSubClass: f64;
+  bProtocol: f64;
+}
+
+struct DeviceInfo {
+  deviceId: f64;
+  isDriverMatched: bool;
+  driverUid: Optional<String>;
+}
+
+struct USBDeviceInfo {
+  @extends base: DeviceInfo;
+  vendorId: f64;
+  productId: f64;
+  interfaceDescList: Array<USBInterfaceDesc>;
+}
+
+union DeviceInfoUnion {
+    t1: USBDeviceInfo;
+    t: DeviceInfo;
+}
+
+struct DriverInfo {
+  busType: BusType;
+  driverUid: String;
+  driverName: String;
+  driverVersion: String;
+  driverSize: String;
+  description: String;
+}
+
+struct USBDriverInfo {
+  @extends base: DriverInfo;
+  productIdList: Array<f64>;
+  vendorIdList: Array<f64>;
+}
+
+union DriverInfoUnion {
+    t1: USBDriverInfo;
+    t: DriverInfo;
+}

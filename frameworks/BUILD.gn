@@ -15,5 +15,6 @@ group("ext_devmgr_frameworks") {
   deps = [
     "ddk:ddk",
     "js/napi:napi_packages",
+    "js/taihe:device_manager_taihe"
   ]
 }
