@@ -22,6 +22,7 @@ describe("PermissionJsTest", function () {
     const PERMISSION_DENIED_CODE = 201;
     const TEST_DEVICE_ID = 0;
     const TEST_DRIVER_UID = 'testDriverUid'
+    const USB_CLASS_HUB = 9;
     const TEST_FUNCTION = () => {
         console.info("Test function is called");
     };
@@ -43,7 +44,8 @@ describe("PermissionJsTest", function () {
     beforeAll(function () {
         console.info('beforeAll called');
         try {
-            const devicesList = usb.getDevices();
+            let devicesList = usb.getDevices();
+            devicesList = devicesList.filter(device => device.clazz != USB_CLASS_HUB);
             if (Array.isArray(devicesList)) {
                 deviceNum = devicesList.length;
             }
