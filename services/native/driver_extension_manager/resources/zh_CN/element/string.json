@@ -1,0 +1,12 @@
+[
+    "string": [
+        {
+            "name": "usb_transmission_error_title",
+            "value": "USB传输异常"
+        },
+        {
+            "name": "usb_troubleshoot_message",
+            "value": "点击查看异常原因及解决方案"
+        }
+    ]
+]

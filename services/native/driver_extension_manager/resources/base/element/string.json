@@ -1,0 +1,12 @@
+[
+    "string": [
+        {
+            "name": "usb_transmission_error_title",
+            "value": "USB Transmission Error"
+        },
+        {
+            "name": "usb_troubleshoot_message",
+            "value": "Click to view error details and solutions"
+        }
+    ]
+]
