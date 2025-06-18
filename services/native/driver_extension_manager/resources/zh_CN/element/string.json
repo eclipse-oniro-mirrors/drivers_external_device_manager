@@ -1,4 +1,4 @@
-[
+{
     "string": [
         {
             "name": "usb_transmission_error_title",
@@ -9,4 +9,4 @@
             "value": "点击查看异常原因及解决方案"
         }
     ]
-]
+}
