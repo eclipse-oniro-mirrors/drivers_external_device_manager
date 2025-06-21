@@ -83,6 +83,7 @@ bool ExtPermissionManager::GetPermissionValues(const std::string &permissionName
     cJSON* jsonItem = cJSON_GetObjectItem(jsonObj, keyStr.c_str());
     if (jsonItem == nullptr || !cJSON_IsString(jsonItem)) {
         EDM_LOGE(MODULE_DEV_MGR, "value is not string, key:%{public}s", keyStr.c_str());
+        cJSON_Delete(bundleNames);
         return false;
     }
     std::istringstream bundleNamesStram(jsonItem->valuestring);
@@ -90,6 +91,7 @@ bool ExtPermissionManager::GetPermissionValues(const std::string &permissionName
     while (std::getline(bundleNamesStram, bundleName, ',')) {
         permissionValues.insert(Trim(bundleName));
     }
+    cJSON_Delete(bundleNames);
     return !permissionValues.empty();
 }
 } // namespace ExternalDeviceManager

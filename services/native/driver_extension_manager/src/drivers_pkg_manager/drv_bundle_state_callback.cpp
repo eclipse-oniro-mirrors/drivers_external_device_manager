@@ -66,6 +66,10 @@ std::string DrvBundleStateCallback::GetBundleSize(const std::string &bundleName)
         EDM_LOGE(MODULE_PKG_MGR, "%{public}s: failed to GetBundleMgrProxy", __func__);
         return bundleSize;
     }
+    if (bundleMgr_ == nullptr) {
+        EDM_LOGE(MODULE_PKG_MGR, "%{public}s: bundleMgr_ is null", __func__);
+        return bundleSize;
+    }
     if (!bundleMgr_->GetBundleStats(bundleName, userId, bundleStats)) {
         EDM_LOGE(MODULE_PKG_MGR, "GetBundleStats failed");
         return bundleSize;
