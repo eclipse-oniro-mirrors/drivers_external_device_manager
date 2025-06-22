@@ -79,6 +79,10 @@ bool ExtPermissionManager::GetPermissionValues(const std::string &permissionName
     }
 
     cJSON* jsonObj = cJSON_Parse(bundleNames.c_str());
+    cJSON *bundleNames = cJSON_Parse(bundleNamesStr.c_str());
+    if (bundleNames == nullptr) {
+        return false;
+    }
     std::string keyStr = "bundleNames";
     cJSON* jsonItem = cJSON_GetObjectItem(jsonObj, keyStr.c_str());
     if (jsonItem == nullptr || !cJSON_IsString(jsonItem)) {
