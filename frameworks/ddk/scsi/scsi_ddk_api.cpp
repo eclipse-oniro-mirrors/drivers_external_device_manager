@@ -423,7 +423,7 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "copy revProduct failed");
         return SCSIPERIPHERAL_DDK_MEMORY_ERROR;
     }
-    inquiryInfo->data->transferredLength = hdiResponse.transferredLength;
+    inquiryInfo->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
     return CopyResponse(hdiResponse, response);
 }
@@ -506,7 +506,7 @@ int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORe
         return ret;
     }
 
-    request->data->transferredLength = hdiResponse.transferredLength;
+    request->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
     return CopyResponse(hdiResponse, response);
 }
@@ -534,7 +534,7 @@ int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IOR
         return ret;
     }
 
-    request->data->transferredLength = hdiResponse.transferredLength;
+    request->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
     return CopyResponse(hdiResponse, response);
 }
@@ -602,7 +602,7 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
         return ret;
     }
 
-    request->data->transferredLength = hdiResponse.transferredLength;
+    request->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
     return CopyResponse(hdiResponse, response);
 }

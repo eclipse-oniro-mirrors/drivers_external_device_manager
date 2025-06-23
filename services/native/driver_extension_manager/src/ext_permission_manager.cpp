@@ -79,10 +79,15 @@ bool ExtPermissionManager::GetPermissionValues(const std::string &permissionName
     }
 
     cJSON* jsonObj = cJSON_Parse(bundleNames.c_str());
+    if (jsonObj == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "JSON parse failed for bundleNames");
+        return false;
+    }
     std::string keyStr = "bundleNames";
     cJSON* jsonItem = cJSON_GetObjectItem(jsonObj, keyStr.c_str());
     if (jsonItem == nullptr || !cJSON_IsString(jsonItem)) {
         EDM_LOGE(MODULE_DEV_MGR, "value is not string, key:%{public}s", keyStr.c_str());
+        cJSON_Delete(jsonObj);
         return false;
     }
     std::istringstream bundleNamesStram(jsonItem->valuestring);
@@ -90,6 +95,7 @@ bool ExtPermissionManager::GetPermissionValues(const std::string &permissionName
     while (std::getline(bundleNamesStram, bundleName, ',')) {
         permissionValues.insert(Trim(bundleName));
     }
+    cJSON_Delete(jsonObj);
     return !permissionValues.empty();
 }
 } // namespace ExternalDeviceManager
