@@ -1,0 +1,94 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/config/components/ets_frontend/ets2abc_config.gni")
+import("//build/ohos.gni")
+import("//build/templates/abc/ohos_abc.gni")
+native_path = "../../../../services/native"
+taihe_path = "../../taihe"
+
+generate_static_abc("driver_extension_ability_abc") {
+  base_url = "./ets"
+  files = [
+    "./ets/@ohos.app.ability.DriverExtensionAbility.ets"
+  ]
+  dst_file = "$target_out_dir/driverExtensionAbility.abc"
+  out_puts = [ "$target_out_dir/driverExtensionAbility.abc" ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/driverExtensionAbility.abc"
+}
+
+ohos_shared_library("driverextension_ani") {
+  include_dirs = [
+    "native/include",
+    "$native_path/driver_extension/include",
+    "$taihe_path/driver_extension_context/include",
+  ]
+  sources = [
+    "native/src/ani_driver_extension.cpp",
+  ]
+
+  deps = [
+    "$native_path/driver_extension:driver_extension",
+    "$taihe_path/driver_extension_context:driverExtensionContext_taihe"
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:app_context",
+    "ability_runtime:extensionkit_native",
+    "ability_runtime:napi_common",
+    "ability_runtime:runtime",
+    "ability_runtime:ani_common",
+    "runtime_core:ani",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_core",
+    "ipc:ipc_napi",
+    "ipc:rpc_ani",
+  ]
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+  output_extension = "so"
+}
+
+ohos_prebuilt_etc("driver_extension_ability_abc_etc") {
+  source = "$target_out_dir/driverExtensionAbility.abc"
+  module_install_dir = "framework"
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+  deps = [ ":driver_extension_ability_abc" ]
+}
+
+group("driver_extensionAbility_ani") {
+  deps = [
+    ":driver_extension_ability_abc_etc",
+    ":driverextension_ani"
+  ]
+}
