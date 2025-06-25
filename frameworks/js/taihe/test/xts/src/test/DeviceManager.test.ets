@@ -128,6 +128,7 @@ export default function DeviceManagerJsTest() {
     const PARAMETER_ERROR_CODE = 401
     const SERVICE_EXCEPTION_CODE = 22900001
     const SERVICE_EXCEPTION_CODE_NEW = 26300001
+    const SERVICE_NOT_ALLOW_ACCESS = 26300002
     const SERVICE_NOT_BOUND = 26300003
 
     /*
@@ -244,6 +245,7 @@ export default function DeviceManagerJsTest() {
       } catch (error: BusinessError) {
         hilog.info(TAG, 'testTag', 'Test case testBindDriverWithDeviceId001 catch err : ' + JSON.stringify(error));
         expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        expect(error.code != SERVICE_NOT_ALLOW_ACCESS).assertTrue();
         done();
       }
     })
@@ -268,6 +270,7 @@ export default function DeviceManagerJsTest() {
           });
         expect(true).assertTrue();
         hilog.info(0, 'testTag ui', 'bindDevice success:' + data.deviceId);
+        hilog.info(0, 'testTag ui', 'bindDevice success:' + JSON.stringify(data.remote));
         done();
       } catch (error: BusinessError) {
         hilog.info(TAG, 'testTag', 'Test case testBindDriverWithDeviceId002 catch err : ' + JSON.stringify(error));
