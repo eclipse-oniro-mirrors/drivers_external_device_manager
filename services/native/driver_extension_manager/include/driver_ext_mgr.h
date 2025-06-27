@@ -20,6 +20,7 @@
 #include <future>
 
 #include "driver_ext_mgr_stub.h"
+#include "event_config.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -44,6 +45,7 @@ public:
         bool isByDeviceId = false, const uint64_t deviceId = 0) override;
     virtual ErrCode QueryDriverInfo(int32_t &errorCode, std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
         bool isByDriverUid = false, const std::string &driverUid = "") override;
+    virtual ErrCode NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName) override;
 
 private:
     std::mutex connectCallbackMutex;
@@ -58,6 +60,7 @@ private:
     bool accountPromiseUsed_ = false;
     bool cesPromiseUsed_ = false;
     std::map<uint64_t, std::vector<sptr<IDriverExtMgrCallback>>> connectCallbackMap;
+    EventConfig eventConfig_;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

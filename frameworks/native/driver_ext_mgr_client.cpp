@@ -234,5 +234,20 @@ UsbErrCode DriverExtMgrClient::QueryDriverInfo(const std::string &driverUid,
     return static_cast<UsbErrCode>(ret);
 }
 
+UsbErrCode DriverExtMgrClient::NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName)
+{
+    if (Connect() != UsbErrCode::EDM_OK) {
+        return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
+    }
+
+    int32_t ret = EDM_OK;
+    int32_t proxyRet = proxy_->NotifyUsbPeripheralFault(domain, faultName);
+    if (proxyRet != ERR_OK) {
+        EDM_LOGE(MODULE_FRAMEWORK, "Usb peripheral fault notify failed.");
+        return ProxyRetTranslate(proxyRet);
+    }
+    return static_cast<UsbErrCode>(ret);
+}
+
 } // namespace ExternalDeviceManager
 } // namespace OHOS

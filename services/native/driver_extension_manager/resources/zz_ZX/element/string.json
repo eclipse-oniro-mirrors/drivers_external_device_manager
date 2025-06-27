@@ -1,0 +1,12 @@
+{
+    "string": [
+        {
+            "name": "usb_transmission_error_title",
+            "value": "[TS_1090964]_USB transfer error"
+        },
+        {
+            "name": "usb_troubleshoot_message",
+            "value": "[TS_1090963]_Click to view details and solutions."
+        }
+    ]
+}

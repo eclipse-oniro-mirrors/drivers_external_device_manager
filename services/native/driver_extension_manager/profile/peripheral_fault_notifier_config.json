@@ -1,0 +1,14 @@
+[
+    {
+        "domain": "USB",
+        "fault": [
+            {
+                "faultName": "TRANSFOR_FAULT",
+                "type": "FAULT",
+                "title": "usb_transmission_error_title",
+                "msg": "usb_troubleshoot_message",
+                "uri": "https://consumer.huawei.com/cn/support/content/knowledgelist/zh-cn-vol16001467/?source=weknow"
+            }
+        ]
+    }
+]

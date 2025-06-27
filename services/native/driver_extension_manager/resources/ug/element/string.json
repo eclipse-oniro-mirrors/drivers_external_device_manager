@@ -2,14 +2,14 @@
     "string": [
         {
             "name": "usb_transmission_error_title",
-            "value": "USB transfer error",
+            "value": "\u200fUSB يوللاش خاتالىقى",
             "attr": {
                 "priority": "translate"
             }
         },
         {
             "name": "usb_troubleshoot_message",
-            "value": "Click to view details and solutions.",
+            "value": "چېكىپ سەۋەبى ۋە چارىسىنى كۆرۈڭ.",
             "attr": {
                 "priority": "translate"
             }

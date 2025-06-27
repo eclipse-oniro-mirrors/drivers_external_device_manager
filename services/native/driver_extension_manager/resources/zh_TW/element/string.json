@@ -2,14 +2,14 @@
     "string": [
         {
             "name": "usb_transmission_error_title",
-            "value": "USB transfer error",
+            "value": "USB 傳輸異常",
             "attr": {
                 "priority": "translate"
             }
         },
         {
             "name": "usb_troubleshoot_message",
-            "value": "Click to view details and solutions.",
+            "value": "輕觸查看異常原因及解決方案",
             "attr": {
                 "priority": "translate"
             }

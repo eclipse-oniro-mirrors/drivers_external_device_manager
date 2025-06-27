@@ -21,10 +21,12 @@
 #include "driver_pkg_manager.h"
 #include "edm_errors.h"
 #include "etx_device_mgr.h"
+#include "event_config.h"
 #include "ext_permission_manager.h"
 #include "hilog_wrapper.h"
 #include "idriver_change_callback.h"
 #include "iservice_registry.h"
+#include "notification_peripheral.h"
 #include "system_ability_definition.h"
 #include "usb_device_info.h"
 #include "usb_driver_info.h"
@@ -66,6 +68,10 @@ void DriverExtMgr::OnStart()
     if (!Publish(AsObject())) {
         EDM_LOGE(MODULE_DEV_MGR, "OnStart register to system ability manager failed.");
         return;
+    }
+    eventConfig_ = EventConfig::GetInstance();
+    if (!eventConfig_.ParseJsonFile()) {
+        EDM_LOGE(MODULE_SERVICE, "ParseJsonFile failed");
     }
 }
 
@@ -241,7 +247,7 @@ static std::shared_ptr<DeviceInfoData> ParseToDeviceInfoData(const std::shared_p
         return nullptr;
     }
     std::shared_ptr<DeviceInfoData> tempDeviceInfo = nullptr;
-    
+
     switch (busType) {
         case BusType::BUS_TYPE_USB: {
             std::shared_ptr<UsbDeviceInfo> usbDeviceInfo = std::static_pointer_cast<UsbDeviceInfo>(deviceInfo);
@@ -271,7 +277,7 @@ static std::shared_ptr<DeviceInfoData> ParseToDeviceInfoData(const std::shared_p
             tempDeviceInfo->driverUid = device->GetDriverUid();
         }
     }
-    
+
     return tempDeviceInfo;
 }
 
@@ -335,7 +341,7 @@ ErrCode DriverExtMgr::QueryDeviceInfo(int32_t &errorCode, std::vector<std::share
     } else {
         devices = ExtDeviceManager::GetInstance().QueryAllDevices();
     }
-    
+
     for (const auto &device : devices) {
         auto tempDeviceInfo = ParseToDeviceInfoData(device);
         if (tempDeviceInfo != nullptr) {
@@ -377,6 +383,30 @@ ErrCode DriverExtMgr::QueryDriverInfo(int32_t &errorCode, std::vector<std::share
 
     errorCode = static_cast<int32_t>(UsbErrCode::EDM_OK);
     return static_cast<int32_t>(UsbErrCode::EDM_OK);
+}
+
+
+ErrCode DriverExtMgr::NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName)
+{
+    if (domain.empty() || faultName.empty()) {
+        EDM_LOGE(MODULE_SERVICE, "Invalid domain or faultName");
+        return false;
+    }
+
+    EDM_LOGI(MODULE_SERVICE, "HandleFaultEvent domain = %{public}s, faultName = %{public}s", domain.c_str(),
+        faultName.c_str());
+
+    auto faultInfo = eventConfig_.GetFaultInfo(domain, faultName);
+    if (faultInfo.faultName.empty() || faultInfo.type.empty() || faultInfo.title.empty()|| faultInfo.msg.empty()) {
+        EDM_LOGE(MODULE_SERVICE, "GetFaultInfo failed");
+        return false;
+    }
+
+    if (!DeviceNotification::GetInstance().HandleNotification(faultInfo)) {
+        EDM_LOGE(MODULE_SERVICE, "Failed to send handle notification");
+        return false;
+    }
+    return true;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

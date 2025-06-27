@@ -1,0 +1,18 @@
+{
+    "string": [
+        {
+            "name": "usb_transmission_error_title",
+            "value": "USB བརྒྱུད་གཏོང་རྒྱུན་ལྡན་མིན།",
+            "attr": {
+                "priority": "translate"
+            }
+        },
+        {
+            "name": "usb_troubleshoot_message",
+            "value": "བརྡབས་ནས་རྒྱུན་ལྡན་མིན་པའི་རྒྱུ་རྐྱེན་དང་གནད་དོན་སེལ་ཐབས་ལ་ལྟ་ཞིབ་བྱེད།",
+            "attr": {
+                "priority": "translate"
+            }
+        }
+    ]
+}

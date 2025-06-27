@@ -36,6 +36,7 @@ public:
     UsbErrCode QueryDeviceInfo(const uint64_t deviceId, std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos);
     UsbErrCode QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos);
     UsbErrCode QueryDriverInfo(const std::string &driverUid, std::vector<std::shared_ptr<DriverInfoData>> &driverInfos);
+    UsbErrCode NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName);
 
 private:
     UsbErrCode Connect();

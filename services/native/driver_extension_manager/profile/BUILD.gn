@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+# Copyright (C) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,11 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-ext_mgr_path = "//drivers/external_device_manager"
-utils_path = "//drivers/external_device_manager/utils"
-ext_mgr_native_part_name = "external_device_manager"
+import("//drivers/external_device_manager/extdevmgr.gni")
 
-declare_args() {
-  extdevmgr_usb_pass_through = true
+## Install peripheral_fault_notifier_config.json to /system/etc/peripheral/peripheral_fault_notifier_config.json
+ohos_prebuilt_etc("peripheral_fault_notifier_config") {
+  source = "peripheral_fault_notifier_config.json"
+  relative_install_dir = "peripheral"
+  part_name = "external_device_manager"
+  subsystem_name = "hdf"
 }
