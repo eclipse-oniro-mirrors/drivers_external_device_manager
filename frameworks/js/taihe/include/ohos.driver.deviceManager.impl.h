@@ -36,7 +36,7 @@ enum ErrorCode : int32_t {
     SERVICE_NOT_BOUND = 26300003, // Use this error code when the service has no binding relationship.
 };
 
-ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_double deviceId, ani_object onDisconnect);
+ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long deviceId, ani_object onDisconnect);
 
 class AsyncData : public RefBase {
     public:

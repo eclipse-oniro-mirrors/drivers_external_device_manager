@@ -22,15 +22,15 @@
 static { loadLibrary("device_manager_taihe_native.z") }
 """)
 
-function queryDevices(busType: Optional<f64>): Array<DeviceUnion>;
+function queryDevices(busType: Optional<i32>): Array<DeviceUnion>;
 
-function queryDeviceInfo(deviceId: Optional<f64>): Array<DeviceInfoUnion>;
+function queryDeviceInfo(deviceId: Optional<u64>): Array<DeviceInfoUnion>;
 
 function queryDriverInfo(driverUid: Optional<String>): Array<DriverInfoUnion>;
 
-@!sts_inject("export native function bindDriverWithDeviceId(deviceId: number, onDisconnect: AsyncCallback<number>): Promise<RemoteDeviceDriver>;")
+@!sts_inject("export native function bindDriverWithDeviceId(deviceId: long, onDisconnect: AsyncCallback<long>): Promise<RemoteDeviceDriver>;")
 @gen_promise("unbindDriverWithDeviceId")
-function UnbindDriverWithDeviceIdSync(deviceId: f64): f64;
+function UnbindDriverWithDeviceIdSync(deviceId: u64): i32;
 
 enum BusType : i32 {
   USB = 1,
@@ -38,14 +38,14 @@ enum BusType : i32 {
 
 struct Device {
   busType: BusType;
-  deviceId: f64;
+  deviceId: u64;
   description: String;
 }
 
 struct USBDevice {
   @extends base: Device;
-  vendorId: f64;
-  productId: f64;
+  vendorId: i32;
+  productId: i32;
 }
 
 union DeviceUnion {
@@ -54,27 +54,27 @@ union DeviceUnion {
 }
 
 struct RemoteDeviceDriver {
-  deviceId: f64;
+  deviceId: u64;
   remote: @sts_type("rpc.IRemoteObject") Opaque;
 }
 
 struct USBInterfaceDesc {
-  bInterfaceNumber: f64;
-  bClass: f64;
-  bSubClass: f64;
-  bProtocol: f64;
+  bInterfaceNumber: i32;
+  bClass: i32;
+  bSubClass: i32;
+  bProtocol: i32;
 }
 
 struct DeviceInfo {
-  deviceId: f64;
+  deviceId: u64;
   isDriverMatched: bool;
   driverUid: Optional<String>;
 }
 
 struct USBDeviceInfo {
   @extends base: DeviceInfo;
-  vendorId: f64;
-  productId: f64;
+  vendorId: i32;
+  productId: i32;
   interfaceDescList: Array<USBInterfaceDesc>;
 }
 
@@ -94,8 +94,8 @@ struct DriverInfo {
 
 struct USBDriverInfo {
   @extends base: DriverInfo;
-  productIdList: Array<f64>;
-  vendorIdList: Array<f64>;
+  productIdList: Array<i32>;
+  vendorIdList: Array<i32>;
 }
 
 union DriverInfoUnion {
