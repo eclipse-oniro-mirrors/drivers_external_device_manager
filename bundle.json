@@ -52,7 +52,11 @@
                 "relational_store",
                 "drivers_interface_input",
                 "cJSON",
-                "selinux_adapter"
+                "selinux_adapter",
+                "distributed_notification_service",
+                "i18n",
+                "image_framework",
+                "config_policy"
             ]
         },
         "build": {

@@ -2,7 +2,10 @@
     "string": [
         {
             "name": "usb_transmission_error_title",
-            "value": "USB传输异常"
+            "value": "USB 传输异常",
+            "attr": {
+                "priority": "translate"
+            }
         },
         {
             "name": "usb_troubleshoot_message",

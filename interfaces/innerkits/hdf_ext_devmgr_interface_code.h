@@ -27,6 +27,7 @@ enum class DriverExtMgrInterfaceCode : uint32_t {
     UNBIND_DRIVER_WITH_DEVICE_ID,
     QUERY_DEVICE_INFO,
     QUERY_DRIVER_INFO,
+    NOTIFY_USB_PERIPHERAL_FAULT,
     INVALID_CODE
 };
 } // namespace ExternalDeviceManager

@@ -1,0 +1,18 @@
+{
+    "string":[
+        {
+            "name":"usb_transmission_error_title",
+            "value":"USB 傳輸出現異常",
+            "attr":{
+                "priority":"translate"
+            }
+        },
+        {
+            "name":"usb_troubleshoot_message",
+            "value":"輕觸檢視出現異常原因及解決方案",
+            "attr":{
+                "priority":"translate"
+            }
+        }
+    ]
+}

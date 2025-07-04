@@ -27,4 +27,5 @@ interface OHOS.ExternalDeviceManager.IDriverExtMgr {
     void UnBindDriverWithDeviceId([out] int errorCode, [in] unsigned long deviceId);
     void QueryDeviceInfo([out] int errorCode, [out] sharedptr<DeviceInfoData>[] deviceInfos, [in] boolean isByDeviceId, [in] unsigned long deviceId);
     void QueryDriverInfo([out] int errorCode, [out] sharedptr<DriverInfoData>[] driverInfos, [in] boolean isByDriverUid, [in] String driverUid);
+    void NotifyUsbPeripheralFault( [in] String domain, [in] String faultName);
 }

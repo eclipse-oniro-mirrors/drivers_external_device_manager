@@ -23,4 +23,7 @@ group("fuzztest") {
     "driver_extension_manager_fuzzer:driver_extension_manager_fuzzer",
     "drivers_pkg_manager_fuzzer:drivers_pkg_manager_fuzzer",
   ]
+  external_deps = [
+    "cJSON:cjson",
+  ]
 }
