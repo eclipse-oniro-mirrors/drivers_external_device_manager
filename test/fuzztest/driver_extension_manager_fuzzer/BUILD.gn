@@ -17,6 +17,7 @@ group("driver_extension_manager_fuzzer") {
   testonly = true
   deps = [
     "binddevice_fuzzer:BindDeviceFuzzTest",
+    "notifyusbperipheralfault_fuzzer:NotifyUsbPeripheralFaultFuzzTest",
     "querydevice_fuzzer:QueryDeviceFuzzTest",
     "querydeviceinfo_fuzzer:QueryDeviceInfoFuzzTest",
     "querydriverinfo_fuzzer:QueryDriverInfoFuzzTest",
