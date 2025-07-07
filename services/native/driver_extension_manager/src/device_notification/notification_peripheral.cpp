@@ -134,8 +134,8 @@ FaultInfo DeviceNotification::FillNotificationCfg(const FaultInfo &faultInfo)
     auto &localeConfig = NotificationLocale::GetInstance();
     FaultInfo temp(faultInfo);
 
-    temp.title = localeConfig.GetStringByKey(faultInfo.title);
-    temp.msg = localeConfig.GetStringByKey(faultInfo.msg);
+    temp.title = localeConfig.GetValueByKey(faultInfo.title);
+    temp.msg = localeConfig.GetValueByKey(faultInfo.msg);
     return temp;
 }
 

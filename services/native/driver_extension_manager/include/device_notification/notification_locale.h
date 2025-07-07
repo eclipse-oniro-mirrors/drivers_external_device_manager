@@ -17,6 +17,7 @@
 #define NOTIFICATION_LOCALE_H
 
 #include "nocopyable.h"
+#include <atomic>
 #include <cJSON.h>
 #include <fstream>
 #include <mutex>
@@ -29,18 +30,17 @@ namespace ExternalDeviceManager {
 class NotificationLocale : public NoCopyable {
 public:
     static NotificationLocale &GetInstance();
-
     void ParseLocaleCfg();
     void UpdateStringMap();
-    std::string GetStringByKey(const std::string &key);
-
+    std::string GetValueByKey(const std::string &key);
 private:
     bool ParseJsonfile(const std::string &targetPath, std::unordered_map<std::string, std::string> &container);
     std::unordered_map<std::string, std::string> languageMap_;
     std::unordered_map<std::string, std::string> stringMap_;
     std::string localeBaseName_;
     std::atomic<bool> islanguageMapInit_ {false};
-    static std::mutex mutex_;
+    mutable std::mutex localeMutex_;
+    static std::mutex instanceMutex_;
     static std::shared_ptr<NotificationLocale> instance_;
 };
 } // namespace ExternalDeviceManager

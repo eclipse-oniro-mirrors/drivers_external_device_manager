@@ -19,6 +19,8 @@
 namespace {
 constexpr const char *SYSTEM_PERIPHERAL_FAULT_NOTIFIER_CONFIG_PATH =
     "/system/etc/peripheral/peripheral_fault_notifier_config.json";
+constexpr const char *SYS_PROD_PERIPHERAL_FAULT_NOTIFIER_CONFIG_PATH =
+    "/sys_prod/etc/peripheral/peripheral_fault_notifier_config.json";
 } // namespace
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -75,14 +77,13 @@ FaultInfo EventConfig::ExtractFaultInfo(const cJSON *faultItem)
 
 void EventConfig::DeleteJsonObj(cJSON *obj)
 {
-    if (!obj &&!cJSON_IsNull(obj)) {
+    if (obj &&!cJSON_IsNull(obj)) {
         cJSON_Delete(obj);
         obj = nullptr;
     }
 }
 
-bool EventConfig::ParseJsonFile(
-    const std::string &targetPath, std::unordered_map<std::string, std::vector<FaultInfo>> &peripheralFaultMap)
+bool EventConfig::ParseJsonFile(const std::string &targetPath, DomainFaultsMap &peripheralFaultMap)
 {
     if (access(targetPath.c_str(), F_OK) != 0) {
         EDM_LOGE(MODULE_SERVICE, "targetPath %{public}s invalid", targetPath.c_str());
@@ -138,10 +139,70 @@ bool EventConfig::ParseJsonFile(
     return true;
 }
 
+DomainFaultsMap EventConfig::FillFaultsMap(const DomainFaultsMap &ccmMap, const DomainFaultsMap &localMap)
+{
+    DomainFaultsMap resMap;
+    DomainFaultsMap tempMap(localMap);
+
+    for (const auto &[domain, ccmFaults] : ccmMap) {
+        auto localIt = tempMap.find(domain);
+        if (localIt == tempMap.end()) {
+            EDM_LOGE(MODULE_SERVICE, "domain %{public}s has been configured in CCMMap but not configured in localMap",
+                domain.c_str());
+            continue;
+        }
+        const auto& localFaults = localIt->second;
+        std::vector<FaultInfo> matchedFaults;
+        for (const auto& ccmFault : ccmFaults) {
+            auto it = std::find_if(localFaults.begin(), localFaults.end(),
+                [&ccmFault](const FaultInfo& localFault) {
+                    return localFault.faultName == ccmFault.faultName;
+                });
+            if (it != localFaults.end()) {
+                matchedFaults.push_back(*it);
+            } else {
+                EDM_LOGE(MODULE_SERVICE,
+                    "domain %{public}s and faultName %{public}s has been configured in CCMMap but not configured in "
+                    "localMap",
+                    domain.c_str(), ccmFault.faultName.c_str());
+            }
+        }
+        if (matchedFaults.size() < localFaults.size()) {
+            EDM_LOGE(MODULE_SERVICE, "localConfig has different faults with CCM for domain %{public}s", domain.c_str());
+        }
+        if (!matchedFaults.empty()) {
+            resMap[domain] = std::move(matchedFaults);
+        }
+        tempMap.erase(localIt);
+    }
+    if (!tempMap.empty()) {
+        EDM_LOGE(MODULE_SERVICE, "localMap contains %{public}lu domains that are not present in CCMMap",
+            static_cast<unsigned long>(tempMap.size()));
+    }
+    return resMap;
+}
+
 bool EventConfig::ParseJsonFile()
 {
     peripheralFaultsMap_.clear();
-    return ParseJsonFile(SYSTEM_PERIPHERAL_FAULT_NOTIFIER_CONFIG_PATH, peripheralFaultsMap_);
+    DomainFaultsMap ccmMap;
+    DomainFaultsMap localMap;
+    bool bRet = ParseJsonFile(SYS_PROD_PERIPHERAL_FAULT_NOTIFIER_CONFIG_PATH, ccmMap);
+    if (!bRet || ccmMap.size() == 0) {
+        EDM_LOGE(MODULE_SERVICE, "Failed to parse the CCM configuration file");
+        return false;
+    }
+    bRet = ParseJsonFile(SYSTEM_PERIPHERAL_FAULT_NOTIFIER_CONFIG_PATH, localMap);
+    if (!bRet || localMap.size() == 0) {
+        EDM_LOGE(MODULE_SERVICE, "Failed to parse the local configuration file");
+        return false;
+    }
+    peripheralFaultsMap_ = FillFaultsMap(ccmMap, localMap);
+    if (peripheralFaultsMap_.empty()) {
+        EDM_LOGE(MODULE_SERVICE, "Failed to ParseJsonFile and peripheralFaultsMap_ is empty");
+        return false;
+    }
+    return true;
 }
 
 FaultInfo EventConfig::GetFaultInfo(const std::string &domain, const std::string &faultName) const
