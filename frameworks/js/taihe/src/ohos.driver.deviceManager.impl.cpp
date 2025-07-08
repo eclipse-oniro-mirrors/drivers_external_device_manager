@@ -108,7 +108,7 @@ void AsyncData::DeleteNapiRef()
 
 static ani_object GetCallbackResult(ani_env *env, uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj)
 {
-    ani_double id = deviceId;
+    ani_long id = deviceId;
     ani_ref remoteObj;
     if (drvExtObj == nullptr) {
         env->GetUndefined(&remoteObj);
@@ -208,19 +208,19 @@ static ani_object ConvertToBusinessError(ani_env *env, const ErrMsg &errMsg)
 static ani_object ConvertToObjectDeviceId(ani_env *env, const uint64_t deviceId)
 {
     ani_object retObject = nullptr;
-    ani_double aniDeviceId = deviceId;
+    ani_long aniDeviceId = deviceId;
     ani_class cls {};
-    if (ANI_OK != env->FindClass("Lstd/core/Double;", &cls)) {
-        EDM_LOGE(MODULE_DEV_MGR, "find class Double Lstd/core/Double failed");
+    if (ANI_OK != env->FindClass("Lstd/core/Long;", &cls)) {
+        EDM_LOGE(MODULE_DEV_MGR, "find class Long Lstd/core/Long failed");
         return retObject;
     }
     ani_method ctor;
     if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "D:V", &ctor)) {
-        EDM_LOGE(MODULE_DEV_MGR, "find method Double.constructor failed");
+        EDM_LOGE(MODULE_DEV_MGR, "find method Long.constructor failed");
         return retObject;
     }
     if (ANI_OK != env->Object_New(cls, ctor, &retObject, aniDeviceId)) {
-        EDM_LOGE(MODULE_DEV_MGR, "create Double object failed");
+        EDM_LOGE(MODULE_DEV_MGR, "create Long object failed");
     }
     return retObject;
 }
@@ -370,7 +370,7 @@ static ohos::driver::deviceManager::DeviceUnion ConvertToDevice(std::shared_ptr<
             ::taihe::static_tag<::ohos::driver::deviceManager::DeviceUnion::tag_t::t>, taiheDevice);
     }
 }
-array<ohos::driver::deviceManager::DeviceUnion> queryDevices(optional_view<double> busType)
+array<ohos::driver::deviceManager::DeviceUnion> queryDevices(optional_view<int32_t> busType)
 {
     EDM_LOGI(MODULE_DEV_MGR, "queryDevices start");
     bool isBusTypeSet = busType.has_value();
@@ -448,7 +448,7 @@ static ohos::driver::deviceManager::DeviceInfoUnion ConvertToDeviceInfo(std::sha
     }
 }
 
-array<ohos::driver::deviceManager::DeviceInfoUnion> queryDeviceInfo(optional_view<double> deviceId)
+array<ohos::driver::deviceManager::DeviceInfoUnion> queryDeviceInfo(optional_view<uint64_t> deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "queryDeviceInfo start");
     std::vector<std::shared_ptr<DeviceInfoData>> deviceInfos;
@@ -484,17 +484,17 @@ static ohos::driver::deviceManager::DriverInfoUnion ConvertToDriverInfo(std::sha
     if (driverInfoData->busType == OHOS::ExternalDeviceManager::BusType::BUS_TYPE_USB) {
         std::shared_ptr<USBDriverInfoData> usbDriverInfo = std::static_pointer_cast<USBDriverInfoData>(driverInfoData);
 
-        std::vector<double> pids;
+        std::vector<int32_t> pids;
         for (auto pidItem : usbDriverInfo->pids) {
             pids.push_back(pidItem);
         }
-        array<double> pidList(pids);
+        array<int32_t> pidList(pids);
 
-        std::vector<double> vids;
+        std::vector<int32_t> vids;
         for (auto vidItem : usbDriverInfo->vids) {
             vids.push_back(vidItem);
         }
-        array<double> vidList(vids);
+        array<int32_t> vidList(vids);
 
         auto taiheUSBDriverInfoData = ohos::driver::deviceManager::USBDriverInfo{
             {
@@ -554,7 +554,7 @@ array<ohos::driver::deviceManager::DriverInfoUnion> queryDriverInfo(optional_vie
     return array<ohos::driver::deviceManager::DriverInfoUnion>(resultArray);
 }
 
-ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_double deviceId, ani_object onDisconnect)
+ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long deviceId, ani_object onDisconnect)
 {
     EDM_LOGI(MODULE_DEV_MGR, "Enter BindDriverWithDeviceIdSync:%{public}016" PRIX64, static_cast<uint64_t>(deviceId));
     std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -594,9 +594,9 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_double 
     return promise;
 }
 
-double UnbindDriverWithDeviceIdSync(double deviceId)
+int32_t UnbindDriverWithDeviceIdSync(uint64_t deviceId)
 {
-    EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDevice:%{public}016" PRIX64, static_cast<uint64_t>(deviceId));
+    EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDevice:%{public}016" PRIX64, deviceId);
     UsbErrCode retCode = g_edmClient.UnbindDriverWithDeviceId(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {

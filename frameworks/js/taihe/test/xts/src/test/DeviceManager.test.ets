@@ -21,7 +21,7 @@ import Utils from './Util.test';
 
 const TAG = 0x0000;
 
-function isUsbDevice(deviceId : number) {
+function isUsbDevice(deviceId : long) {
   return (deviceId & 0x00000000FFFFFFFF) === deviceManager.BusType.USB;
 }
 
@@ -92,7 +92,7 @@ function assertDriverInfo(driverInfo : deviceManager.DriverInfo) {
 
 export default function DeviceManagerJsTest() {
   describe("DeviceManagerJsTest", ():void => {
-    let deviceId: double = 0;
+    let deviceId: long = 0;
     beforeAll(() => {
       hilog.info(TAG, 'testTag', 'beforeAll called');
       try {
@@ -265,7 +265,7 @@ export default function DeviceManagerJsTest() {
       }
       try {
         let data: deviceManager.RemoteDeviceDriver = await deviceManager.bindDriverWithDeviceId(deviceId,
-          (error: Error | undefined, data: double) => {
+          (err: BusinessError<void>|null, data: long|undefined) => {
             hilog.info(TAG, 'testTag', 'unbindDriverWithDeviceId callback success');
           });
         expect(true).assertTrue();
