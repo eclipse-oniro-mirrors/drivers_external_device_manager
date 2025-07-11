@@ -79,6 +79,7 @@ ohos_shared_library("driver_extension_module") {
     "ability_runtime:runtime",
     "ipc:ipc_napi",
     "napi:ace_napi",
+    "hilog:libhilog"
   ]
 
   relative_install_dir = "extensionability/"
