@@ -44,9 +44,6 @@ private:
 
     std::shared_ptr<Media::PixelMap> iconPixelMap_ {};
 };
-
-extern "C" API bool HandleNotification(const FaultInfo &notifCfg);
-
 } // namespace ExternalDeviceManager
 } // namespace OHOS
 #endif // DEVICE_NOTIFICATION_H

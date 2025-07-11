@@ -28,11 +28,30 @@ constexpr const char *DEFAULT_LANGUAGE_EN = "base";
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+namespace {
+bool IsPathValid(const std::string &path)
+{
+    // Check for directory traversal patterns
+    if (path.find("..") != std::string::npos) {
+        return false;
+    }
+
+    // Check for absolute paths
+    if (!path.empty() && (path[0] == '/' || path[0] == '\\')) {
+        return false;
+    }
+
+    // Check for other suspicious characters
+    const std::string forbiddenChars = "\\:*?\"<>|";
+    return path.find_first_of(forbiddenChars) == std::string::npos;
+}
+} // namespace
+
 std::shared_ptr<NotificationLocale> NotificationLocale::instance_ = nullptr;
-std::mutex NotificationLocale::mutex_;
+std::mutex NotificationLocale::instanceMutex_;
 NotificationLocale &NotificationLocale::GetInstance()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(instanceMutex_);
     if (instance_ == nullptr) {
         instance_ = std::make_shared<NotificationLocale>();
     }
@@ -91,6 +110,7 @@ void NotificationLocale::ParseLocaleCfg()
 
 void NotificationLocale::UpdateStringMap()
 {
+    std::lock_guard<std::mutex> lock(localeMutex_);
     OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetSystemLocale());
     std::string curBaseName = locale.GetBaseName();
     if (localeBaseName_ == curBaseName) {
@@ -99,22 +119,35 @@ void NotificationLocale::UpdateStringMap()
 
     localeBaseName_ = curBaseName;
     std::string language = DEFAULT_LANGUAGE_EN;
+
     if (languageMap_.find(localeBaseName_) != languageMap_.end()) {
         language = languageMap_[localeBaseName_];
     }
 
+    // Validate language path to prevent directory traversal
+    if (!IsPathValid(language)) {
+        EDM_LOGE(MODULE_SERVICE, "Invalid language path detected: %{public}s", language.c_str());
+        language = DEFAULT_LANGUAGE_EN;
+    }
+
     stringMap_.clear();
     std::string resourcePath = SYSTEM_PERIPHERAL_RESOURCE_PATH + language + ELEMENT_STRING_FILE;
+    // Additional path validation
+    if (resourcePath.find("/../") != std::string::npos) {
+        EDM_LOGE(MODULE_SERVICE, "Potential path traversal attack detected");
+        return;
+    }
     ParseJsonfile(resourcePath, stringMap_);
 }
 
-std::string NotificationLocale::GetStringByKey(const std::string &key)
+std::string NotificationLocale::GetValueByKey(const std::string &key)
 {
+    std::lock_guard<std::mutex> lock(localeMutex_);
     auto iter = stringMap_.find(key);
     if (iter != stringMap_.end()) {
         return iter->second;
     }
-    EDM_LOGI(MODULE_SERVICE, "fail to get related string by key(%{public}s)", key.c_str());
+    EDM_LOGE(MODULE_SERVICE, "fail to get related string by key(%{public}s)", key.c_str());
     return "";
 }
 } // namespace ExternalDeviceManager

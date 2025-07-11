@@ -40,7 +40,7 @@ struct FaultInfo {
             ", uri: " + uri;
     }
 };
-
+using DomainFaultsMap  = std::unordered_map<std::string, std::vector<FaultInfo>>;
 class EventConfig {
 public:
     static EventConfig &GetInstance();
@@ -50,11 +50,10 @@ public:
     FaultInfo GetFaultInfo(const std::string &domain, const std::string &faultName) const;
 
 private:
+    DomainFaultsMap FillFaultsMap(const DomainFaultsMap &ccmMap, const DomainFaultsMap &localMap);
     void DeleteJsonObj(cJSON *obj);
-    bool ParseJsonFile(
-        const std::string &targetPath, std::unordered_map<std::string, std::vector<FaultInfo>> &peripheralFaultNap);
-    // domain -> FaultInfo vector map
-    std::unordered_map<std::string, std::vector<FaultInfo>> peripheralFaultsMap_;
+    bool ParseJsonFile(const std::string &targetPath, DomainFaultsMap &peripheralFaultNap);
+    DomainFaultsMap peripheralFaultsMap_;
     static std::mutex mutex_;
     static std::shared_ptr<EventConfig> instance_;
 };

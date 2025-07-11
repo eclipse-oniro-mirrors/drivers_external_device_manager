@@ -19,12 +19,13 @@
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
+#include "file_ex.h"
 
 using namespace testing::ext;
 
 namespace OHOS {
 namespace ExternalDeviceManager {
-static std::string g_jsonStr = R"(
+static std::string g_localJsonStr = R"(
 [
     {
         "domain": "USB",
@@ -41,7 +42,44 @@ static std::string g_jsonStr = R"(
 ]
 )";
 
-const std::string J_SON_FILE_PATH = "./event_config.json";
+static std::string g_ccmJsonStr = R"(
+[
+    {
+        "domain": "USB",
+        "fault": [
+            {
+                "faultName": "TRANSFOR_FAULT",
+                "type": "FAULT",
+                "title": "usb_transmission_error_title",
+                "msg": "usb_troubleshoot_message",
+                "uri": "www.gitee.com"
+            },
+            {
+                "faultName": "READ_FAULT",
+                "type": "FAULT",
+                "title": "usb_transmission_error_title",
+                "msg": "usb_troubleshoot_message",
+                "uri": "www.gitee.com"
+            }
+        ]
+    },
+    {
+        "domain": "MOUSE",
+        "fault": [
+            {
+                "faultName": "TRANSFOR_FAULT",
+                "type": "FAULT",
+                "title": "usb_transmission_error_title",
+                "msg": "usb_troubleshoot_message",
+                "uri": "www.gitee.com"
+            }
+        ]
+    }
+]
+)";
+
+const std::string LOCAL_J_SON_FILE_PATH = "./local_event_config.json";
+const std::string CCM_J_SON_FILE_PATH = "./ccm_event_config.json";
 
 class EventConfigTest : public testing::Test {
 public:
@@ -49,23 +87,28 @@ public:
     static void TearDownTestCase(void);
     void SetUp();
     void TearDown();
+    static void DeleteFile(const std::string &filePath);
 };
+
+void EventConfigTest::DeleteFile(const std::string &filePath)
+{
+    if (access(filePath.c_str(), F_OK) == 0) {
+        if (remove(filePath.c_str()) != 0) {
+            EDM_LOGE(MODULE_SERVICE, "Failed to remove file: %{public}s", filePath.c_str());
+        }
+    }
+}
 
 void EventConfigTest::SetUpTestCase(void)
 {
-    std::ofstream ofs(J_SON_FILE_PATH);
-    if (ofs.is_open()) {
-        ofs << g_jsonStr;
-        ofs.close();
-    }
+    SaveStringToFile(LOCAL_J_SON_FILE_PATH, g_localJsonStr);
+    SaveStringToFile(CCM_J_SON_FILE_PATH, g_ccmJsonStr);
 }
+
 void EventConfigTest::TearDownTestCase(void)
 {
-    if (access(J_SON_FILE_PATH.c_str(), F_OK) == 0) {
-        if (remove(J_SON_FILE_PATH.c_str()) != 0) {
-            EDM_LOGE(MODULE_SERVICE, "Failed to remove file: %{public}s", J_SON_FILE_PATH.c_str());
-        }
-    }
+    DeleteFile(LOCAL_J_SON_FILE_PATH);
+    DeleteFile(CCM_J_SON_FILE_PATH);
 }
 void EventConfigTest::SetUp(void) {}
 void EventConfigTest::TearDown(void) {}
@@ -103,11 +146,35 @@ HWTEST_F(EventConfigTest, ParseJsonFile002, TestSize.Level1)
     EDM_LOGI(MODULE_SERVICE, "ParseJsonFile002 begin");
     EventConfig &eventConfig = EventConfig::GetInstance();
     EXPECT_NE(&eventConfig, nullptr);
-    std::unordered_map<std::string, std::vector<FaultInfo>> peripheralFaultsMap;
-    bool bRet = eventConfig.ParseJsonFile(J_SON_FILE_PATH, peripheralFaultsMap);
+    DomainFaultsMap peripheralFaultsMap;
+    bool bRet = eventConfig.ParseJsonFile(LOCAL_J_SON_FILE_PATH, peripheralFaultsMap);
     EXPECT_TRUE(bRet);
     EXPECT_GT(peripheralFaultsMap.size(), 0);
     EDM_LOGI(MODULE_SERVICE, "ParseJsonFile002 end");
+}
+
+/**
+ * @tc.name: FillFaultsMap001
+ * @tc.desc: Test FillFaultsMap
+ * @tc.type: FUNC
+ */
+HWTEST_F(EventConfigTest, FillFaultsMap001, TestSize.Level1)
+{
+    EDM_LOGI(MODULE_SERVICE, "FillFaultsMap001 begin");
+    EventConfig &eventConfig = EventConfig::GetInstance();
+    EXPECT_NE(&eventConfig, nullptr);
+    DomainFaultsMap ccmMap;
+    DomainFaultsMap localMap;
+    DomainFaultsMap comMap;
+    bool bRet = eventConfig.ParseJsonFile(LOCAL_J_SON_FILE_PATH, ccmMap);
+    EXPECT_TRUE(bRet);
+    EXPECT_EQ(ccmMap.size(), 1);
+    bRet = eventConfig.ParseJsonFile(CCM_J_SON_FILE_PATH, localMap);
+    EXPECT_TRUE(bRet);
+    EXPECT_EQ(localMap.size(), 2);
+    comMap = eventConfig.FillFaultsMap(ccmMap, localMap);
+    EXPECT_EQ(comMap.size(), 1);
+    EDM_LOGI(MODULE_SERVICE, "FillFaultsMap001 end");
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

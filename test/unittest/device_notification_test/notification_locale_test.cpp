@@ -96,7 +96,7 @@ HWTEST_F(NotificationLocaleTest, ParseLocaleCfg001, TestSize.Level1)
 
 /**
  * @tc.name: GetStringByKey001
- * @tc.desc: Test GetStringByKey
+ * @tc.desc: Test GetValueByKey
  * @tc.type: FUNC
  */
 HWTEST_F(NotificationLocaleTest, GetStringByKey001, TestSize.Level1)
@@ -109,8 +109,8 @@ HWTEST_F(NotificationLocaleTest, GetStringByKey001, TestSize.Level1)
     notificationLocale.UpdateStringMap();
     EXPECT_GT(notificationLocale.languageMap_.size(), 0);
     EXPECT_GT(notificationLocale.stringMap_.size(), 0);
-    EXPECT_TRUE(notificationLocale.GetStringByKey("key").empty());
-    EXPECT_FALSE(notificationLocale.GetStringByKey("usb_transmission_error_title").empty());
+    EXPECT_TRUE(notificationLocale.GetValueByKey("key").empty());
+    EXPECT_FALSE(notificationLocale.GetValueByKey("usb_transmission_error_title").empty());
     EDM_LOGI(MODULE_SERVICE, "GetStringByKey001 end");
 }
 
@@ -165,7 +165,7 @@ HWTEST_F(NotificationLocaleTest, UpdateStringMap001, TestSize.Level1)
     EXPECT_GT(notificationLocale.stringMap_.size(), 0);
     EXPECT_EQ(notificationLocale.stringMap_.size(), stringMapBak.size());
     std::string key = "usb_transmission_error_title";
-    std::string value = notificationLocale.GetStringByKey(key);
+    std::string value = notificationLocale.GetValueByKey(key);
     EXPECT_EQ(value, stringMapBak[key]);
 
     // restore

@@ -390,7 +390,7 @@ ErrCode DriverExtMgr::NotifyUsbPeripheralFault(const std::string &domain, const 
 {
     if (domain.empty() || faultName.empty()) {
         EDM_LOGE(MODULE_SERVICE, "Invalid domain or faultName");
-        return false;
+        return static_cast<int32_t>(UsbErrCode::EDM_ERR_INVALID_PARAM);
     }
 
     EDM_LOGI(MODULE_SERVICE, "HandleFaultEvent domain = %{public}s, faultName = %{public}s", domain.c_str(),
@@ -399,14 +399,14 @@ ErrCode DriverExtMgr::NotifyUsbPeripheralFault(const std::string &domain, const 
     auto faultInfo = eventConfig_.GetFaultInfo(domain, faultName);
     if (faultInfo.faultName.empty() || faultInfo.type.empty() || faultInfo.title.empty()|| faultInfo.msg.empty()) {
         EDM_LOGE(MODULE_SERVICE, "GetFaultInfo failed");
-        return false;
+        return static_cast<int32_t>(UsbErrCode::EDM_ERR_INVALID_PARAM);
     }
 
     if (!DeviceNotification::GetInstance().HandleNotification(faultInfo)) {
         EDM_LOGE(MODULE_SERVICE, "Failed to send handle notification");
-        return false;
+        return static_cast<int32_t>(UsbErrCode::EDM_NOK);
     }
-    return true;
+    return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS
