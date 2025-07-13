@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,15 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DEVICE_MANAGER_MIDDLE_H
-#define DEVICE_MANAGER_MIDDLE_H
+#ifndef OHOS_DRIVER_DEVICE_MANAGER_IMPL_H
+#define OHOS_DRIVER_DEVICE_MANAGER_IMPL_H
+
+#include <cinttypes>
 
 #include "hilog_wrapper.h"
-#include "napi/native_api.h"
-#include "napi/native_node_api.h"
 #include "idriver_ext_mgr_callback.h"
 #include "driver_ext_mgr_callback_stub.h"
 #include "driver_ext_mgr_client.h"
+#include "event_handler.h"
+#include <ani.h>
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -34,31 +36,24 @@ enum ErrorCode : int32_t {
     SERVICE_NOT_BOUND = 26300003, // Use this error code when the service has no binding relationship.
 };
 
+ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long deviceId, ani_object onDisconnect);
+
 class AsyncData : public RefBase {
-public:
-    uint64_t deviceId;
-    napi_env env;
-    napi_ref bindCallback;
-    napi_ref onDisconnect;
-    napi_ref unbindCallback;
-    napi_deferred bindDeferred;
-    napi_deferred unbindDeferred;
-    ErrMsg unBindErrMsg;
+    public:
+        uint64_t deviceId;
+        ani_vm *vm = nullptr;
+        ani_env *env  = nullptr;
+        ani_ref onDisconnect;
+        ani_resolver bindDeferred;
+        ErrMsg unBindErrMsg;
 
-    void DeleteNapiRef();
-
-    ~AsyncData()
-    {
-        EDM_LOGE(MODULE_DEV_MGR, "Release callback data: %{public}016" PRIX64, deviceId);
-        DeleteNapiRef();
-    }
-};
-
-struct AsyncDataWorker {
-    napi_env env = nullptr;
-    napi_ref bindCallback = nullptr;
-    napi_ref onDisconnect = nullptr;
-    napi_ref unbindCallback = nullptr;
+        void DeleteNapiRef();
+        AsyncData(ani_vm *vm, ani_env *env): vm(vm), env(env) {}
+        ~AsyncData()
+        {
+            EDM_LOGE(MODULE_DEV_MGR, "Release callback data: %{public}016" PRIX64, deviceId);
+            DeleteNapiRef();
+        }
 };
 
 class DeviceManagerCallback : public DriverExtMgrCallbackStub {
