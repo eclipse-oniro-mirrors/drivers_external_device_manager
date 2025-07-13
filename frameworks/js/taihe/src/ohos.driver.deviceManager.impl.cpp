@@ -22,6 +22,7 @@
 #include "ohos.driver.deviceManager.proj.hpp"
 #include "stdexcept"
 #include "taihe/runtime.hpp"
+#include "edm_errors.h"
 
 using namespace taihe;
 using namespace ohos::driver::deviceManager;
@@ -225,13 +226,13 @@ static ani_object ConvertToObjectDeviceId(ani_env *env, const uint64_t deviceId)
     return retObject;
 }
 
-void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
+ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
     EDM_LOGI(MODULE_DEV_MGR, "bind device callback: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device OnConnect is null");
-        return;
+        return EDM_NOK;
     }
 
     auto data = g_callbackMap[deviceId];
@@ -246,7 +247,7 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
         if (ANI_ERROR == ret) {
             if (ANI_OK != data->vm->GetEnv(ANI_VERSION_1, &env)) {
                 EDM_LOGE(MODULE_DEV_MGR, "GetEnv failed");
-                return;
+                return EDM_NOK;
             }
         }
         if (ANI_OK != env->CreateLocalScope(ANI_SCOPE_SIZE)) {
@@ -254,7 +255,7 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
             if (ret == ANI_OK) {
                 data->vm->DetachCurrentThread();
             }
-            return;
+            return EDM_NOK;
         }
         ani_object result = GetCallbackResult(env, data->deviceId, drvExtObj);
         ani_object err = ConvertToBusinessError(env, errMsg);
@@ -273,23 +274,25 @@ void DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObjec
     };
     if (!SendEventToMainThread(task)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
+        return EDM_NOK;
     }
+    return EDM_OK;
 }
 
-void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
+ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGI(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device callback map is null");
-        return;
+        return EDM_NOK;
     }
 
     auto data = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
     if (data->onDisconnect == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "device callback is null");
-        return;
+        return EDM_NOK;
     }
     data->IncStrongRef(nullptr);
     auto task = [data, errMsg]() {
@@ -300,7 +303,7 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
         if (ret != ANI_OK && data->vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "Failed to get JNI environment.");
             data->DecStrongRef(nullptr);
-            return;
+            return EDM_NOK;
         }
         if (ANI_OK != env->CreateLocalScope(ANI_SCOPE_SIZE)) {
             EDM_LOGE(MODULE_DEV_MGR, "Failed to create local scope.");
@@ -308,7 +311,7 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
             if (ret == ANI_OK) {
                 data->vm->DetachCurrentThread();
             }
-            return;
+            return EDM_NOK;
         }
         ani_ref argv[] = {ConvertToBusinessError(env, errMsg), ConvertToObjectDeviceId(env, data->deviceId)};
         ani_ref result;
@@ -324,24 +327,27 @@ void DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg
     if (!SendEventToMainThread(task)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
         data->DecStrongRef(nullptr);
+        return EDM_NOK;
     }
+    return EDM_OK;
 }
 
-void DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
+ErrCode DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGI(MODULE_DEV_MGR, "unbind device callback: %{public}016" PRIX64, deviceId);
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind map is null");
-        return;
+        return EDM_NOK;
     }
 
     auto asyncData = g_callbackMap[deviceId];
     if (asyncData == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
-        return;
+        return EDM_NOK;
     }
     asyncData->unBindErrMsg = errMsg;
+    return EDM_OK;
 }
 
 static ohos::driver::deviceManager::DeviceUnion ConvertToDevice(std::shared_ptr<DeviceData> &deviceData)
