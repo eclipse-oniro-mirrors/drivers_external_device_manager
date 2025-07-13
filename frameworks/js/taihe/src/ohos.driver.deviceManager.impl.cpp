@@ -271,6 +271,7 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
         if (ret == ANI_OK) {
             data->vm->DetachCurrentThread();
         }
+        return EDM_OK;
     };
     if (!SendEventToMainThread(task)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
@@ -323,6 +324,7 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
         if (ret == ANI_OK) {
             data->vm->DetachCurrentThread();
         }
+        return EDM_OK;
     };
     if (!SendEventToMainThread(task)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
