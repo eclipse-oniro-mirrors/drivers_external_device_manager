@@ -52,7 +52,7 @@
                 "relational_store",
                 "drivers_interface_input",
                 "cJSON",
-		"runtime_core"
+                "runtime_core",
                 "selinux_adapter"
             ]
         },
