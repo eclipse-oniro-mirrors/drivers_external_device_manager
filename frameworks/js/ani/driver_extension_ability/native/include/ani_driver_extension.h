@@ -19,15 +19,15 @@
 #include "driver_extension.h"
 #include "driver_extension_context.h"
 #include "runtime.h"
-#include "sts_runtime.h"
+#include "ets_runtime.h"
 
-class STSRuntime;
+class ETSRuntime;
 
 namespace OHOS {
 namespace AbilityRuntime {
 class AniDriverExtension : public DriverExtension, public std::enable_shared_from_this<AniDriverExtension> {
 public:
-    explicit AniDriverExtension(STSRuntime &stsRuntime);
+    explicit AniDriverExtension(ETSRuntime &stsRuntime);
     virtual ~AniDriverExtension() override;
     static AniDriverExtension *Create(const std::unique_ptr<Runtime> &runtime);
     virtual void Init(const std::shared_ptr<AppExecFwk::AbilityLocalRecord> &record,
@@ -48,7 +48,7 @@ public:
 
 private:
     std::unique_ptr<AbilityRuntime::STSNativeReference> stsObj_;
-    STSRuntime &stsRuntime_;
+    ETSRuntime &stsRuntime_;
 };
 } // namespace AbilityRuntime
 } // namespace OHOS
