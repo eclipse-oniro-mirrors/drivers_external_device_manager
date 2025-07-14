@@ -247,7 +247,6 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
         if (ANI_ERROR == ret) {
             if (ANI_OK != data->vm->GetEnv(ANI_VERSION_1, &env)) {
                 EDM_LOGE(MODULE_DEV_MGR, "GetEnv failed");
-                return EDM_NOK;
             }
         }
         if (ANI_OK != env->CreateLocalScope(ANI_SCOPE_SIZE)) {
@@ -255,7 +254,6 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
             if (ret == ANI_OK) {
                 data->vm->DetachCurrentThread();
             }
-            return EDM_NOK;
         }
         ani_object result = GetCallbackResult(env, data->deviceId, drvExtObj);
         ani_object err = ConvertToBusinessError(env, errMsg);
@@ -271,7 +269,6 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
         if (ret == ANI_OK) {
             data->vm->DetachCurrentThread();
         }
-        return EDM_OK;
     };
     if (!SendEventToMainThread(task)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
@@ -304,7 +301,6 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
         if (ret != ANI_OK && data->vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "Failed to get JNI environment.");
             data->DecStrongRef(nullptr);
-            return EDM_NOK;
         }
         if (ANI_OK != env->CreateLocalScope(ANI_SCOPE_SIZE)) {
             EDM_LOGE(MODULE_DEV_MGR, "Failed to create local scope.");
@@ -312,7 +308,6 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
             if (ret == ANI_OK) {
                 data->vm->DetachCurrentThread();
             }
-            return EDM_NOK;
         }
         ani_ref argv[] = {ConvertToBusinessError(env, errMsg), ConvertToObjectDeviceId(env, data->deviceId)};
         ani_ref result;
@@ -324,7 +319,6 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
         if (ret == ANI_OK) {
             data->vm->DetachCurrentThread();
         }
-        return EDM_OK;
     };
     if (!SendEventToMainThread(task)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
