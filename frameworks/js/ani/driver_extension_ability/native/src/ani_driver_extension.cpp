@@ -26,12 +26,12 @@ constexpr const char* DRIVER_EXTENSION_CLS = "L@ohos/app/ability/DriverExtension
 namespace OHOS {
 namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
-AniDriverExtension::AniDriverExtension(STSRuntime& aniRuntime) : stsRuntime_(aniRuntime) {}
+AniDriverExtension::AniDriverExtension(ETSRuntime& aniRuntime) : stsRuntime_(aniRuntime) {}
 AniDriverExtension::~AniDriverExtension() = default;
 
 AniDriverExtension* AniDriverExtension::Create(const std::unique_ptr<Runtime>& runtime)
 {
-    return new AniDriverExtension(static_cast<STSRuntime&>(*runtime));
+    return new AniDriverExtension(static_cast<ETSRuntime&>(*runtime));
 }
 
 void AniDriverExtension::Init(const std::shared_ptr<AbilityLocalRecord> &record,
