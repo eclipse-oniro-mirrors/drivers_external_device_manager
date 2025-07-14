@@ -77,7 +77,7 @@ ani_object CreateAniDriverExtensionContext(ani_env *env, std::shared_ptr<DriverE
         HILOG_ERROR("application null");
         return nullptr;
     }
-    OHOS::AbilityRuntime::CreatEtsExtensionContext(env, cls, contextObj, context, context->GetAbilityInfo());
+    OHOS::AbilityRuntime::CreateEtsExtensionContext(env, cls, contextObj, context, context->GetAbilityInfo());
     HILOG_DEBUG("CreateAniDriverExtensionContext end");
     return contextObj;
 }
