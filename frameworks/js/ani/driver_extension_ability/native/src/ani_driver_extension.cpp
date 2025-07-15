@@ -21,6 +21,7 @@
 #include "DriverExtensionContext_ani.h"
 #include "hitrace_meter.h"
 #include "hilog_wrapper.h"
+#include "ets_native_reference.h"
 
 constexpr const char* DRIVER_EXTENSION_CLS = "L@ohos/app/ability/DriverExtensionAbility/DriverExtensionAbility;";
 namespace OHOS {
