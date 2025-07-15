@@ -16,6 +16,7 @@
 #ifndef OHOS_ABILITY_RUNTIME_ANI_DRIVER_EXTENSION_H
 #define OHOS_ABILITY_RUNTIME_ANI_DRIVER_EXTENSION_H
 
+#include "ani.h
 #include "driver_extension.h"
 #include "driver_extension_context.h"
 #include "runtime.h"
@@ -47,7 +48,7 @@ public:
         ani_env *env, std::shared_ptr<AAFwk::Want> want, const std::shared_ptr<OHOSApplication> &application);
 
 private:
-    std::unique_ptr<AbilityRuntime::STSNativeReference> stsObj_;
+    std::unique_ptr<AppExecFwk::ETSNativeReference> stsObj_;
     ETSRuntime &stsRuntime_;
 };
 } // namespace AbilityRuntime
