@@ -16,7 +16,7 @@
 #ifndef OHOS_ABILITY_RUNTIME_ANI_DRIVER_EXTENSION_H
 #define OHOS_ABILITY_RUNTIME_ANI_DRIVER_EXTENSION_H
 
-#include "ani.h
+#include "ani.h"
 #include "driver_extension.h"
 #include "driver_extension_context.h"
 #include "runtime.h"
