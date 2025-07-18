@@ -33,15 +33,10 @@ public:
     {
         ani_object nullobj {};
 
-        ani_namespace ns;
-        if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            HILOG_ERROR("[ANI] Not found namespace %{public}s", nsName);
-            return nullobj;
-        }
-
         ani_class cls;
-        if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
-            HILOG_ERROR("[ANI] Not found class %{public}s", clsName);
+        const std::string fullClsName = std::string(nsName) + "." + clsName;
+        if (ANI_OK != env->FindClass(fullClsName.c_str(), &cls)) {
+            HILOG_ERROR("[ANI] Not found class %{public}s", fullClsName.c_str());
             return nullobj;
         }
 
