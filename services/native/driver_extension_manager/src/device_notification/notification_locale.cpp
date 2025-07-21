@@ -14,7 +14,6 @@
  */
 
 #include "notification_locale.h"
-#include "config_policy_utils.h"
 #include "hilog_wrapper.h"
 #include "locale_config.h"
 #include "locale_matcher.h"

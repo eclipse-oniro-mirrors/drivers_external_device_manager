@@ -55,8 +55,7 @@
                 "selinux_adapter",
                 "distributed_notification_service",
                 "i18n",
-                "image_framework",
-                "config_policy"
+                "image_framework"
             ]
         },
         "build": {
