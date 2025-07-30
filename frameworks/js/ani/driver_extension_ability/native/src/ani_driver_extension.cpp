@@ -23,7 +23,7 @@
 #include "hilog_wrapper.h"
 #include "ets_native_reference.h"
 
-constexpr const char* DRIVER_EXTENSION_CLS = "L@ohos/app/ability/DriverExtensionAbility/DriverExtensionAbility;";
+constexpr const char* DRIVER_EXTENSION_CLS = "@ohos.app.ability.DriverExtensionAbility.DriverExtensionAbility";
 namespace OHOS {
 namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
@@ -260,7 +260,7 @@ ani_array_ref AniDriverExtension::ToAniStringList(ani_env *env,
     }
     ani_array_ref result = nullptr;
     ani_class stringCls = nullptr;
-    if (ANI_OK != env->FindClass("Lstd/core/String;", &stringCls)) {
+    if (ANI_OK != env->FindClass("std.core.String", &stringCls)) {
         HILOG_ERROR("FindClass Lstd/core/String Failed");
         return result;
     }
@@ -295,7 +295,7 @@ void AniDriverExtension::Dump(const std::vector<std::string> &params, std::vecto
     for (int i = 0; i < int(length); i++) {
         ani_ref stringEntryRef;
         if (ANI_OK != env->Object_CallMethodByName_Ref(static_cast<ani_object>(result), "$_get",
-            "I:Lstd/core/Object;", &stringEntryRef, (ani_int)i)) {
+            "i:C{std.core.Object}", &stringEntryRef, (ani_int)i)) {
             HILOG_ERROR("Object_CallMethodByName_Ref get Failed");
             return;
         }
