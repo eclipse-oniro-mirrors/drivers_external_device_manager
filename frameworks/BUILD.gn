@@ -14,6 +14,9 @@
 group("ext_devmgr_frameworks") {
   deps = [
     "ddk:ddk",
+    "js/ani/driver_extension_ability:driver_extensionAbility_ani",
     "js/napi:napi_packages",
+    "js/taihe:device_manager_taihe",
+    "js/taihe/driver_extension_context:driverExtensionContext_taihe",
   ]
 }
