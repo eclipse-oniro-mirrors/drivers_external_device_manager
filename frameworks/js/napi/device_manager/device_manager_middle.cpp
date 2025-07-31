@@ -714,6 +714,7 @@ static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
         size_t len;
         NAPI_CALL(env, napi_get_value_string_utf8(env, argv[0], nullptr, 0, &len));
         std::string driverUid;
+        driverUid.reserve(len + 1);
         driverUid.resize(len);
         NAPI_CALL(env, napi_get_value_string_utf8(env, argv[0], &driverUid[0], len + 1, &len));
         ret = g_edmClient.QueryDriverInfo(driverUid, driverInfos);
