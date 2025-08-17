@@ -251,24 +251,23 @@ void AniDriverExtension::OnDisconnect(const AAFwk::Want &want,
     HILOG_DEBUG("%{public}s end.", __func__);
 }
 
-ani_array_ref AniDriverExtension::ToAniStringList(ani_env *env,
+ani_array AniDriverExtension::ToAniStringList(ani_env *env,
     const std::vector<std::string> &params, const uint32_t length)
 {
     HILOG_DEBUG("%{public}s begin.", __func__);
     if (env == nullptr) {
         return nullptr;
     }
-    ani_array_ref result = nullptr;
-    ani_class stringCls = nullptr;
-    if (ANI_OK != env->FindClass("std.core.String", &stringCls)) {
-        HILOG_ERROR("FindClass Lstd/core/String Failed");
+    ani_array result = nullptr;
+    ani_ref undefinedRef {};
+    if (env->GetUndefined(&undefinedRef) != ANI_OK) {
         return result;
     }
-    if (env->Array_New_Ref(stringCls, length, nullptr, &result) != ANI_OK) {
+    if (env->Array_New(length, undefinedRef, &result) != ANI_OK) {
         return result;
     }
     for (auto i = 0; i < length;  ++i) {
-        if (ANI_OK != env->Array_Set_Ref(result, i, AniStringUtils::ToAni(env, params[i]))) {
+        if (ANI_OK != env->Array_Set(result, i, AniStringUtils::ToAni(env, params[i]))) {
             return result;
         }
     }
@@ -281,7 +280,7 @@ void AniDriverExtension::Dump(const std::vector<std::string> &params, std::vecto
     HILOG_DEBUG("%{public}s begin.", __func__);
     Extension::Dump(params, info);
     auto env = stsRuntime_.GetAniEnv();
-    ani_array_ref params_ = ToAniStringList(env, params, params.size());
+    ani_array params_ = ToAniStringList(env, params, params.size());
     ani_ref result = nullptr;
     if (ANI_OK != env->Object_CallMethodByName_Ref(stsObj_->aniObj, "onDump", nullptr, &result, params_)) {
         HILOG_ERROR("Failed to call the method: Dump");
