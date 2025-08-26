@@ -31,11 +31,43 @@ ohos_js_stage_unittest("NdkPermissionJsTest") {
   shared_libraries = [
     "./entry/src/main/cpp:ddk_permission_js_test",
     ":libcppsharedso",
+    ":libhmicuucso",
+    ":libhmicui18nso",
+    ":libcppso",
   ]
 }
 
 ohos_prebuilt_shared_library("libcppsharedso") {
   source = rebase_path(libcxx_ndk_shared_file)
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+}
+
+ohos_prebuilt_shared_library("libhmicuucso") {
+  if (ohos_indep_compiler_enable) {
+    source = rebase_path("//binarys/third_party/icu/innerapis/shared_icuuc/libs/libhmicuuc.z.so")
+  } else {
+    source = rebase_path("${root_out_dir}/thirdparty/icu/libhmicuuc.z.so")
+  }
+  external_deps = [ "icu:shared_icuuc" ]
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+}
+
+ohos_prebuilt_shared_library("libhmicui18nso") {
+  if (ohos_indep_compiler_enable) {
+    source = rebase_path("//binarys/third_party/icu/innerapis/shared_icui18n/libs/libhmicui18n.z.so")
+  } else {
+    source = rebase_path("${root_out_dir}/thirdparty/icu/libhmicui18n.z.so")
+  }
+  external_deps = [ "icu:shared_icui18n" ]
+  subsystem_name = "hdf"
+  part_name = "external_device_manager"
+}
+
+ohos_prebuilt_shared_library("libcppso") {
+  dir_path = "${clang_base_path}/../llvm/lib/${abi_target}"
+  source = rebase_path("${dir_path}/libc++.so")
   subsystem_name = "hdf"
   part_name = "external_device_manager"
 }
