@@ -390,6 +390,7 @@ USBDriverInfoData* USBDriverInfoData::Unmarshalling(Parcel &data)
         return nullptr;
     }
 
+    usbdriverInfoData->busType = BusType::BUS_TYPE_USB;
     usbdriverInfoData->driverUid = data.ReadString();
     usbdriverInfoData->driverName = data.ReadString();
     usbdriverInfoData->bundleSize = data.ReadString();
