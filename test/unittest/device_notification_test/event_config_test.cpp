@@ -126,14 +126,16 @@ HWTEST_F(EventConfigTest, ParseJsonFile001, TestSize.Level1)
     eventConfig.ParseJsonFile();
     size_t size = eventConfig.peripheralFaultsMap_.size();
     ASSERT_GT(size, 0);
-    std::vector<FaultInfo> faults = eventConfig.GetFaultsInfoByDomain("USB");
-    EXPECT_GT(faults.size(), 0);
-    FaultInfo faultInfo = eventConfig.GetFaultInfo("USB", "TRANSFOR_FAULT");
-    EXPECT_EQ(faultInfo.faultName, "TRANSFOR_FAULT");
-    EXPECT_EQ(faultInfo.type, "FAULT");
-    EXPECT_EQ(faultInfo.title, "usb_transmission_error_title");
-    EXPECT_EQ(faultInfo.msg, "usb_troubleshoot_message");
-    EDM_LOGI(MODULE_SERVICE, "ParseJsonFile001 end");
+    if (size > 0) {
+        std::vector<FaultInfo> faults = eventConfig.GetFaultsInfoByDomain("USB");
+        EXPECT_GT(faults.size(), 0);
+        FaultInfo faultInfo = eventConfig.GetFaultInfo("USB", "TRANSFOR_FAULT");
+        EXPECT_EQ(faultInfo.faultName, "TRANSFOR_FAULT");
+        EXPECT_EQ(faultInfo.type, "FAULT");
+        EXPECT_EQ(faultInfo.title, "usb_transmission_error_title");
+        EXPECT_EQ(faultInfo.msg, "usb_troubleshoot_message");
+        EDM_LOGI(MODULE_SERVICE, "ParseJsonFile001 end");
+    }
 }
 
 /**
