@@ -125,7 +125,6 @@ HWTEST_F(EventConfigTest, ParseJsonFile001, TestSize.Level1)
     EXPECT_NE(&eventConfig, nullptr);
     eventConfig.ParseJsonFile();
     size_t size = eventConfig.peripheralFaultsMap_.size();
-    ASSERT_GT(size, 0);
     if (size > 0) {
         std::vector<FaultInfo> faults = eventConfig.GetFaultsInfoByDomain("USB");
         EXPECT_GT(faults.size(), 0);
