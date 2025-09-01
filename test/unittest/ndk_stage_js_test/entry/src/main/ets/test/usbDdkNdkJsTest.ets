@@ -837,6 +837,32 @@ export default function usbDdkNdkJsTest() {
     });
 
     /**
+     * @tc.name       : testUsbSendPipeRequest005
+     * @tc.desc       : OH_Usb_SendPipeRequest Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbSendPipeRequest005', 0, async (done: Function) => {
+      console.info('----------------------testUsbSendPipeRequest005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test USB deviceId = " + deviceId);
+        const ret = usbDdkNdkTest.usbSendPipeRequestFive(deviceId);
+        console.info("Test Result testUsbSendPipeRequest005 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSendPipeRequest005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testUsbCreateDeviceMemMap001
      * @tc.desc       : OH_Usb_CreateDeviceMemMap Interface testing
      * @tc.type       : Function
@@ -1018,6 +1044,31 @@ export default function usbDdkNdkJsTest() {
       }
     });
 
+    /**
+     * @tc.name       : testUsbSendPipeRequestWithAshmem005
+     * @tc.desc       : OH_Usb_SendPipeRequestWithAshmem Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbSendPipeRequestWithAshmem005', 0, async (done: Function) => {
+      console.info('----------------------testUsbSendPipeRequestWithAshmem005---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test USB deviceId = " + deviceId);
+        const ret = usbDdkNdkTest.usbSendPipeRequestWithAshmemFive(deviceId);
+        console.info("Test Result testUsbSendPipeRequestWithAshmem005 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbSendPipeRequestWithAshmem004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
 
     /**
     * @tc.name       : testUsbGetDevices001
