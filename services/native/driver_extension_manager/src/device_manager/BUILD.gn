@@ -81,6 +81,7 @@ ohos_static_library("driver_extension_device_manager_test") {
   ]
   external_deps = [
     "ability_base:want",
+    "ability_runtime:ability_connect_callback_stub",
     "ability_runtime:ability_manager",
     "bundle_framework:appexecfwk_core",
     "bundle_framework:libappexecfwk_common",
