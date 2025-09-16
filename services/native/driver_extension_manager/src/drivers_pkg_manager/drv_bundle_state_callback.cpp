@@ -498,6 +498,7 @@ bool DrvBundleStateCallback::IsCurrentUserId(const int userId)
 
 bool DrvBundleStateCallback::GetBundleMgrProxy()
 {
+    EDM_LOGI(MODULE_PKG_MGR, "%{public}s: Enter", __func__);
     if (bundleMgr_ == nullptr) {
         auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (systemAbilityManager == nullptr) {
@@ -554,6 +555,7 @@ void DrvBundleStateCallback::OnBundleDrvRemoved(const std::string &bundleName, c
 
 void DrvBundleStateCallback::ResetBundleMgr()
 {
+    EDM_LOGI(MODULE_PKG_MGR, "%{public}s: Enter", __func__);
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     if (bundleMgr_ != nullptr && bundleMgr_->AsObject()) {
         bundleMgr_->AsObject()->RemoveDeathRecipient(bmsDeathRecipient_);
