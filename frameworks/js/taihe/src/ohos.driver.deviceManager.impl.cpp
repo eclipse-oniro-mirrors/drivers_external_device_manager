@@ -17,7 +17,7 @@
 #include <map>
 
 #include "ohos.driver.deviceManager.impl.hpp"
-#include "ani_remote_object.h"
+#include "remote_object_taihe_ani.h"
 #include "ohos.driver.deviceManager.impl.h"
 #include "ohos.driver.deviceManager.proj.hpp"
 #include "stdexcept"
@@ -68,42 +68,18 @@ static bool SendEventToMainThread(const std::function<void()> func)
     return true;
 }
 
-void AsyncData::DeleteNapiRef()
+void AsyncData::DeleteGlobalRef()
 {
     if (env == nullptr) {
         return;
     }
-    sptr<AsyncData> guard(this);
-
-    auto task = [guard]() {
-        EDM_LOGD(MODULE_DEV_MGR, "DeleteNapiRef async task is run.");
-
-        AsyncData* data = guard.GetRefPtr();
-        ani_env *taskEnv = nullptr;
-
-        bool attached = false;
-        ani_options aniArgs {0, nullptr};
-        if (ANI_ERROR == data->vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &taskEnv)) {
-            if (ANI_OK != data->vm->GetEnv(ANI_VERSION_1, &taskEnv)) {
-                EDM_LOGE(MODULE_DEV_MGR, "GetEnv failed");
-                return;
-            }
-        } else {
-            attached = true;
+    if (onDisconnect) {
+        if (ANI_OK != env->GlobalReference_Delete(onDisconnect)) {
+            EDM_LOGE(MODULE_DEV_MGR, "GlobalReference_Delete failed.");
         }
-        if (data->onDisconnect != nullptr) {
-            taskEnv->GlobalReference_Delete(data->onDisconnect);
-            data->onDisconnect = nullptr;
-        }
-        if (attached) {
-            data->vm->DetachCurrentThread();
-        }
-        data->env = nullptr;
-        data->vm = nullptr;
-    };
-    if (!SendEventToMainThread(task)) {
-        EDM_LOGE(MODULE_DEV_MGR, "delete napi ref send event failed.");
-        guard = nullptr;
+        env = nullptr;
+        vm = nullptr;
+        onDisconnect = nullptr;
     }
 }
 
@@ -210,7 +186,7 @@ static ani_object ConvertToObjectDeviceId(ani_env *env, const uint64_t deviceId)
         return retObject;
     }
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "d:", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "l:", &ctor)) {
         EDM_LOGE(MODULE_DEV_MGR, "find method Long.constructor failed");
         return retObject;
     }
