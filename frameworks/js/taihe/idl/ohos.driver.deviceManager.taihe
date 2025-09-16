@@ -19,7 +19,7 @@
 @!namespace("@ohos.driver.deviceManager", "deviceManager")
 
 @!sts_inject("""
-static { loadLibrary("device_manager_taihe_native.z") }
+static { loadLibraryWithPermissionCheck("device_manager_taihe_native.z", "@ohos.driver.deviceManager") }
 """)
 
 function queryDevices(busType: Optional<i32>): Array<DeviceUnion>;
