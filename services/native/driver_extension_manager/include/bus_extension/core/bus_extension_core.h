@@ -29,6 +29,7 @@ class BusExtensionCore {
     DECLARE_SINGLE_INSTANCE_BASE(BusExtensionCore);
 
 public:
+    ~BusExtensionCore();
     int32_t Init(std::shared_ptr<IDevChangeCallback> callback);
     int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
     std::shared_ptr<IBusExtension> GetBusExtensionByName(std::string busName);
