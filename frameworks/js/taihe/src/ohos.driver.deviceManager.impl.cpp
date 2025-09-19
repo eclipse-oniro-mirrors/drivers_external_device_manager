@@ -17,7 +17,7 @@
 #include <map>
 
 #include "ohos.driver.deviceManager.impl.hpp"
-#include "ani_remote_object.h"
+#include "remote_object_taihe_ani.h"
 #include "ohos.driver.deviceManager.impl.h"
 #include "ohos.driver.deviceManager.proj.hpp"
 #include "stdexcept"
@@ -66,45 +66,6 @@ static bool SendEventToMainThread(const std::function<void()> func)
     mainHandler->PostTask(func, "", 0, OHOS::AppExecFwk::EventQueue::Priority::HIGH, {});
     EDM_LOGD(MODULE_DEV_MGR, "SendEventToMainThread end");
     return true;
-}
-
-void AsyncData::DeleteNapiRef()
-{
-    if (env == nullptr) {
-        return;
-    }
-    sptr<AsyncData> guard(this);
-
-    auto task = [guard]() {
-        EDM_LOGD(MODULE_DEV_MGR, "DeleteNapiRef async task is run.");
-
-        AsyncData* data = guard.GetRefPtr();
-        ani_env *taskEnv = nullptr;
-
-        bool attached = false;
-        ani_options aniArgs {0, nullptr};
-        if (ANI_ERROR == data->vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &taskEnv)) {
-            if (ANI_OK != data->vm->GetEnv(ANI_VERSION_1, &taskEnv)) {
-                EDM_LOGE(MODULE_DEV_MGR, "GetEnv failed");
-                return;
-            }
-        } else {
-            attached = true;
-        }
-        if (data->onDisconnect != nullptr) {
-            taskEnv->GlobalReference_Delete(data->onDisconnect);
-            data->onDisconnect = nullptr;
-        }
-        if (attached) {
-            data->vm->DetachCurrentThread();
-        }
-        data->env = nullptr;
-        data->vm = nullptr;
-    };
-    if (!SendEventToMainThread(task)) {
-        EDM_LOGE(MODULE_DEV_MGR, "delete napi ref send event failed.");
-        guard = nullptr;
-    }
 }
 
 static ani_object GetCallbackResult(ani_env *env, uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj)
@@ -210,7 +171,7 @@ static ani_object ConvertToObjectDeviceId(ani_env *env, const uint64_t deviceId)
         return retObject;
     }
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "D:V", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "l:", &ctor)) {
         EDM_LOGE(MODULE_DEV_MGR, "find method Long.constructor failed");
         return retObject;
     }
@@ -271,6 +232,13 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
     return EDM_OK;
 }
 
+void DetachThread(ani_vm *vm, bool isAttached)
+{
+    if (isAttached) {
+        vm->DetachCurrentThread();
+    }
+}
+
 ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGI(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
@@ -299,9 +267,7 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
         if (ANI_OK != env->CreateLocalScope(ANI_SCOPE_SIZE)) {
             EDM_LOGE(MODULE_DEV_MGR, "Failed to create local scope.");
             data->DecStrongRef(nullptr);
-            if (ret == ANI_OK) {
-                data->vm->DetachCurrentThread();
-            }
+            DetachThread(data->vm, ret == ANI_OK);
         }
         ani_ref argv[] = {ConvertToBusinessError(env, errMsg), ConvertToObjectDeviceId(env, data->deviceId)};
         ani_ref result;
@@ -310,9 +276,10 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
         EDM_LOGD(MODULE_DEV_MGR, "OnDisconnect callback finish ret: %{public}u", callRet);
         env->DestroyLocalScope();
         data->DecStrongRef(nullptr);
-        if (ret == ANI_OK) {
-            data->vm->DetachCurrentThread();
+        if (ANI_OK != env->GlobalReference_Delete(data->onDisconnect)) {
+            EDM_LOGE(MODULE_DEV_MGR, "GlobalReference_Delete failed.");
         }
+        DetachThread(data->vm, ret == ANI_OK);
     };
     if (!SendEventToMainThread(task)) {
         EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");

@@ -58,6 +58,22 @@ struct RemoteDeviceDriver {
   remote: @sts_type("rpc.IRemoteObject") Opaque;
 }
 
+@!sts_inject("""
+    class RemoteDeviceDriver_inner implements RemoteDeviceDriver {
+        deviceId: long;
+        remote: rpc.IRemoteObject;
+        constructor(
+            deviceId: long,
+            remote: rpc.IRemoteObject,
+        )
+        {
+            this.deviceId = deviceId;
+            this.remote = remote;
+        }
+    }
+
+""")
+
 struct USBInterfaceDesc {
   bInterfaceNumber: i32;
   bClass: i32;

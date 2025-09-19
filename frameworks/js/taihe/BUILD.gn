@@ -61,7 +61,7 @@ taihe_shared_library("device_manager_taihe_native") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "ipc:rpc_ani",
+    "ipc:rpc_taihe",
     "ipc:ipc_single",
     "runtime_core:ani",
   ]
