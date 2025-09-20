@@ -38,9 +38,8 @@ std::unordered_map<std::string, BusType> BusExtensionCore::busTypeMap_ = {
     {"usb", BusType::BUS_TYPE_USB}
 };
 
-void BusExtensionCore::UnLoadBusExtensionLibs()
+BusExtensionCore::~BusExtensionCore()
 {
-    std::lock_guard<std::mutex> guard(mutex_);
     for (uint32_t i = 0; i < BUS_TYPE_MAX; i++) {
         if (handleArr[i] == nullptr) {
             continue;
@@ -52,7 +51,6 @@ void BusExtensionCore::UnLoadBusExtensionLibs()
 
 void BusExtensionCore::LoadBusExtensionLibs()
 {
-    std::lock_guard<std::mutex> guard(mutex_);
     for (BusType i = BUS_TYPE_USB; i < BUS_TYPE_MAX; i = (BusType)(i + 1)) {
         std::ostringstream libPath;
         libPath << BUS_EXTENSION_SO_PATH << "/" << HDI_SO_PREFIX;

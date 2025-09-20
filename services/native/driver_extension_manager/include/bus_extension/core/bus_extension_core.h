@@ -15,7 +15,6 @@
 #ifndef BUS_EXTENSION_CORE_H
 #define BUS_EXTENSION_CORE_H
 
-#include <mutex>
 #include <memory>
 #include <unordered_map>
 #include "ext_object.h"
@@ -30,12 +29,11 @@ class BusExtensionCore {
     DECLARE_SINGLE_INSTANCE_BASE(BusExtensionCore);
 
 public:
-    ~BusExtensionCore() = default;
+    ~BusExtensionCore();
     int32_t Init(std::shared_ptr<IDevChangeCallback> callback);
     int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
     std::shared_ptr<IBusExtension> GetBusExtensionByName(std::string busName);
     static BusType GetBusTypeByName(const std::string &busName);
-    void UnLoadBusExtensionLibs();
     void LoadBusExtensionLibs();
     std::shared_ptr<IDriverChangeCallback> AcquireDriverChangeCallback(BusType busType);
 
@@ -45,7 +43,6 @@ private:
     const uint32_t MAX_BUS_EXTENSIONS = 100;
     static std::unordered_map<std::string, BusType> busTypeMap_;
     void *handleArr[BUS_TYPE_MAX] = { nullptr };
-    std::mutex mutex_;
 };
 
 // bus extension should register by __attribute__ ((constructor)) when loading so

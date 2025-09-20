@@ -78,7 +78,6 @@ void DriverExtMgr::OnStart()
 void DriverExtMgr::OnStop()
 {
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStop");
-    BusExtensionCore::GetInstance().UnLoadBusExtensionLibs();
 }
 
 int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
