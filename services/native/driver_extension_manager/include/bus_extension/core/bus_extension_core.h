@@ -29,11 +29,12 @@ class BusExtensionCore {
     DECLARE_SINGLE_INSTANCE_BASE(BusExtensionCore);
 
 public:
-    ~BusExtensionCore();
+    ~BusExtensionCore() = default;
     int32_t Init(std::shared_ptr<IDevChangeCallback> callback);
     int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
     std::shared_ptr<IBusExtension> GetBusExtensionByName(std::string busName);
     static BusType GetBusTypeByName(const std::string &busName);
+    void UnLoadBusExtensionLibs();
     void LoadBusExtensionLibs();
     std::shared_ptr<IDriverChangeCallback> AcquireDriverChangeCallback(BusType busType);
 

@@ -38,7 +38,7 @@ std::unordered_map<std::string, BusType> BusExtensionCore::busTypeMap_ = {
     {"usb", BusType::BUS_TYPE_USB}
 };
 
-BusExtensionCore::~BusExtensionCore()
+void BusExtensionCore::UnLoadBusExtensionLibs()
 {
     for (uint32_t i = 0; i < BUS_TYPE_MAX; i++) {
         if (handleArr[i] == nullptr) {
