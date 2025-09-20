@@ -15,6 +15,7 @@
 #ifndef BUS_EXTENSION_CORE_H
 #define BUS_EXTENSION_CORE_H
 
+#include <mutex>
 #include <memory>
 #include <unordered_map>
 #include "ext_object.h"
@@ -44,6 +45,7 @@ private:
     const uint32_t MAX_BUS_EXTENSIONS = 100;
     static std::unordered_map<std::string, BusType> busTypeMap_;
     void *handleArr[BUS_TYPE_MAX] = { nullptr };
+    std::mutex mutex_;
 };
 
 // bus extension should register by __attribute__ ((constructor)) when loading so
