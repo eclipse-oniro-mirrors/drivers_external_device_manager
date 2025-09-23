@@ -38,6 +38,17 @@ std::unordered_map<std::string, BusType> BusExtensionCore::busTypeMap_ = {
     {"usb", BusType::BUS_TYPE_USB}
 };
 
+BusExtensionCore::~BusExtensionCore()
+{
+    for (uint32_t i = 0; i < BUS_TYPE_MAX; i++) {
+        if (handleArr[i] == nullptr) {
+            continue;
+        }
+        dlclose(handleArr[i]);
+        handleArr[i] = nullptr;
+    }
+}
+
 void BusExtensionCore::LoadBusExtensionLibs()
 {
     for (BusType i = BUS_TYPE_USB; i < BUS_TYPE_MAX; i = (BusType)(i + 1)) {
@@ -62,6 +73,7 @@ void BusExtensionCore::LoadBusExtensionLibs()
             EDM_LOGE(MODULE_DEV_MGR, "failed to dlopen  %{public}s, %{public}s", realPath, dlerror());
             continue;
         }
+        handleArr[i] = handler;
     }
 }
 

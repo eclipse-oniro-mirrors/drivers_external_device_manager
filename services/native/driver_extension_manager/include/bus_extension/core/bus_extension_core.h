@@ -29,7 +29,7 @@ class BusExtensionCore {
     DECLARE_SINGLE_INSTANCE_BASE(BusExtensionCore);
 
 public:
-    ~BusExtensionCore() = default;
+    ~BusExtensionCore();
     int32_t Init(std::shared_ptr<IDevChangeCallback> callback);
     int32_t Register(BusType busType, std::shared_ptr<IBusExtension> busExtension);
     std::shared_ptr<IBusExtension> GetBusExtensionByName(std::string busName);
@@ -42,6 +42,7 @@ private:
     std::unordered_map<BusType, std::shared_ptr<IBusExtension>> busExtensions_;
     const uint32_t MAX_BUS_EXTENSIONS = 100;
     static std::unordered_map<std::string, BusType> busTypeMap_;
+    void *handleArr[BUS_TYPE_MAX] = { nullptr };
 };
 
 // bus extension should register by __attribute__ ((constructor)) when loading so
