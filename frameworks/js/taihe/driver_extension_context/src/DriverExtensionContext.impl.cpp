@@ -35,7 +35,7 @@ void UpdateDriverState([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_objec
     }
     ErrCode innerErrorCode = driverExtensionContext->UpdateDriverState();
     if (innerErrorCode != ANI_OK) {
-        HILOG_ERROR("UpdateDriverState error");
+        HILOG_ERROR("UpdateDriverState error: %{public}d", innerErrorCode);
         return;
     }
     HILOG_DEBUG("UpdateDriverState end");
@@ -68,7 +68,7 @@ ani_object CreateAniDriverExtensionContext(ani_env *env, std::shared_ptr<DriverE
         HILOG_ERROR("status: %{public}d", status);
         return nullptr;
     }
-    ani_long nativeContextLong = (ani_long)context.get();
+    ani_long nativeContextLong = reinterpret_cast<ani_long>(context.get());
     if ((status = env->Object_SetField_Long(contextObj, field, nativeContextLong)) != ANI_OK) {
         HILOG_ERROR("status: %{public}d", status);
         return nullptr;

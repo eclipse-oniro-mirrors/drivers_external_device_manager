@@ -28,7 +28,21 @@ namespace OHOS {
 namespace AbilityRuntime {
 using namespace OHOS::AppExecFwk;
 AniDriverExtension::AniDriverExtension(ETSRuntime& aniRuntime) : stsRuntime_(aniRuntime) {}
-AniDriverExtension::~AniDriverExtension() = default;
+AniDriverExtension::~AniDriverExtension()
+{
+    if (stsObj_ != nullptr) {
+        ani_ref contextRef = nullptr;
+        auto env = stsRuntime_.GetAniEnv();
+        if (ANI_OK != env->Object_GetFieldByName_Ref(stsObj_->aniObj, "context", &contextRef)) {
+            HILOG_ERROR("Failed to get context field.");
+            return;
+        }
+        if (ANI_OK != env->GlobalReference_Delete(contextRef)) {
+            HILOG_ERROR("Failed to GlobalReference_Delete.");
+            return;
+        }
+    }
+}
 
 AniDriverExtension* AniDriverExtension::Create(const std::unique_ptr<Runtime>& runtime)
 {
