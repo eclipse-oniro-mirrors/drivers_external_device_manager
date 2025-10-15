@@ -62,7 +62,7 @@ taihe_shared_library("device_manager_taihe_native") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "ipc:ipc_single",
-    "ipc:rpc_ani",
+    "ipc:rpc_taihe",
     "runtime_core:ani",
   ]
 }
@@ -82,14 +82,6 @@ ohos_prebuilt_etc("device_manager_etc") {
   subsystem_name = "$subsystem_name"
   deps = [ ":device_manager_abc" ]
 }
-
-# generate_static_abc("device_manager_test") {
-#   base_url = "$taihe_generated_file_path"
-#   files = [ "$taihe_generated_file_path/@ohos.driver.deviceManager.ets" ]
-#   is_boot_abc = "True"
-#   device_dst_file = "/system/framework/device_manager_abc.abc"
-#   dependencies = [ ":run_taihe" ]
-# }
 
 group("device_manager_taihe") {
   deps = [

@@ -65,7 +65,7 @@ export default class DriverExtensionAbility {
     }
     onConnect(want: Want): rpc.RemoteObject | Promise<rpc.RemoteObject> {
         hilog.info(0x0000, 'testTag', `onConnect`);
-        let myService: rpc.RemoteObject = new MyService("onConnect");
+        let myService: rpc.RemoteObject = new MyService('onConnect');
         return myService;
     }
     onDisconnect(want: Want): undefined | Promise<void> {
@@ -81,6 +81,6 @@ export default class DriverExtensionAbility {
     private disConnectCbInfo: long = 0;
     private isOnDisconnectAsync: boolean = true;
     private isOnConnectAsync: boolean = true;
-    remoteObject: rpc.RemoteObject | null = null;
-    context: DriverExtensionContext = new DriverExtensionContext();
+    public remoteObject: rpc.RemoteObject | null = null;
+    public context: DriverExtensionContext = new DriverExtensionContext();
 }

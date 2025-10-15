@@ -17,7 +17,7 @@
 #include <map>
 
 #include "ohos.driver.deviceManager.impl.hpp"
-#include "ani_remote_object.h"
+#include "remote_object_taihe_ani.h"
 #include "ohos.driver.deviceManager.impl.h"
 #include "ohos.driver.deviceManager.proj.hpp"
 #include "stdexcept"
@@ -73,37 +73,16 @@ void AsyncData::DeleteNapiRef()
     if (env == nullptr) {
         return;
     }
-    sptr<AsyncData> guard(this);
-
-    auto task = [guard]() {
-        EDM_LOGD(MODULE_DEV_MGR, "DeleteNapiRef async task is run.");
-
-        AsyncData* data = guard.GetRefPtr();
-        ani_env *taskEnv = nullptr;
-
-        bool attached = false;
-        ani_options aniArgs {0, nullptr};
-        if (ANI_ERROR == data->vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &taskEnv)) {
-            if (ANI_OK != data->vm->GetEnv(ANI_VERSION_1, &taskEnv)) {
-                EDM_LOGE(MODULE_DEV_MGR, "GetEnv failed");
-                return;
-            }
-        } else {
-            attached = true;
+    if (onDisconnect) {
+        ani_env *env_now;
+        vm->GetEnv(ANI_VERSION_1, &env_now);
+        ani_status ret = env_now->GlobalReference_Delete(onDisconnect);
+        if (ret != ANI_OK) {
+            EDM_LOGE(MODULE_DEV_MGR, "GlobalReference_Delete failed. ret=%{public}d", ret);
         }
-        if (data->onDisconnect != nullptr) {
-            taskEnv->GlobalReference_Delete(data->onDisconnect);
-            data->onDisconnect = nullptr;
-        }
-        if (attached) {
-            data->vm->DetachCurrentThread();
-        }
-        data->env = nullptr;
-        data->vm = nullptr;
-    };
-    if (!SendEventToMainThread(task)) {
-        EDM_LOGE(MODULE_DEV_MGR, "delete napi ref send event failed.");
-        guard = nullptr;
+        env = nullptr;
+        vm = nullptr;
+        onDisconnect = nullptr;
     }
 }
 
@@ -158,14 +137,13 @@ static std::optional<std::string> GetNapiError(int32_t errorCode)
 static ani_object ConvertToBusinessError(ani_env *env, const ErrMsg &errMsg)
 {
     ani_ref businessError = nullptr;
+    env->GetUndefined(&businessError);
     if (errMsg.IsOk()) {
-        env->GetUndefined(&businessError);
         return reinterpret_cast<ani_object>(businessError);
     }
 
     auto msgString = GetNapiError(SERVICE_EXCEPTION);
     if (!msgString) {
-        env->GetUndefined(&businessError);
         return reinterpret_cast<ani_object>(businessError);
     }
 
@@ -175,17 +153,17 @@ static ani_object ConvertToBusinessError(ani_env *env, const ErrMsg &errMsg)
     ani_class cls {};
     if (ANI_OK != env->FindClass(errorClsName, &cls)) {
         EDM_LOGE(MODULE_DEV_MGR, "find class BusinessError %{public}s failed", errorClsName);
-        return errorObject;
+        return reinterpret_cast<ani_object>(businessError);
     }
     ani_method ctor;
     if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor)) {
         EDM_LOGE(MODULE_DEV_MGR, "find method BusinessError.constructor failed");
-        return errorObject;
+        return reinterpret_cast<ani_object>(businessError);
     }
 
     if (ANI_OK != env->Object_New(cls, ctor, &errorObject)) {
         EDM_LOGE(MODULE_DEV_MGR, "create BusinessError object failed");
-        return errorObject;
+        return reinterpret_cast<ani_object>(businessError);
     }
 
     ani_double aniErrCode = static_cast<ani_double>(SERVICE_EXCEPTION);
@@ -216,7 +194,7 @@ static ani_object ConvertToObjectDeviceId(ani_env *env, const uint64_t deviceId)
         return retObject;
     }
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", nullptr, &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", "l:", &ctor)) {
         EDM_LOGE(MODULE_DEV_MGR, "find method Long.constructor failed");
         return retObject;
     }
@@ -301,6 +279,7 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
         if (ret != ANI_OK && data->vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "Failed to get JNI environment.");
             data->DecStrongRef(nullptr);
+            return;
         }
         if (ANI_OK != env->CreateLocalScope(ANI_SCOPE_SIZE)) {
             EDM_LOGE(MODULE_DEV_MGR, "Failed to create local scope.");
@@ -308,6 +287,7 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
             if (ret == ANI_OK) {
                 data->vm->DetachCurrentThread();
             }
+            return;
         }
         ani_ref argv[] = {ConvertToBusinessError(env, errMsg), ConvertToObjectDeviceId(env, data->deviceId)};
         ani_ref result;
@@ -364,7 +344,7 @@ static ohos::driver::deviceManager::DeviceUnion ConvertToDevice(std::shared_ptr<
             ::taihe::static_tag<::ohos::driver::deviceManager::DeviceUnion::tag_t::t1>, taiheUsbDevice);
     } else {
         auto taiheDevice = ohos::driver::deviceManager::Device{
-            std::move(ohos::driver::deviceManager::BusType::key_t::USB),
+            std::move(ohos::driver::deviceManager::BusType::key_t(deviceData->busType)),
             std::move(deviceData->deviceId),
             std::move(deviceData->descripton)
         };
@@ -514,7 +494,7 @@ static ohos::driver::deviceManager::DriverInfoUnion ConvertToDriverInfo(std::sha
             ::taihe::static_tag<::ohos::driver::deviceManager::DriverInfoUnion::tag_t::t1>, taiheUSBDriverInfoData);
     } else {
         auto taiheDriverInfoData = ohos::driver::deviceManager::DriverInfo{
-            std::move(ohos::driver::deviceManager::BusType::key_t::USB),
+            std::move(ohos::driver::deviceManager::BusType::key_t(driverInfoData->busType)),
             std::move(driverInfoData->driverUid),
             std::move(driverInfoData->driverName),
             std::move(driverInfoData->version),
