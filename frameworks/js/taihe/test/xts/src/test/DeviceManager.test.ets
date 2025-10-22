@@ -154,9 +154,13 @@ export default function DeviceManagerJsTest() {
         expect(deviceUsb.description != null).assertEqual(true);
         expect(deviceUsb.vendorId != null).assertEqual(true);
         expect(deviceUsb.productId != null).assertEqual(true);
-      } catch (err: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDevices001 catch err: ' + JSON.stringify(err));
-        expect().assertFail();
+      } catch (err) {
+        if (err instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDevices001 catch err: ' + JSON.stringify(err));
+          expect().assertFail();
+        } else {
+          throw err
+        }
       }
     })
 
@@ -177,9 +181,13 @@ export default function DeviceManagerJsTest() {
         hilog.info(TAG, 'testTag', 'Test case testQueryDevices002 ret : ' + JSON.stringify(devices));
         expect(devices != null).assertEqual(true);
         expect(devices[0].deviceId != null).assertTrue();
-      } catch (err: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDevices002 catch err: ' + JSON.stringify(err));
-        expect().assertFail();
+      } catch (err) {
+        if (err instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDevices002 catch err: ' + JSON.stringify(err));
+          expect().assertFail();
+        } else {
+          throw err
+        }
       }
     })
 
@@ -194,9 +202,13 @@ export default function DeviceManagerJsTest() {
         let devices = deviceManager.queryDevices(12345);
         hilog.info(TAG, 'testTag', 'Test case testQueryDevices003 ret : ', JSON.stringify(devices));
         expect(devices.length == 0).assertTrue();
-      } catch (err: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDevices003 catch err : ' + JSON.stringify(err));
-        expect(err.code).assertEqual(SERVICE_EXCEPTION_CODE);
+      } catch (err) {
+        if (err instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDevices003 catch err : ' + JSON.stringify(err));
+          expect(err.code).assertEqual(SERVICE_EXCEPTION_CODE);
+        } else {
+          throw err
+        }
       }
     })
 
@@ -215,9 +227,13 @@ export default function DeviceManagerJsTest() {
       try {
         let devices = deviceManager.queryDevices();
         hilog.info(TAG, 'testTag', 'Test case testQueryDevices004 ret : ' + JSON.stringify(devices));
-      } catch (err: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDevices004 catch err : ' + JSON.stringify(err));
-        expect(err.code).assertEqual(SERVICE_EXCEPTION_CODE);
+      } catch (err) {
+        if(err instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDevices004 catch err : ' + JSON.stringify(err));
+          expect(err.code).assertEqual(SERVICE_EXCEPTION_CODE);
+        } else {
+          throw err
+        }
       }
     })
 
@@ -242,11 +258,15 @@ export default function DeviceManagerJsTest() {
         });
         expect(false).assertTrue();
         done();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testBindDriverWithDeviceId001 catch err : ' + JSON.stringify(error));
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
-        expect(error.code != SERVICE_NOT_ALLOW_ACCESS).assertTrue();
-        done();
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testBindDriverWithDeviceId001 catch err : ' + JSON.stringify(error));
+          expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+          expect(error.code != SERVICE_NOT_ALLOW_ACCESS).assertTrue();
+          done();
+        } else {
+          throw  error
+        }
       }
     })
 
@@ -272,10 +292,14 @@ export default function DeviceManagerJsTest() {
         hilog.info(0, 'testTag ui', 'bindDevice success:' + data.deviceId);
         hilog.info(0, 'testTag ui', 'bindDevice success:' + JSON.stringify(data.remote));
         done();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testBindDriverWithDeviceId002 catch err : ' + JSON.stringify(error));
-        expect(false).assertTrue();
-        done();
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testBindDriverWithDeviceId002 catch err : ' + JSON.stringify(error));
+          expect(false).assertTrue();
+          done();
+        } else {
+          throw error
+        }
       }
     })
 
@@ -297,10 +321,14 @@ export default function DeviceManagerJsTest() {
         expect(true).assertTrue();
         await Utils.msSleep(2000);
         done();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testUnbindDriverWithDeviceId001 catch err :' + JSON.stringify(error));
-        expect(false).assertTrue();
-        done();
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testUnbindDriverWithDeviceId001 catch err :' + JSON.stringify(error));
+          expect(false).assertTrue();
+          done();
+        } else {
+          throw error
+        }
       }
     })
 
@@ -323,10 +351,14 @@ export default function DeviceManagerJsTest() {
           done();
         });
         done();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testUnbindDriverWithDeviceId002 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SERVICE_NOT_BOUND);
-        done();
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testUnbindDriverWithDeviceId002 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SERVICE_NOT_BOUND);
+          done();
+        } else {
+          throw error
+        }
       }
     })
 
@@ -344,10 +376,14 @@ export default function DeviceManagerJsTest() {
           done();
         });
         done();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testUnbindDriverWithDeviceId003 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
-        done();
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testUnbindDriverWithDeviceId003 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+          done();
+        } else {
+          throw error
+        }
       }
     })
 
@@ -364,9 +400,13 @@ export default function DeviceManagerJsTest() {
         for (const deviceInfo of deviceInfos) {
           assertDeviceInfo(deviceInfo);
         }
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDeviceInfo001 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDeviceInfo001 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        } else {
+          throw error
+        }
       }
     })
 
@@ -383,9 +423,13 @@ export default function DeviceManagerJsTest() {
         for (const deviceInfo of deviceInfos) {
           assertDeviceInfo(deviceInfo);
         }
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDeviceInfo002 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDeviceInfo002 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        } else {
+          throw error
+        }
       }
     })
 
@@ -402,9 +446,13 @@ export default function DeviceManagerJsTest() {
         for (const driverInfo of driverInfos) {
           assertDriverInfo(driverInfo);
         }
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDriverInfo001 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDriverInfo001 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        } else {
+          throw error
+        }
       }
     })
 
@@ -421,9 +469,13 @@ export default function DeviceManagerJsTest() {
         for (const driverInfo of driverInfos) {
           assertDriverInfo(driverInfo);
         }
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testQueryDriverInfo002 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testQueryDriverInfo002 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+        } else {
+          throw error
+        }
       }
     })
   })

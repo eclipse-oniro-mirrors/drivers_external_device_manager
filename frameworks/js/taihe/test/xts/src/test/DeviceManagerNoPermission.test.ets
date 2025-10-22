@@ -75,11 +75,15 @@ export default function PermissionJsTest(){
         });
         expect(false).assertTrue();
         done();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag',
-          'Test case Permission_bindDriverWithDeviceId_001 catch err : ' + JSON.stringify(error));
-        expect(error.code).assertEqual(PERMISSION_DENIED_CODE);
-        done();
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag',
+            'Test case Permission_bindDriverWithDeviceId_001 catch err : ' + JSON.stringify(error));
+          expect(error.code).assertEqual(PERMISSION_DENIED_CODE);
+          done();
+        } else {
+          throw error
+        }
       }
     })
 
@@ -94,10 +98,14 @@ export default function PermissionJsTest(){
         await deviceManager.unbindDriverWithDeviceId(TEST_DEVICE_ID);
         expect(false).assertTrue();
         done();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case Permission_unbindDriverWithDeviceId catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(PERMISSION_DENIED_CODE);
-        done();
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case Permission_unbindDriverWithDeviceId catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(PERMISSION_DENIED_CODE);
+          done();
+        } else {
+          throw error
+        }
       }
     })
 
@@ -111,9 +119,13 @@ export default function PermissionJsTest(){
       try {
         deviceManager.queryDevices();
         expect(false).assertTrue();
-      } catch (err: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case Permission_queryDevices_001 catch err: ' + JSON.stringify(err));
-        expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+      } catch (err) {
+        if (err instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case Permission_queryDevices_001 catch err: ' + JSON.stringify(err));
+          expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+        } else {
+          throw err
+        }
       }
     });
 
@@ -127,9 +139,13 @@ export default function PermissionJsTest(){
       try {
         deviceManager.queryDeviceInfo(TEST_DEVICE_ID);
         expect(false).assertTrue();
-      } catch (err: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case Permission_queryDeviceInfo_001 catch err: ' + JSON.stringify(err));
-        expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+      } catch (err) {
+        if (err instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case Permission_queryDeviceInfo_001 catch err: ' + JSON.stringify(err));
+          expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+        } else {
+          throw err
+        }
       }
     });
 
@@ -143,9 +159,13 @@ export default function PermissionJsTest(){
       try {
         deviceManager.queryDriverInfo(TEST_DRIVER_UID);
         expect(false).assertTrue();
-      } catch (err: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case Permission_queryDriverInfo_001 catch err: ' + JSON.stringify(err));
-        expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+      } catch (err) {
+        if (err instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case Permission_queryDriverInfo_001 catch err: ' + JSON.stringify(err));
+          expect(err.code).assertEqual(PERMISSION_DENIED_CODE);
+        } else {
+          throw err
+        }
       }
     });
   })

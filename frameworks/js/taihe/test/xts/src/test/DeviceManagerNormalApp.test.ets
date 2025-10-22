@@ -73,9 +73,13 @@ export default function DeviceManagerJsNormalTest(){
       try {
         const deviceInfos = deviceManager.queryDeviceInfo();
         expect(false).assertTrue();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testNormalQueryDeviceInfo001 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SYSTEMAPI_DENIED_CODE);
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testNormalQueryDeviceInfo001 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SYSTEMAPI_DENIED_CODE);
+        } else {
+          throw error
+        }
       }
     })
 
@@ -94,9 +98,13 @@ export default function DeviceManagerJsNormalTest(){
       try {
         let driverInfos = deviceManager.queryDriverInfo();
         expect(false).assertTrue();
-      } catch (error: BusinessError) {
-        hilog.info(TAG, 'testTag', 'Test case testNormalQueryDriverInfo001 catch err :' + JSON.stringify(error));
-        expect(error.code).assertEqual(SYSTEMAPI_DENIED_CODE);
+      } catch (error) {
+        if (error instanceof BusinessError) {
+          hilog.info(TAG, 'testTag', 'Test case testNormalQueryDriverInfo001 catch err :' + JSON.stringify(error));
+          expect(error.code).assertEqual(SYSTEMAPI_DENIED_CODE);
+        } else {
+          throw error
+        }
       }
     })
   })
