@@ -42,7 +42,12 @@ int32_t DriverInfo::Serialize(string &str)
     cJSON_AddStringToObject(root, "ext_info", extInfo.c_str());
     cJSON_AddBoolToObject(root, "launch_on_bind", this->launchOnBind_);
     cJSON_AddBoolToObject(root, "access_allowed", this->accessAllowed_);
-    str = cJSON_PrintUnformatted(root);
+    const char* nativeStr = cJSON_PrintUnformatted(root);
+    if (nativeStr == nullptr) {
+        EDM_LOGE(MODULE_COMMON, "Unformatted characters is NULL!");
+        return EDM_ERR_JSON_PARSE_FAIL;
+    }
+    str = nativeStr;
     EDM_LOGI(MODULE_COMMON, "DriverInfo Serialize Done, %{public}s", str.c_str());
     cJSON_Delete(root);
     return EDM_OK;
