@@ -62,6 +62,13 @@ bool ExtPermissionManager::IsSystemApp()
     return tokenType != ATokenTypeEnum::TOKEN_HAP;
 }
 
+bool ExtPermissionManager::IsSa()
+{
+    AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
+    return tokenType == ATokenTypeEnum::TOKEN_NATIVE;
+}
+
 uint32_t ExtPermissionManager::GetCallingTokenID()
 {
     return IPCSkeleton::GetCallingTokenID();

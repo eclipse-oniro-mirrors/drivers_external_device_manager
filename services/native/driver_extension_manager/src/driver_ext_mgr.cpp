@@ -388,6 +388,12 @@ ErrCode DriverExtMgr::QueryDriverInfo(int32_t &errorCode, std::vector<std::share
 
 ErrCode DriverExtMgr::NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName)
 {
+    if (!ExtPermissionManager::IsSa()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s not a sa", __func__);
+        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_OK);
+    }
+    
     if (domain.empty() || faultName.empty()) {
         EDM_LOGE(MODULE_SERVICE, "Invalid domain or faultName");
         return static_cast<int32_t>(UsbErrCode::EDM_ERR_INVALID_PARAM);
