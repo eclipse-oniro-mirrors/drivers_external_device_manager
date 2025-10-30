@@ -390,7 +390,7 @@ ErrCode DriverExtMgr::NotifyUsbPeripheralFault(const std::string &domain, const 
 {
     if (!ExtPermissionManager::IsSa()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s not a sa", __func__);
-        return sstatic_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+        return static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
     }
     
     if (domain.empty() || faultName.empty()) {
