@@ -27,6 +27,8 @@ public:
 
     static bool IsSystemApp();
 
+    static bool IsSa();
+
     static uint32_t GetCallingTokenID();
 
     static bool GetPermissionValues(const std::string &permissionName,
