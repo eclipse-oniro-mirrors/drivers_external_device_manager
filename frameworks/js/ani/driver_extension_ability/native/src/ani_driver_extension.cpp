@@ -294,7 +294,7 @@ void AniDriverExtension::Dump(const std::vector<std::string> &params, std::vecto
     for (int i = 0; i < int(length); i++) {
         ani_ref stringEntryRef;
         if (ANI_OK != env->Object_CallMethodByName_Ref(static_cast<ani_object>(result), "$_get",
-            "i:C{std.core.Object}", &stringEntryRef, (ani_int)i)) {
+            "i:Y", &stringEntryRef, (ani_int)i)) {
             HILOG_ERROR("Object_CallMethodByName_Ref get Failed");
             return;
         }
