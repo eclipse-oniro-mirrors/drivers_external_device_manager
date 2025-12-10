@@ -33,15 +33,10 @@ public:
     {
         ani_object nullobj {};
 
-        ani_namespace ns;
-        if (ANI_OK != env->FindNamespace(nsName, &ns)) {
-            HILOG_ERROR("[ANI] Not found namespace %{public}s", nsName);
-            return nullobj;
-        }
-
         ani_class cls;
-        if (ANI_OK != env->Namespace_FindClass(ns, clsName, &cls)) {
-            HILOG_ERROR("[ANI] Not found class %{public}s", clsName);
+        const std::string fullClsName = std::string(nsName) + "." + clsName;
+        if (ANI_OK != env->FindClass(fullClsName.c_str(), &cls)) {
+            HILOG_ERROR("[ANI] Not found class %{public}s", fullClsName.c_str());
             return nullobj;
         }
 
@@ -191,25 +186,25 @@ private:
 template <>
 inline bool UnionAccessor::IsInstanceOfType<bool>()
 {
-    return IsInstanceOf("Lstd/core/Boolean;");
+    return IsInstanceOf("std.core.Boolean");
 }
 
 template <>
 inline bool UnionAccessor::IsInstanceOfType<int>()
 {
-    return IsInstanceOf("Lstd/core/Int;");
+    return IsInstanceOf("std.core.Int");
 }
 
 template <>
 inline bool UnionAccessor::IsInstanceOfType<double>()
 {
-    return IsInstanceOf("Lstd/core/Double;");
+    return IsInstanceOf("std.core.Double");
 }
 
 template <>
 inline bool UnionAccessor::IsInstanceOfType<std::string>()
 {
-    return IsInstanceOf("Lstd/core/String;");
+    return IsInstanceOf("std.core.String");
 }
 
 template <>
@@ -220,7 +215,7 @@ inline bool UnionAccessor::TryConvert<bool>(bool &value)
     }
 
     ani_boolean aniValue;
-    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Boolean(obj_, "toBoolean", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -236,7 +231,7 @@ inline bool UnionAccessor::TryConvert<int>(int &value)
     }
 
     ani_int aniValue;
-    auto ret = env_->Object_CallMethodByName_Int(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Int(obj_, "toInt", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }
@@ -252,7 +247,7 @@ inline bool UnionAccessor::TryConvert<double>(double &value)
     }
 
     ani_double aniValue;
-    auto ret = env_->Object_CallMethodByName_Double(obj_, "unboxed", nullptr, &aniValue);
+    auto ret = env_->Object_CallMethodByName_Double(obj_, "toDouble", nullptr, &aniValue);
     if (ret != ANI_OK) {
         return false;
     }

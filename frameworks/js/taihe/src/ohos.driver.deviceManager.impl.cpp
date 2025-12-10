@@ -99,16 +99,11 @@ static ani_object GetCallbackResult(ani_env *env, uint64_t deviceId, const sptr<
     }
 
     ani_object result {};
-    static const char *namespaceName = "L@ohos/driver/deviceManager/deviceManager;";
-    ani_namespace ns;
-    if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
-        EDM_LOGE(MODULE_DEV_MGR, "Not found '%{public}s'", namespaceName);
-        return result;
-    }
 
     ani_class cls;
-    if (ANI_OK != env->Namespace_FindClass(ns, "LRemoteDeviceDriver_inner;", &cls)) {
-        EDM_LOGE(MODULE_DEV_MGR, "FindClass \"LRemoteDeviceDriver_inner;\" failed");
+    const char *clsName = "@ohos.driver.deviceManager.deviceManager.RemoteDeviceDriver_inner";
+    if (ANI_OK != env->FindClass(clsName, &cls)) {
+        EDM_LOGE(MODULE_DEV_MGR, "FindClass '%{public}s' failed", clsName);
         return result;
     }
 

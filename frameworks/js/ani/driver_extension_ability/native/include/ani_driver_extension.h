@@ -42,7 +42,7 @@ public:
     void OnDisconnect(const AAFwk::Want &want, AppExecFwk::AbilityTransactionCallbackInfo<> *callbackInfo,
         bool &isAsyncCallback) override;
     virtual void OnStop() override;
-    ani_array_ref ToAniStringList(ani_env *env, const std::vector<std::string> &params, const uint32_t length);
+    ani_array ToAniStringList(ani_env *env, const std::vector<std::string> &params, const uint32_t length);
     virtual void Dump(const std::vector<std::string> &params, std::vector<std::string> &info) override;
     void BindContext(
         ani_env *env, std::shared_ptr<AAFwk::Want> want, const std::shared_ptr<OHOSApplication> &application);
