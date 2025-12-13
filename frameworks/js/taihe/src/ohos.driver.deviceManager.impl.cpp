@@ -144,14 +144,14 @@ static ani_object ConvertToBusinessError(ani_env *env, const ErrMsg &errMsg)
 
     ani_object errorObject = nullptr;
     EDM_LOGD(MODULE_DEV_MGR, "Begin ThrowBusinessError.");
-    static const char *errorClsName = "L@ohos/base/BusinessError;";
+    static const char *errorClsName = "@ohos.base.BusinessError";
     ani_class cls {};
     if (ANI_OK != env->FindClass(errorClsName, &cls)) {
         EDM_LOGE(MODULE_DEV_MGR, "find class BusinessError %{public}s failed", errorClsName);
         return reinterpret_cast<ani_object>(businessError);
     }
     ani_method ctor;
-    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":V", &ctor)) {
+    if (ANI_OK != env->Class_FindMethod(cls, "<ctor>", ":", &ctor)) {
         EDM_LOGE(MODULE_DEV_MGR, "find method BusinessError.constructor failed");
         return reinterpret_cast<ani_object>(businessError);
     }
@@ -184,7 +184,7 @@ static ani_object ConvertToObjectDeviceId(ani_env *env, const uint64_t deviceId)
     ani_object retObject = nullptr;
     ani_long aniDeviceId = deviceId;
     ani_class cls {};
-    if (ANI_OK != env->FindClass("Lstd/core/Long;", &cls)) {
+    if (ANI_OK != env->FindClass("std.core.Long", &cls)) {
         EDM_LOGE(MODULE_DEV_MGR, "find class Long Lstd/core/Long failed");
         return retObject;
     }
