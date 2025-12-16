@@ -43,6 +43,7 @@ std::unordered_map<int32_t, int32_t> g_errorMap = {
     {HDF_ERR_IO, USB_DDK_IO_FAILED},
     {HDF_ERR_TIMEOUT, USB_DDK_TIMEOUT}
 };
+std::unordered_map<uint8_t*, int32_t> g_fdMap;
 } // namespace
 
 static int32_t TransToUsbCode(int32_t ret)
@@ -71,6 +72,12 @@ void OH_Usb_Release()
         EDM_LOGE(MODULE_USB_DDK, "ddk is null");
         return;
     }
+    for (const auto& fdPair : g_fdMap) {
+        if (fdPair.second != -1) {
+            close(fdPair.second);
+        }
+    }
+    g_fdMap.clear();
     g_ddk->Release();
     g_ddk.clear();
 }
@@ -81,6 +88,12 @@ int32_t OH_Usb_ReleaseResource()
         EDM_LOGE(MODULE_USB_DDK, "ddk is null");
         return USB_DDK_INVALID_OPERATION;
     }
+    for (const auto& fdPair : g_fdMap) {
+        if (fdPair.second != -1) {
+            close(fdPair.second);
+        }
+    }
+    g_fdMap.clear();
     int32_t ret = TransToUsbCode(g_ddk->Release());
     if (ret != USB_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "release failed: %{public}d", ret);
@@ -292,6 +305,12 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
         return USB_DDK_MEMORY_ERROR;
     }
 
+    if (g_fdMap.find(buffer) != g_fdMap.end() && g_fdMap[buffer] != -1) {
+        EDM_LOGW(MODULE_USB_DDK, "fd exist, close old fd");
+        close(g_fdMap[buffer]);
+    }
+    g_fdMap[buffer] = fd;
+
     UsbDeviceMemMap *memMap = new UsbDeviceMemMap({buffer, size, 0, size, 0});
     if (memMap == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "alloc dev mem failed, errno=%{public}d", errno);
@@ -309,9 +328,18 @@ void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap)
         return;
     }
 
+    uint8_t *buffer = devMmap->address;
     if (munmap(devMmap->address, devMmap->size) != 0) {
         EDM_LOGE(MODULE_USB_DDK, "munmap failed, errno=%{public}d", errno);
         return;
+    }
+    auto it = g_fdMap.find(buffer);
+    if (it != g_fdMap.end()) {
+        if (g_fdMap[buffer] != -1) {
+            EDM_LOGD(MODULE_USB_DDK, "close fd");
+            close(g_fdMap[buffer]);
+        }
+        g_fdMap.erase(it);
     }
     delete devMmap;
 }
