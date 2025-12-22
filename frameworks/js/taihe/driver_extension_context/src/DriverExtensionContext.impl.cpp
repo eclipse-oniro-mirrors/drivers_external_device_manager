@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace AbilityRuntime {
-constexpr const char *DRIVER_EXTENSION_CONTEXT_CLS = "Lapplication/DriverExtensionContext/DriverExtensionContext;";
+constexpr const char *DRIVER_EXTENSION_CONTEXT_CLS = "application.DriverExtensionContext.DriverExtensionContext";
 void UpdateDriverState([[maybe_unused]] ani_env *env, [[maybe_unused]] ani_object object)
 {
     HILOG_DEBUG("UpdateDriverState begin");

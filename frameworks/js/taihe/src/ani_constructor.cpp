@@ -31,7 +31,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
         return ANI_ERROR;
     }
 
-    static const char *namespaceName = "L@ohos/driver/deviceManager/deviceManager;";
+    static const char *namespaceName = "@ohos.driver.deviceManager.deviceManager";
     ani_namespace ns;
     if (ANI_OK != env->FindNamespace(namespaceName, &ns)) {
         EDM_LOGE(MODULE_DEV_MGR, "Not found '%{public}s'", namespaceName);
