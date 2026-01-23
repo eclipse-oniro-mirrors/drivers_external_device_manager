@@ -59,16 +59,20 @@ void AsyncData::DeleteNapiRef()
     if (env == nullptr) {
         return;
     }
-    auto task = [this]() {
+    auto env_ = env;
+    auto bindCallback_ = bindCallback;
+    auto onDisconnect_ = onDisconnect;
+    auto unbindCallback_ = unbindCallback;
+    auto task = [env_, bindCallback_, onDisconnect_, unbindCallback_]() {
         EDM_LOGE(MODULE_DEV_MGR, "DeleteNapiRef async task is run.");
-        if (bindCallback != nullptr) {
-            napi_delete_reference(env, bindCallback);
+        if (bindCallback_ != nullptr) {
+            napi_delete_reference(env_, bindCallback_);
         }
-        if (onDisconnect != nullptr) {
-            napi_delete_reference(env, onDisconnect);
+        if (onDisconnect_ != nullptr) {
+            napi_delete_reference(env_, onDisconnect_);
         }
-        if (unbindCallback != nullptr) {
-            napi_delete_reference(env, unbindCallback);
+        if (unbindCallback_ != nullptr) {
+            napi_delete_reference(env_, unbindCallback_);
         }
     };
     if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_immediate)) {
