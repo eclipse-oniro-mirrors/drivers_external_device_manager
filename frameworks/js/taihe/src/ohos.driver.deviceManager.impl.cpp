@@ -88,7 +88,7 @@ void AsyncData::DeleteNapiRef()
 
 static ani_object GetCallbackResult(ani_env *env, uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj)
 {
-    ani_long id = deviceId;
+    ani_long id = static_cast<int64_t>(deviceId);
     ani_ref remoteObj;
     if (drvExtObj == nullptr) {
         env->GetUndefined(&remoteObj);
@@ -559,7 +559,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
     }
 
     data->env = env;
-    data->deviceId = deviceId;
+    data->deviceId = static_cast<uint64_t>(deviceId);
     if (ANI_OK != env->GlobalReference_Create(reinterpret_cast<ani_ref>(onDisconnect), &data->onDisconnect)) {
         set_business_error(PARAMETER_ERROR, "GlobalReference_Create failed");
         return nullptr;

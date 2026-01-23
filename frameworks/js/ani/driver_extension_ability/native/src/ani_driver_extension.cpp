@@ -112,6 +112,10 @@ void AniDriverExtension::OnStart(const AAFwk::Want &want)
     HILOG_DEBUG("%{public}s begin.", __func__);
     Extension::OnStart(want);
     auto env = stsRuntime_.GetAniEnv();
+    if (env == nullptr) {
+        HILOG_ERROR("Failed to get env");
+        return;
+    }
     ani_object ani_want = OHOS::AppExecFwk::WrapWant(env, want);
     if (ANI_OK != env->Object_CallMethodByName_Void(stsObj_->aniObj, "onInit", nullptr, ani_want)) {
         HILOG_ERROR("Failed to call the method: onInit");
@@ -125,6 +129,10 @@ void AniDriverExtension::OnStop()
     HILOG_DEBUG("%{public}s begin.", __func__);
     DriverExtension::OnStop();
     auto env = stsRuntime_.GetAniEnv();
+    if (env == nullptr) {
+        HILOG_ERROR("Failed to get env");
+        return;
+    }
     if (ANI_OK != env->Object_CallMethodByName_Void(stsObj_->aniObj, "onRelease", nullptr)) {
         HILOG_ERROR("Failed to call the method: onRelease");
         return;
@@ -139,6 +147,10 @@ sptr<IRemoteObject> AniDriverExtension::OnConnect(const AAFwk::Want &want)
     Extension::OnConnect(want);
     ani_ref result = nullptr;
     auto env = stsRuntime_.GetAniEnv();
+    if (env == nullptr) {
+        HILOG_ERROR("Failed to get env");
+        return nullptr;
+    }
     ani_object ani_want = OHOS::AppExecFwk::WrapWant(env, want);
     if (ANI_OK != env->Object_CallMethodByName_Ref(stsObj_->aniObj, "onConnect", nullptr, &result, ani_want)) {
         HILOG_ERROR("Failed to call the method: onConnect");
@@ -171,6 +183,10 @@ sptr<IRemoteObject> AniDriverExtension::OnConnect(const AAFwk::Want &want,
     Extension::OnConnect(want);
     ani_boolean isAsync = false;
     auto env = stsRuntime_.GetAniEnv();
+    if (env == nullptr) {
+        HILOG_ERROR("Failed to get env");
+        return nullptr;
+    }
     if (ANI_OK != env->Object_SetFieldByName_Long(stsObj_->aniObj, "connectCbInfo",
         reinterpret_cast<ani_long>(callbackInfo))) {
         HILOG_ERROR("Failed to Set the connectCbInfo");
@@ -209,6 +225,10 @@ void AniDriverExtension::OnDisconnect(const AAFwk::Want &want)
     HILOG_DEBUG("%{public}s begin.", __func__);
     Extension::OnDisconnect(want);
     auto env = stsRuntime_.GetAniEnv();
+    if (env == nullptr) {
+        HILOG_ERROR("Failed to get env");
+        return;
+    }
     ani_object ani_want = OHOS::AppExecFwk::WrapWant(env, want);
     if (ANI_OK != env->Object_CallMethodByName_Void(stsObj_->aniObj, "callOnDisConnect", nullptr, ani_want)) {
         HILOG_ERROR("Failed to call the method: onDisconnect");
@@ -227,6 +247,10 @@ void AniDriverExtension::OnDisconnect(const AAFwk::Want &want,
     }
     auto env = stsRuntime_.GetAniEnv();
     Extension::OnDisconnect(want);
+    if (env == nullptr) {
+        HILOG_ERROR("Failed to get env");
+        return;
+    }
     if (ANI_OK != env->Object_SetFieldByName_Long(stsObj_->aniObj, "disConnectCbInfo",
         reinterpret_cast<ani_long>(callbackInfo))) {
         HILOG_ERROR("Failed to Set the disConnectCbInfo");
@@ -280,6 +304,10 @@ void AniDriverExtension::Dump(const std::vector<std::string> &params, std::vecto
     HILOG_DEBUG("%{public}s begin.", __func__);
     Extension::Dump(params, info);
     auto env = stsRuntime_.GetAniEnv();
+    if (env == nullptr) {
+        HILOG_ERROR("Failed to get env");
+        return;
+    }
     ani_array params_ = ToAniStringList(env, params, params.size());
     ani_ref result = nullptr;
     if (ANI_OK != env->Object_CallMethodByName_Ref(stsObj_->aniObj, "onDump", nullptr, &result, params_)) {
