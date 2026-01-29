@@ -331,6 +331,7 @@ USBDeviceInfoData* USBDeviceInfoData::Unmarshalling(Parcel &data)
     }
     return usbDeviceInfo;
 }
+
 std::shared_ptr<USBInterfaceDesc> USBInterfaceDesc::Unmarshalling(Parcel &data)
 {
     std::shared_ptr<USBInterfaceDesc> desc = std::make_shared<USBInterfaceDesc>();
