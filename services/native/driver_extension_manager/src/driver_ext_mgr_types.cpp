@@ -142,7 +142,7 @@ USBDevice* USBDevice::Unmarshalling(Parcel &data)
     delete deviceData;
 
     if (!data.ReadUint16(usbDevice->productId) || !data.ReadUint16(usbDevice->vendorId)) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to read USBDevice fields")
+        EDM_LOGE(MODULE_DEV_MGR, "failed to read USBDevice fields");
         delete usbDevice;
         return nullptr;
     }
