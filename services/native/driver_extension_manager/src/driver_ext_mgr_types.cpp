@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 constexpr uint64_t MAX_INTERFACE_DESC_SIZE = 512;
-
+111
 bool ErrMsg::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteInt32(errCode)) {
