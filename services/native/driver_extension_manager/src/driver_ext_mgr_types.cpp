@@ -102,7 +102,7 @@ DeviceData* DeviceData::Unmarshalling(Parcel &data)
     }
     device->busType = static_cast<BusType>(tempBusType);
 
-    if (!dataUint64(device->deviceId) || !data.ReadString(device->descripton)) {
+    if (!data.ReadUint64(device->deviceId) || !data.ReadString(device->descripton)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read DeviceData fields");
         delete device;
         return nullptr;
@@ -257,7 +257,7 @@ DeviceInfoData* DeviceInfoData::Unmarshalling(Parcel &data)
         return nullptr;
     }
 
-    BusType busType = DeviceInfoData::GetBusTypeByDeviceId(deviceId);
+    BusType busType = DeviceInfoData::GetBusTypeByDeviceId(deviceInfoData->deviceId);
     if (busType <= BusType::BUS_TYPE_INVALID || busType >= BusType::BUS_TYPE_MAX) {
         EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}u", busType);
         delete deviceInfoData;
@@ -292,7 +292,7 @@ USBDeviceInfoData* USBDeviceInfoData::Unmarshalling(Parcel &data)
         return nullptr;
     }
     DeviceInfoData *deviceInfoData = nullptr;
-    deviceInfoData = DeviceInfoData::Unmarshalling(Parcel &data);
+    deviceInfoData = DeviceInfoData::Unmarshalling(data);
     if (!deviceInfoData) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to unmarshal base deviceInfoData");
         delete usbDeviceInfo;
