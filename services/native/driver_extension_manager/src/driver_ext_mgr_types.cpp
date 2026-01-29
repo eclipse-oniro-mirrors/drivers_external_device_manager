@@ -95,7 +95,7 @@ DeviceData* DeviceData::Unmarshalling(Parcel &data)
         return nullptr;
     }
     uint32_t tempBusType = 0;
-    if (!data.ReadUint32(tempBusType) || static_cast<BusType>(tempBusType) == BUS_TYPE_INVALID) {
+    if (!data.ReadUint32(tempBusType) || static_cast<BusType>(tempBusType) != BusType::BUS_TYPE_USB) {
         EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}d", tempBusType);
         delete device;
         return nullptr;
@@ -258,7 +258,7 @@ DeviceInfoData* DeviceInfoData::Unmarshalling(Parcel &data)
     }
 
     BusType busType = DeviceInfoData::GetBusTypeByDeviceId(deviceInfoData->deviceId);
-    if (busType <= BusType::BUS_TYPE_INVALID || busType >= BusType::BUS_TYPE_MAX) {
+    if (busType != BusType::BUS_TYPE_USB) {
         EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}u", busType);
         delete deviceInfoData;
         return nullptr;
