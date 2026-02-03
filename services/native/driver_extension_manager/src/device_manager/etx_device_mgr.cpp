@@ -226,7 +226,8 @@ std::unordered_set<uint64_t> ExtDeviceManager::DeleteBundlesOfBundleInfoMap(cons
     } else {
         std::string startStr = bundleName + Device::GetStiching();
         for (auto iter = bundleMatchMap_.begin(); iter != bundleMatchMap_.end();) {
-            if (startStr.compare(iter->first.substr(0, startStr.size())) == 0) {
+            if (iter->first.size() >= startStr.size() &&
+                startStr.compare(iter->first.substr(0, startStr.size())) == 0) {
                 deviceIds.insert(iter->second.begin(), iter->second.end());
                 iter = bundleMatchMap_.erase(iter);
             } else {

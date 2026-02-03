@@ -72,14 +72,17 @@ private:
         napi_value lastParam = (argc > ARGC_ZERO) ? argv[INDEX_ZERO] : nullptr;
 
         napi_value result = nullptr;
-        std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
-        auto asyncTask = [weak = context_, env, task = napiAsyncTask.get()]() {
+        std::shared_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+        auto asyncTask = [weak = context_, env, task = napiAsyncTask]() {
             HILOG_INFO("UpdateDriverState begin");
+            if (task == nullptr) {
+                HILOG_ERROR("napiAsyncTask is nullptr");
+                return;
+            }
             auto context = weak.lock();
             if (!context) {
                 HILOG_WARN("context is released");
                 task->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context is released"));
-                delete task;
                 return;
             }
 
@@ -91,7 +94,6 @@ private:
             } else {
                 task->Reject(env, CreateJsErrorByNativeErr(env, innerErrorCode));
             }
-            delete task;
         };
         if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_high)) {
             napiAsyncTask->Reject(env, CreateJsError(env, ERROR_CODE_ONE, "Context send event failed"));
@@ -101,20 +103,20 @@ private:
         return result;
     }
 
-    std::unique_ptr<NapiAsyncTask> CreateEmptyAsyncTask(napi_env env, napi_value lastParam, napi_value* result)
+    std::shared_ptr<NapiAsyncTask> CreateEmptyAsyncTask(napi_env env, napi_value lastParam, napi_value* result)
     {
         napi_valuetype type = napi_undefined;
         napi_typeof(env, lastParam, &type);
         if (lastParam == nullptr || type != napi_function) {
             napi_deferred nativeDeferred = nullptr;
             napi_create_promise(env, &nativeDeferred, result);
-            return std::make_unique<NapiAsyncTask>(nativeDeferred, std::unique_ptr<NapiAsyncTask::ExecuteCallback>(),
+            return std::make_shared<NapiAsyncTask>(nativeDeferred, std::unique_ptr<NapiAsyncTask::ExecuteCallback>(),
                 std::unique_ptr<NapiAsyncTask::CompleteCallback>());
         } else {
             napi_get_undefined(env, result);
             napi_ref callbackRef = nullptr;
             napi_create_reference(env, lastParam, 1, &callbackRef);
-            return std::make_unique<NapiAsyncTask>(callbackRef, std::unique_ptr<NapiAsyncTask::ExecuteCallback>(),
+            return std::make_shared<NapiAsyncTask>(callbackRef, std::unique_ptr<NapiAsyncTask::ExecuteCallback>(),
                 std::unique_ptr<NapiAsyncTask::CompleteCallback>());
         }
     }

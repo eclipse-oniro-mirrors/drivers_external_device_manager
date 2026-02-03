@@ -14,6 +14,7 @@
  */
 
 #ifndef USB_CONFIG_DESC_PARSER_H
+#define USB_CONFIG_DESC_PARSER_H
 #include <vector>
 #include "usb_ddk_types.h"
 namespace OHOS {
@@ -22,5 +23,4 @@ int32_t ParseUsbConfigDescriptor(const std::vector<uint8_t> &configBuffer, UsbDd
 void FreeUsbConfigDescriptor(UsbDdkConfigDescriptor * const config);
 } // namespace ExternalDeviceManager
 } // namespace OHOS
-#define USB_CONFIG_DESC_PARSER_H
 #endif // USB_CONFIG_DESC_PARSER_H

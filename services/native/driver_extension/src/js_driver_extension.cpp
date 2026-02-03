@@ -475,7 +475,7 @@ void JsDriverExtension::Dump(const std::vector<std::string> &params, std::vector
     napi_value dumpInfo = CallObjectMethod(env, "onDump", argv, ARGC_ONE);
     bool isArray = false;
     napi_is_array(env, dumpInfo, &isArray);
-    if (isArray) {
+    if (!isArray) {
         HILOG_ERROR("dumpInfo is not array.");
         return;
     }
