@@ -75,6 +75,10 @@ private:
         std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
         auto asyncTask = [weak = context_, env, task = napiAsyncTask.get()]() {
             HILOG_INFO("UpdateDriverState begin");
+            if (task == nullptr) {
+                HILOG_ERROR("napiAsyncTask is nullptr");
+                return;
+            }
             auto context = weak.lock();
             if (!context) {
                 HILOG_WARN("context is released");

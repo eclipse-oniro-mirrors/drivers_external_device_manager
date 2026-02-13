@@ -83,6 +83,7 @@ UsbErrCode DriverExtMgrClient::Connect()
     proxy_ = iface_cast<IDriverExtMgr>(remote);
     if (proxy_ == nullptr) {
         EDM_LOGF(MODULE_FRAMEWORK, "Failed to cast DriverExtMgrProxy object");
+        return UsbErrCode::EDM_ERR_GET_SERVICE_FAILED;
     }
     EDM_LOGI(MODULE_FRAMEWORK, "Connecting DriverExtMgrProxy success");
     return UsbErrCode::EDM_OK;

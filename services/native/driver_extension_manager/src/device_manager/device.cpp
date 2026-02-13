@@ -80,7 +80,9 @@ int32_t Device::Connect()
             __func__, bundleName.c_str(), abilityName.c_str(), ret, retry);
         usleep(waitTimeMs * msToUs);
         drvExtRemote_ = nullptr;
-        connectNofitier_->ClearDrvExtConnectionInfo();
+        if (connectNofitier_ != nullptr) {
+            connectNofitier_->ClearDrvExtConnectionInfo();
+        }
         ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
             bundleName, abilityName, connectNofitier_, busDevId);
         retry++;
@@ -199,7 +201,9 @@ void Device::OnDisconnect(int resultCode)
 
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     drvExtRemote_ = nullptr;
-    connectNofitier_->ClearDrvExtConnectionInfo();
+    if (connectNofitier_ != nullptr) {
+        connectNofitier_->ClearDrvExtConnectionInfo();
+    }
     for (auto &callback : callbacks_) {
         callback->OnUnBind(GetDeviceInfo()->GetDeviceId(), {static_cast<UsbErrCode>(resultCode), ""});
         callback->OnDisconnect(GetDeviceInfo()->GetDeviceId(), {static_cast<UsbErrCode>(resultCode), ""});
