@@ -17,14 +17,26 @@ let ExtensionAbility = requireNapi('app.ability.ExtensionAbility');
 
 class DriverExtensionAbility extends ExtensionAbility {
   onInit(want) {
+    if (!want) {
+      console.log('onInit, want is null or undefined' );
+      return;
+    }
     console.log('onInit, want:' + want.abilityName);
   }
 
   onConnect(want) {
+    if (!want) {
+      console.log('onConnect, want is null or undefined' );
+      return;
+    }
     console.log('onConnect, want:' + want.abilityName);
   }
 
   onDisconnect(want) {
+    if (!want) {
+      console.log('onDisconnect, want is null or undefined' );
+      return;
+    }
     console.log('onDisconnect');
   }
 
