@@ -30,7 +30,7 @@ void UsbDriverChangeCallback::OnDriverMatched(const std::shared_ptr<DriverInfo> 
         EDM_LOGE(MODULE_BUS_USB,  "iUsbDdk_ is nullptr");
         return;
     }
-    V1_1::DriverAbilityInfo driverAbilityInfo;
+    V1_2::DriverAbilityInfo driverAbilityInfo;
     driverAbilityInfo.driverUid = driverInfo->GetDriverUid();
     std::shared_ptr<UsbDriverInfo> usbDriverInfo = std::static_pointer_cast<UsbDriverInfo>(driverInfo->GetInfoExt());
     if (usbDriverInfo == nullptr) {

@@ -18,34 +18,34 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include "v1_1/iusb_ddk.h"
+#include "v1_2/iusb_ddk.h"
 
 namespace OHOS {
 namespace USB {
 using namespace OHOS::HDI::Usb::Ddk;
-class UsbDdkServiceMock : public V1_1::IUsbDdk {
+class UsbDdkServiceMock : public V1_2::IUsbDdk {
 public:
     UsbDdkServiceMock() = default;
     ~UsbDdkServiceMock() = default;
     int32_t GetConfigDescriptor(uint64_t deviceId, uint8_t configIndex, std::vector<uint8_t> &configDesc) override;
     MOCK_METHOD0(Init, int32_t());
     MOCK_METHOD0(Release, int32_t());
-    MOCK_METHOD2(GetDeviceDescriptor, int32_t(uint64_t deviceId, V1_1::UsbDeviceDescriptor &desc));
+    MOCK_METHOD2(GetDeviceDescriptor, int32_t(uint64_t deviceId, V1_2::UsbDeviceDescriptor &desc));
     MOCK_METHOD3(ClaimInterface, int32_t(uint64_t deviceId, uint8_t interfaceIndex, uint64_t &interfaceHandle));
     MOCK_METHOD1(ReleaseInterface, int32_t(uint64_t interfaceHandle));
     MOCK_METHOD2(SelectInterfaceSetting, int32_t(uint64_t interfaceHandle, uint8_t settingIndex));
     MOCK_METHOD2(GetCurrentInterfaceSetting, int32_t(uint64_t interfaceHandle, uint8_t &settingIndex));
-    MOCK_METHOD4(SendControlReadRequest, int32_t(uint64_t interfaceHandle, const V1_1::UsbControlRequestSetup &setup,
+    MOCK_METHOD4(SendControlReadRequest, int32_t(uint64_t interfaceHandle, const V1_2::UsbControlRequestSetup &setup,
         uint32_t timeout, std::vector<uint8_t> &data));
-    MOCK_METHOD4(SendControlWriteRequest, int32_t(uint64_t interfaceHandle, const V1_1::UsbControlRequestSetup &setup,
+    MOCK_METHOD4(SendControlWriteRequest, int32_t(uint64_t interfaceHandle, const V1_2::UsbControlRequestSetup &setup,
         uint32_t timeout, const std::vector<uint8_t> &data));
-    MOCK_METHOD5(SendPipeRequest, int32_t(const V1_1::UsbRequestPipe &pipe, uint32_t size, uint32_t offset,
+    MOCK_METHOD5(SendPipeRequest, int32_t(const V1_2::UsbRequestPipe &pipe, uint32_t size, uint32_t offset,
         uint32_t length, uint32_t &transferedLength));
     MOCK_METHOD2(GetDeviceMemMapFd, int32_t(uint64_t deviceId, int &fd));
-    MOCK_METHOD3(SendPipeRequestWithAshmem, int32_t(const V1_1::UsbRequestPipe &pipe, const V1_1::UsbAshmem &ashmem,
+    MOCK_METHOD3(SendPipeRequestWithAshmem, int32_t(const V1_2::UsbRequestPipe &pipe, const V1_2::UsbAshmem &ashmem,
         uint32_t &transferredLength));
     MOCK_METHOD1(GetDevices, int32_t(std::vector<uint64_t> &deviceIds));
-    MOCK_METHOD1(UpdateDriverInfo, int32_t(const V1_1::DriverAbilityInfo &driverInfo));
+    MOCK_METHOD1(UpdateDriverInfo, int32_t(const V1_2::DriverAbilityInfo &driverInfo));
     MOCK_METHOD1(RemoveDriverInfo, int32_t(const std::string &driverUid));
 };
 } // namespace USB

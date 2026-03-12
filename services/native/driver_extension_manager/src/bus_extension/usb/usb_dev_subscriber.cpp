@@ -76,7 +76,7 @@ static uint64_t ToExtDevId(const UsbDev& usbDev)
 
 #ifdef EXTDEVMGR_USB_PASS_THROUGH
 void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbHostInterface> iusb,
-    sptr<V1_1::IUsbDdk> iUsbDdk)
+    sptr<V1_2::IUsbDdk> iUsbDdk)
 {
     this->iusb_ = iusb;
     this->callback_ = callback;
@@ -84,7 +84,7 @@ void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbHo
 };
 #else
 void UsbDevSubscriber::Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb,
-    sptr<V1_1::IUsbDdk> iUsbDdk)
+    sptr<V1_2::IUsbDdk> iUsbDdk)
 {
     this->iusb_ = iusb;
     this->callback_ = callback;

@@ -23,7 +23,7 @@
 #include "v1_0/iusbd_subscriber.h"
 #include "v1_0/iusb_interface.h"
 #endif // EXTDEVMGR_USB_PASS_THROUGH
-#include "v1_1/iusb_ddk.h"
+#include "v1_2/iusb_ddk.h"
 #include "usb_config_desc_parser.h"
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -54,9 +54,9 @@ struct UsbDevDescLite {
 class UsbDevSubscriber : public IUsbdSubscriber {
 public:
 #ifdef EXTDEVMGR_USB_PASS_THROUGH
-    void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbHostInterface> iusb, sptr<V1_1::IUsbDdk> iUsbDdk);
+    void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbHostInterface> iusb, sptr<V1_2::IUsbDdk> iUsbDdk);
 #else
-    void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb, sptr<V1_1::IUsbDdk> iUsbDdk);
+    void Init(shared_ptr<IDevChangeCallback> callback, sptr<IUsbInterface> iusb, sptr<V1_2::IUsbDdk> iUsbDdk);
 #endif // EXTDEVMGR_USB_PASS_THROUGH
     int32_t DeviceEvent(const USBDeviceInfo &info) override;
     int32_t PortChangedEvent(const PortInfo &info) override;
@@ -67,7 +67,7 @@ private:
 #else
     sptr<IUsbInterface> iusb_;
 #endif // EXTDEVMGR_USB_PASS_THROUGH
-    sptr<V1_1::IUsbDdk> iUsbDdk_;
+    sptr<V1_2::IUsbDdk> iUsbDdk_;
     int32_t OnDeviceConnect(const UsbDev &usbDev);
     int32_t OnDeviceDisconnect(const UsbDev &usbDev);
     int32_t GetInterfaceDescriptor(const UsbDev &usbDev, std::vector<UsbInterfaceDescriptor> &interfaceList);

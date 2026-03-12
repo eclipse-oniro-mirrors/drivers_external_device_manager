@@ -18,7 +18,7 @@ namespace OHOS {
 namespace USB {
 using namespace OHOS;
 using namespace OHOS::HDI;
-using namespace OHOS::HDI::Usb::Ddk::V1_1;
+using namespace OHOS::HDI::Usb::Ddk::V1_2;
 constexpr int32_t DEV_ADDR_INTERFACE_ERR = 9;
 constexpr uint64_t BUS_NUM_OK = 6;
 constexpr int32_t SHIFT_32 = 16;
