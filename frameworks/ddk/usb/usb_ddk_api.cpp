@@ -369,3 +369,61 @@ int32_t OH_Usb_GetDevices(struct Usb_DeviceArray *devices)
 
     return USB_DDK_SUCCESS;
 }
+
+int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequestSetup *setupPacket, uint8_t *data,
+    uint32_t timeout)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
+        return USB_DDK_INVALID_OPERATION;
+    }
+
+    if (setupPacket == nullptr || data == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+
+    auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_1::UsbControlRequestSetup *>(setupPacket);
+    std::vector<uint8_t> dataTmp(data, data + setupPacket->wLength);
+    uint32_t transferredLength = 0;
+    int32_t ret = TransToUsbCode(g_ddk->ControlTransfer(deviceID, *tmpSetUp, timeout, dataTmp, transferredLength));
+    if (ret != USB_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: control transfer failed", __func__);
+        return ret;
+    }
+
+    if (dataTmp.size() > 0) {
+        if (memcpy_s(data, setupPacket->wLength, dataTmp.data(), dataTmp.size()) != 0) {
+            EDM_LOGE(MODULE_USB_DDK, "%{public}s: copy data failed", __func__);
+            return USB_DDK_MEMORY_ERROR;
+        }
+    }
+
+    return static_cast<int32_t>(transferredLength);
+}
+
+int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub)
+{
+    if (g_ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
+        return USB_DDK_INVALID_OPERATION;
+    }
+    if (nonRootHub == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+
+    std::vector<uint64_t> nonRootHubIds;
+    int32_t ret = TransToUsbCode(g_ddk->GetNonRootHubs(nonRootHubIds));
+    if (ret != USB_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: get non-root hubs failed", __func__);
+        return ret;
+    }
+
+    nonRootHub->num = nonRootHubIds.size();
+    for (size_t i = 0; i < nonRootHubIds.size(); i++) {
+        nonRootHub->nonRootHubIds[i] = nonRootHubIds[i];
+    }
+
+    return USB_DDK_SUCCESS;
+}
