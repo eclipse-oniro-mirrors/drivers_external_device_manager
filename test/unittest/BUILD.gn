@@ -46,7 +46,7 @@ ohos_unittest("bus_extension_usb_test") {
     "bundle_framework:appexecfwk_base",
     "cJSON:cjson",
     "c_utils:utils",
-    "drivers_interface_usb:libusb_ddk_proxy_1.1",
+    "drivers_interface_usb:libusb_ddk_proxy_1.2",
     "googletest:gmock_main",
     "googletest:gtest_main",
     "hilog:libhilog",
