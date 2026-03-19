@@ -18,13 +18,10 @@ Guidance for AI coding agents working in the OpenHarmony External Device Manager
 # All unit tests
 ./build.sh --product-name {product_name} --build-target external_device_manager_ut
 
-# Specific unit tests (targets in test/unittest/BUILD.gn)
+# Specific unit tests
 ./build.sh --product-name {product_name} --build-target bus_extension_usb_test
 ./build.sh --product-name {product_name} --build-target device_manager_test
 ./build.sh --product-name {product_name} --build-target drivers_pkg_manager_test
-
-# Module tests
-./build.sh --product-name {product_name} --build-target external_device_manager_mt
 
 # Fuzz tests
 ./build.sh --product-name {product_name} --build-target fuzztest
@@ -61,9 +58,6 @@ namespace ExternalDeviceManager {
 | Constants | UPPER_SNAKE_CASE | `EDM_OK` |
 | Files | snake_case | `device_manager.cpp` |
 
-### Include Order
-1. Standard library (alphabetically) 2. System headers 3. Project headers
-
 ### Logging (`hilog_wrapper.h`)
 ```cpp
 EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
@@ -79,18 +73,6 @@ enum UsbErrCode : int32_t {
     EDM_OK = 0, EDM_NOK, EDM_ERR_INVALID_PARAM,
     EDM_ERR_INVALID_OBJECT, EDM_ERR_TIMEOUT,
 };
-
-if (callback == nullptr) {
-    EDM_LOGE(MODULE_DEV_MGR, "invalid callback");
-    return UsbErrCode::EDM_ERR_INVALID_OBJECT;
-}
-```
-
-### Single Instance (`single_instance.h`)
-```cpp
-class MyClass { DECLARE_SINGLE_INSTANCE(MyClass) };
-IMPLEMENT_SINGLE_INSTANCE(MyClass)
-MyClass::GetInstance().DoSomething();
 ```
 
 ### Smart Pointers & Thread Safety
@@ -98,66 +80,186 @@ MyClass::GetInstance().DoSomething();
 - Use `sptr`/`wptr` for OpenHarmony remote objects
 - Use `std::lock_guard<std::recursive_mutex>` for thread safety
 
-## Testing Guidelines
+## Business Logic
 
-### Unit Tests
-```cpp
-#include <gtest/gtest.h>
-#include "edm_errors.h"
+### Architecture Overview
 
-namespace OHOS {
-namespace ExternalDeviceManager {
-using namespace testing::ext;
+The External Device Manager provides plug-and-play capability for non-standard protocol devices. It manages the full lifecycle of external device driver packages (development, deployment, installation, operation, capability exposure).
 
-class MyTest : public testing::Test {
-public:
-    void SetUp() override {}
-    void TearDown() override {}
-};
+### Core Modules
 
-HWTEST_F(MyTest, TestName001, TestSize.Level1)
-{
-    ASSERT_EQ(SomeFunction(), EDM_OK);
-}
-} // namespace ExternalDeviceManager
-} // namespace OHOS
+#### 1. Driver Extension Manager Service (DriverExtMgr)
+**Location**: `services/native/driver_extension_manager/include/driver_ext_mgr.h`
+
+- **Purpose**: System ability entry point, main service for external device management
+- **Key Responsibilities**:
+  - Service lifecycle management (OnStart/OnStop)
+  - Device query operations
+  - Device bind/unbind operations
+  - Driver information query
+  - Callback management for device connections
+
+- **Main Interfaces** (from `IDriverExtMgr.idl`):
+  - `QueryDevice()`: Query devices by bus type
+  - `BindDevice()`: Bind a device with its driver package
+  - `UnBindDevice()`: Unbind a device
+  - `BindDriverWithDeviceId()`: Bind driver with device ID
+  - `UnBindDriverWithDeviceId()`: Unbind driver with device ID
+  - `QueryDeviceInfo()`: Query device information
+  - `QueryDriverInfo()`: Query driver package information
+
+#### 2. Device Manager Module
+**Location**: `services/native/driver_extension_manager/include/device_manager/`
+
+- **Purpose**: Core device and driver matching management
+- **Key Responsibilities**:
+  - Device list management (deviceMap_)
+  - Driver matching table management (bundleMatchMap_)
+  - Device registration/unregistration
+  - Device-driver binding/unbinding
+  - Permission verification for driver access
+  - Automatic driver matching on device connect
+
+- **Key Classes**:
+  - `ExtDeviceManager` (etx_device_mgr.h): Main device manager singleton
+  - `Device` (device.h): Represents a physical device with driver binding state
+
+- **Device-Driver Matching Flow**:
+  1. Bus extension detects device connect → `RegisterDevice()`
+  2. `MatchDriverInfos()` matches device to driver packages using DriverPkgManager
+  3. Matching result stored in `bundleMatchMap_`
+  4. Application calls `BindDevice()` → `ConnectDevice()` → starts DriverExtensionAbility
+  5. Application gets driver remote object for direct interaction
+
+#### 3. Driver Package Manager Module
+**Location**: `services/native/driver_extension_manager/include/drivers_pkg_manager/`
+
+- **Purpose**: Driver package lifecycle and metadata management
+- **Key Responsibilities**:
+  - Monitor driver package installation/update/uninstall (via BundleManagerService)
+  - Parse driver package metadata (driver_uid, supported devices)
+  - Provide driver query capability
+  - Driver-device matching logic
+
+- **Key Classes**:
+  - `DriverPkgManager` (driver_pkg_manager.h): Package manager singleton
+  - `DrvBundleStateCallback`: Listens for bundle state changes
+  - `BundleMonitor`: Monitors bundle updates
+
+- **Driver Metadata**:
+  - Bus type (USB, HID, etc.)
+  - Vendor ID/Product ID for matching
+  - Driver UID
+  - Driver name/version/description
+
+#### 4. Bus Extension Core Module
+**Location**: `services/native/driver_extension_manager/include/bus_extension/`
+
+- **Purpose**: Manages different bus types and device enumeration
+- **Key Responsibilities**:
+  - Load and register bus extension plugins
+  - Manage bus extension lifecycle
+  - Device enumeration coordination
+  - Device change notification forwarding
+
+- **Key Classes**:
+  - `BusExtensionCore` (bus_extension_core.h): Core manager for bus extensions
+  - `IBusExtension` (utils/include/ibus_extension.h): Interface for all bus extensions
+
+- **Supported Bus Types**:
+  - USB (UsbBusExtension)
+  - HID, SCSI, Serial (extensible framework)
+
+#### 5. USB Bus Extension Plugin
+**Location**: `services/native/driver_extension_manager/include/bus_extension/usb/`
+
+- **Purpose**: USB-specific device management
+- **Key Responsibilities**:
+  - USB device hot-plug monitoring (via UsbDevSubscriber)
+  - USB device information reading (vendor ID, product ID, interfaces)
+  - Driver-device matching for USB devices
+  - USB DDK interaction for device operations
+
+- **Key Classes**:
+  - `UsbBusExtension` (usb_bus_extension.h): USB bus extension implementation
+  - `UsbDevSubscriber` (usb_dev_subscriber.h): Device change subscriber
+  - `UsbDeviceInfo`, `UsbDriverInfo`: USB-specific data structures
+
+#### 6. Driver Extension Controller
+**Location**: `services/native/driver_extension_manager/include/device_manager/driver_extension_controller.h`
+
+- **Purpose**: Manages DriverExtensionAbility lifecycle
+- **Key Responsibilities**:
+  - Start/stop DriverExtensionAbility
+  - Connect/disconnect to DriverExtensionAbility
+  - Manage ability connections and callbacks
+
+- **Key Classes**:
+  - `DriverExtensionController`: Singleton for ability lifecycle management
+  - `IDriverExtensionConnectCallback`: Connection callback interface
+
+### Data Flow Examples
+
+#### Device Connection Flow
+```
+1. USB device inserted
+   ↓
+2. UsbDevSubscriber detects device
+   ↓
+3. UsbBusExtension reports to BusExtensionCore
+   ↓
+4. BusExtensionCore notifies ExtDeviceManager → RegisterDevice()
+   ↓
+5. ExtDeviceManager queries DriverPkgManager → QueryMatchDriver()
+   ↓
+6. DriverPkgManager parses driver metadata, returns matched drivers
+   ↓
+7. ExtDeviceManager stores match in bundleMatchMap_
+   ↓
+8. Application calls BindDevice()
+   ↓
+9. DriverExtensionController starts DriverExtensionAbility → StartDriverExtension()
+   ↓
+10. DriverExtensionController connects to ability → ConnectDriverExtension()
+    ↓
+11. Application receives remote object, can call driver functions
 ```
 
-### Fuzz Tests
-```cpp
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
-{
-    OHOS::ExternalDeviceManager::FuzzTest(data, size);
-    return 0;
-}
+#### Driver Package Installation Flow
+```
+1. User installs driver package (HAP)
+   ↓
+2. BundleManagerService triggers DrvBundleStateCallback
+   ↓
+3. DriverPkgManager parses metadata from bundle
+   ↓
+4. DriverPkgManager queries for matching devices → QueryMatchDriver()
+   ↓
+5. ExtDeviceManager updates device matching status
+   ↓
+6. Devices auto-bind if matching drivers found
 ```
 
-## TypeScript/ArkTS
-```typescript
-import { DriverExtensionAbility } from '@kit.DriverDevelopmentKit';
-import { Want } from '@kit.AbilityKit';
-import { rpc } from '@kit.IPCKit';
+### Key Data Structures
 
-export default class DriverExtAbility extends DriverExtensionAbility {
-  onInit(want: Want): void {
-    console.info('testTag', `onInit, want: ${want.abilityName}`);
-  }
-  onConnect(want: Want): rpc.RemoteObject {
-    return new StubTest('test');
-  }
-}
-```
+| Type | Location | Purpose |
+|------|----------|---------|
+| `DeviceData` | interfaces/innerkits/driver_ext_mgr_types.h | Base device info |
+| `USBDevice` | interfaces/innerkits/driver_ext_mgr_types.h | USB device data |
+| `DeviceInfoData` | interfaces/innerkits/driver_ext_mgr_types.h | Device info with driver match status |
+| `USBDeviceInfoData` | interfaces/innerkits/driver_ext_mgr_types.h | USB device with interface descriptors |
+| `DriverInfoData` | interfaces/innerkits/driver_ext_mgr_types.h | Base driver info |
+| `USBDriverInfoData` | interfaces/innerkits/driver_ext_mgr_types.h | USB driver with VID/PID lists |
 
 ## Key Directories
 
 | Path | Purpose |
 |------|---------|
-| `bundle.json` | Component config |
-| `extdevmgr.gni` | GN build variables |
-| `interfaces/innerkits/` | Internal interfaces |
-| `services/native/` | Native implementations |
-| `frameworks/` | Framework/bridge code |
-| `utils/include/` | Logging, errors, patterns |
+| `services/native/driver_extension_manager/` | Core service implementation |
+| `interfaces/innerkits/` | Internal interfaces and types |
+| `frameworks/native/` | Bridge code (client implementation) |
+| `utils/include/` | Logging, errors, common patterns |
+| `interfaces/ddk/` | DDK interfaces (USB, HID, SCSI) |
 | `test/unittest/` | Unit tests |
 | `test/moduletest/` | Module tests |
 | `test/fuzztest/` | Fuzz tests |
