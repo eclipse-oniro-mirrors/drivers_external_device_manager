@@ -46,10 +46,12 @@ std::unordered_map<int32_t, int32_t> g_errorMap = {
 std::unordered_map<uint8_t*, int32_t> g_fdMap;
 } // namespace
 
-static int32_t TransToUsbCode(int32_t ret)
+static int32_t TransToUsbCode(int32_t ret, int32_t defaultCode = USB_DDK_SUCCESS)
 {
     if ((g_errorMap.find(ret) != g_errorMap.end())) {
         return g_errorMap[ret];
+    } else if (defaultCode != USB_DDK_SUCCESS) {
+        return defaultCode;
     } else {
         return ret;
     }
@@ -377,7 +379,6 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
         EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
         return USB_DDK_INVALID_OPERATION;
     }
-
     if (setupPacket == nullptr || data == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
         return USB_DDK_INVALID_PARAMETER;
@@ -386,7 +387,8 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
     auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_2::UsbControlRequestSetup *>(setupPacket);
     std::vector<uint8_t> dataTmp(data, data + setupPacket->wLength);
     uint32_t transferredLength = 0;
-    int32_t ret = TransToUsbCode(g_ddk->ControlTransfer(deviceID, *tmpSetUp, timeout, dataTmp, transferredLength));
+    int32_t ret = TransToUsbCode(
+        g_ddk->ControlTransfer(deviceID, *tmpSetUp, timeout, dataTmp, transferredLength), USB_DDK_IO_FAILED);
     if (ret != USB_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "%{public}s: control transfer failed", __func__);
         return ret;
@@ -398,7 +400,6 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
             return USB_DDK_MEMORY_ERROR;
         }
     }
-
     return static_cast<int32_t>(transferredLength);
 }
 
