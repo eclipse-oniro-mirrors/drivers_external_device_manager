@@ -26,7 +26,7 @@
 #include "hilog_wrapper.h"
 #include "usb_config_desc_parser.h"
 #include "usb_ddk_types.h"
-#include "v1_2/usb_ddk_service.h"
+#include "v1_2/iusb_ddk.h"
 
 using namespace OHOS::ExternalDeviceManager;
 namespace {
