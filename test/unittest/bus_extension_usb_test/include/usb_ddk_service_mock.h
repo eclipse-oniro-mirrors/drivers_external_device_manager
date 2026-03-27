@@ -47,7 +47,7 @@ public:
     MOCK_METHOD1(GetDevices, int32_t(std::vector<uint64_t> &deviceIds));
     MOCK_METHOD1(UpdateDriverInfo, int32_t(const V1_2::DriverAbilityInfo &driverInfo));
     MOCK_METHOD1(RemoveDriverInfo, int32_t(const std::string &driverUid));
-    MOCK_METHOD5(ControlTransfer,int32_t(uint64_t deviceId, const V1_2::UsbControlRequestSetup &setupPacket,
+    MOCK_METHOD5(ControlTransfer, int32_t(uint64_t deviceId, const V1_2::UsbControlRequestSetup &setupPacket,
         uint32_t timeout, std::vector<uint8_t> &data, uint32_t &transferredLength));
     MOCK_METHOD1(GetNonRootHubs, int32_t(std::vector<uint64_t> &nonRootHubIds));
 };
