@@ -1126,5 +1126,164 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
+
+    /**
+     * @tc.name       : testUsbGetNonRootHubs001
+     * @tc.desc       : OH_Usb_GetNonRootHubs Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbGetNonRootHubs001', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetNonRootHubs001---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbGetNonRootHubsOne();
+        console.info("Test Result testUsbGetNonRootHubs001 : " + ret);
+        expect(ret).assertEqual(USB_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetNonRootHubs001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbGetNonRootHubs002
+     * @tc.desc       : OH_Usb_GetNonRootHubs Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbGetNonRootHubs002', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetNonRootHubs002---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbGetNonRootHubsTwo();
+        console.info("Test Result testUsbGetNonRootHubs002 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetNonRootHubs002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbGetNonRootHubs003
+     * @tc.desc       : OH_Usb_GetNonRootHubs Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbGetNonRootHubs003', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetNonRootHubs003---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbGetNonRootHubsThree();
+        console.info("Test Result testUsbGetNonRootHubs003 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetNonRootHubs003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer001
+     * @tc.desc       : OH_Usb_ControlTransfer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer001', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer001---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        console.info("Test USB deviceId = " + deviceId);
+        const ret = usbDdkNdkTest.usbControlTransferOne(deviceId);
+        console.info("Test Result testUsbControlTransfer001 : " + ret);
+        expect(ret).assertGreater(0);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer002
+     * @tc.desc       : OH_Usb_ControlTransfer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer002', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer002---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbControlTransferTwo();
+        console.info("Test Result testUsbControlTransfer002 : " + ret);
+        expect(ret).assertLess(0);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer003
+     * @tc.desc       : OH_Usb_ControlTransfer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer003', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer003---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbControlTransferThree();
+        console.info("Test Result testUsbControlTransfer003 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer004
+     * @tc.desc       : OH_Usb_ControlTransfer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer004', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer004---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbControlTransferFour();
+        console.info("Test Result testUsbControlTransfer004 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer005
+     * @tc.desc       : OH_Usb_ControlTransfer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer005', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer005---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbControlTransferFive();
+        console.info("Test Result testUsbControlTransfer005 : " + ret);
+        expect(ret).assertLess(0);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }
