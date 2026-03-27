@@ -18,19 +18,19 @@
 #include <memory>
 #include "ext_object.h"
 #include "idriver_change_callback.h"
-#include "v1_1/iusb_ddk.h"
+#include "v1_2/iusb_ddk.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace OHOS::HDI::Usb::Ddk;
 class UsbDriverChangeCallback final : public IDriverChangeCallback {
 public:
-    UsbDriverChangeCallback(sptr<V1_1::IUsbDdk> &iUsbDdk) : iUsbDdk_(iUsbDdk) {}
+    UsbDriverChangeCallback(sptr<V1_2::IUsbDdk> &iUsbDdk) : iUsbDdk_(iUsbDdk) {}
     virtual void OnDriverMatched(const std::shared_ptr<DriverInfo> &driverInfo) override;
     virtual void OnDriverRemoved(const std::shared_ptr<DriverInfo> &driverInfo) override;
 
 private:
-    sptr<V1_1::IUsbDdk> iUsbDdk_ = nullptr;
+    sptr<V1_2::IUsbDdk> iUsbDdk_ = nullptr;
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

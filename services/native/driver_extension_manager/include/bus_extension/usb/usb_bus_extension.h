@@ -22,7 +22,7 @@
 #include "usb_dev_subscriber.h"
 #include "usb_device_info.h"
 #include "usb_driver_change_callback.h"
-#include "v1_1/iusb_ddk.h"
+#include "v1_2/iusb_ddk.h"
 #ifdef EXTDEVMGR_USB_PASS_THROUGH
 #include "v2_0/iusb_host_interface.h"
 #else
@@ -50,13 +50,13 @@ public:
 #else
     void SetUsbInferface(sptr<IUsbInterface> iusb);
 #endif // EXTDEVMGR_USB_PASS_THROUGH
-    void SetUsbDdk(sptr<V1_1::IUsbDdk> iUsbDdk);
+    void SetUsbDdk(sptr<V1_2::IUsbDdk> iUsbDdk);
     BusType GetBusType() override;
     shared_ptr<IDriverChangeCallback> AcquireDriverChangeCallback() override;
 
 private:
     sptr<UsbDevSubscriber> subScriber_ = nullptr;
-    sptr<V1_1::IUsbDdk> iUsbDdk_ = nullptr;
+    sptr<V1_2::IUsbDdk> iUsbDdk_ = nullptr;
     vector<uint16_t> ParseCommaStrToVectorUint16(const string &str);
 #ifdef EXTDEVMGR_USB_PASS_THROUGH
     sptr<IUsbHostInterface> usbInterface_ = nullptr;

@@ -68,7 +68,7 @@ void UsbBusExtension::SetUsbInferface(sptr<IUsbInterface> iusb)
 }
 #endif // EXTDEVMGR_USB_PASS_THROUGH
 
-void UsbBusExtension::SetUsbDdk(sptr<V1_1::IUsbDdk> iUsbDdk)
+void UsbBusExtension::SetUsbDdk(sptr<V1_2::IUsbDdk> iUsbDdk)
 {
     this->iUsbDdk_ = iUsbDdk;
 }
@@ -81,7 +81,7 @@ BusType UsbBusExtension::GetBusType()
 shared_ptr<IDriverChangeCallback> UsbBusExtension::AcquireDriverChangeCallback()
 {
     if (this->iUsbDdk_ == nullptr) {
-        this->iUsbDdk_ = V1_1::IUsbDdk::Get();
+        this->iUsbDdk_ = V1_2::IUsbDdk::Get();
         if (this->iUsbDdk_ == nullptr) {
             EDM_LOGE(MODULE_BUS_USB, "driver get IUsbDdk error");
             return nullptr;
@@ -120,7 +120,7 @@ int32_t UsbBusExtension::SetDevChangeCallback(shared_ptr<IDevChangeCallback> dev
 #endif // EXTDEVMGR_USB_PASS_THROUGH
 
     if (this->iUsbDdk_ == nullptr) {
-        this->iUsbDdk_ = V1_1::IUsbDdk::Get();
+        this->iUsbDdk_ = V1_2::IUsbDdk::Get();
         if (this->iUsbDdk_ == nullptr) {
             EDM_LOGE(MODULE_BUS_USB,  "get IUsbDdk error");
             return EDM_ERR_INVALID_OBJECT;

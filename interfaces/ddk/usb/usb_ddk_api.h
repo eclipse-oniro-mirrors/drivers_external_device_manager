@@ -257,6 +257,42 @@ void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap);
  * @since 16
  */
 int32_t OH_Usb_GetDevices(struct Usb_DeviceArray *devices);
+
+/**
+ * @brief Performs a USB control transfer. The direction of the transfer is inferred from the bmRequestType field of\n
+ * the setup packet.
+ *
+ * @permission ohos.permission.ACCESS_DDK_USB
+ * @param deviceID An ID for the device to communicate with.
+ * @param setupPacket Configuration parameters for the setup packet in control transfer requests.
+ * @param data A suitably-sized data buffer for either input or output based on the direction bits with bmRequestType.
+ * @param timeout Timeout (in milliseconds) that this function should wait before giving up due to no response being\n
+ * received. For an unlimited timeout, use value 0.
+ * @return on success, the number of bytes actually transferred.
+ *         {@link USB_DDK_NO_PERM} Permission authentication failed.
+ *         {@link USB_DDK_INVALID_OPERATION} DDK Service not initialized. Please invoke OH_Usb_Init to complete the\n
+ *         initialization process first.
+ *         {@link USB_DDK_INVALID_PARAMETER} The setupPacket or data parameters are invalid.
+ *         {@link USB_DDK_TIMEOUT} The control transfer timed out.
+ *         {@link USB_DDK_IO_FAILED} Control transfer request I/O exception.
+ * @since 26.0.0
+ */
+int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequestSetup *setupPacket, uint8_t *data,
+    uint32_t timeout);
+
+/**
+ * @brief Query and return the list of non-root hubs.
+ *
+ * @permission ohos.permission.ACCESS_DDK_USB
+ * @param nonRootHub Returns the list of queried non-root hubs.
+ * @return {@link USB_DDK_SUCCESS} Query operation successful.
+ *         {@link USB_DDK_NO_PERM} Permission authentication failed.
+ *         {@link USB_DDK_INVALID_OPERATION} DDK Service not initialized. Please invode OH_Usb_Init to complete the\n
+ *         initialization process first.
+ *         {@link USB_DDK_INVALID_PARAMETER} The parameter nonRootHub is null.
+ * @since 26.0.0
+ */
+int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub);
 /** @} */
 #ifdef __cplusplus
 }
