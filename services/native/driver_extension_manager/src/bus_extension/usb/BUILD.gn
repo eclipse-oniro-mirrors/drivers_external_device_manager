@@ -42,6 +42,8 @@ ohos_shared_library("driver_extension_usb_bus") {
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.2",
+    "hdf_core:libhdi_base",
+    "hdf_core:libpub_utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
