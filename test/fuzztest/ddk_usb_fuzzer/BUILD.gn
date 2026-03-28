@@ -33,7 +33,9 @@ ohos_fuzztest("UsbDdkFuzzTest") {
   
   external_deps = [
     "c_utils:utils",
-    "drivers_interface_usb:libusb_ddk_proxy_1.0",
+    "drivers_interface_usb:libusb_ddk_proxy_1.2",
+    "hdf_core:libhdi_base",
+    "hdf_core:libhdf_utils",
     "hilog:libhilog",
   ]
   

@@ -28,8 +28,7 @@ bool FuzzUsbControlTransfer(const uint8_t *data, size_t size)
     }
     
     uint64_t deviceId = *reinterpret_cast<const uint64_t*>(data);
-    const UsbControlRequestSetup* setup = 
-        reinterpret_cast<const UsbControlRequestSetup*>(data + sizeof(uint64_t));
+    const UsbControlRequestSetup* setup = reinterpret_cast<const UsbControlRequestSetup*>(data + sizeof(uint64_t));
     uint32_t timeout = *reinterpret_cast<const uint32_t*>(
         data + sizeof(uint64_t) + sizeof(UsbControlRequestSetup));
     
@@ -47,8 +46,7 @@ bool FuzzUsbGetNonRootHubs(const uint8_t *data, size_t size)
     hubArray.num = 0;
     
     int32_t ret = OH_Usb_GetNonRootHubs(&hubArray);
-    EDM_LOGD(MODULE_USB_DDK, "FuzzUsbGetNonRootHubs result: %{public}d, num: %{public}u", 
-             ret, hubArray.num);
+    EDM_LOGD(MODULE_USB_DDK, "FuzzUsbGetNonRootHubs result: %{public}d, num: %{public}u", ret, hubArray.num);
     
     delete[] hubArray.nonRootHubIds;
     return true;
