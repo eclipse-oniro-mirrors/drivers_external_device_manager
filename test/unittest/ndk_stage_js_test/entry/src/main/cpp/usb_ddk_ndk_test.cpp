@@ -1245,7 +1245,6 @@ static napi_value UsbControlTransferFour(napi_env env, napi_callback_info info)
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     uint64_t deviceId = PARAM_1;
-    struct UsbControlRequestSetup setup;
     uint8_t data[USB_DDK_TEST_BUF_SIZE] = {PARAM_0};
     int32_t returnValue = OH_Usb_ControlTransfer(deviceId, nullptr, data, g_timeout);
     OH_Usb_Release();

@@ -1201,7 +1201,7 @@ export default function usbDdkNdkJsTest() {
         console.info("Test USB deviceId = " + deviceId);
         const ret = usbDdkNdkTest.usbControlTransferOne(deviceId);
         console.info("Test Result testUsbControlTransfer001 : " + ret);
-        expect(ret).assertGreater(0);
+        expect(ret).assertEqual(0x0012);
         done();
       } catch (err) {
         console.error(TAG, `testUsbControlTransfer001 failed, message is ${err.message}`);
@@ -1220,7 +1220,7 @@ export default function usbDdkNdkJsTest() {
       try {
         const ret = usbDdkNdkTest.usbControlTransferTwo();
         console.info("Test Result testUsbControlTransfer002 : " + ret);
-        expect(ret).assertLess(0);
+        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
         done();
       } catch (err) {
         console.error(TAG, `testUsbControlTransfer002 failed, message is ${err.message}`);
@@ -1277,7 +1277,7 @@ export default function usbDdkNdkJsTest() {
       try {
         const ret = usbDdkNdkTest.usbControlTransferFive();
         console.info("Test Result testUsbControlTransfer005 : " + ret);
-        expect(ret).assertLess(0);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
         done();
       } catch (err) {
         console.error(TAG, `testUsbControlTransfer005 failed, message is ${err.message}`);
