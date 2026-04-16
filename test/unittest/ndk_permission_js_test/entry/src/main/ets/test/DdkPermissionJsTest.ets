@@ -410,6 +410,44 @@ export default function DdkPermissionJsTest() {
     });
 
     /**
+     * @tc.name       : testUsbGetNonRootHubs001
+     * @tc.desc       : OH_Usb_GetDevices Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbGetNonRootHubs001', 0, async (done: Function) => {
+      console.info('----------------------testUsbGetNonRootHubs001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbGetNonRootHubs(deviceId);
+        console.info("Test Result testUsbGetNonRootHubs001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbGetNonRootHubs001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer001
+     * @tc.desc       : OH_Usb_GetDevices Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer001', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer001---------------------------');
+      try {
+        const ret = ddkPermissionTest.usbControlTransfer(deviceId);
+        console.info("Test Result testUsbControlTransfer001 : " + ret);
+        expect(ret).assertEqual(DDK_ERR_NOPERM);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
      * @tc.name       : testhidCreateDevice001
      * @tc.desc       : OH_Hid_CreateDevice Interface testing
      * @tc.type       : Function

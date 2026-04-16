@@ -34,6 +34,7 @@ constexpr int32_t DESCRIPTOR_TYPE_STRING = 3;
 constexpr int32_t DESCRIPTOR_VALUE_START_OFFSET = 2;
 constexpr int32_t HALF = 2;
 constexpr uint8_t USB_CLASS_HUB = 0x09;
+constexpr uint8_t ROOT_HUB_DEV_ADDR = 0x01;
 
 static string ToDeviceDesc(const UsbDev& usbDev, const UsbDevDescLite& desc)
 {
@@ -181,8 +182,8 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
         return ret;
     }
 
-    if (deviceDescriptor.bDeviceClass == USB_CLASS_HUB) {
-        EDM_LOGW(MODULE_BUS_USB, "USB device class is HUB, not supported");
+    if (deviceDescriptor.bDeviceClass == USB_CLASS_HUB && usbDev.devAddr == ROOT_HUB_DEV_ADDR) {
+        EDM_LOGW(MODULE_BUS_USB, "USB device is root HUB, not supported");
         (void)this->iusb_->CloseDevice(usbDev);
         return EDM_OK;
     }

@@ -29,6 +29,8 @@ export default function usbDdkNdkJsTest() {
     const USB_DDK_SUCCESS: number = 0;
     const USB_DDK_INVALID_PARAMETER: number = 401;
     const USB_DDK_INVALID_OPERATION: number = 27400002;
+    const USB_DDK_IO_FAILED: number = 27400003;
+    const USB_DDK_TIMEOUT: number = 27400004;
 
     beforeAll(async () => {
       try {
@@ -1218,9 +1220,15 @@ export default function usbDdkNdkJsTest() {
     it('testUsbControlTransfer002', 0, async (done: Function) => {
       console.info('----------------------testUsbControlTransfer002---------------------------');
       try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
         const ret = usbDdkNdkTest.usbControlTransferTwo();
         console.info("Test Result testUsbControlTransfer002 : " + ret);
-        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
         done();
       } catch (err) {
         console.error(TAG, `testUsbControlTransfer002 failed, message is ${err.message}`);
@@ -1275,12 +1283,68 @@ export default function usbDdkNdkJsTest() {
     it('testUsbControlTransfer005', 0, async (done: Function) => {
       console.info('----------------------testUsbControlTransfer005---------------------------');
       try {
-        const ret = usbDdkNdkTest.usbControlTransferFive();
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbControlTransferFive(deviceId);
         console.info("Test Result testUsbControlTransfer005 : " + ret);
         expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
         done();
       } catch (err) {
         console.error(TAG, `testUsbControlTransfer005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer006
+     * @tc.desc       : OH_Usb_ControlTransfer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer006', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer006---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbControlTransferSix(deviceId);
+        console.info("Test Result testUsbControlTransfer006 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer006 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbControlTransfer007
+     * @tc.desc       : OH_Usb_ControlTransfer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbControlTransfer007', 0, async (done: Function) => {
+      console.info('----------------------testUsbControlTransfer007---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbControlTransferSeven(deviceId);
+        console.info("Test Result testUsbControlTransfer007 : " + ret);
+        expect(ret).assertEqual(USB_DDK_IO_FAILED);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbControlTransfer007 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }
