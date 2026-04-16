@@ -417,7 +417,7 @@ export default function DdkPermissionJsTest() {
     it('testUsbGetNonRootHubs001', 0, async (done: Function) => {
       console.info('----------------------testUsbGetNonRootHubs001---------------------------');
       try {
-        const ret = ddkPermissionTest.UsbGetNonRootHubs(deviceId);
+        const ret = ddkPermissionTest.usbGetNonRootHubs(deviceId);
         console.info("Test Result testUsbGetNonRootHubs001 : " + ret);
         expect(ret).assertEqual(DDK_ERR_NOPERM);
         done();
@@ -436,7 +436,7 @@ export default function DdkPermissionJsTest() {
     it('testUsbControlTransfer001', 0, async (done: Function) => {
       console.info('----------------------testUsbControlTransfer001---------------------------');
       try {
-        const ret = ddkPermissionTest.UsbControlTransfer(deviceId);
+        const ret = ddkPermissionTest.usbControlTransfer(deviceId);
         console.info("Test Result testUsbControlTransfer001 : " + ret);
         expect(ret).assertEqual(DDK_ERR_NOPERM);
         done();

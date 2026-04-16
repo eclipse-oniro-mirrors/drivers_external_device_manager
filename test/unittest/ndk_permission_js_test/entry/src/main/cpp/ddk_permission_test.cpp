@@ -190,7 +190,7 @@ static napi_value UsbGetNonRootHubs(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, usbInitReturnValue == USB_DDK_NO_PERM, "OH_Usb_Init failed, no permission");
     struct Usb_NonRootHubArray hubArray;
     hubArray.nonRootHubIds = new uint64_t[MAX_USB_DEVICE_NUM];
-    int32_t returnValue = OH_Usb_GetDevices(&hubArray);
+    int32_t returnValue = OH_Usb_GetNonRootHubs(&hubArray);
     OH_Usb_Release();
     delete[] hubArray.nonRootHubIds;
     napi_value result = nullptr;
@@ -200,9 +200,12 @@ static napi_value UsbGetNonRootHubs(napi_env env, napi_callback_info info)
 
 static napi_value UsbControlTransfer(napi_env env, napi_callback_info info)
 {
+    int32_t usbInitReturnValue = OH_Usb_Init();
+    NAPI_ASSERT(env, usbInitReturnValue == USB_DDK_NO_PERM, "OH_Usb_Init failed, no permission");
     struct UsbControlRequestSetup setup;
     uint8_t strDesc[2] = {0};
     int32_t returnValue = OH_Usb_ControlTransfer(0, &setup, strDesc, 0);
+    OH_Usb_Release();
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;

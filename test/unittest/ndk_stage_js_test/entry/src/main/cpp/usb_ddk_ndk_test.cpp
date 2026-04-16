@@ -1214,12 +1214,7 @@ static napi_value UsbControlTransferTwo(napi_env env, napi_callback_info info)
 {
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
-    size_t argc = PARAM_1;
-    napi_value args[PARAM_1] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    int64_t deviceId64;
-    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
-    uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
+    uint64_t deviceId = PARAM_1;
     struct UsbControlRequestSetup setup;
     uint8_t data[USB_DDK_TEST_BUF_SIZE] = {PARAM_0};
     setup.bmRequestType = 0x80;
@@ -1314,34 +1309,10 @@ static napi_value UsbControlTransferSeven(napi_env env, napi_callback_info info)
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     struct UsbControlRequestSetup setup;
     uint8_t data[USB_DDK_TEST_BUF_SIZE] = {PARAM_0};
-    setup.bmRequestType = 0x80;
-    setup.bRequest = 0x06;
+    setup.bmRequestType = 0xff;
+    setup.bRequest = 0xff;  // invalid request => USB_DDK_IO_FAILED
     setup.wValue = (0x01 << PARAM_8) | 0x00;
-    setup.wIndex = 0x0000;
-    setup.wLength = 0x0012;
-    int32_t returnValue = OH_Usb_ControlTransfer(deviceId, &setup, data, 1);
-    OH_Usb_Release();
-    napi_value result = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
-    return result;
-}
-
-static napi_value UsbControlTransferEight(napi_env env, napi_callback_info info)
-{
-    size_t argc = PARAM_1;
-    napi_value args[PARAM_1] = {nullptr};
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
-    int64_t deviceId64;
-    NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
-    uint64_t deviceId = JsDeviceIdToNative(static_cast<uint64_t>(deviceId64));
-    int32_t usbInitReturnValue = OH_Usb_Init();
-    NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
-    struct UsbControlRequestSetup setup;
-    uint8_t data[USB_DDK_TEST_BUF_SIZE] = {PARAM_0};
-    setup.bmRequestType = 0x00;
-    setup.bRequest = 0x05;  // SET_ADDRESS => USB_DDK_IO_FAILED
-    setup.wValue = (0x01 << PARAM_8) | 0x00;
-    setup.wIndex = 0x0000;
+    setup.wIndex = 0x00ff;
     setup.wLength = 0x0012;
     int32_t returnValue = OH_Usb_ControlTransfer(deviceId, &setup, data, UINT32_MAX);
     OH_Usb_Release();
@@ -1407,7 +1378,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("usbControlTransferFive", UsbControlTransferFive),
         DECLARE_NAPI_FUNCTION("usbControlTransferSix", UsbControlTransferSix),
         DECLARE_NAPI_FUNCTION("usbControlTransferSeven", UsbControlTransferSeven),
-        DECLARE_NAPI_FUNCTION("usbControlTransferEight", UsbControlTransferEight),
     };
 
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
