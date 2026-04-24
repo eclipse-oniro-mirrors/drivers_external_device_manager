@@ -41,9 +41,7 @@ export default class DriverExtensionAbility {
         let p = this.onConnect(want);
         if (p instanceof Promise) {
             this.isOnConnectAsync = true;
-            return waitForCompletion(async () => {
-                return await(p as Promise<rpc.RemoteObject>);
-            });
+            return (p as Promise<rpc.RemoteObject>).awaitSync();
         } else {
             this.isOnConnectAsync = false;
             return p;
@@ -53,10 +51,9 @@ export default class DriverExtensionAbility {
         let p = this.onDisconnect(want);
         if (p instanceof Promise) {
             this.isOnDisconnectAsync = true;
-            return waitForCompletion(async ()=> {
-                return await(p as Promise<void>);
-            })
-            
+            (p as Promise<void>).awaitSync();
+            return;
+
         } else {
             this.isOnDisconnectAsync = false;
             return;
