@@ -108,7 +108,9 @@ private:
     std::unique_ptr<NapiAsyncTask> CreateEmptyAsyncTask(napi_env env, napi_value lastParam, napi_value* result)
     {
         napi_valuetype type = napi_undefined;
-        napi_typeof(env, lastParam, &type);
+        if (lastParam != nullptr) {
+            napi_typeof(env, lastParam, &type);
+        }
         if (lastParam == nullptr || type != napi_function) {
             napi_deferred nativeDeferred = nullptr;
             napi_create_promise(env, &nativeDeferred, result);
