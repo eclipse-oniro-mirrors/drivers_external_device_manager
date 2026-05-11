@@ -65,6 +65,11 @@ taihe_shared_library("device_manager_taihe_native") {
     "ipc:rpc_taihe",
     "runtime_core:ani",
   ]
+
+  if (extdevmgr_feature_metrics_enable) {
+    defines += [ "EDM_MANAGER_METRICS_ENABLE" ]
+    external_deps += [ "api_metrics:histogrammanager" ]
+  }
 }
 
 generate_static_abc("device_manager_abc") {

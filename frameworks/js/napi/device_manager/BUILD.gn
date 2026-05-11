@@ -33,6 +33,12 @@ ohos_shared_library("devicemanager_napi") {
     "ipc:ipc_single",
     "napi:ace_napi",
   ]
+
+  if (extdevmgr_feature_metrics_enable) {
+    defines += [ "EDM_MANAGER_METRICS_ENABLE" ]
+    external_deps += [ "api_metrics:histogrammanager" ]
+  }
+
   cflags_cc = [
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",

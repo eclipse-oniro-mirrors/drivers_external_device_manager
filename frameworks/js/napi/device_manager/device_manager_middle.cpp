@@ -26,6 +26,7 @@
 #include "napi_remote_object.h"
 #include "device_manager_middle.h"
 #include "edm_errors.h"
+#include "ext_dev_api_metrics.h"
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -419,6 +420,7 @@ static napi_value ConvertToJsDriverInfo(napi_env& env, std::shared_ptr<DriverInf
 static napi_value QueryDevices(napi_env env, napi_callback_info info)
 {
     EDM_LOGI(MODULE_DEV_MGR, "queryDevices start");
+    ExtDevApiMetrics metrics("queryDevices");
     size_t argc = PARAM_COUNT_1;
     napi_value argv[PARAM_COUNT_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
@@ -433,8 +435,10 @@ static napi_value QueryDevices(napi_env env, napi_callback_info info)
     UsbErrCode retCode = g_edmClient.QueryDevice(busType, devices);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "queryDevice: no permission");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION);
             ThrowErr(env, SERVICE_EXCEPTION, "Query device service fail");
         }
         return nullptr;
@@ -470,22 +474,26 @@ static bool ParseDeviceId(const napi_env& env, const napi_value& value, uint64_t
 
 static napi_value BindDevice(napi_env env, napi_callback_info info)
 {
+    ExtDevApiMetrics metrics("bindDevice");
     size_t argc = PARAM_COUNT_3;
     napi_value argv[PARAM_COUNT_3] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_2) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "bindDevice parameter count not match");
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
         return nullptr;
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter bindDevice:%{public}016" PRIX64, deviceId);
 
     if (!IsMatchType(env, argv[1], napi_function)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "onDisconnect param is error");
         return nullptr;
     }
@@ -494,8 +502,10 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION);
             ThrowErr(env, SERVICE_EXCEPTION, "bindDevice service failed");
         }
         return nullptr;
@@ -503,6 +513,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
 
     sptr<AsyncData> data = new (std::nothrow) AsyncData {};
     if (data == nullptr) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "malloc callback data fail");
         return nullptr;
     }
@@ -522,16 +533,19 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
 
 static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 {
+    ExtDevApiMetrics metrics("unbindDevice");
     size_t argc = PARAM_COUNT_2;
     napi_value argv[PARAM_COUNT_2] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_1) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "Param count error");
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
         return nullptr;
     }
@@ -540,8 +554,10 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
     UsbErrCode retCode = g_edmClient.UnBindDevice(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "unbindDevice: no permission");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION);
             ThrowErr(env, SERVICE_EXCEPTION, "unbindDevice service failed");
         }
         return nullptr;
@@ -549,6 +565,7 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.find(deviceId) == g_callbackMap.end()) {
+        metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "Unbind callback does not exist");
         return nullptr;
     }
@@ -565,22 +582,26 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 
 static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 {
+    ExtDevApiMetrics metrics("bindDriverWithDeviceId");
     size_t argc = PARAM_COUNT_3;
     napi_value argv[PARAM_COUNT_3] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_2) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "bindDriver parameter count not match");
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
         return nullptr;
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter bindDriver:%{public}016" PRIX64, deviceId);
 
     if (!IsMatchType(env, argv[1], napi_function)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "onDisconnect param is error");
         return nullptr;
     }
@@ -589,11 +610,14 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
+            metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
             ThrowErr(env, SERVICE_NOT_ALLOW_ACCESS,
                 "bindDriver: The driver service does not allow any client to bind.");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver service failed");
         }
         return nullptr;
@@ -601,6 +625,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
     sptr<AsyncData> data = new (std::nothrow) AsyncData {};
     if (data == nullptr) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "malloc callback data fail");
         return nullptr;
     }
@@ -620,16 +645,19 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
 static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info)
 {
+    ExtDevApiMetrics metrics("unbindDriverWithDeviceId");
     size_t argc = PARAM_COUNT_2;
     napi_value argv[PARAM_COUNT_2] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_1) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "Param count error");
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
         return nullptr;
     }
@@ -638,10 +666,13 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
     UsbErrCode retCode = g_edmClient.UnbindDriverWithDeviceId(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "unbindDriver: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_BOUND) {
+            metrics.SetErrorCode(SERVICE_NOT_BOUND);
             ThrowErr(env, SERVICE_NOT_BOUND, "unbindDriver: there is no binding relationship");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             ThrowErr(env, SERVICE_EXCEPTION_NEW, "unbindDriver service failed");
         }
         return nullptr;
@@ -649,6 +680,7 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
 
     std::lock_guard<std::mutex> mapLock(mapMutex);
     if (g_callbackMap.find(deviceId) == g_callbackMap.end()) {
+        metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "Unbind callback does not exist");
         return nullptr;
     }
@@ -666,11 +698,13 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
 static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_COUNT_1;
+    ExtDevApiMetrics metrics("queryDeviceInfo");
     napi_value argv[PARAM_COUNT_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
 
     uint64_t deviceId = 0;
     if (argc > PARAM_COUNT_0 && !ParseDeviceId(env, argv[0], &deviceId)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "deviceId type error");
         return nullptr;
     }
@@ -683,10 +717,13 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
     }
     if (ret != UsbErrCode::EDM_OK) {
         if (ret == UsbErrCode::EDM_ERR_NOT_SYSTEM_APP) {
+            metrics.SetErrorCode(PERMISSION_NOT_SYSTEM_APP);
             ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDeviceInfo: none system app");
         } else if (ret == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "queryDeviceInfo: no permission");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query device info service fail");
         }
         return nullptr;
@@ -705,9 +742,11 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
 {
     size_t argc = PARAM_COUNT_1;
+    ExtDevApiMetrics metrics("queryDriverInfo");
     napi_value argv[PARAM_COUNT_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc > PARAM_COUNT_0 && !IsMatchType(env, argv[0], napi_string)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         ThrowErr(env, PARAMETER_ERROR, "driverUid type is invalid");
         return nullptr;
     }
@@ -728,10 +767,13 @@ static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
 
     if (ret != UsbErrCode::EDM_OK) {
         if (ret == UsbErrCode::EDM_ERR_NOT_SYSTEM_APP) {
+            metrics.SetErrorCode(PERMISSION_NOT_SYSTEM_APP);
             ThrowErr(env, PERMISSION_NOT_SYSTEM_APP, "queryDriverInfo: none system app");
         } else if (ret == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "queryDriverInfo: no permission");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             ThrowErr(env, SERVICE_EXCEPTION_NEW, "Query driver info service fail");
         }
         return nullptr;

@@ -23,6 +23,7 @@
 #include "stdexcept"
 #include "taihe/runtime.hpp"
 #include "edm_errors.h"
+#include "ext_dev_api_metrics.h"
 
 using namespace taihe;
 using namespace ohos::driver::deviceManager;
@@ -350,6 +351,7 @@ static ohos::driver::deviceManager::DeviceUnion ConvertToDevice(std::shared_ptr<
 array<ohos::driver::deviceManager::DeviceUnion> queryDevices(optional_view<int32_t> busType)
 {
     EDM_LOGI(MODULE_DEV_MGR, "queryDevices start");
+    ExtDevApiMetrics metrics("queryDevices");
     bool isBusTypeSet = busType.has_value();
     int32_t busTypeVal = isBusTypeSet ? busType.value() : OHOS::ExternalDeviceManager::BusType::BUS_TYPE_USB;
     EDM_LOGI(MODULE_DEV_MGR, "bus type is %{public}d", busTypeVal);
@@ -358,9 +360,11 @@ array<ohos::driver::deviceManager::DeviceUnion> queryDevices(optional_view<int32
     UsbErrCode retCode = g_edmClient.QueryDevice(busTypeVal, devices);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             set_business_error(PERMISSION_DENIED, "queryDevice: no permission");
         } else {
             EDM_LOGD(MODULE_DEV_MGR, "queryDevices error code: %{public}d", retCode);
+            metrics.SetErrorCode(SERVICE_EXCEPTION);
             set_business_error(SERVICE_EXCEPTION, "Query device service fail");
         }
         return array<ohos::driver::deviceManager::DeviceUnion>(resultArray);
@@ -428,6 +432,7 @@ static ohos::driver::deviceManager::DeviceInfoUnion ConvertToDeviceInfo(std::sha
 array<ohos::driver::deviceManager::DeviceInfoUnion> queryDeviceInfo(optional_view<uint64_t> deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "queryDeviceInfo start");
+    ExtDevApiMetrics metrics("queryDeviceInfo");
     std::vector<std::shared_ptr<DeviceInfoData>> deviceInfos;
     int32_t ret;
     bool isDeviceIdSet = deviceId.has_value();
@@ -439,10 +444,13 @@ array<ohos::driver::deviceManager::DeviceInfoUnion> queryDeviceInfo(optional_vie
     std::vector<ohos::driver::deviceManager::DeviceInfoUnion> resultArray;
     if (ret != UsbErrCode::EDM_OK) {
         if (ret == UsbErrCode::EDM_ERR_NOT_SYSTEM_APP) {
+            metrics.SetErrorCode(PERMISSION_NOT_SYSTEM_APP);
             set_business_error(PERMISSION_NOT_SYSTEM_APP, "queryDeviceInfo: none system app");
         } else if (ret == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             set_business_error(PERMISSION_DENIED, "queryDeviceInfo: no permission");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             set_business_error(SERVICE_EXCEPTION_NEW, "Query device info service fail");
         }
         return array<ohos::driver::deviceManager::DeviceInfoUnion>(resultArray);
@@ -504,6 +512,7 @@ static ohos::driver::deviceManager::DriverInfoUnion ConvertToDriverInfo(std::sha
 array<ohos::driver::deviceManager::DriverInfoUnion> queryDriverInfo(optional_view<string> driverUid)
 {
     EDM_LOGD(MODULE_DEV_MGR, "queryDriverInfo start");
+    ExtDevApiMetrics metrics("queryDriverInfo");
     std::vector<std::shared_ptr<DriverInfoData>> driverInfos;
     std::vector<ohos::driver::deviceManager::DriverInfoUnion> resultArray;
     int32_t ret;
@@ -516,10 +525,13 @@ array<ohos::driver::deviceManager::DriverInfoUnion> queryDriverInfo(optional_vie
 
     if (ret != UsbErrCode::EDM_OK) {
         if (ret == UsbErrCode::EDM_ERR_NOT_SYSTEM_APP) {
+            metrics.SetErrorCode(PERMISSION_NOT_SYSTEM_APP);
             set_business_error(PERMISSION_NOT_SYSTEM_APP, "queryDriverInfo: none system app");
         } else if (ret == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             set_business_error(PERMISSION_DENIED, "queryDriverInfo: no permission");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             set_business_error(SERVICE_EXCEPTION_NEW, "Query driver info service fail");
         }
         return array<ohos::driver::deviceManager::DriverInfoUnion>(resultArray);
@@ -534,14 +546,18 @@ array<ohos::driver::deviceManager::DriverInfoUnion> queryDriverInfo(optional_vie
 ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long deviceId, ani_object onDisconnect)
 {
     EDM_LOGI(MODULE_DEV_MGR, "Enter BindDriverWithDeviceIdSync:%{public}016" PRIX64, static_cast<uint64_t>(deviceId));
+    ExtDevApiMetrics metrics("bindDriverWithDeviceId");
     std::lock_guard<std::mutex> mapLock(mapMutex);
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
+            metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
             set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             set_business_error(SERVICE_EXCEPTION_NEW, "bindDevice service failed");
         }
         return nullptr;
@@ -554,6 +570,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
     }
     sptr<AsyncData> data = new (std::nothrow) AsyncData(vm, env);
     if (data == nullptr) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         set_business_error(PARAMETER_ERROR, "malloc callback data fail");
         return nullptr;
     }
@@ -561,6 +578,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
     data->env = env;
     data->deviceId = static_cast<uint64_t>(deviceId);
     if (ANI_OK != env->GlobalReference_Create(reinterpret_cast<ani_ref>(onDisconnect), &data->onDisconnect)) {
+        metrics.SetErrorCode(PARAMETER_ERROR);
         set_business_error(PARAMETER_ERROR, "GlobalReference_Create failed");
         return nullptr;
     }
@@ -574,13 +592,17 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
 int32_t UnbindDriverWithDeviceIdSync(uint64_t deviceId)
 {
     EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDevice:%{public}016" PRIX64, deviceId);
+    ExtDevApiMetrics metrics("unbindDriverWithDeviceId");
     UsbErrCode retCode = g_edmClient.UnbindDriverWithDeviceId(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
             set_business_error(PERMISSION_DENIED, "unbindDevice: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_BOUND) {
+            metrics.SetErrorCode(SERVICE_NOT_BOUND);
             set_business_error(SERVICE_NOT_BOUND, "unbindDevice: there is no binding relationship");
         } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
             set_business_error(SERVICE_EXCEPTION_NEW, "unbindDevice service failed");
         }
     }
