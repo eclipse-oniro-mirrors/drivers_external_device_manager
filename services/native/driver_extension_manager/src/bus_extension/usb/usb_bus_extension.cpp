@@ -154,7 +154,7 @@ bool UsbBusExtension::MatchDriver(const DriverInfo &driver, const DeviceInfo &de
 
     if (device.GetBusType() != BusType::BUS_TYPE_USB) {
         EDM_LOGW(MODULE_BUS_USB,  "deivce type not support %d != %d",
-            (uint32_t)device.GetBusType(), (uint32_t)BusType::BUS_TYPE_USB);
+            static_cast<uint32_t>(device.GetBusType()), static_cast<uint32_t>(BusType::BUS_TYPE_USB));
         return false;
     }
     const UsbDriverInfo *usbDriverInfo = static_cast<const UsbDriverInfo *>(driver.GetInfoExt().get());
