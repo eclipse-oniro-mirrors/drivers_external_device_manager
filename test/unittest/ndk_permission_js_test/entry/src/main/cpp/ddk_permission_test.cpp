@@ -317,10 +317,10 @@ static napi_value HidOpen(napi_env env, napi_callback_info info)
 
     int64_t deviceId64;
     NAPI_CALL(env, napi_get_value_int64(env, args[PARAM_0], &deviceId64));
-    int32_t deviceId32 = (int32_t)(deviceId64 >> THIRTYTWO_BIT);
+    int32_t deviceId32 = static_cast<int32_t>(deviceId64 >> THIRTYTWO_BIT);
     uint32_t busNum = ((deviceId32 & BUS_NUM_MASK) >> SIXTEEN_BIT);
     uint32_t deviceNum = deviceId32 & DEVICE_NUM_MASK;
-    uint64_t deviceId = ((uint64_t)busNum << THIRTYTWO_BIT) | deviceNum;
+    uint64_t deviceId = (static_cast<uint64_t>(busNum) << THIRTYTWO_BIT) | deviceNum;
 
     struct Hid_DeviceHandle *dev = nullptr;
     int32_t returnValue = OH_Hid_Open(deviceId, 0, &dev);

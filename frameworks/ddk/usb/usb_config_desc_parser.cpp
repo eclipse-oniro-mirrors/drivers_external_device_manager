@@ -495,7 +495,7 @@ static int32_t ParseConfiguration(UsbDdkConfigDescriptor &config, const uint8_t 
         USB_DDK_CONFIG_DESCRIPTOR_TYPE, (uint8_t *)&config, sizeof(struct UsbConfigDescriptor), buffer, size);
     if ((config.configDescriptor.bDescriptorType != USB_DDK_DT_CONFIG) ||
         (config.configDescriptor.bLength < USB_DDK_DT_CONFIG_SIZE) ||
-        (config.configDescriptor.bLength > (uint8_t)size) ||
+        (config.configDescriptor.bLength > static_cast<uint8_t>(size)) ||
         (config.configDescriptor.bNumInterfaces > USB_MAXINTERFACES)) {
         EDM_LOGE(MODULE_USB_DDK, "invalid descriptor: type = 0x%{public}x, length = %{public}u",
             config.configDescriptor.bDescriptorType, config.configDescriptor.bLength);
@@ -512,7 +512,7 @@ static int32_t ParseConfiguration(UsbDdkConfigDescriptor &config, const uint8_t 
         return USB_DDK_INVALID_OPERATION;
     }
 
-    config.configDescriptor.bNumInterfaces = (uint8_t)intfNum;
+    config.configDescriptor.bNumInterfaces = static_cast<uint8_t>(intfNum);
     config.interface = new UsbDdkInterface[intfNum];
     if (config.interface == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "new UsbDdkInterface failed");
