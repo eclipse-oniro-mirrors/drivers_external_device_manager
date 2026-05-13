@@ -47,6 +47,7 @@ taihe_shared_library("device_manager_taihe_native") {
 
   sources += [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",
+    "${utils_path}/src/ext_dev_api_metrics.cpp",
     "src/ani_constructor.cpp",
     "src/ohos.driver.deviceManager.impl.cpp",
   ]

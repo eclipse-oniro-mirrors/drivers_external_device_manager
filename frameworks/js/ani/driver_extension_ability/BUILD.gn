@@ -34,7 +34,10 @@ ohos_shared_library("driverextension_ani") {
     "$taihe_path/driver_extension_context/include",
     "${utils_path}/include/",
   ]
-  sources = [ "native/src/ani_driver_extension.cpp" ]
+  sources = [
+    "native/src/ani_driver_extension.cpp",
+    "${utils_path}/src/ext_dev_api_metrics.cpp",
+  ]
 
   deps = [
     "$native_path/driver_extension:driver_extension",
