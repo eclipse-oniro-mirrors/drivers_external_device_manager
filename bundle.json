@@ -31,6 +31,7 @@
         "ram": "8000KB",
         "deps": {
             "components": [
+                "api_metrics",
                 "hilog",
                 "init",
                 "ipc",
