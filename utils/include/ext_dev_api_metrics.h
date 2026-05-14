@@ -26,8 +26,6 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 
-constexpr int32_t EDM_METRICS_UNKNOWN_ERROR = 99999999;
-
 class ExtDevApiMetrics {
 public:
     ExtDevApiMetrics(std::string name);

@@ -21,6 +21,7 @@ ohos_shared_library("devicemanager_napi") {
   ]
 
   include_dirs = [
+    "${utils_path}/",
     "${utils_path}/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
   ]

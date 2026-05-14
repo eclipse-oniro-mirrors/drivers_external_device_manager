@@ -40,6 +40,8 @@ constexpr size_t ARGC_ONE = 1;
 namespace {
 using namespace OHOS::ExternalDeviceManager;
 
+constexpr int32_t EDM_METRICS_UNKNOWN_ERROR = 99999999;
+
 static void ParseToExtDevEvent(const std::shared_ptr<AppExecFwk::AbilityInfo> &abilityInfo,
     const std::shared_ptr<ExtDevEvent> &extDevEvent)
 {

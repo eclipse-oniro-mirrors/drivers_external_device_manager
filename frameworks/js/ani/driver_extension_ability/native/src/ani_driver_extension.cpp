@@ -27,6 +27,9 @@
 constexpr const char* DRIVER_EXTENSION_CLS = "@ohos.app.ability.DriverExtensionAbility.DriverExtensionAbility";
 namespace OHOS {
 namespace AbilityRuntime {
+
+constexpr int32_t EDM_METRICS_UNKNOWN_ERROR = 99999999;
+
 using namespace OHOS::AppExecFwk;
 AniDriverExtension::AniDriverExtension(ETSRuntime& aniRuntime) : stsRuntime_(aniRuntime) {}
 AniDriverExtension::~AniDriverExtension() = default;

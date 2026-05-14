@@ -41,6 +41,7 @@ taihe_shared_library("device_manager_taihe_native") {
   sources = get_target_outputs(":run_taihe")
   include_dirs = [
     "./include/",
+    "${utils_path}/",
     "${utils_path}/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
   ]

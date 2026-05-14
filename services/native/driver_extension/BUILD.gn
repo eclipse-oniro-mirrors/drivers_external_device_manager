@@ -26,6 +26,7 @@ ohos_shared_library("driver_extension") {
     "include",
     "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
+    "${utils_path}/",
     "${utils_path}/include/",
   ]
 
