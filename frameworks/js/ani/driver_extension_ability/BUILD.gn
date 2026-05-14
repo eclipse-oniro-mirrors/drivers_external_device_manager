@@ -32,7 +32,6 @@ ohos_shared_library("driverextension_ani") {
     "native/include",
     "$native_path/driver_extension/include",
     "$taihe_path/driver_extension_context/include",
-    "${utils_path}/include/",
     "${utils_path}/",
   ]
   sources = [
