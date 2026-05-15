@@ -41,12 +41,14 @@ taihe_shared_library("device_manager_taihe_native") {
   sources = get_target_outputs(":run_taihe")
   include_dirs = [
     "./include/",
+    "${utils_path}/",
     "${utils_path}/include/",
     "${ext_mgr_path}/interfaces/innerkits/",
   ]
 
   sources += [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",
+    "${utils_path}/src/ext_dev_api_metrics.cpp",
     "src/ani_constructor.cpp",
     "src/ohos.driver.deviceManager.impl.cpp",
   ]
@@ -65,6 +67,13 @@ taihe_shared_library("device_manager_taihe_native") {
     "ipc:rpc_taihe",
     "runtime_core:ani",
   ]
+
+  defines = []
+
+  if (extdevmgr_feature_metrics_enable) {
+    defines += [ "EDM_MANAGER_METRICS_ENABLE" ]
+    external_deps += [ "api_metrics:histogrammanager" ]
+  }
 }
 
 generate_static_abc("device_manager_abc") {

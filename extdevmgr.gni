@@ -18,4 +18,9 @@ ext_mgr_native_part_name = "external_device_manager"
 
 declare_args() {
   extdevmgr_usb_pass_through = true
+  extdevmgr_feature_metrics_enable = false
+}
+
+if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
+  extdevmgr_feature_metrics_enable = true
 }

@@ -22,10 +22,14 @@
 #include "hitrace_meter.h"
 #include "hilog_wrapper.h"
 #include "ets_native_reference.h"
+#include "ext_dev_api_metrics.h"
 
 constexpr const char* DRIVER_EXTENSION_CLS = "@ohos.app.ability.DriverExtensionAbility.DriverExtensionAbility";
 namespace OHOS {
 namespace AbilityRuntime {
+
+constexpr int32_t EDM_METRICS_UNKNOWN_ERROR = 99999999;
+
 using namespace OHOS::AppExecFwk;
 AniDriverExtension::AniDriverExtension(ETSRuntime& aniRuntime) : stsRuntime_(aniRuntime) {}
 AniDriverExtension::~AniDriverExtension() = default;
@@ -110,15 +114,18 @@ void AniDriverExtension::BindContext(ani_env *env, std::shared_ptr<AAFwk::Want> 
 void AniDriverExtension::OnStart(const AAFwk::Want &want)
 {
     HILOG_DEBUG("%{public}s begin.", __func__);
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onInit");
     Extension::OnStart(want);
     auto env = stsRuntime_.GetAniEnv();
     if (env == nullptr) {
         HILOG_ERROR("Failed to get env");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     ani_object ani_want = OHOS::AppExecFwk::WrapWant(env, want);
     if (ANI_OK != env->Object_CallMethodByName_Void(stsObj_->aniObj, "onInit", nullptr, ani_want)) {
         HILOG_ERROR("Failed to call the method: onInit");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     HILOG_DEBUG("%{public}s end.", __func__);
@@ -127,14 +134,17 @@ void AniDriverExtension::OnStart(const AAFwk::Want &want)
 void AniDriverExtension::OnStop()
 {
     HILOG_DEBUG("%{public}s begin.", __func__);
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onRelease");
     DriverExtension::OnStop();
     auto env = stsRuntime_.GetAniEnv();
     if (env == nullptr) {
         HILOG_ERROR("Failed to get env");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     if (ANI_OK != env->Object_CallMethodByName_Void(stsObj_->aniObj, "onRelease", nullptr)) {
         HILOG_ERROR("Failed to call the method: onRelease");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     HILOG_DEBUG("%{public}s end.", __func__);
@@ -143,21 +153,25 @@ void AniDriverExtension::OnStop()
 sptr<IRemoteObject> AniDriverExtension::OnConnect(const AAFwk::Want &want)
 {
     HITRACE_METER_NAME(HITRACE_TAG_ABILITY_MANAGER, __PRETTY_FUNCTION__);
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onConnect");
     HILOG_DEBUG("%{public}s begin.", __func__);
     Extension::OnConnect(want);
     ani_ref result = nullptr;
     auto env = stsRuntime_.GetAniEnv();
     if (env == nullptr) {
         HILOG_ERROR("Failed to get env");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return nullptr;
     }
     ani_object ani_want = OHOS::AppExecFwk::WrapWant(env, want);
     if (ANI_OK != env->Object_CallMethodByName_Ref(stsObj_->aniObj, "onConnect", nullptr, &result, ani_want)) {
         HILOG_ERROR("Failed to call the method: onConnect");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return nullptr;
     }
     if (result == nullptr) {
         HILOG_ERROR("Failed to call onConnect : result == nullptr");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return nullptr;
     }
     HILOG_DEBUG("%{public}s end.", __func__);
@@ -165,6 +179,7 @@ sptr<IRemoteObject> AniDriverExtension::OnConnect(const AAFwk::Want &want)
     auto remoteObj = AniGetNativeRemoteObject(env, obj);
     if (remoteObj == nullptr) {
         HILOG_ERROR("remoteObj null");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return nullptr;
     }
     HILOG_DEBUG("end");
@@ -222,16 +237,19 @@ sptr<IRemoteObject> AniDriverExtension::OnConnect(const AAFwk::Want &want,
 void AniDriverExtension::OnDisconnect(const AAFwk::Want &want)
 {
     HITRACE_METER_NAME(HITRACE_TAG_ABILITY_MANAGER, __PRETTY_FUNCTION__);
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onDisconnect");
     HILOG_DEBUG("%{public}s begin.", __func__);
     Extension::OnDisconnect(want);
     auto env = stsRuntime_.GetAniEnv();
     if (env == nullptr) {
         HILOG_ERROR("Failed to get env");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     ani_object ani_want = OHOS::AppExecFwk::WrapWant(env, want);
     if (ANI_OK != env->Object_CallMethodByName_Void(stsObj_->aniObj, "callOnDisConnect", nullptr, ani_want)) {
         HILOG_ERROR("Failed to call the method: onDisconnect");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     HILOG_DEBUG("%{public}s end.", __func__);
@@ -302,21 +320,25 @@ ani_array AniDriverExtension::ToAniStringList(ani_env *env,
 void AniDriverExtension::Dump(const std::vector<std::string> &params, std::vector<std::string> &info)
 {
     HILOG_DEBUG("%{public}s begin.", __func__);
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onDump");
     Extension::Dump(params, info);
     auto env = stsRuntime_.GetAniEnv();
     if (env == nullptr) {
         HILOG_ERROR("Failed to get env");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     ani_array params_ = ToAniStringList(env, params, params.size());
     ani_ref result = nullptr;
     if (ANI_OK != env->Object_CallMethodByName_Ref(stsObj_->aniObj, "onDump", nullptr, &result, params_)) {
         HILOG_ERROR("Failed to call the method: Dump");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     ani_double length;
     if (ANI_OK != env->Object_GetPropertyByName_Double(static_cast<ani_object>(result), "length", &length)) {
         HILOG_ERROR("Object_GetPropertyByName_Double length Failed");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     for (int i = 0; i < int(length); i++) {
@@ -324,6 +346,7 @@ void AniDriverExtension::Dump(const std::vector<std::string> &params, std::vecto
         if (ANI_OK != env->Object_CallMethodByName_Ref(static_cast<ani_object>(result), "$_get",
             "i:Y", &stringEntryRef, (ani_int)i)) {
             HILOG_ERROR("Object_CallMethodByName_Ref get Failed");
+            metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
             return;
         }
         info.push_back(AniStringUtils::ToStd(env, static_cast<ani_string>(stringEntryRef)));

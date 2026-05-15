@@ -26,6 +26,7 @@ ohos_shared_library("driver_extension") {
     "include",
     "${ext_mgr_path}/interfaces/ddk/usb",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
+    "${utils_path}/",
   ]
 
   sources = [
@@ -33,6 +34,7 @@ ohos_shared_library("driver_extension") {
     "src/driver_extension_context.cpp",
     "src/js_driver_extension.cpp",
     "src/js_driver_extension_context.cpp",
+    "${utils_path}/src/ext_dev_api_metrics.cpp",
   ]
 
   deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event" ]
@@ -55,6 +57,14 @@ ohos_shared_library("driver_extension") {
     "ipc:ipc_napi",
     "napi:ace_napi",
   ]
+
+  defines = []
+
+  if (extdevmgr_feature_metrics_enable) {
+    defines += [ "EDM_MANAGER_METRICS_ENABLE" ]
+    external_deps += [ "api_metrics:histogrammanager" ]
+  }
+
   cflags_cc = [
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",

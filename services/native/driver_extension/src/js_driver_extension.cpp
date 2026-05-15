@@ -29,6 +29,7 @@
 #include "napi_common_want.h"
 #include "napi_remote_object.h"
 #include "driver_report_sys_event.h"
+#include "ext_dev_api_metrics.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
@@ -38,6 +39,8 @@ constexpr size_t ARGC_ONE = 1;
 
 namespace {
 using namespace OHOS::ExternalDeviceManager;
+
+constexpr int32_t EDM_METRICS_UNKNOWN_ERROR = 99999999;
 
 static void ParseToExtDevEvent(const std::shared_ptr<AppExecFwk::AbilityInfo> &abilityInfo,
     const std::shared_ptr<ExtDevEvent> &extDevEvent)
@@ -229,22 +232,30 @@ void JsDriverExtension::BindContext(napi_env env, napi_value obj)
 
 void JsDriverExtension::OnStart(const AAFwk::Want &want)
 {
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onInit");
     Extension::OnStart(want);
     HILOG_INFO("JsDriverExtension OnStart begin..");
     HandleScope handleScope(jsRuntime_);
     napi_env env = jsRuntime_.GetNapiEnv();
     napi_value napiWant = OHOS::AppExecFwk::WrapWant(env, want);
     napi_value argv[] = {napiWant};
-    CallObjectMethod(env, "onInit", argv, ARGC_ONE);
+    napi_value result = CallObjectMethod(env, "onInit", argv, ARGC_ONE);
+    if (result == nullptr) {
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
+    }
     HILOG_INFO("%{public}s end.", __func__);
 }
 
 void JsDriverExtension::OnStop()
 {
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onRelease");
     DriverExtension::OnStop();
     HILOG_INFO("JsDriverExtension OnStop begin.");
     napi_env env = jsRuntime_.GetNapiEnv();
-    CallObjectMethod(env, "onRelease");
+    napi_value result = CallObjectMethod(env, "onRelease");
+    if (result == nullptr) {
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
+    }
     bool ret = ConnectionManager::GetInstance().DisconnectCaller(GetContext()->GetToken());
     if (ret) {
         ConnectionManager::GetInstance().ReportConnectionLeakEvent(getpid(), gettid());
@@ -255,12 +266,14 @@ void JsDriverExtension::OnStop()
 
 sptr<IRemoteObject> JsDriverExtension::OnConnect(const AAFwk::Want &want)
 {
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onConnect");
     HandleScope handleScope(jsRuntime_);
     napi_value result = CallOnConnect(want);
     napi_env env = jsRuntime_.GetNapiEnv();
     auto remoteObj = NAPI_ohos_rpc_getNativeRemoteObject(env, result);
     if (remoteObj == nullptr) {
         HILOG_ERROR("remoteObj nullptr.");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
     }
     return remoteObj;
 }
@@ -310,6 +323,7 @@ sptr<IRemoteObject> JsDriverExtension::OnConnect(const AAFwk::Want &want,
 
 void JsDriverExtension::OnDisconnect(const AAFwk::Want &want)
 {
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onDisconnect");
     HITRACE_METER_NAME(HITRACE_TAG_ABILITY_MANAGER, __PRETTY_FUNCTION__);
     Extension::OnDisconnect(want);
     HILOG_DEBUG("%{public}s begin.", __func__);
@@ -459,6 +473,7 @@ bool JsDriverExtension::CallPromise(napi_value result, AppExecFwk::AbilityTransa
 
 void JsDriverExtension::Dump(const std::vector<std::string> &params, std::vector<std::string> &info)
 {
+    OHOS::ExternalDeviceManager::ExtDevApiMetrics metrics("onDump");
     Extension::Dump(params, info);
     HILOG_INFO("%{public}s called.", __func__);
     HandleScope handleScope(jsRuntime_);
@@ -477,12 +492,14 @@ void JsDriverExtension::Dump(const std::vector<std::string> &params, std::vector
     napi_is_array(env, dumpInfo, &isArray);
     if (!isArray) {
         HILOG_ERROR("dumpInfo is not array.");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     uint32_t arrayLen = 0;
     napi_get_array_length(env, dumpInfo, &arrayLen);
     if (arrayLen <= 0) {
         HILOG_ERROR("dumpInfo array length is error.");
+        metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
         return;
     }
     for (uint32_t i = 0; i < arrayLen; i++) {
@@ -491,6 +508,7 @@ void JsDriverExtension::Dump(const std::vector<std::string> &params, std::vector
         napi_get_element(env, dumpInfo, i, &element);
         if (!ConvertFromJsValue(env, element, dumpInfoStr)) {
             HILOG_ERROR("Parse dumpInfoStr failed");
+            metrics.SetErrorCode(EDM_METRICS_UNKNOWN_ERROR);
             return;
         }
         info.push_back(dumpInfoStr);
