@@ -207,14 +207,14 @@ ErrCode DriverExtMgr::BindDriverWithDeviceId(int32_t &errorCode, uint64_t device
     }
 
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
-    unordered_set<std::string> accessibleBundles;
-    if (!ExtPermissionManager::GetPermissionValues(ACCESS_DDK_DRIVERS_PERMISSION, accessibleBundles)) {
+    unordered_set<std::string> accessibleAppIds;
+    if (!ExtPermissionManager::GetPermissionValues(ACCESS_DDK_DRIVERS_PERMISSION, accessibleAppIds)) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s failed to get permission value", __func__);
         errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
         return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
     errorCode = static_cast<int32_t>(ExtDeviceManager::GetInstance().ConnectDriverWithDeviceId(deviceId, callingTokenId,
-        accessibleBundles, connectCallback));
+        accessibleAppIds, connectCallback));
     return static_cast<int32_t>(UsbErrCode::EDM_OK);
 }
 
