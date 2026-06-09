@@ -45,7 +45,7 @@ public:
         const sptr<IDriverExtMgrCallback> &connectCallback);
     int32_t DisConnectDevice(uint64_t deviceId, uint32_t callingTokenId);
     int32_t ConnectDriverWithDeviceId(uint64_t deviceId, uint32_t callingTokenId,
-        const unordered_set<std::string> &accessibleBundles, const sptr<IDriverExtMgrCallback> &connectCallback);
+        const unordered_set<std::string> &accessibleAppIds, const sptr<IDriverExtMgrCallback> &connectCallback);
     int32_t DisConnectDriverWithDeviceId(uint64_t deviceId, uint32_t callingTokenId);
     void RemoveDeviceOfDeviceMap(shared_ptr<Device> device);
     std::unordered_set<uint64_t> DeleteBundlesOfBundleInfoMap(const std::string &bundleName = "");
@@ -64,7 +64,7 @@ private:
     void UnLoadSelf(void);
     size_t GetTotalDeviceNum(void) const;
     int32_t CheckAccessPermission(const std::shared_ptr<DriverInfo> &driverInfo,
-        const unordered_set<std::string> &accessibleBundles) const;
+        const unordered_set<std::string> &accessibleAppIds) const;
     unordered_map<BusType, unordered_map<uint64_t, shared_ptr<Device>>> deviceMap_;
     unordered_map<string, unordered_set<uint64_t>> bundleMatchMap_; // driver matching table
     mutex deviceMapMutex_;

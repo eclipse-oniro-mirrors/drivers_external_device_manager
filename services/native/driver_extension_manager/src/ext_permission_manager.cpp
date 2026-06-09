@@ -77,30 +77,30 @@ uint32_t ExtPermissionManager::GetCallingTokenID()
 bool ExtPermissionManager::GetPermissionValues(const std::string &permissionName,
     std::unordered_set<std::string> &permissionValues)
 {
-    std::string bundleNames;
+    std::string appIds;
     AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    int32_t ret = AccessTokenKit::GetReqPermissionByName(callerToken, permissionName, bundleNames);
-    if (ret != 0 || bundleNames.empty()) {
+    int32_t ret = AccessTokenKit::GetReqPermissionByName(callerToken, permissionName, appIds);
+    if (ret != 0 || appIds.empty()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s GetReqPermissionByName: %{public}d", __func__, ret);
         return false;
     }
 
-    cJSON* jsonObj = cJSON_Parse(bundleNames.c_str());
+    cJSON* jsonObj = cJSON_Parse(appIds.c_str());
     if (jsonObj == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "JSON parse failed for bundleNames");
+        EDM_LOGE(MODULE_DEV_MGR, "JSON parse failed for appIds");
         return false;
     }
-    std::string keyStr = "bundleNames";
+    std::string keyStr = "appIds";
     cJSON* jsonItem = cJSON_GetObjectItem(jsonObj, keyStr.c_str());
     if (jsonItem == nullptr || !cJSON_IsString(jsonItem)) {
         EDM_LOGE(MODULE_DEV_MGR, "value is not string, key:%{public}s", keyStr.c_str());
         cJSON_Delete(jsonObj);
         return false;
     }
-    std::istringstream bundleNamesStram(jsonItem->valuestring);
-    std::string bundleName;
-    while (std::getline(bundleNamesStram, bundleName, ',')) {
-        permissionValues.insert(Trim(bundleName));
+    std::istringstream appIdsStram(jsonItem->valuestring);
+    std::string appId;
+    while (std::getline(appIdsStram, appId, ',')) {
+        permissionValues.insert(Trim(appId));
     }
     cJSON_Delete(jsonObj);
     return !permissionValues.empty();

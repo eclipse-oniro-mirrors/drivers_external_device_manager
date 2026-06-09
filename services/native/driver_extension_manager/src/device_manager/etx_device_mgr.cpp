@@ -23,6 +23,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "bundle_update_callback.h"
+#include "bundlemgr/bundle_mgr_proxy.h"
 #include "driver_report_sys_event.h"
 
 namespace OHOS {
@@ -580,7 +581,7 @@ int32_t ExtDeviceManager::DisConnectDevice(uint64_t deviceId, uint32_t callingTo
 }
 
 int32_t ExtDeviceManager::ConnectDriverWithDeviceId(uint64_t deviceId, uint32_t callingTokenId,
-    const unordered_set<std::string> &accessibleBundles, const sptr<IDriverExtMgrCallback> &connectCallback)
+    const unordered_set<std::string> &accessibleAppIds, const sptr<IDriverExtMgrCallback> &connectCallback)
 {
     // find device by deviceId
     lock_guard<mutex> lock(deviceMapMutex_);
@@ -590,7 +591,7 @@ int32_t ExtDeviceManager::ConnectDriverWithDeviceId(uint64_t deviceId, uint32_t 
         return EDM_NOK;
     }
 
-    int32_t ret = CheckAccessPermission(device->GetDriverInfo(), accessibleBundles);
+    int32_t ret = CheckAccessPermission(device->GetDriverInfo(), accessibleAppIds);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to bind device verification with %{public}016" PRIX64 " deviceId", deviceId);
         auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_BIND);
@@ -646,7 +647,7 @@ void ExtDeviceManager::SetDriverChangeCallback(shared_ptr<IDriverChangeCallback>
 }
 
 int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo> &driverInfo,
-    const unordered_set<std::string> &accessibleBundles) const
+    const unordered_set<std::string> &accessibleAppIds) const
 {
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "the device does not have a matching driver");
@@ -657,9 +658,27 @@ int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo
         return EDM_ERR_SERVICE_NOT_ALLOW_ACCESS;
     }
 
+    auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgrProxy == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "Failed to get system ability mgr.");
+        return EDM_NOK;
+    }
+    auto bundleMgrProxy = samgrProxy->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (bundleMgrProxy == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "Failed to Get BMS SA.");
+        return EDM_NOK;
+    }
+    auto bundleManager = iface_cast<AppExecFwk::IBundleMgr>(bundleMgrProxy);
+    if (bundleManager == nullptr) {
+        EDM_LOGE(MODULE_DEV_MGR, "Failed to get bundle manager");
+        return EDM_NOK;
+    }
+
     std::string bundleName = driverInfo->GetBundleName();
-    auto driverIter = accessibleBundles.find(bundleName);
-    if (driverIter == accessibleBundles.end()) {
+    int32_t userId = driverInfo->GetUserId();
+    std::string appId = bundleManager->GetAppIdByBundleName(bundleName, userId);
+    auto driverIter = accessibleAppIds.find(appId);
+    if (driverIter == accessibleAppIds.end()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s does not exist in ohos.permission.ACCESS_DDK_DRIVERS configuration",
             bundleName.c_str());
         return EDM_ERR_NO_PERM;
