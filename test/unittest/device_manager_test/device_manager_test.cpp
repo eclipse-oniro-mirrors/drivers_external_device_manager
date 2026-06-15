@@ -309,7 +309,7 @@ HWTEST_F(DeviceManagerTest, ConnectDeviceTest2, TestSize.Level1)
 
     device->driverInfo_->bundleName_ = "testBundleName1";
     ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId, accessibleBundles, connectCallback);
-    ASSERT_NE(ret, EDM_ERR_NO_PERM);
+    ASSERT_EQ(ret, EDM_ERR_NO_PERM);
 }
 
 HWTEST_F(DeviceManagerTest, ConnectDeviceTest3, TestSize.Level1)
@@ -427,15 +427,15 @@ HWTEST_F(DeviceManagerTest, DisConnectDeviceTest1, TestSize.Level1)
 
     device->driverInfo_->accessAllowed_ = true;
     ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId1, accessibleBundles, connectCallback);
-    ASSERT_EQ(ret, EDM_OK);
-    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+    ASSERT_EQ(ret, EDM_ERR_NO_PERM);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 0);
 
     const uint32_t tokenId2 = 2;
     ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId2);
     ASSERT_EQ(ret, EDM_ERR_SERVICE_NOT_BOUND);
 
     ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId1);
-    ASSERT_NE(ret, EDM_ERR_SERVICE_NOT_BOUND);
+    ASSERT_EQ(ret, EDM_ERR_SERVICE_NOT_BOUND);
 }
 
 HWTEST_F(DeviceManagerTest, DisConnectDeviceTest2, TestSize.Level1)
@@ -475,8 +475,8 @@ HWTEST_F(DeviceManagerTest, DisConnectDeviceTest2, TestSize.Level1)
 
     device->driverInfo_->accessAllowed_ = true;
     ret = extMgr.ConnectDriverWithDeviceId(deviceId, tokenId1, accessibleBundles, connectCallback);
-    ASSERT_EQ(ret, EDM_OK);
-    ASSERT_EQ(device->boundCallerInfos_.size(), 1);
+    ASSERT_EQ(ret, EDM_ERR_NO_PERM);
+    ASSERT_EQ(device->boundCallerInfos_.size(), 0);
 
     const uint32_t tokenId2 = 2;
     ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId2);
