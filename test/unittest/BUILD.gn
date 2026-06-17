@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -126,24 +126,28 @@ ohos_unittest("driver_extension_manager_client_test") {
   ]
 }
 
-group("external_device_manager_ut") {
-  testonly = true
-  deps = [
-    ":bus_extension_usb_test",
-    ":driver_extension_manager_client_test",
-    ":drivers_pkg_manager_test",
-    "ddk_base_test:ddk_base_test",
-    "ddk_scsi_test:ddk_scsi_test",
-    "ddk_usb_serial_test:ddk_usb_serial_test",
-    "device_manager_js_test:DeviceManagerJsTest",
-    "device_manager_test:device_manager_test",
-    "device_notification_test:event_config_test",
-    "device_notification_test:notification_locale_test",
-    "device_notification_test:notification_peripheral_test",
-    "driver_extension_context_test:driver_extension_context_test",
-    "ndk_permission_js_test:NdkPermissionJsTest",
-    "ndk_stage_js_test:NdkStageJsTest",
-    "permission_js_test:PermissionJsTest",
-    "systemapi_js_test:SystemApiJsTest",
-  ]
+if (external_device_manager_enable_service) {
+  group("external_device_manager_ut") {
+    testonly = true
+    deps = [
+      ":bus_extension_usb_test",
+      ":driver_extension_manager_client_test",
+      ":drivers_pkg_manager_test",
+      "ddk_base_test:ddk_base_test",
+      "ddk_scsi_test:ddk_scsi_test",
+      "ddk_usb_serial_test:ddk_usb_serial_test",
+      "device_manager_js_test:DeviceManagerJsTest",
+      "device_manager_test:device_manager_test",
+      "device_notification_test:event_config_test",
+      "device_notification_test:notification_locale_test",
+      "device_notification_test:notification_peripheral_test",
+      "driver_extension_context_test:driver_extension_context_test",
+      "ndk_permission_js_test:NdkPermissionJsTest",
+      "ndk_stage_js_test:NdkStageJsTest",
+      "permission_js_test:PermissionJsTest",
+      "systemapi_js_test:SystemApiJsTest",
+    ]
+  }
+} else {
+  group("external_device_manager_ut") {}
 }
