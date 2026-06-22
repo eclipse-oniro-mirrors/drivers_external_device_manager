@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,6 +36,7 @@ static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
 std::mutex g_mutex;
 
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
 constexpr uint32_t MAX_HID_DEVICE_PROP_LEN = 7;
 constexpr uint32_t MAX_HID_EVENT_TYPES_LEN = 5;
@@ -44,6 +45,7 @@ constexpr uint32_t MAX_HID_ABS_LEN = 26;
 constexpr uint32_t MAX_HID_REL_BITS_LEN = 13;
 constexpr uint32_t MAX_HID_MISC_EVENT_LEN = 6;
 constexpr uint32_t MAX_NAME_LENGTH = 80;
+#endif
 
 }
 #ifdef __cplusplus
@@ -67,19 +69,28 @@ struct Hid_DeviceHandle {
     }
 } __attribute__ ((aligned(8)));
 
-Hid_DeviceHandle *NewHidDeviceHandle()
+Hid_DeviceHandle *NewHidDeviceHandle(void)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     return new Hid_DeviceHandle;
+#else
+    return nullptr;
+#endif
 }
 
 void DeleteHidDeviceHandle(Hid_DeviceHandle **dev)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (*dev != nullptr) {
         delete *dev;
         *dev = nullptr;
     }
+#else
+    (void)dev;
+#endif
 }
 
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 static int32_t TransToHidCode(int32_t ret)
 {
     if (ret >= OH_IPC_ERROR_CODE_BASE && ret <= OH_IPC_ERROR_CODE_MAX) {
@@ -87,6 +98,7 @@ static int32_t TransToHidCode(int32_t ret)
     }
     return ret;
 }
+#endif
 
 class HidDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
@@ -106,6 +118,7 @@ void HidDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
     }
 }
 
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 static uint32_t GetRealDeviceId(int32_t deviceId)
 {
     if (g_deviceMap.find(deviceId) != g_deviceMap.end()) {
@@ -116,7 +129,7 @@ static uint32_t GetRealDeviceId(int32_t deviceId)
     return static_cast<uint32_t>(deviceId);
 }
 
-static int32_t Connect()
+static int32_t Connect(void)
 {
     if (g_ddk == nullptr) {
         g_ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
@@ -249,9 +262,11 @@ static bool CheckHidDevice(Hid_Device *hidDevice)
     }
     return true;
 }
+#endif
 
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
@@ -302,10 +317,14 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
         return ret;
     }
     return CacheDeviceInfor(tempDevice, tempEventProperties, deviceId);
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
@@ -338,10 +357,14 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
         return ret;
     }
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
@@ -356,10 +379,14 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 
     g_deviceMap.erase(deviceId);
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_Init(void)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     g_ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "get ddk failed");
@@ -367,10 +394,14 @@ int32_t OH_Hid_Init(void)
     }
 
     return TransToHidCode(g_ddk->Init());
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_Release(void)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "ddk is null");
         return HID_DDK_INIT_ERROR;
@@ -379,10 +410,14 @@ int32_t OH_Hid_Release(void)
     g_ddk.clear();
 
     return TransToHidCode(ret);
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle **dev)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -399,10 +434,14 @@ int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle 
     }
 
     return TransToHidCode(g_ddk->Open(deviceId, interfaceIndex, (*dev)->impl));
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -416,10 +455,14 @@ int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
     DeleteHidDeviceHandle(dev);
 
     return TransToHidCode(ret);
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint32_t *bytesWritten)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -439,10 +482,14 @@ int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint
         return ret;
     }
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, int timeout, uint32_t *bytesRead)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -467,10 +514,14 @@ int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSiz
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint32_t *bytesRead)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -496,10 +547,14 @@ int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -515,10 +570,14 @@ int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
         dev->impl.nonBlock = nonBlock;
     }
     return TransToHidCode(ret);
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -541,10 +600,14 @@ int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
     rawDevInfo->product = tmpRawDevInfo.product;
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -569,10 +632,14 @@ int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -597,10 +664,14 @@ int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bu
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -625,10 +696,14 @@ int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t buf
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, const uint8_t *data, uint32_t length)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -648,10 +723,14 @@ int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, cons
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8_t *data, uint32_t bufSize)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -678,10 +757,14 @@ int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 int32_t OH_Hid_GetReportDescriptor(Hid_DeviceHandle *dev, uint8_t *buf, uint32_t bufSize, uint32_t *bytesRead)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
@@ -707,6 +790,9 @@ int32_t OH_Hid_GetReportDescriptor(Hid_DeviceHandle *dev, uint8_t *buf, uint32_t
     }
 
     return HID_DDK_SUCCESS;
+#else
+    return HID_DDK_INVALID_OPERATION;
+#endif
 }
 
 #ifdef __cplusplus

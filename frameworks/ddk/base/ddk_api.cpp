@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,7 @@ std::mutex g_mutex;
 
 DDK_RetCode OH_DDK_CreateAshmem(const uint8_t *name, uint32_t size, DDK_Ashmem **ashmem)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (name == nullptr) {
         EDM_LOGE(MODULE_BASE_DDK, "invalid buffer name!");
         return DDK_INVALID_PARAMETER;
@@ -63,8 +64,12 @@ DDK_RetCode OH_DDK_CreateAshmem(const uint8_t *name, uint32_t size, DDK_Ashmem *
     std::lock_guard<std::mutex> lock(g_mutex);
     g_shareMemoryMap[ddkAshmem->ashmemFd] = shareMemory;
     return DDK_SUCCESS;
+#else
+    return DDK_INVALID_OPERATION;
+#endif
 }
 
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 static DDK_RetCode AshmemValidityCheck(DDK_Ashmem *ashmem)
 {
     if (ashmem == nullptr) {
@@ -73,20 +78,22 @@ static DDK_RetCode AshmemValidityCheck(DDK_Ashmem *ashmem)
     }
 
     if (g_shareMemoryMap.find(ashmem->ashmemFd) == g_shareMemoryMap.end()) {
-        EDM_LOGE(MODULE_BASE_DDK, "ashmemFd dose not exist! error fd = %{public}d", ashmem->ashmemFd);
+        EDM_LOGE(MODULE_BASE_DDK, "ashmemFd does not exist! error fd = %{public}d", ashmem->ashmemFd);
         return DDK_FAILURE;
     }
 
     if (g_shareMemoryMap[ashmem->ashmemFd] == nullptr) {
-        EDM_LOGE(MODULE_BASE_DDK, "share memory dose not create!");
+        EDM_LOGE(MODULE_BASE_DDK, "share memory does not create!");
         return DDK_FAILURE;
     }
 
     return DDK_SUCCESS;
 }
+#endif
 
 DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
     if (ret != DDK_SUCCESS) {
@@ -108,10 +115,14 @@ DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
     ashmem->address =
         reinterpret_cast<const uint8_t *>(g_shareMemoryMap[ashmem->ashmemFd]->ReadFromAshmem(ashmem->size, 0));
     return DDK_SUCCESS;
+#else
+    return DDK_INVALID_OPERATION;
+#endif
 }
 
 DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
     if (ret != DDK_SUCCESS) {
@@ -122,10 +133,14 @@ DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
     g_shareMemoryMap[ashmem->ashmemFd]->UnmapAshmem();
     ashmem->address = nullptr;
     return DDK_SUCCESS;
+#else
+    return DDK_INVALID_OPERATION;
+#endif
 }
 
 DDK_RetCode OH_DDK_DestroyAshmem(DDK_Ashmem *ashmem)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
     if (ret != DDK_SUCCESS) {
@@ -138,4 +153,7 @@ DDK_RetCode OH_DDK_DestroyAshmem(DDK_Ashmem *ashmem)
     delete ashmem;
     ashmem = nullptr;
     return DDK_SUCCESS;
+#else
+    return DDK_INVALID_OPERATION;
+#endif
 }

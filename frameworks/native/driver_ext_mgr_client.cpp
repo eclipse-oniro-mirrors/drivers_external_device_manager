@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,11 @@
 #include <system_ability_definition.h>
 
 #include "hilog_wrapper.h"
+
+#ifndef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+static constexpr int32_t SERVICE_EXCEPTION = 22900001;
+#endif
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 DriverExtMgrClient::DriverExtMgrClient() {}
@@ -33,6 +38,7 @@ DriverExtMgrClient::~DriverExtMgrClient()
     }
 }
 
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 static UsbErrCode ProxyRetTranslate(int32_t proxyRet)
 {
     UsbErrCode ret = UsbErrCode::EDM_OK;
@@ -49,9 +55,11 @@ static UsbErrCode ProxyRetTranslate(int32_t proxyRet)
     }
     return ret;
 }
+#endif
 
-UsbErrCode DriverExtMgrClient::Connect()
+UsbErrCode DriverExtMgrClient::Connect(void)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(mutex_);
     if (proxy_ != nullptr) {
         return UsbErrCode::EDM_OK;
@@ -87,10 +95,16 @@ UsbErrCode DriverExtMgrClient::Connect()
     }
     EDM_LOGI(MODULE_FRAMEWORK, "Connecting DriverExtMgrProxy success");
     return UsbErrCode::EDM_OK;
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 void DriverExtMgrClient::DisConnect(const wptr<IRemoteObject> &remote)
 {
+#ifndef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    (void)remote;
+#else
     std::lock_guard<std::mutex> lock(mutex_);
     if (proxy_ == nullptr) {
         return;
@@ -101,10 +115,14 @@ void DriverExtMgrClient::DisConnect(const wptr<IRemoteObject> &remote)
         serviceRemote->RemoveDeathRecipient(deathRecipient_);
         proxy_ = nullptr;
     }
+#endif
 }
 
 void DriverExtMgrClient::DriverExtMgrDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)
 {
+#ifndef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    (void)remote;
+#else
     if (remote == nullptr) {
         EDM_LOGF(MODULE_FRAMEWORK, "OnRemoteDied failed, remote is nullptr");
         return;
@@ -112,10 +130,12 @@ void DriverExtMgrClient::DriverExtMgrDeathRecipient::OnRemoteDied(const wptr<IRe
 
     DriverExtMgrClient::GetInstance().DisConnect(remote);
     EDM_LOGF(MODULE_FRAMEWORK, "received death notification of remote and finished to disconnect");
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::QueryDevice(uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -125,10 +145,14 @@ UsbErrCode DriverExtMgrClient::QueryDevice(uint32_t busType, std::vector<std::sh
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::BindDevice(uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -139,10 +163,14 @@ UsbErrCode DriverExtMgrClient::BindDevice(uint64_t deviceId, const sptr<IDriverE
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -152,11 +180,15 @@ UsbErrCode DriverExtMgrClient::UnBindDevice(uint64_t deviceId)
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::BindDriverWithDeviceId(uint64_t deviceId,
     const sptr<IDriverExtMgrCallback> &connectCallback)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -166,10 +198,14 @@ UsbErrCode DriverExtMgrClient::BindDriverWithDeviceId(uint64_t deviceId,
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::UnbindDriverWithDeviceId(uint64_t deviceId)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -179,10 +215,14 @@ UsbErrCode DriverExtMgrClient::UnbindDriverWithDeviceId(uint64_t deviceId)
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::QueryDeviceInfo(std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -192,11 +232,15 @@ UsbErrCode DriverExtMgrClient::QueryDeviceInfo(std::vector<std::shared_ptr<Devic
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::QueryDeviceInfo(const uint64_t deviceId,
     std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -206,10 +250,14 @@ UsbErrCode DriverExtMgrClient::QueryDeviceInfo(const uint64_t deviceId,
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::QueryDriverInfo(std::vector<std::shared_ptr<DriverInfoData>> &driverInfos)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -219,11 +267,15 @@ UsbErrCode DriverExtMgrClient::QueryDriverInfo(std::vector<std::shared_ptr<Drive
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::QueryDriverInfo(const std::string &driverUid,
     std::vector<std::shared_ptr<DriverInfoData>> &driverInfos)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -233,10 +285,14 @@ UsbErrCode DriverExtMgrClient::QueryDriverInfo(const std::string &driverUid,
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 UsbErrCode DriverExtMgrClient::NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName)
 {
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (Connect() != UsbErrCode::EDM_OK) {
         return UsbErrCode::EDM_ERR_CONNECTION_FAILED;
     }
@@ -248,6 +304,9 @@ UsbErrCode DriverExtMgrClient::NotifyUsbPeripheralFault(const std::string &domai
         return ProxyRetTranslate(proxyRet);
     }
     return static_cast<UsbErrCode>(ret);
+#else
+    return static_cast<UsbErrCode>(SERVICE_EXCEPTION);
+#endif
 }
 
 } // namespace ExternalDeviceManager
