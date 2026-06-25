@@ -89,26 +89,26 @@ bool USBDevice::Marshalling(Parcel &parcel) const
 
 DeviceData* DeviceData::Unmarshalling(Parcel &data)
 {
-    auto device = new (std::nothrow) DeviceData();
-    if (device == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to create DeviceData object");
+    BusType busType = static_cast<BusType>(data.ReadUint32());
+    if (busType == BusType::BUS_TYPE_INVALID) {
+        EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}u", busType);
         return nullptr;
     }
-    uint32_t tempBusType = 0;
-    if (!data.ReadUint32(tempBusType) || static_cast<BusType>(tempBusType) != BusType::BUS_TYPE_USB) {
-        EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}d", tempBusType);
-        delete device;
-        return nullptr;
-    }
-    device->busType = static_cast<BusType>(tempBusType);
-
-    if (!data.ReadUint64(device->deviceId) || !data.ReadString(device->descripton)) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to read DeviceData fields");
-        delete device;
-        return nullptr;
+    DeviceData *deviceData = nullptr;
+    switch (busType) {
+        case BusType::BUS_TYPE_USB: {
+            deviceData = USBDevice::Unmarshalling(data);
+            break;
+        }
+        default:
+            break;
     }
 
-    return device;
+    if (deviceData != nullptr) {
+        deviceData->busType = busType;
+    }
+
+    return deviceData;
 }
 
 std::string DeviceData::Dump()
@@ -122,30 +122,16 @@ std::string DeviceData::Dump()
 
 USBDevice* USBDevice::Unmarshalling(Parcel &data)
 {
-    auto usbDevice = new (std::nothrow) USBDevice();
+    USBDevice *usbDevice = new (std::nothrow) USBDevice;
     if (usbDevice == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to create USBDevice object");
-        return nullptr;
-    }
-    DeviceData *deviceData = nullptr;
-    deviceData = DeviceData::Unmarshalling(data);
-    if (!deviceData) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to unmarshal base DeviceData");
-        delete usbDevice;
-        delete deviceData;
+        EDM_LOGE(MODULE_DEV_MGR, "failed to create usbDevice");
         return nullptr;
     }
 
-    usbDevice->busType = deviceData->busType;
-    usbDevice->deviceId = deviceData->deviceId;
-    usbDevice->descripton = deviceData->descripton;
-    delete deviceData;
-
-    if (!data.ReadUint16(usbDevice->productId) || !data.ReadUint16(usbDevice->vendorId)) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to read USBDevice fields");
-        delete usbDevice;
-        return nullptr;
-    }
+    usbDevice->deviceId = data.ReadUint64();
+    usbDevice->descripton = data.ReadString();
+    usbDevice->productId = data.ReadUint16();
+    usbDevice->vendorId = data.ReadUint16();
 
     return usbDevice;
 }
@@ -245,37 +231,44 @@ bool USBInterfaceDesc::Marshalling(Parcel &parcel) const
 
 DeviceInfoData* DeviceInfoData::Unmarshalling(Parcel &data)
 {
-    auto deviceInfoData = new (std::nothrow) DeviceInfoData();
-    if (deviceInfoData == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to create DeviceData object");
-        delete deviceInfoData;
-        return nullptr;
-    }
-    if (!data.ReadUint64(deviceInfoData->deviceId)) {
+    uint64_t deviceId = 0;
+    if (!data.ReadUint64(deviceId)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read deviceId");
-        delete deviceInfoData;
         return nullptr;
     }
 
-    BusType busType = DeviceInfoData::GetBusTypeByDeviceId(deviceInfoData->deviceId);
-    if (busType != BusType::BUS_TYPE_USB) {
+    BusType busType = DeviceInfoData::GetBusTypeByDeviceId(deviceId);
+    if (busType <= BusType::BUS_TYPE_INVALID || busType >= BusType::BUS_TYPE_MAX) {
         EDM_LOGE(MODULE_DEV_MGR, "invalid busType:%{public}u", busType);
-        delete deviceInfoData;
         return nullptr;
     }
 
-    if (!data.ReadBool(deviceInfoData->isDriverMatched)) {
+    bool isDriverMatched = false;
+    if (!data.ReadBool(isDriverMatched)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read isDriverMatched");
-        delete deviceInfoData;
         return nullptr;
     }
 
-    if (!data.ReadString(deviceInfoData->driverUid)) {
+    std::string driverUid = "";
+    if (!data.ReadString(driverUid)) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to read driverUid");
-        delete deviceInfoData;
         return nullptr;
     }
 
+    DeviceInfoData *deviceInfoData = nullptr;
+    switch (busType) {
+        case BusType::BUS_TYPE_USB: {
+            deviceInfoData = USBDeviceInfoData::Unmarshalling(data);
+            break;
+        }
+        default:
+            break;
+    }
+    if (deviceInfoData != nullptr) {
+        deviceInfoData->deviceId = deviceId;
+        deviceInfoData->isDriverMatched = isDriverMatched;
+        deviceInfoData->driverUid = driverUid;
+    }
     return deviceInfoData;
 }
 
@@ -291,30 +284,8 @@ USBDeviceInfoData* USBDeviceInfoData::Unmarshalling(Parcel &data)
         EDM_LOGE(MODULE_DEV_MGR, "failed to create usbDeviceInfo");
         return nullptr;
     }
-    DeviceInfoData *deviceInfoData = nullptr;
-    deviceInfoData = DeviceInfoData::Unmarshalling(data);
-    if (!deviceInfoData) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to unmarshal base deviceInfoData");
-        delete usbDeviceInfo;
-        delete deviceInfoData;
-        return nullptr;
-    }
-    usbDeviceInfo->deviceId = deviceInfoData->deviceId;
-    usbDeviceInfo->isDriverMatched = deviceInfoData->isDriverMatched;
-    usbDeviceInfo->driverUid = deviceInfoData->driverUid;
-    delete deviceInfoData;
-    if (!data.ReadUint16(usbDeviceInfo->productId)) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to read productId");
-        delete usbDeviceInfo;
-        return nullptr;
-    }
-
-    if (!data.ReadUint16(usbDeviceInfo->vendorId)) {
-        EDM_LOGE(MODULE_DEV_MGR, "failed to read vendorId");
-        delete usbDeviceInfo;
-        return nullptr;
-    }
-
+    usbDeviceInfo->productId = data.ReadUint16();
+    usbDeviceInfo->vendorId = data.ReadUint16();
     uint64_t interfaceDescSize = data.ReadUint64();
     if (interfaceDescSize > MAX_INTERFACE_DESC_SIZE) {
         EDM_LOGE(MODULE_DEV_MGR, "interfaceDescSize is out of range");
