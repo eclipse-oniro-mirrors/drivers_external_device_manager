@@ -60,7 +60,8 @@
                 "i18n",
                 "image_framework",
                 "runtime_core",
-                "selinux_adapter"
+                "selinux_adapter",
+                "bounds_checking_function"
             ]
         },
         "build": {
