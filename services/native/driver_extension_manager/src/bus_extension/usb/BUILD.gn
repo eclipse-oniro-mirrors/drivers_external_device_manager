@@ -12,6 +12,12 @@
 # limitations under the License.
 import("../../../../../../extdevmgr.gni")
 ohos_shared_library("driver_extension_usb_bus") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   sources = [
     "usb_bus_extension.cpp",
     "usb_dev_subscriber.cpp",

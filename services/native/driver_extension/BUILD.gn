@@ -22,6 +22,12 @@ config("ability_config") {
 }
 
 ohos_shared_library("driver_extension") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   include_dirs = [
     "include",
     "${ext_mgr_path}/interfaces/ddk/usb",
@@ -76,6 +82,12 @@ ohos_shared_library("driver_extension") {
 }
 
 ohos_shared_library("driver_extension_module") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   include_dirs = [ "include" ]
 
   sources = [ "src/driver_extension_module_loader.cpp" ]
