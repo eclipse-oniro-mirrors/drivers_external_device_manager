@@ -48,7 +48,7 @@ class AsyncData : public RefBase {
         ErrMsg unBindErrMsg;
 
         void DeleteNapiRef();
-        AsyncData(ani_vm *vm, ani_env *env): vm(vm), env(env) {}
+        AsyncData(ani_vm *vm, ani_env *env): vm(vm), env(env), onDisconnect(nullptr), bindDeferred(nullptr) {}
         ~AsyncData()
         {
             EDM_LOGE(MODULE_DEV_MGR, "Release callback data: %{public}016" PRIX64, deviceId);
