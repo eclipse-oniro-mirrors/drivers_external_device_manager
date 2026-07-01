@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -231,6 +231,7 @@ static napi_value UsbFreeConfigDescriptor(napi_env env, napi_callback_info info)
 
 static napi_value UsbClaimInterfaceOne(napi_env env, napi_callback_info info)
 {
+    OH_LOG_INFO(LOG_APP, "UsbClaimInterfaceOne enter");
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
@@ -240,14 +241,19 @@ static napi_value UsbClaimInterfaceOne(napi_env env, napi_callback_info info)
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t returnValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -272,12 +278,17 @@ static napi_value UsbClaimInterfaceThree(napi_env env, napi_callback_info info)
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t returnValue = OH_Usb_ClaimInterface(deviceId, interface, nullptr);
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -293,14 +304,19 @@ static napi_value UsbReleaseInterface(napi_env env, napi_callback_info info)
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     int32_t returnValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -316,7 +332,13 @@ static napi_value UsbSelectInterfaceSettingOne(napi_env env, napi_callback_info 
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -324,7 +346,6 @@ static napi_value UsbSelectInterfaceSettingOne(napi_env env, napi_callback_info 
     int32_t returnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, g_settingIndex);
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -340,7 +361,13 @@ static napi_value UsbSelectInterfaceSettingTwo(napi_env env, napi_callback_info 
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_OPERATION, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -349,7 +376,6 @@ static napi_value UsbSelectInterfaceSettingTwo(napi_env env, napi_callback_info 
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
     int32_t returnValue = OH_Usb_SelectInterfaceSetting(g_interfaceHandle, g_settingIndex);
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -365,7 +391,13 @@ static napi_value UsbGetCurrentInterfaceSettingOne(napi_env env, napi_callback_i
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -376,7 +408,6 @@ static napi_value UsbGetCurrentInterfaceSettingOne(napi_env env, napi_callback_i
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -392,7 +423,13 @@ static napi_value UsbGetCurrentInterfaceSettingTwo(napi_env env, napi_callback_i
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_OPERATION, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -403,7 +440,6 @@ static napi_value UsbGetCurrentInterfaceSettingTwo(napi_env env, napi_callback_i
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
     int32_t returnValue = OH_Usb_GetCurrentInterfaceSetting(g_interfaceHandle, &g_settingIndex);
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -419,7 +455,13 @@ static napi_value UsbGetCurrentInterfaceSettingThree(napi_env env, napi_callback
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -430,7 +472,6 @@ static napi_value UsbGetCurrentInterfaceSettingThree(napi_env env, napi_callback
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -446,7 +487,13 @@ static napi_value UsbSendControlReadRequestOne(napi_env env, napi_callback_info 
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -463,7 +510,6 @@ static napi_value UsbSendControlReadRequestOne(napi_env env, napi_callback_info 
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -479,7 +525,13 @@ static napi_value UsbSendControlReadRequestTwo(napi_env env, napi_callback_info 
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_OPERATION, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -491,7 +543,6 @@ static napi_value UsbSendControlReadRequestTwo(napi_env env, napi_callback_info 
     uint8_t data[USB_DDK_TEST_BUF_SIZE] = {PARAM_0};
     uint32_t dataLen = USB_DDK_TEST_BUF_SIZE;
     int32_t returnValue = OH_Usb_SendControlReadRequest(g_interfaceHandle, &setup, g_timeout, data, &dataLen);
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -507,7 +558,13 @@ static napi_value UsbSendControlReadRequestThree(napi_env env, napi_callback_inf
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -518,7 +575,6 @@ static napi_value UsbSendControlReadRequestThree(napi_env env, napi_callback_inf
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -534,7 +590,13 @@ static napi_value UsbSendControlReadRequestFour(napi_env env, napi_callback_info
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -545,7 +607,6 @@ static napi_value UsbSendControlReadRequestFour(napi_env env, napi_callback_info
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -561,7 +622,13 @@ static napi_value UsbSendControlReadRequestFive(napi_env env, napi_callback_info
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -572,7 +639,6 @@ static napi_value UsbSendControlReadRequestFive(napi_env env, napi_callback_info
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -597,11 +663,16 @@ static napi_value UsbSendControlWriteRequestOne(napi_env env, napi_callback_info
     setupW.wValue = 0x00;
     setupW.wIndex = 0x00;
     setupW.wLength = 0;
+    napi_value result = nullptr;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setupW, g_timeout, dataW, dataLen);
+    if (returnValue != USB_DDK_SUCCESS) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -617,7 +688,13 @@ static napi_value UsbSendControlWriteRequestTwo(napi_env env, napi_callback_info
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_OPERATION, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -629,7 +706,6 @@ static napi_value UsbSendControlWriteRequestTwo(napi_env env, napi_callback_info
     uint8_t data = PARAM_10;
     uint32_t dataLen = PARAM_10;
     int32_t returnValue = OH_Usb_SendControlWriteRequest(g_interfaceHandle, &setup, g_timeout, &data, dataLen);
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -645,7 +721,13 @@ static napi_value UsbSendControlWriteRequestThree(napi_env env, napi_callback_in
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -656,7 +738,6 @@ static napi_value UsbSendControlWriteRequestThree(napi_env env, napi_callback_in
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -672,7 +753,13 @@ static napi_value UsbSendControlWriteRequestFour(napi_env env, napi_callback_inf
     int32_t usbInitReturnValue = OH_Usb_Init();
     NAPI_ASSERT(env, usbInitReturnValue == PARAM_0, "OH_Usb_Init failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -683,7 +770,6 @@ static napi_value UsbSendControlWriteRequestFour(napi_env env, napi_callback_inf
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -702,7 +788,13 @@ static napi_value UsbSendPipeRequestOne(napi_env env, napi_callback_info info)
     int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     uint8_t endpoint1 = std::get<2>(source);
@@ -723,7 +815,6 @@ static napi_value UsbSendPipeRequestOne(napi_env env, napi_callback_info info)
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -837,7 +928,13 @@ static napi_value UsbSendPipeRequestFive(napi_env env, napi_callback_info info)
     struct UsbDdkConfigDescriptor *config = nullptr;
     int32_t usbGetConfigDescriptorReturnValue = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
     NAPI_ASSERT(env, usbGetConfigDescriptorReturnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
+    napi_value result = nullptr;
     auto [result1, interface1, endpoint1, maxPktSize1] = GetEndpointInfo(config);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "GetEndpointInfo failed");
     OH_Usb_FreeConfigDescriptor(config);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
@@ -853,7 +950,6 @@ static napi_value UsbSendPipeRequestFive(napi_env env, napi_callback_info info)
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -948,7 +1044,13 @@ static napi_value UsbSendPipeRequestWithAshmemOne(napi_env env, napi_callback_in
     int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_SUCCESS, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     uint8_t endpoint1 = std::get<2>(source);
@@ -972,7 +1074,6 @@ static napi_value UsbSendPipeRequestWithAshmemOne(napi_env env, napi_callback_in
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -1014,7 +1115,13 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
     int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     uint8_t endpoint1 = std::get<2>(source);
@@ -1028,7 +1135,6 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
     OH_Usb_Release();
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -1047,7 +1153,13 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
+    napi_value result = nullptr;
     bool result1 = ParseConfiguration(deviceId, source);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_OPERATION, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
     uint8_t interface = std::get<1>(source);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface, &g_interfaceHandle);
@@ -1069,7 +1181,6 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
     OH_DDK_DestroyAshmem(ashmem);
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
@@ -1090,7 +1201,13 @@ static napi_value UsbSendPipeRequestWithAshmemFive(napi_env env, napi_callback_i
     struct UsbDdkConfigDescriptor *config = nullptr;
     int32_t usbGetConfigDescriptorReturnValue = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
     NAPI_ASSERT(env, usbGetConfigDescriptorReturnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
+    napi_value result = nullptr;
     auto [result1, interface1, endpoint1, maxPktSize1] = GetEndpointInfo(config);
+    if (!result1) {
+        OH_Usb_Release();
+        NAPI_CALL(env, napi_create_int32(env, USB_DDK_INVALID_PARAMETER, &result));
+        return result;
+    }
     NAPI_ASSERT(env, result1 == true, "GetEndpointInfo failed");
     OH_Usb_FreeConfigDescriptor(config);
     int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
@@ -1109,7 +1226,6 @@ static napi_value UsbSendPipeRequestWithAshmemFive(napi_env env, napi_callback_i
     pipe.timeout = UINT32_MAX;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
     OH_DDK_DestroyAshmem(ashmem);
-    napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
     return result;
 }
