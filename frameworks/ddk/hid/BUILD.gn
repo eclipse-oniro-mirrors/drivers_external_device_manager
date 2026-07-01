@@ -29,6 +29,7 @@ ohos_shared_library("hid") {
     "hilog:libhilog",
     "ipc:ipc_capi",
     "ipc:ipc_core",
+    "bounds_checking_function:libsec_shared"
   ]
   cflags_cc = [
     "-fno-asynchronous-unwind-tables",
