@@ -231,7 +231,6 @@ static napi_value UsbFreeConfigDescriptor(napi_env env, napi_callback_info info)
 
 static napi_value UsbClaimInterfaceOne(napi_env env, napi_callback_info info)
 {
-    OH_LOG_INFO(LOG_APP, "UsbClaimInterfaceOne enter");
     size_t argc = PARAM_1;
     napi_value args[PARAM_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, args, nullptr, nullptr));
