@@ -19,6 +19,12 @@ config("drvext_manager_public_config") {
 
 if (external_device_manager_enable_service) {
   ohos_shared_library("drivers_pkg_manager") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     install_enable = true
     sources = [
       "driver_info.cpp",
