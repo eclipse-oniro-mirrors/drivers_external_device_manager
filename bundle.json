@@ -61,7 +61,8 @@
                 "image_framework",
                 "runtime_core",
                 "selinux_adapter",
-                "bounds_checking_function"
+                "bounds_checking_function",
+                "taihe_ffi_gen"
             ]
         },
         "build": {
