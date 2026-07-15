@@ -75,7 +75,7 @@ if (external_device_manager_enable_service) {
       "-fno-unwind-tables",
       "-Os",
     ]
-
+    branch_protector_ret = "pac_ret"
     sanitize = {
       cfi = true
       cfi_cross_dso = true
@@ -106,6 +106,12 @@ config("driver_extension_manager_test_public_config") {
 
 if (external_device_manager_enable_service) {
   ohos_static_library("driver_extension_manager_test") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     sources = [
       "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",
       "native/driver_extension_manager/src/driver_ext_mgr.cpp",

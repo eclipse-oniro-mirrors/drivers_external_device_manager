@@ -16,6 +16,12 @@ import("//drivers/external_device_manager/extdevmgr.gni")
 module_output_path = "external_device_manager/extension_device_manager"
 usb_bus_extension_include_path = "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb"
 ohos_unittest("bus_extension_usb_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = "${module_output_path}"
   sources = [
     "bus_extension_usb_test/src/usb_bus_extension_test.cpp",
@@ -64,6 +70,12 @@ ohos_unittest("bus_extension_usb_test") {
 }
 
 ohos_unittest("drivers_pkg_manager_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = "${module_output_path}"
   sources = [
     "drivers_pkg_manager_test/src/driver_pkg_manager_test.cpp",
@@ -104,6 +116,12 @@ ohos_unittest("drivers_pkg_manager_test") {
 }
 
 ohos_unittest("driver_extension_manager_client_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = "${module_output_path}"
 
   sources = [

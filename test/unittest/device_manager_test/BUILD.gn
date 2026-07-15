@@ -16,6 +16,12 @@ import("//drivers/external_device_manager/extdevmgr.gni")
 module_output_path = "external_device_manager/extension_device_manager"
 
 ohos_unittest("device_manager_test") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   module_out_path = "${module_output_path}"
   sources = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/driver_ext_mgr_types.cpp",

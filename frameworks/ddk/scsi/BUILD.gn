@@ -14,6 +14,12 @@
 import("../../../extdevmgr.gni")
 
 ohos_shared_library("scsi") {
+  branch_protector_ret = "pac_ret"
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   include_dirs = [
     "${ext_mgr_path}/interfaces/ddk/scsi/",
     "${utils_path}/include/",
