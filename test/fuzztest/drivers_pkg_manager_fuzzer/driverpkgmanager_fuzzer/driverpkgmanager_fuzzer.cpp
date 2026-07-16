@@ -19,6 +19,7 @@
 #include "ibus_extension.h"
 #include "driver_pkg_manager.h"
 #include "hilog_wrapper.h"
+#include "usb_device_info.h"
 #include "driverpkgmanager_fuzzer.h"
 #undef private
 namespace OHOS {
