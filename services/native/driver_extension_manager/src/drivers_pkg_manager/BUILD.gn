@@ -90,6 +90,12 @@ if (external_device_manager_enable_service) {
 
 if (external_device_manager_enable_service) {
   ohos_static_library("drivers_pkg_manager_test") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     sources = [
       "driver_info.cpp",
       "driver_os_account_subscriber.cpp",

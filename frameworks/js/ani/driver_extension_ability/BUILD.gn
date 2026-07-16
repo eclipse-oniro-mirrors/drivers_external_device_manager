@@ -71,7 +71,7 @@ ohos_shared_library("driverextension_ani") {
     defines += [ "EDM_MANAGER_METRICS_ENABLE" ]
     external_deps += [ "api_metrics:histogrammanager" ]
   }
-
+  branch_protector_ret = "pac_ret"
   sanitize = {
     integer_overflow = true
     ubsan = true
