@@ -35,10 +35,8 @@ bool QueryMatchDriverIllegalBusTest(const uint8_t *data, size_t size)
         return false;
     }
 
-    int busType = *(static_cast<const uint8_t *>(data));
-    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<DeviceInfo>(
-    busType);
-    devInfo->devInfo_.devBusInfo.busType = BUS_TYPE_USB;
+    int busDeviceId = *(static_cast<const uint8_t *>(data));
+    std::shared_ptr<DeviceInfo> devInfo = std::make_shared<UsbDeviceInfo>(busDeviceId);
     shared_ptr<DriverInfo> bundle = drvPkgMgrInstance.QueryMatchDriver(devInfo);
     if (bundle == nullptr) {
         return false;
