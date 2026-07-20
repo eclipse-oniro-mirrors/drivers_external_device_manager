@@ -675,6 +675,8 @@ int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo
         return EDM_NOK;
     }
 
+    std::string bundleName = driverInfo->GetBundleName();
+    int32_t userId = driverInfo->GetUserId();
     OHOS::AppExecFwk::AppProvisionInfo info;
     ErrCode ret = bundleManager->GetAppProvisionInfo(bundleName, userId, info);
     if (ret != ERR_OK) {
