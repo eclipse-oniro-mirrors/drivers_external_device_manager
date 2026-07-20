@@ -24,6 +24,7 @@
 #include "system_ability_definition.h"
 #include "bundle_update_callback.h"
 #include "bundlemgr/bundle_mgr_proxy.h"
+#include "bundlemgr/bundle_mgr_interface.h"
 #include "driver_report_sys_event.h"
 
 namespace OHOS {
@@ -674,10 +675,14 @@ int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo
         return EDM_NOK;
     }
 
-    std::string bundleName = driverInfo->GetBundleName();
-    int32_t userId = driverInfo->GetUserId();
-    std::string appId = bundleManager->GetAppIdByBundleName(bundleName, userId);
-    auto driverIter = accessibleAppIds.find(appId);
+    OHOS::AppExecFwk::AppProvisionInfo info;
+    ErrCode ret = bundleManager->GetAppProvisionInfo(bundleName, userId, info);
+    if (ret != ERR_OK) {
+        EDM_LOGE(MODULE_DEV_MGR, "Failed to get app provision info, ret=%{public}d", ret);
+        return EDM_ERR_NO_PERM;
+    }
+
+    auto driverIter = accessibleAppIds.find(info.appIdentifier);
     if (driverIter == accessibleAppIds.end()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s does not exist in ohos.permission.ACCESS_DDK_DRIVERS configuration",
             bundleName.c_str());
