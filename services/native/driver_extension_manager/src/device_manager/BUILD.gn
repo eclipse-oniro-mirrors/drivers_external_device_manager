@@ -70,6 +70,12 @@ if (external_device_manager_enable_service) {
 
 if (external_device_manager_enable_service) {
   ohos_static_library("driver_extension_device_manager_test") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     sources = [
       "bundle_update_callback.cpp",
       "dev_change_callback.cpp",
