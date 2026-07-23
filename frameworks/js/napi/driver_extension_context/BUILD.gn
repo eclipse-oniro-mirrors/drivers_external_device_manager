@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -48,7 +48,11 @@ ohos_shared_library("driverextensioncontext_napi") {
     ":driver_extension_context_js",
   ]
 
-  external_deps = [ "napi:ace_napi" ]
+  external_deps = [
+    "napi:ace_napi",
+    "libuv:uv",
+    "node:node_header_notice"
+  ]
 
   relative_install_dir = "module/application"
   subsystem_name = "hdf"

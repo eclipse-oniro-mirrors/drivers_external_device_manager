@@ -62,7 +62,9 @@
                 "runtime_core",
                 "selinux_adapter",
                 "bounds_checking_function",
-                "taihe_ffi_gen"
+                "taihe_ffi_gen",
+                "node",
+                "libuv"
             ]
         },
         "build": {
