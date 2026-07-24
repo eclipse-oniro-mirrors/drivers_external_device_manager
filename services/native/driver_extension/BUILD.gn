@@ -36,11 +36,11 @@ ohos_shared_library("driver_extension") {
   ]
 
   sources = [
+    "${utils_path}/src/ext_dev_api_metrics.cpp",
     "src/driver_extension.cpp",
     "src/driver_extension_context.cpp",
     "src/js_driver_extension.cpp",
     "src/js_driver_extension_context.cpp",
-    "${utils_path}/src/ext_dev_api_metrics.cpp",
   ]
 
   deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event" ]
@@ -62,7 +62,7 @@ ohos_shared_library("driver_extension") {
     "ipc:ipc_core",
     "ipc:ipc_napi",
     "napi:ace_napi",
-    "node:node_header_notice"
+    "node:node_header_notice",
   ]
 
   defines = []
@@ -101,10 +101,11 @@ ohos_shared_library("driver_extension_module") {
     "ability_runtime:ability_manager",
     "ability_runtime:extensionkit_native",
     "ability_runtime:runtime",
-    "ipc:ipc_napi",
-    "napi:ace_napi",
     "hilog:libhilog",
-    "node:node_header_notice"
+    "ipc:ipc_napi",
+    "ipc:ipc_single",
+    "napi:ace_napi",
+    "node:node_header_notice",
   ]
 
   relative_install_dir = "extensionability/"
