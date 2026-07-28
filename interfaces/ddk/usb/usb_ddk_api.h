@@ -263,8 +263,8 @@ int32_t OH_Usb_GetDevices(struct Usb_DeviceArray *devices);
  * of the setup packet.
  *
  * @permission ohos.permission.ACCESS_DDK_USB
- * @param deviceID An ID for the device to communicate with.
- * @param setupPacket Configuration parameters for the setup packet in control transfer requests.
+ * @param deviceID An ID for the device to communicate with
+ * @param setupPacket Configuration parameters for the setup packet in control transfer requests
  * @param data A suitably-sized data buffer for either input or output based on the direction bits
  *     within bmRequestType.
  * @param timeout Timeout (in milliseconds) that this function should wait before giving up due to no response being
