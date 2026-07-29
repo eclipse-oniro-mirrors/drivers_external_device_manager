@@ -45,7 +45,7 @@ public:
     static DataParser &GetInstance();
 
     // 解析数据
-    double ParseData(const uint8_t *buffer, uint32_t length);
+    double ParseData(const uint8_t *buff, uint32_t length);
 
     // 设置keycode map
     void UpdateKeyCodeMap(int key, char *keyValue);
