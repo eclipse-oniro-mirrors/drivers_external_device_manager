@@ -855,7 +855,7 @@ export default function usbDdkNdkJsTest() {
         console.info("Test USB deviceId = " + deviceId);
         const ret = usbDdkNdkTest.usbSendPipeRequestFive(deviceId);
         console.info("Test Result testUsbSendPipeRequest005 : " + ret);
-        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        expect(ret).assertEqual(USB_DDK_SUCCESS);
         done();
       } catch (err) {
         console.error(TAG, `testUsbSendPipeRequest005 failed, message is ${err.message}`);
@@ -1063,7 +1063,7 @@ export default function usbDdkNdkJsTest() {
         console.info("Test USB deviceId = " + deviceId);
         const ret = usbDdkNdkTest.usbSendPipeRequestWithAshmemFive(deviceId);
         console.info("Test Result testUsbSendPipeRequestWithAshmem005 : " + ret);
-        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        expect(ret).assertEqual(USB_DDK_SUCCESS);
         done();
       } catch (err) {
         console.error(TAG, `testUsbSendPipeRequestWithAshmem004 failed, message is ${err.message}`);

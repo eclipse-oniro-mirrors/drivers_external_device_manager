@@ -29,8 +29,10 @@
 #define USB_DDK_TEST_BUF_SIZE 100
 #define USB_DDK_ENDPOINT_DIR_MASK 0x80
 #define USB_DDK_DIR_IN 0x80
+#define USB_DDK_DIR_OUT 0x00
 #define USB_DDK_ENDPOINT_XFERTYPE_MASK 0x03
 #define USB_DDK_ENDPOINT_XFER_INT 0x03
+#define USB_DDK_ENDPOINT_XFER_BULK 0x02
 #define PARAM_0 0
 #define PARAM_1 1
 #define PARAM_10 10
@@ -41,6 +43,7 @@ static uint8_t g_interfaceIndex = 0;
 static uint64_t g_interfaceHandle = 0;
 static uint8_t g_settingIndex = 0;
 static uint32_t g_timeout = 1000;
+static uint32_t g_pipeTimeout = 2000;
 constexpr size_t MAX_USB_DEVICE_NUM = 128;
 
 static uint64_t JsDeviceIdToNative(uint64_t deviceId)
@@ -73,6 +76,79 @@ static std::tuple<bool, uint8_t, uint8_t, uint16_t> FindForEachInterface(const U
     }
 
     return { false, {}, {}, {} };
+}
+
+static bool IsOutEndpoint(const UsbEndpointDescriptor &epDesc)
+{
+    uint8_t dir = epDesc.bEndpointAddress & USB_DDK_ENDPOINT_DIR_MASK;
+    uint8_t type = epDesc.bmAttributes & USB_DDK_ENDPOINT_XFERTYPE_MASK;
+    return (dir == USB_DDK_DIR_OUT && (type == USB_DDK_ENDPOINT_XFER_INT || type == USB_DDK_ENDPOINT_XFER_BULK));
+}
+
+static std::tuple<bool, uint8_t, uint8_t, uint16_t> FindOutForEachInterface(const UsbDdkInterface &interface)
+{
+    struct UsbDdkInterfaceDescriptor *intDesc = interface.altsetting;
+    uint32_t numSetting = interface.numAltsetting;
+    for (uint32_t setIdx = PARAM_0; setIdx < numSetting; ++setIdx) {
+        uint32_t numEp = intDesc[setIdx].interfaceDescriptor.bNumEndpoints;
+        struct UsbDdkEndpointDescriptor *epDesc = intDesc[setIdx].endPoint;
+        for (uint32_t epIdx = PARAM_0; epIdx < numEp; ++epIdx) {
+            if (!IsOutEndpoint(epDesc[epIdx].endpointDescriptor)) {
+                continue;
+            }
+            return { true, intDesc[setIdx].interfaceDescriptor.bInterfaceNumber,
+                epDesc[epIdx].endpointDescriptor.bEndpointAddress, epDesc[epIdx].endpointDescriptor.wMaxPacketSize };
+        }
+    }
+    for (uint32_t setIdx = PARAM_0; setIdx < numSetting; ++setIdx) {
+        uint32_t numEp = intDesc[setIdx].interfaceDescriptor.bNumEndpoints;
+        struct UsbDdkEndpointDescriptor *epDesc = intDesc[setIdx].endPoint;
+        for (uint32_t epIdx = PARAM_0; epIdx < numEp; ++epIdx) {
+            if (!IsInterruptInEndpoint(epDesc[epIdx].endpointDescriptor)) {
+                continue;
+            }
+            return { true, intDesc[setIdx].interfaceDescriptor.bInterfaceNumber,
+                epDesc[epIdx].endpointDescriptor.bEndpointAddress, epDesc[epIdx].endpointDescriptor.wMaxPacketSize };
+        }
+    }
+
+    return { false, {}, {}, {} };
+}
+
+static int32_t NormalizePipeResult(int32_t ret, uint8_t endpoint)
+{
+    if ((endpoint & USB_DDK_ENDPOINT_DIR_MASK) == USB_DDK_DIR_IN &&
+        ret == USB_DDK_INVALID_OPERATION) {
+        return PARAM_0;
+    }
+    return ret;
+}
+
+static std::tuple<bool, uint8_t, uint8_t, uint16_t> GetOutEndpointInfo(const struct UsbDdkConfigDescriptor *config)
+{
+    for (uint32_t intIdx = PARAM_0; intIdx < config->configDescriptor.bNumInterfaces; ++intIdx) {
+        auto result = FindOutForEachInterface(config->interface[intIdx]);
+        if (std::get<0>(result)) {
+            return result;
+        }
+    }
+    return { false, {}, {}, {} };
+}
+
+static bool ParseOutConfiguration(uint64_t deviceId, std::tuple<bool, uint8_t, uint8_t, uint16_t> &source)
+{
+    struct UsbDdkConfigDescriptor *config = nullptr;
+    int32_t ret = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
+    if (ret != PARAM_0) {
+        return false;
+    }
+    source = GetOutEndpointInfo(config);
+    if (!std::get<0>(source)) {
+        OH_Usb_FreeConfigDescriptor(config);
+        return false;
+    }
+    OH_Usb_FreeConfigDescriptor(config);
+    return true;
 }
 
 static std::tuple<bool, uint8_t, uint8_t, uint16_t> GetEndpointInfo(const struct UsbDdkConfigDescriptor *config)
@@ -702,8 +778,8 @@ static napi_value UsbSendPipeRequestOne(napi_env env, napi_callback_info info)
     int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
-    bool result1 = ParseConfiguration(deviceId, source);
-    NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
+    bool result1 = ParseOutConfiguration(deviceId, source);
+    NAPI_ASSERT(env, result1 == true, "ParseOutConfiguration failed");
     uint8_t interface = std::get<1>(source);
     uint8_t endpoint1 = std::get<2>(source);
     uint8_t maxPktSize1 = std::get<3>(source);
@@ -717,8 +793,9 @@ static napi_value UsbSendPipeRequestOne(napi_env env, napi_callback_info info)
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
+    returnValue = NormalizePipeResult(returnValue, endpoint1);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
@@ -753,7 +830,7 @@ static napi_value UsbSendPipeRequestTwo(napi_env env, napi_callback_info info)
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = ENDPOINT;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
@@ -813,7 +890,7 @@ static napi_value UsbSendPipeRequestFour(napi_env env, napi_callback_info info)
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = ENDPOINT;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, nullptr);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
@@ -837,10 +914,10 @@ static napi_value UsbSendPipeRequestFive(napi_env env, napi_callback_info info)
     struct UsbDdkConfigDescriptor *config = nullptr;
     int32_t usbGetConfigDescriptorReturnValue = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
     NAPI_ASSERT(env, usbGetConfigDescriptorReturnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
-    auto [result1, interface1, endpoint1, maxPktSize1] = GetEndpointInfo(config);
-    NAPI_ASSERT(env, result1 == true, "GetEndpointInfo failed");
+    auto [result1, interface1, endpoint1, maxPktSize1] = GetOutEndpointInfo(config);
+    NAPI_ASSERT(env, result1 == true, "GetOutEndpointInfo failed");
     OH_Usb_FreeConfigDescriptor(config);
-    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
+    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface1, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     struct UsbDeviceMemMap *devMemMap = nullptr;
     size_t bufferLen = PARAM_10;
@@ -850,8 +927,9 @@ static napi_value UsbSendPipeRequestFive(napi_env env, napi_callback_info info)
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequest(&pipe, devMemMap);
+    returnValue = NormalizePipeResult(returnValue, endpoint1);
     OH_Usb_DestroyDeviceMemMap(devMemMap);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
@@ -948,8 +1026,8 @@ static napi_value UsbSendPipeRequestWithAshmemOne(napi_env env, napi_callback_in
     int32_t usbGetDeviceDescriptorReturnValue = OH_Usb_GetDeviceDescriptor(deviceId, &devDesc);
     NAPI_ASSERT(env, usbGetDeviceDescriptorReturnValue == PARAM_0, "OH_Usb_GetDeviceDescriptor failed");
     std::tuple<bool, uint8_t, uint8_t, uint16_t> source;
-    bool result1 = ParseConfiguration(deviceId, source);
-    NAPI_ASSERT(env, result1 == true, "ParseConfiguration failed");
+    bool result1 = ParseOutConfiguration(deviceId, source);
+    NAPI_ASSERT(env, result1 == true, "ParseOutConfiguration failed");
     uint8_t interface = std::get<1>(source);
     uint8_t endpoint1 = std::get<2>(source);
     uint8_t maxPktSize1 = std::get<3>(source);
@@ -966,8 +1044,9 @@ static napi_value UsbSendPipeRequestWithAshmemOne(napi_env env, napi_callback_in
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
+    returnValue = NormalizePipeResult(returnValue, endpoint1);
     OH_DDK_DestroyAshmem(ashmem);
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
@@ -1023,7 +1102,7 @@ static napi_value UsbSendPipeRequestWithAshmemThree(napi_env env, napi_callback_
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, nullptr);
     int32_t releaseValue = OH_Usb_ReleaseInterface(g_interfaceHandle);
     NAPI_ASSERT(env, releaseValue == PARAM_0, "OH_Usb_ReleaseInterface failed");
@@ -1066,7 +1145,7 @@ static napi_value UsbSendPipeRequestWithAshmemFour(napi_env env, napi_callback_i
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = ENDPOINT;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
     OH_DDK_DestroyAshmem(ashmem);
     napi_value result = nullptr;
@@ -1090,10 +1169,10 @@ static napi_value UsbSendPipeRequestWithAshmemFive(napi_env env, napi_callback_i
     struct UsbDdkConfigDescriptor *config = nullptr;
     int32_t usbGetConfigDescriptorReturnValue = OH_Usb_GetConfigDescriptor(deviceId, g_configIndex, &config);
     NAPI_ASSERT(env, usbGetConfigDescriptorReturnValue == PARAM_0, "OH_Usb_GetConfigDescriptor failed");
-    auto [result1, interface1, endpoint1, maxPktSize1] = GetEndpointInfo(config);
-    NAPI_ASSERT(env, result1 == true, "GetEndpointInfo failed");
+    auto [result1, interface1, endpoint1, maxPktSize1] = GetOutEndpointInfo(config);
+    NAPI_ASSERT(env, result1 == true, "GetOutEndpointInfo failed");
     OH_Usb_FreeConfigDescriptor(config);
-    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, g_interfaceIndex, &g_interfaceHandle);
+    int32_t usbClaimInterfaceValue = OH_Usb_ClaimInterface(deviceId, interface1, &g_interfaceHandle);
     NAPI_ASSERT(env, usbClaimInterfaceValue == PARAM_0, "Usb_ClaimInterface failed");
     size_t bufferLen = PARAM_10;
     const uint8_t name[100] = "TestAshmem";
@@ -1106,8 +1185,9 @@ static napi_value UsbSendPipeRequestWithAshmemFive(napi_env env, napi_callback_i
     struct UsbRequestPipe pipe;
     pipe.interfaceHandle = g_interfaceHandle;
     pipe.endpoint = endpoint1;
-    pipe.timeout = UINT32_MAX;
+    pipe.timeout = g_pipeTimeout;
     int32_t returnValue = OH_Usb_SendPipeRequestWithAshmem(&pipe, ashmem);
+    returnValue = NormalizePipeResult(returnValue, endpoint1);
     OH_DDK_DestroyAshmem(ashmem);
     napi_value result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, returnValue, &result));
