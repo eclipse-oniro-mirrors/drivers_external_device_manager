@@ -19,6 +19,22 @@ import serialDdkNdkTest from 'libserial_ddk_ndk_test.so'
 import scsiDdkNdkTest from 'libscsi_ddk_ndk_test.so'
 import deviceManager from "@ohos.driver.deviceManager";
 
+interface FilteredDevice {
+  vendorId: number;
+  productId: number;
+}
+
+const FILTERED_DEVICES: Array<FilteredDevice> = [
+  { vendorId: 3034, productId: 33107 },
+  { vendorId: 65535, productId: 14131 },
+  { vendorId: 8457, productId: 13361 },
+];
+
+function isFilteredDevice(device: deviceManager.USBDevice): boolean {
+  return FILTERED_DEVICES.some(item =>
+    device.vendorId === item.vendorId && device.productId === item.productId
+  );
+}
 
 export default function usbDdkNdkJsTest() {
   let deviceId: number = -1;
@@ -35,7 +51,12 @@ export default function usbDdkNdkJsTest() {
     beforeAll(async () => {
       try {
         let devices: Array<deviceManager.Device> = deviceManager.queryDevices(deviceManager.BusType.USB);
-        for (let item of devices) {
+        let filteredList: Array<deviceManager.Device> = devices.filter(item => {
+          let device: deviceManager.USBDevice = item as deviceManager.USBDevice;
+          return !isFilteredDevice(device);
+        });
+        console.info('filter device list:', JSON.stringify(filteredList));
+        for (let item of filteredList) {
           let device: deviceManager.USBDevice = item as deviceManager.USBDevice;
           if (serialDdkNdkTest.isUsbSerialDevice(device.deviceId)) {
             console.info(`Since the device ${device.deviceId} is a USB Serial device, the NDK test cases are skipped`);
