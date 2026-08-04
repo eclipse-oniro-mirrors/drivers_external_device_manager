@@ -23,7 +23,7 @@ config("ability_config") {
 
 ohos_shared_library("driver_extension") {
   branch_protector_ret = "pac_ret"
-  branch_protector_ret = "bit"
+  branch_protector_ret = "bti"
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -85,7 +85,7 @@ ohos_shared_library("driver_extension") {
 
 ohos_shared_library("driver_extension_module") {
   branch_protector_ret = "pac_ret"
-  branch_protector_ret = "bit"
+  branch_protector_ret = "bti"
   sanitize = {
     cfi = true
     cfi_cross_dso = true

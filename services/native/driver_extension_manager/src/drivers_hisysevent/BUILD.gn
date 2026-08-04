@@ -15,7 +15,7 @@ import("//drivers/external_device_manager/extdevmgr.gni")
 
 ohos_shared_library("report_sys_event") {
   branch_protector_ret = "pac_ret"
-  branch_protector_ret = "bit"
+  branch_protector_ret = "bti"
   sanitize = {
     cfi = true
     cfi_cross_dso = true
