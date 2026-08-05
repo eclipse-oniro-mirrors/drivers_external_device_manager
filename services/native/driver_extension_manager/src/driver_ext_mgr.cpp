@@ -388,9 +388,9 @@ ErrCode DriverExtMgr::QueryDriverInfo(int32_t &errorCode, std::vector<std::share
 
 ErrCode DriverExtMgr::NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName)
 {
-    if (!ExtPermissionManager::IsSa()) {
-        EDM_LOGE(MODULE_DEV_MGR, "%{public}s not a sa", __func__);
-        return static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
+    if (!ExtPermissionManager::IsSystemApp()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
+        return static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SYSTEM_APP);
     }
     
     if (domain.empty() || faultName.empty()) {
