@@ -64,7 +64,8 @@
                 "bounds_checking_function",
                 "taihe_ffi_gen",
                 "node",
-                "libuv"
+                "libuv",
+                "ets_frontend"
             ]
         },
         "build": {
