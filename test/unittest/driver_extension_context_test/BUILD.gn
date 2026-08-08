@@ -39,7 +39,6 @@ ohos_unittest("driver_extension_context_test") {
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_common",
     "ability_runtime:runtime",
-    "background_task_mgr:bgtaskmgr_innerkits",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "googletest:gmock_main",
