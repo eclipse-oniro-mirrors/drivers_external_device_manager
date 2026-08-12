@@ -1,0 +1,12 @@
+1.0 {
+    global:
+        extern "C++" {
+            *GetInstance*;
+            *LoadConfig*;
+            *SubscribeCommonEvent*;
+            *UnInit*;
+            *OnDeviceConnected*;
+        };
+    local:
+        *;
+};

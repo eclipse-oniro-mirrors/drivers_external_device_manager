@@ -31,6 +31,9 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_hisysevent",
   ]
+  if (external_device_manager_enable_app_launch) {
+    include_dirs += [ "${ext_mgr_path}/services/native/driver_extension_manager/include/app_launch_manager" ]
+  }
   configs = [
     "${utils_path}:coverage_flags",
     "${utils_path}:utils_config",
@@ -40,11 +43,18 @@ ohos_shared_library("driver_extension_usb_bus") {
     "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
     "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
   ]
+  if (external_device_manager_enable_app_launch) {
+    deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/app_launch_manager:app_launch_manager" ]
+  }
   defines = []
   if (extdevmgr_usb_pass_through) {
     defines += [ " EXTDEVMGR_USB_PASS_THROUGH" ]
   }
+  if (external_device_manager_enable_app_launch) {
+    defines += app_launch_defines
+  }
   external_deps = [
+    "bundle_framework:appexecfwk_core",
     "cJSON:cjson",
     "c_utils:utils",
     "drivers_interface_usb:libusb_ddk_proxy_1.2",

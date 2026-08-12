@@ -13,6 +13,20 @@
             "attr": {
                 "priority": "translate"
             }
+        },
+        {
+            "name": "usb_app_launch_title",
+            "value": "Wireless display adapter app not installed",
+            "attr": {
+                "priority": "translate"
+            }
+        },
+        {
+            "name": "usb_app_launch_message",
+            "value": "A compatible wireless display adapter app is detected. Tap to download and install from AppGallery.",
+            "attr": {
+                "priority": "translate"
+            }
         }
     ]
 }

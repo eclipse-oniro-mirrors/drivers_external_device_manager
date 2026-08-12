@@ -34,6 +34,9 @@ if (external_device_manager_enable_service) {
       "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
       "${ext_mgr_path}/services/native/driver_extension_manager/include/device_notification",
     ]
+    if (external_device_manager_enable_app_launch) {
+      include_dirs += [ "${ext_mgr_path}/services/native/driver_extension_manager/include/app_launch_manager" ]
+    }
     configs = [ "${utils_path}:utils_config" ]
     deps = [
       "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
@@ -53,6 +56,13 @@ if (external_device_manager_enable_service) {
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     ]
+    if (external_device_manager_enable_app_launch) {
+      deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/app_launch_manager:app_launch_manager" ]
+    }
+    defines = external_device_defines
+    if (external_device_manager_enable_app_launch) {
+      defines += app_launch_defines
+    }
     external_deps = [
       "ability_runtime:ability_manager",
       "access_token:libaccesstoken_sdk",
@@ -62,6 +72,7 @@ if (external_device_manager_enable_service) {
       "bundle_framework:libappexecfwk_common",
       "cJSON:cjson",
       "c_utils:utils",
+      "common_event_service:cesfwk_innerkits",
       "distributed_notification_service:ans_innerkits",
       "hilog:libhilog",
       "hisysevent:libhisysevent",
@@ -102,6 +113,9 @@ config("driver_extension_manager_test_public_config") {
     "${ext_mgr_path}/utils/include/",
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
   ]
+  if (external_device_manager_enable_app_launch) {
+    include_dirs += [ "${ext_mgr_path}/services/native/driver_extension_manager/include/app_launch_manager" ]
+  }
 }
 
 if (external_device_manager_enable_service) {
@@ -148,6 +162,9 @@ if (external_device_manager_enable_service) {
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     ]
+    if (external_device_manager_enable_app_launch) {
+      deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/app_launch_manager:app_launch_manager" ]
+    }
     external_deps = [
       "ability_runtime:ability_manager",
       "access_token:libaccesstoken_sdk",
@@ -157,6 +174,7 @@ if (external_device_manager_enable_service) {
       "bundle_framework:libappexecfwk_common",
       "cJSON:cjson",
       "c_utils:utils",
+      "common_event_service:cesfwk_innerkits",
       "distributed_notification_service:ans_innerkits",
       "hilog:libhilog",
       "i18n:intl_util",
@@ -164,6 +182,10 @@ if (external_device_manager_enable_service) {
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
+    defines = external_device_defines
+    if (external_device_manager_enable_app_launch) {
+      defines += app_launch_defines
+    }
 
     subsystem_name = "hdf"
     part_name = "external_device_manager"

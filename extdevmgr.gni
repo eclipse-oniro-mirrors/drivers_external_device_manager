@@ -20,6 +20,7 @@ declare_args() {
   extdevmgr_usb_pass_through = true
   external_device_manager_enable_service = true
   extdevmgr_feature_metrics_enable = false
+  external_device_manager_enable_app_launch = false
 }
 
 if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
@@ -29,4 +30,8 @@ if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metric
 external_device_defines = []
 if (external_device_manager_enable_service) {
   external_device_defines = [ "ENABLE_EXTERNAL_DEVICE_DDK_SERVICE" ]
+}
+app_launch_defines = []
+if (external_device_manager_enable_app_launch) {
+  app_launch_defines = [ "ENABLE_APP_LAUNCH_MANAGER" ]
 }

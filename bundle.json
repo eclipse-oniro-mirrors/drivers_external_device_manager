@@ -24,7 +24,8 @@
             "//drivers/external_device_manager/hisysevent.yaml"
         ],
         "features": [
-            "external_device_manager_enable_service"
+            "external_device_manager_enable_service",
+            "external_device_manager_enable_app_launch"
         ],
         "adapted_system_type": [
             "standard"

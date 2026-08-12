@@ -21,6 +21,9 @@
 #include <cwchar>
 #include <algorithm>
 #include "driver_report_sys_event.h"
+#ifdef ENABLE_APP_LAUNCH_MANAGER
+#include "app_launch_manager.h"
+#endif
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -190,6 +193,9 @@ int32_t UsbDevSubscriber::OnDeviceConnect(const UsbDev &usbDev)
     
     auto usbDevInfo = make_shared<UsbDeviceInfo>(ToBusDeivceId(usbDev), ToDeviceDesc(usbDev, deviceDescriptor));
     SetUsbDevInfoValue(deviceDescriptor, usbDevInfo, GetDevStringVal(usbDev, deviceDescriptor.iSerialNumber));
+#ifdef ENABLE_APP_LAUNCH_MANAGER
+    AppLaunchManager::GetInstance().OnDeviceConnected(deviceDescriptor.idVendor, deviceDescriptor.idProduct);
+#endif
     ExtDevReportSysEvent::ParseToExtDevEvent(usbDevInfo, extDevEvent);
     ret = GetInterfaceDescriptor(usbDev, usbDevInfo->interfaceDescList_);
     if (ret != EDM_OK) {
