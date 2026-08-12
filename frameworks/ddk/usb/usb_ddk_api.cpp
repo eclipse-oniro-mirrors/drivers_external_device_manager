@@ -337,7 +337,7 @@ int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem 
 
     if (ashmem->offset > ashmem->size || ashmem->bufferLength > ashmem->size - ashmem->offset) {
         EDM_LOGE(MODULE_USB_DDK,
-            "invalid offset or bufferLength: size=%{public}zu, offset=%{public}u, len=%{public}u",
+            "invalid offset or bufferLength: size=%{public}u, offset=%{public}u, len=%{public}u",
             ashmem->size, ashmem->offset, ashmem->bufferLength);
         return USB_DDK_INVALID_PARAMETER;
     }
