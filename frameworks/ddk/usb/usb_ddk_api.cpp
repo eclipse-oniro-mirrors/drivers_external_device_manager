@@ -314,6 +314,13 @@ int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devM
         return USB_DDK_INVALID_PARAMETER;
     }
 
+    if (devMmap->offset > devMmap->size || devMmap->bufferLength > devMmap->size - devMmap->offset) {
+        EDM_LOGE(MODULE_USB_DDK,
+            "invalid offset or bufferLength: size=%{public}zu, offset=%{public}u, len=%{public}u",
+            devMmap->size, devMmap->offset, devMmap->bufferLength);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+
     auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_2::UsbRequestPipe *>(pipe);
     return TransToUsbCode(g_ddk->SendPipeRequest(
         *tmpSetUp, devMmap->size, devMmap->offset, devMmap->bufferLength, devMmap->transferedLength));
