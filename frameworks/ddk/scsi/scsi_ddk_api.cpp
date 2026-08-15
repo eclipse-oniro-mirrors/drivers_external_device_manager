@@ -71,6 +71,7 @@ constexpr uint32_t MASK_SENSE_KEY_SPECIFIC = 0x007FFFFF;
 #endif
 } // namespace
 
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 static int32_t ValidateMemMap(ScsiPeripheral_DeviceMemMap *data)
 {
     if (data == nullptr || data->address == nullptr) {
@@ -117,6 +118,7 @@ static void RestoreMemMap(ScsiPeripheral_DeviceMemMap *data, uint32_t transferre
     }
     (void)memmove_s(data->address + data->offset, data->size - data->offset, data->address, len);
 }
+#endif
 
 struct ScsiPeripheral_Device {
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralDevice impl;
