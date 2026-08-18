@@ -23,9 +23,11 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 
+static constexpr size_t MIN_FUZZ_DATA_SIZE = 4;
+
 bool OnDeviceConnectedFuzzTest(const uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < 4) {
+    if (data == nullptr || size < MIN_FUZZ_DATA_SIZE) {
         return false;
     }
 

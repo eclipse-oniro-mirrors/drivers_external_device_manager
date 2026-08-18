@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include "common_event_subscriber.h"
 #include "want.h"
@@ -54,6 +55,7 @@ private:
 
     std::shared_ptr<ParamEventSubscriber> subscriber_ = nullptr;
     std::function<void()> updateCallback_ = nullptr;
+    std::mutex callbackMutex_;
 
     static constexpr const char *EVENT_ACTION = "usual.event.DUE_SA_CFG_UPDATED";
     static constexpr const char *EVENT_INFO_TYPE = "type";

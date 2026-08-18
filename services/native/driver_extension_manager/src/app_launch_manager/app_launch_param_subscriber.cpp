@@ -37,34 +37,37 @@ AppLaunchParamSubscriber::~AppLaunchParamSubscriber()
 void AppLaunchParamSubscriber::SubscribeEvent(std::function<void()> updateCallback)
 {
     EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
-    if (subscriber_) {
-        EDM_LOGI(MODULE_BUS_USB, "Common Event is already subscribed!");
-        return;
-    }
-
-    updateCallback_ = updateCallback;
-
-    EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EVENT_ACTION);
-    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    subscribeInfo.SetPermission("ohos.permission.RECEIVE_UPDATE_MESSAGE");
-    subscriber_ = std::make_shared<ParamEventSubscriber>(subscribeInfo, *this);
-
-    for (int32_t retry = 0; retry < RETRY_SUBSCRIBER; retry++) {
-        bool subscribeResult = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
-        if (subscribeResult) {
-            EDM_LOGI(MODULE_BUS_USB, "SubscribeEvent success.");
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        if (subscriber_) {
+            EDM_LOGI(MODULE_BUS_USB, "Common Event is already subscribed!");
             return;
         }
-        EDM_LOGI(MODULE_BUS_USB, "SubscribeEvent failed, retry=%{public}d/%{public}d",
-            retry + 1, RETRY_SUBSCRIBER);
-        if (retry < RETRY_SUBSCRIBER - 1) {
-            usleep(RETRY_INTERVAL_US);
-        }
-    }
 
-    EDM_LOGE(MODULE_BUS_USB, "SubscribeEvent failed after all retries.");
-    subscriber_ = nullptr;
+        updateCallback_ = updateCallback;
+
+        EventFwk::MatchingSkills matchingSkills;
+        matchingSkills.AddEvent(EVENT_ACTION);
+        EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+        subscribeInfo.SetPermission("ohos.permission.RECEIVE_UPDATE_MESSAGE");
+        subscriber_ = std::make_shared<ParamEventSubscriber>(subscribeInfo, *this);
+
+        for (int32_t retry = 0; retry < RETRY_SUBSCRIBER; retry++) {
+            bool subscribeResult = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
+            if (subscribeResult) {
+                EDM_LOGI(MODULE_BUS_USB, "SubscribeEvent success.");
+                return;
+            }
+            EDM_LOGI(MODULE_BUS_USB, "SubscribeEvent failed, retry=%{public}d/%{public}d",
+                retry + 1, RETRY_SUBSCRIBER);
+            if (retry < RETRY_SUBSCRIBER - 1) {
+                usleep(RETRY_INTERVAL_US);
+            }
+        }
+
+        EDM_LOGE(MODULE_BUS_USB, "SubscribeEvent failed after all retries.");
+        subscriber_ = nullptr;
+    }
 }
 
 void AppLaunchParamSubscriber::UnsubscribeEvent()
