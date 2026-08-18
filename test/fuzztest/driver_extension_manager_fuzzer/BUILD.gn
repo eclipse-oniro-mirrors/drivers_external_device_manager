@@ -12,6 +12,7 @@
 # limitations under the License
 
 import("//build/test.gni")
+import("//drivers/external_device_manager/extdevmgr.gni")
 
 group("driver_extension_manager_fuzzer") {
   testonly = true
@@ -23,4 +24,7 @@ group("driver_extension_manager_fuzzer") {
     "querydriverinfo_fuzzer:QueryDriverInfoFuzzTest",
     "unbinddevice_fuzzer:UnBindDeviceFuzzTest",
   ]
+  if (external_device_manager_enable_app_launch) {
+    deps += [ "applaunchmanager_fuzzer:AppLaunchManagerFuzzTest" ]
+  }
 }

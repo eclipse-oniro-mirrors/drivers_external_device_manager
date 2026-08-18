@@ -165,6 +165,12 @@ if (external_device_manager_enable_service) {
       "permission_js_test:PermissionJsTest",
       "systemapi_js_test:SystemApiJsTest",
     ]
+    if (external_device_manager_enable_app_launch) {
+      deps += [
+        "app_launch_manager_test:app_launch_config_test",
+        "app_launch_manager_test:app_launch_manager_test",
+      ]
+    }
   }
 } else {
   group("external_device_manager_ut") {}

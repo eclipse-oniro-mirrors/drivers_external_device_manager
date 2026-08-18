@@ -70,16 +70,20 @@ void AppLaunchParamSubscriber::SubscribeEvent(std::function<void()> updateCallba
 void AppLaunchParamSubscriber::UnsubscribeEvent()
 {
     EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
-    if (subscriber_) {
-        bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
-        EDM_LOGI(MODULE_BUS_USB, "subscribeResult = %{public}d", subscribeResult);
-        subscriber_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        if (subscriber_) {
+            bool subscribeResult = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+            EDM_LOGI(MODULE_BUS_USB, "subscribeResult = %{public}d", subscribeResult);
+            subscriber_ = nullptr;
+        }
+        updateCallback_ = nullptr;
     }
-    updateCallback_ = nullptr;
 }
 
 void AppLaunchParamSubscriber::OnReceiveEvent(const AAFwk::Want &want)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     std::string action = want.GetAction();
     if (action != EVENT_ACTION) {
         EDM_LOGI(MODULE_BUS_USB, "Ignore event: %{public}s", action.c_str());

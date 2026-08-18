@@ -196,10 +196,6 @@ std::optional<AppLaunchEntry> AppLaunchConfig::FindEntry(uint16_t vid, uint16_t 
 {
     EDM_LOGI(MODULE_BUS_USB, "%{public}s enter, vid=%{public}04x, pid=%{public}04x", __func__, vid, pid);
     std::lock_guard<std::mutex> lock(configMutex_);
-    for (const auto &item : entryMap_) {
-        EDM_LOGI(MODULE_BUS_USB, "entryMap_ key=%{public}s vid=%{public}04x pid=%{public}04x bundle=%{public}s",
-            item.first.c_str(), item.second.vid, item.second.pid, item.second.bundleName.c_str());
-    }
     std::string key = MakeKey(vid, pid);
     std::unordered_map<std::string, AppLaunchEntry>::iterator it = entryMap_.find(key);
     if (it != entryMap_.end()) {
