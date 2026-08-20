@@ -119,6 +119,10 @@ static int32_t FindNextDescriptor(const uint8_t *buffer, int32_t size)
         if (header->bDescriptorType == USB_DDK_DT_INTERFACE || header->bDescriptorType == USB_DDK_DT_ENDPOINT) {
             break;
         }
+        if (header->bLength < sizeof(UsbDescriptorHeader) || header->bLength > size) {
+            EDM_LOGW(MODULE_USB_DDK, "invalid descriptor length %{public}hhu, skipping remainder", header->bLength);
+            break;
+        }
         buffer += header->bLength;
         size -= header->bLength;
     }
