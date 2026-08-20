@@ -10,6 +10,17 @@
         {
             "name": "usb_troubleshoot_message",
             "value": "点击查看异常原因及解决方案"
+        },
+        {
+            "name": "usb_app_launch_title",
+            "value": "无线投屏器应用未安装",
+            "attr": {
+                "priority": "translate"
+            }
+        },
+        {
+            "name": "usb_app_launch_message",
+            "value": "检测到匹配可用的无线投屏器应用，请点击前往应用市场下载并完成安装"
         }
     ]
 }

@@ -30,6 +30,9 @@
 #include "system_ability_definition.h"
 #include "usb_device_info.h"
 #include "usb_driver_info.h"
+#ifdef ENABLE_APP_LAUNCH_MANAGER
+#include "app_launch_manager.h"
+#endif
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -45,6 +48,9 @@ void DriverExtMgr::OnStart()
 {
     int32_t ret;
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStart");
+#ifdef ENABLE_APP_LAUNCH_MANAGER
+    AppLaunchManager::GetInstance().LoadConfig();
+#endif
     BusExtensionCore::GetInstance().LoadBusExtensionLibs();
     std::shared_ptr<IDriverChangeCallback> driverChangeCallback =
         BusExtensionCore::GetInstance().AcquireDriverChangeCallback(BUS_TYPE_USB);
@@ -78,6 +84,9 @@ void DriverExtMgr::OnStart()
 void DriverExtMgr::OnStop()
 {
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStop");
+#ifdef ENABLE_APP_LAUNCH_MANAGER
+    AppLaunchManager::GetInstance().UnInit();
+#endif
 }
 
 int DriverExtMgr::Dump(int fd, const std::vector<std::u16string> &args)
@@ -110,6 +119,9 @@ void DriverExtMgr::OnAddSystemAbility(int32_t systemAbilityId, const std::string
         case  COMMON_EVENT_SERVICE_ID: {
             EDM_LOGI(MODULE_SERVICE, "OnAddSystemAbility CommonEventService");
             DriverPkgManager::GetInstance().RegisterBundleStatusCallback();
+#ifdef ENABLE_APP_LAUNCH_MANAGER
+            AppLaunchManager::GetInstance().SubscribeCommonEvent();
+#endif
             if (!cesPromiseUsed_) {
                 commEventPromise_.set_value(systemAbilityId);
                 cesPromiseUsed_ = true;

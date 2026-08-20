@@ -1,0 +1,63 @@
+import("//drivers/external_device_manager/extdevmgr.gni")
+
+if (external_device_manager_enable_app_launch) {
+  ohos_shared_library("app_launch_manager") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    sources = [
+      "app_launch_config.cpp",
+      "app_launch_launcher.cpp",
+      "app_launch_manager.cpp",
+      "app_launch_notifier.cpp",
+      "app_launch_param_subscriber.cpp",
+    ]
+
+    include_dirs = [
+      "${ext_mgr_path}/services/native/driver_extension_manager/include",
+      "${ext_mgr_path}/services/native/driver_extension_manager/include/app_launch_manager",
+      "${ext_mgr_path}/services/native/driver_extension_manager/include/device_notification",
+      "${ext_mgr_path}/utils/include",
+    ]
+
+    configs = [ "${utils_path}:utils_config" ]
+
+    deps = [
+      "${ext_mgr_path}/services/native/driver_extension_manager/src/device_notification:notification_peripheral",
+    ]
+
+    external_deps = [
+      "ability_runtime:ability_manager",
+      "bundle_framework:appexecfwk_base",
+      "bundle_framework:appexecfwk_core",
+      "cJSON:cjson",
+      "common_event_service:cesfwk_innerkits",
+      "c_utils:utils",
+      "distributed_notification_service:ans_innerkits",
+      "hilog:libhilog",
+      "i18n:intl_util",
+      "image_framework:image_native",
+      "ipc:ipc_core",
+      "os_account:os_account_innerkits",
+      "safwk:system_ability_fwk",
+      "samgr:samgr_proxy",
+    ]
+
+    cflags_cc = [
+      "-fno-asynchronous-unwind-tables",
+      "-fno-exceptions",
+      "-fno-unwind-tables",
+      "-Os",
+    ]
+
+    version_script = "app_launch_manager.map"
+    install_enable = true
+    subsystem_name = "hdf"
+    part_name = "external_device_manager"
+  }
+} else {
+  group("app_launch_manager") {}
+}
