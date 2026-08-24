@@ -17,12 +17,17 @@ module_output_path = "external_device_manager/extension_device_manager"
 
 ohos_unittest("ddk_usb_config_desc_test") {
   module_out_path = "${module_output_path}"
-  sources = ["ddk_usb_config_desc_test.cpp"]
+  sources = [
+    "ddk_usb_config_desc_test.cpp",
+    "${ext_mgr_path}/frameworks/ddk/usb/usb_config_desc_parser.cpp"
+    ]
   include_dirs = [
+    "${ext_mgr_path}/frameworks/ddk/usb"
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${utils_path}/include/",
   ]
-  deps = [ "${ext_mgr_path}/frameworks/ddk/usb:usb_ndk" ]
+  defines = [ "USB_CONFIG_DESC_PARSER_UNITTEST" ]
+  deps = []
   external_deps = [
     "c_utils:utils",
     "googletest:gtest_main",
