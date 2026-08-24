@@ -23,11 +23,9 @@ using namespace testing::ext;
 namespace OHOS {
 namespace ExternalDeviceManager {
 
-class UsbConfigDescParserTest : public testing::Test
-{
+class UsbConfigDescParserTest : public testing::Test {
 public:
-    void TearDown() override
-    {
+    void TearDown() override {
         if (config_ != nullptr)
         {
             FreeUsbConfigDescriptor(config_);
@@ -53,7 +51,7 @@ static std::vector<uint8_t> BuildValidConfigDescriptor()
         // USB Interface Descriptor (9 bytes)
         0x09,       //bLength
         0x04,       //bDescriptorType = INTERFACE
-        0x00,       //bInterfaceNumber = 0       
+        0x00,       //bInterfaceNumber = 0
         0x00,       //bAlternatSetting = 0
         0x00,       //bNumEndpoints = 0
         0xFF,       //bInterfaceClass = vendor
