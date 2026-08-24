@@ -20,14 +20,16 @@
 
 using namespace testing::ext;
 
-namespace OHOS{
-namespace ExternalDeviceManager{
+namespace OHOS {
+namespace ExternalDeviceManager {
 
-class UsbConfigDescParserTest : public testing::Test {
+class UsbConfigDescParserTest : public testing::Test
+{
 public:
     void TearDown() override
     {
-        if (config_ != nullptr){
+        if (config_ != nullptr)
+        {
             FreeUsbConfigDescriptor(config_);
             config_ = nullptr;
         }
@@ -62,43 +64,43 @@ static std::vector<uint8_t> BuildValidConfigDescriptor()
     return buf;
 }
 
-HWTEST_F(UsbConfigDescParsetTest,ParseUsbConfigDescriptor_BlengthZero_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthZero_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     buf[2] = 0x14;
     buf[3] = 0x00;
 
-    buf.insert(buf.end(), {0x00,0x21});
+    buf.insert(buf.end(), {0x00, 0x21});
 
     int32_t ret = ParseUsbConfigDescriptor(buf, &config_);
     EXPECT_TRUE(ret != USB_DDK_SUCCESS || config_ != nullptr);
 }
 
-HWTEST_F(UsbConfigDescParsetTest,ParseUsbConfigDescriptor_BlengthOne_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthOne_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     buf[2] = 0x14;
     buf[3] = 0x00;
 
-    buf.insert(buf.end(), {0x01,0x21});
+    buf.insert(buf.end(), {0x01, 0x21});
 
     int32_t ret = ParseUsbConfigDescriptor(buf, &config_);
     EXPECT_TRUE(ret != USB_DDK_SUCCESS || config_ != nullptr);
 }
 
-HWTEST_F(UsbConfigDescParsetTest,ParseUsbConfigDescriptor_BlengthOverflow_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthOverflow_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     buf[2] = 0x14;
     buf[3] = 0x00;
 
-    buf.insert(buf.end(), {0xFF,0x21});
+    buf.insert(buf.end(), {0xFF, 0x21});
 
     int32_t ret = ParseUsbConfigDescriptor(buf, &config_);
     EXPECT_TRUE(ret != USB_DDK_SUCCESS || config_ != nullptr);
 }
 
-HWTEST_F(UsbConfigDescParsetTest,ParseUsbConfigDescriptor_ValidDescriptor_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_ValidDescriptor_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     int32_t ret = ParseUsbConfigDescriptor(buf, &config_);
