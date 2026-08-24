@@ -25,9 +25,9 @@ namespace ExternalDeviceManager {
 
 class UsbConfigDescParserTest : public testing::Test {
 public:
-    void TearDown() override {
-        if (config_ != nullptr)
-        {
+    void TearDown() override
+    {
+        if (config_ != nullptr) {
             FreeUsbConfigDescriptor(config_);
             config_ = nullptr;
         }
