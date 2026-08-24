@@ -153,6 +153,7 @@ if (external_device_manager_enable_service) {
       ":drivers_pkg_manager_test",
       "ddk_base_test:ddk_base_test",
       "ddk_scsi_test:ddk_scsi_test",
+      "ddk_usb_config_desc_test",
       "ddk_usb_serial_test:ddk_usb_serial_test",
       "device_manager_js_test:DeviceManagerJsTest",
       "device_manager_test:device_manager_test",
