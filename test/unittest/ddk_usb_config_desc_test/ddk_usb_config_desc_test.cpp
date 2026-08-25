@@ -46,6 +46,7 @@ static std::vector<uint8_t> BuildValidConfigDescriptor()
         0x12, 0x00, //wTotalLength = 18 (config 9 + interface 9)
         0x01,       //bNumInterfaces = 1
         0x00,       //bConfigurationValue
+        0x00,       //iConfiguration
         0x80,       //bmAttributes
         0x32,       //bMaxPower
         // USB Interface Descriptor (9 bytes)
@@ -62,7 +63,7 @@ static std::vector<uint8_t> BuildValidConfigDescriptor()
     return buf;
 }
 
-HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthZero_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParserTest, ParseUsbConfigDescriptor_BlengthZero_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     buf[2] = 0x14;
@@ -74,7 +75,7 @@ HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthZero_001, Test
     EXPECT_TRUE(ret != USB_DDK_SUCCESS || config_ != nullptr);
 }
 
-HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthOne_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParserTest, ParseUsbConfigDescriptor_BlengthOne_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     buf[2] = 0x14;
@@ -86,7 +87,7 @@ HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthOne_001, TestS
     EXPECT_TRUE(ret != USB_DDK_SUCCESS || config_ != nullptr);
 }
 
-HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthOverflow_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParserTest, ParseUsbConfigDescriptor_BlengthOverflow_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     buf[2] = 0x14;
@@ -98,13 +99,13 @@ HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_BlengthOverflow_001, 
     EXPECT_TRUE(ret != USB_DDK_SUCCESS || config_ != nullptr);
 }
 
-HWTEST_F(UsbConfigDescParsetTest, ParseUsbConfigDescriptor_ValidDescriptor_001, TestSize.Level1)
+HWTEST_F(UsbConfigDescParserTest, ParseUsbConfigDescriptor_ValidDescriptor_001, TestSize.Level1)
 {
     auto buf = BuildValidConfigDescriptor();
     int32_t ret = ParseUsbConfigDescriptor(buf, &config_);
     EXPECT_EQ(ret, USB_DDK_SUCCESS);
     ASSERT_NE(config_, nullptr);
-    EXPECT_EQ(config_->configDescriptor.bNumInterfaces);
+    EXPECT_EQ(config_->configDescriptor.bNumInterfaces,);
 }
 
 } // namespace ExternalDeviceManager
