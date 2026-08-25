@@ -19,10 +19,10 @@ ohos_unittest("ddk_usb_config_desc_test") {
   module_out_path = "${module_output_path}"
   sources = [
     "ddk_usb_config_desc_test.cpp",
-    "${ext_mgr_path}/frameworks/ddk/usb/usb_config_desc_parser.cpp"
+    "${ext_mgr_path}/frameworks/ddk/usb/usb_config_desc_parser.cpp",
     ]
   include_dirs = [
-    "${ext_mgr_path}/frameworks/ddk/usb"
+    "${ext_mgr_path}/frameworks/ddk/usb",
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${utils_path}/include/",
   ]
