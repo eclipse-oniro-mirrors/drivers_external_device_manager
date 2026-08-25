@@ -105,7 +105,7 @@ HWTEST_F(UsbConfigDescParserTest, ParseUsbConfigDescriptor_ValidDescriptor_001, 
     int32_t ret = ParseUsbConfigDescriptor(buf, &config_);
     EXPECT_EQ(ret, USB_DDK_SUCCESS);
     ASSERT_NE(config_, nullptr);
-    EXPECT_EQ(config_->configDescriptor.bNumInterfaces,);
+    EXPECT_EQ(config_->configDescriptor.bNumInterfaces, 1);
 }
 
 } // namespace ExternalDeviceManager
