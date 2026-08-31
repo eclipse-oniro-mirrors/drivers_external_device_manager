@@ -49,6 +49,7 @@ if (external_device_manager_enable_app_launch) {
     cflags_cc = [
       "-fno-asynchronous-unwind-tables",
       "-fno-exceptions",
+      "-fno-rtti",
       "-fno-unwind-tables",
       "-Os",
     ]

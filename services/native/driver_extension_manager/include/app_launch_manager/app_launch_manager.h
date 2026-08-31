@@ -16,11 +16,8 @@
 #ifndef APP_LAUNCH_MANAGER_H
 #define APP_LAUNCH_MANAGER_H
 
-#include <atomic>
-#include <condition_variable>
 #include <mutex>
 #include <string>
-#include <thread>
 #include "app_launch_config.h"
 #include "bundle_mgr_proxy.h"
 #include "app_launch_launcher.h"
@@ -43,7 +40,6 @@ public:
 private:
     AppLaunchManager() = default;
     bool IsAppInstalled(const std::string &bundleName);
-    void NotifyWorker();
 
     AppLaunchConfig config_;
     AppLaunchParamSubscriber paramSubscriber_;
@@ -52,12 +48,6 @@ private:
     std::mutex bundleMgrMutex_;
     sptr<AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
     bool GetBundleMgrProxy();
-
-    std::mutex queueMutex_;
-    std::condition_variable queueCv_;
-    std::vector<AppLaunchEntry> pendingEntries_;
-    std::thread workerThread_;
-    std::atomic<bool> running_{false};
 };
 
 } // namespace ExternalDeviceManager
