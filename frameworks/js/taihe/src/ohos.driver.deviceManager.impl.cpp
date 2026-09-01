@@ -547,22 +547,6 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
 {
     EDM_LOGI(MODULE_DEV_MGR, "Enter BindDriverWithDeviceIdSync:%{public}016" PRIX64, static_cast<uint64_t>(deviceId));
     ExtDevApiMetrics metrics("bindDriverWithDeviceId");
-    std::lock_guard<std::mutex> mapLock(mapMutex);
-    UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
-    if (retCode != UsbErrCode::EDM_OK) {
-        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
-            metrics.SetErrorCode(PERMISSION_DENIED);
-            set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
-        } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
-            metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
-            set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
-        } else {
-            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
-            set_business_error(SERVICE_EXCEPTION_NEW, "bindDevice service failed");
-        }
-        return nullptr;
-    }
-
     ani_vm *vm = nullptr;
     if (ANI_OK != env->GetVM(&vm)) {
         EDM_LOGE(MODULE_DEV_MGR, "GetVM failed.");
@@ -585,7 +569,29 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
 
     ani_object promise;
     env->Promise_New(&data->bindDeferred, &promise);
-    g_callbackMap[data->deviceId] = data;
+
+    {
+        std::lock_guard<std::mutex> mapLock(mapMutex);
+        g_callbackMap[data->deviceId] = data;
+    }
+
+    UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
+    if (retCode != UsbErrCode::EDM_OK) {
+        std::lock_guard<std::mutex> mapLock(mapMutex);
+        g_callbackMap[data->deviceId] = data;
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
+            set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
+        } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
+            metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
+            set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
+        } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+            set_business_error(SERVICE_EXCEPTION_NEW, "bindDevice service failed");
+        }
+        return nullptr;
+    }
+    
     return promise;
 }
 

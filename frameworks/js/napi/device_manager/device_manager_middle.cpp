@@ -498,19 +498,6 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    std::lock_guard<std::mutex> mapLock(mapMutex);
-    UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
-    if (retCode != UsbErrCode::EDM_OK) {
-        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
-            metrics.SetErrorCode(PERMISSION_DENIED);
-            ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
-        } else {
-            metrics.SetErrorCode(SERVICE_EXCEPTION);
-            ThrowErr(env, SERVICE_EXCEPTION, "bindDevice service failed");
-        }
-        return nullptr;
-    }
-
     sptr<AsyncData> data = new (std::nothrow) AsyncData {};
     if (data == nullptr) {
         metrics.SetErrorCode(PARAMETER_ERROR);
@@ -526,8 +513,26 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     } else {
         NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
     }
-    g_callbackMap[data->deviceId] = data;
 
+    {
+        std::lock_guard<std::mutex> mapLock(mapMutex);
+        g_callbackMap[data->deviceId] = data;
+    }
+
+    UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
+    if (retCode != UsbErrCode::EDM_OK) {
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            g_callbackMap[data->deviceId] = data;
+            metrics.SetErrorCode(PERMISSION_DENIED);
+            ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
+        } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION);
+            ThrowErr(env, SERVICE_EXCEPTION, "bindDevice service failed");
+        }
+
+        return nullptr;
+    }
     return promise;
 }
 
@@ -606,23 +611,6 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    std::lock_guard<std::mutex> mapLock(mapMutex);
-    UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
-    if (retCode != UsbErrCode::EDM_OK) {
-        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
-            metrics.SetErrorCode(PERMISSION_DENIED);
-            ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
-        } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
-            metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
-            ThrowErr(env, SERVICE_NOT_ALLOW_ACCESS,
-                "bindDriver: The driver service does not allow any client to bind.");
-        } else {
-            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
-            ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver service failed");
-        }
-        return nullptr;
-    }
-
     sptr<AsyncData> data = new (std::nothrow) AsyncData {};
     if (data == nullptr) {
         metrics.SetErrorCode(PARAMETER_ERROR);
@@ -638,7 +626,29 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     } else {
         NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
     }
-    g_callbackMap[data->deviceId] = data;
+
+    {
+        std::lock_guard<std::mutex> mapLock(mapMutex);
+        g_callbackMap[data->deviceId] = data;
+    }
+
+    UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
+    if (retCode != UsbErrCode::EDM_OK) {
+        std::lock_guard<std::mutex> mapLock(mapMutex);
+        g_callbackMap[data->deviceId] = data;
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            metrics.SetErrorCode(PERMISSION_DENIED);
+            ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
+        } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
+            metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
+            ThrowErr(env, SERVICE_NOT_ALLOW_ACCESS,
+                "bindDriver: The driver service does not allow any client to bind.");
+        } else {
+            metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+            ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver service failed");
+        }
+        return nullptr;
+    }
 
     return promise;
 }
