@@ -65,20 +65,18 @@ std::vector<std::string> AppLaunchConfig::GetVersionNums(const std::string &file
     struct stat fileStat;
     int ret = stat(filePath.c_str(), &fileStat);
     if (ret != 0) {
-        EDM_LOGE(MODULE_BUS_USB, "stat failed, errno=%{public}d(%{public}s), path=%{public}s",
-            errno, strerror(errno), filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "stat failed, errno=%{public}d(%{public}s)",
+            errno, strerror(errno));
         return {};
     }
-    EDM_LOGI(MODULE_BUS_USB, "stat success, size=%{public}ld, path=%{public}s",
-        static_cast<long>(fileStat.st_size), filePath.c_str());
     if (fileStat.st_size <= 0 || fileStat.st_size > MAX_VERSION_FILE_LEN) {
-        EDM_LOGE(MODULE_BUS_USB, "version file stat failed or invalid size: %{public}s", filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "version file stat failed or invalid size");
         return {};
     }
 
     std::ifstream file(filePath);
     if (!file.is_open()) {
-        EDM_LOGE(MODULE_BUS_USB, "failed to open version file: %{public}s", filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "failed to open version file");
         return {};
     }
 
@@ -87,26 +85,25 @@ std::vector<std::string> AppLaunchConfig::GetVersionNums(const std::string &file
     file.close();
 
     if (line.empty()) {
-        EDM_LOGE(MODULE_BUS_USB, "version file line is empty: %{public}s", filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "version file line is empty");
         return {};
     }
 
     std::vector<std::string> versionStr = SplitString(line, '=');
     const size_t expectedSize = 2;
     if (versionStr.size() != expectedSize) {
-        EDM_LOGE(MODULE_BUS_USB, "version format invalid, expected 'key=value': %{public}s", filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "version format invalid, expected 'key=value'");
         return {};
     }
 
     if (versionStr[1].empty()) {
-        EDM_LOGE(MODULE_BUS_USB, "version value is empty: %{public}s", filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "version value is empty");
         return {};
     }
 
     Trim(versionStr[1]);
     std::vector<std::string> versionNum = SplitString(versionStr[1], '.');
-    EDM_LOGI(MODULE_BUS_USB, "read version from %{public}s: %{public}s",
-        filePath.c_str(), versionStr[1].c_str());
+    EDM_LOGI(MODULE_BUS_USB, "read version success");
     return versionNum;
 }
 
@@ -127,13 +124,13 @@ bool AppLaunchConfig::CompareVersion(const std::vector<std::string> &localVersio
             errno = 0;
             long localValue = std::strtol(localVersion[i].c_str(), nullptr, 10);
             if (errno == ERANGE || localValue > INT32_MAX || localValue < 0) {
-                EDM_LOGE(MODULE_BUS_USB, "local version segment overflow: %{public}s", localVersion[i].c_str());
+                EDM_LOGE(MODULE_BUS_USB, "local version segment overflow");
                 return false;
             }
             errno = 0;
             long cloudValue = std::strtol(cloudVersion[i].c_str(), nullptr, 10);
             if (errno == ERANGE || cloudValue > INT32_MAX || cloudValue < 0) {
-                EDM_LOGE(MODULE_BUS_USB, "cloud version segment overflow: %{public}s", cloudVersion[i].c_str());
+                EDM_LOGE(MODULE_BUS_USB, "cloud version segment overflow");
                 return false;
             }
             return localValue < cloudValue;
@@ -182,7 +179,7 @@ bool AppLaunchConfig::LoadConfig()
 {
     EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
     std::string effectivePath = GetHigherVersionPath() + CONFIG_FILE_NAME;
-    EDM_LOGI(MODULE_BUS_USB, "effective config path: %{public}s", effectivePath.c_str());
+    EDM_LOGI(MODULE_BUS_USB, "effective config path selected");
     std::unordered_map<std::string, AppLaunchEntry> newMap;
     if (!ParseConfigFileTo(effectivePath, newMap)) {
         return false;
@@ -194,14 +191,14 @@ bool AppLaunchConfig::LoadConfig()
 
 std::optional<AppLaunchEntry> AppLaunchConfig::FindEntry(uint16_t vid, uint16_t pid)
 {
-    EDM_LOGI(MODULE_BUS_USB, "%{public}s enter, vid=%{public}04x, pid=%{public}04x", __func__, vid, pid);
+    EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
     std::lock_guard<std::mutex> lock(configMutex_);
     std::string key = MakeKey(vid, pid);
     std::unordered_map<std::string, AppLaunchEntry>::iterator it = entryMap_.find(key);
     if (it != entryMap_.end()) {
         return it->second;
     }
-    EDM_LOGI(MODULE_BUS_USB, "entry not found for key %{public}s", key.c_str());
+    EDM_LOGI(MODULE_BUS_USB, "entry not found");
     return std::nullopt;
 }
 
@@ -209,19 +206,19 @@ cJSON *AppLaunchConfig::ParseJsonRoot(const std::string &filePath)
 {
     struct stat fileStat;
     if (stat(filePath.c_str(), &fileStat) != 0) {
-        EDM_LOGE(MODULE_BUS_USB, "stat config file failed, errno=%{public}d(%{public}s), path=%{public}s",
-            errno, strerror(errno), filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "stat config file failed, errno=%{public}d(%{public}s)",
+            errno, strerror(errno));
         return nullptr;
     }
     if (fileStat.st_size <= 0 || fileStat.st_size > MAX_CONFIG_FILE_LEN) {
-        EDM_LOGE(MODULE_BUS_USB, "config file size=%{public}ld invalid, path=%{public}s",
-            static_cast<long>(fileStat.st_size), filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "config file size=%{public}ld invalid",
+            static_cast<long>(fileStat.st_size));
         return nullptr;
     }
 
     std::ifstream file(filePath.c_str(), std::ios::in | std::ios::binary);
     if (!file.is_open()) {
-        EDM_LOGE(MODULE_BUS_USB, "failed to open config file %{public}s", filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "failed to open config file");
         return nullptr;
     }
 
@@ -231,14 +228,12 @@ cJSON *AppLaunchConfig::ParseJsonRoot(const std::string &filePath)
 
     cJSON *root = cJSON_Parse(content.c_str());
     if (root == nullptr) {
-        const char *errPtr = cJSON_GetErrorPtr();
-        EDM_LOGE(MODULE_BUS_USB, "failed to parse config json %{public}s, error at: %{public}s",
-            filePath.c_str(), errPtr ? errPtr : "unknown");
+        EDM_LOGE(MODULE_BUS_USB, "failed to parse config json");
         return nullptr;
     }
 
     if (cJSON_IsNull(root) || !cJSON_IsArray(root)) {
-        EDM_LOGE(MODULE_BUS_USB, "config json root is not array %{public}s", filePath.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "config json root is not array");
         cJSON_Delete(root);
         return nullptr;
     }
@@ -273,13 +268,13 @@ bool AppLaunchConfig::ParseDeviceItemTo(cJSON *deviceItem,
     errno = 0;
     unsigned long vidVal = std::strtoul(vidObj->valuestring, nullptr, 16);
     if (errno != 0 || vidVal > UINT16_MAX) {
-        EDM_LOGE(MODULE_BUS_USB, "vid value invalid: %{public}s", vidObj->valuestring);
+        EDM_LOGE(MODULE_BUS_USB, "vid value invalid");
         return false;
     }
     errno = 0;
     unsigned long pidVal = std::strtoul(pidObj->valuestring, nullptr, 16);
     if (errno != 0 || pidVal > UINT16_MAX) {
-        EDM_LOGE(MODULE_BUS_USB, "pid value invalid: %{public}s", pidObj->valuestring);
+        EDM_LOGE(MODULE_BUS_USB, "pid value invalid");
         return false;
     }
 
@@ -294,8 +289,6 @@ bool AppLaunchConfig::ParseDeviceItemTo(cJSON *deviceItem,
     }
 
     std::string key = MakeKey(entry.vid, entry.pid);
-    EDM_LOGI(MODULE_BUS_USB, "loaded entry: vid=%{public}04x pid=%{public}04x bundle=%{public}s",
-        entry.vid, entry.pid, entry.bundleName.c_str());
     outMap[key] = std::move(entry);
     return true;
 }

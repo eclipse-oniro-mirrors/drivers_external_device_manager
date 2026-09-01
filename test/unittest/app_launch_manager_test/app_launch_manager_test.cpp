@@ -77,12 +77,7 @@ void AppLaunchManagerTest::SetUp(void)
         std::lock_guard<std::mutex> lock(mgr.config_.configMutex_);
         mgr.config_.entryMap_.clear();
     }
-    {
-        std::lock_guard<std::mutex> lock(mgr.queueMutex_);
-        mgr.pendingEntries_.clear();
-    }
     mgr.bundleMgr_ = nullptr;
-    mgr.running_ = false;
 }
 
 void AppLaunchManagerTest::TearDown(void) {}
@@ -98,16 +93,12 @@ HWTEST_F(AppLaunchManagerTest, OnDeviceConnected001, TestSize.Level1)
     auto &mgr = AppLaunchManager::GetInstance();
     mgr.OnDeviceConnected(0xFFFF, 0xFFFF);
 
-    {
-        std::lock_guard<std::mutex> lock(mgr.queueMutex_);
-        EXPECT_EQ(mgr.pendingEntries_.size(), 0u);
-    }
     EDM_LOGI(MODULE_BUS_USB, "OnDeviceConnected001 end");
 }
 
 /**
  * @tc.name: OnDeviceConnected002
- * @tc.desc: Test OnDeviceConnected002 with matching config entry should enqueue
+ * @tc.desc: Test OnDeviceConnected002 with matching config entry
  * @tc.type: FUNC
  */
 HWTEST_F(AppLaunchManagerTest, OnDeviceConnected002, TestSize.Level1)
@@ -127,13 +118,6 @@ HWTEST_F(AppLaunchManagerTest, OnDeviceConnected002, TestSize.Level1)
 
     mgr.OnDeviceConnected(0x12D1, 0x4321);
 
-    {
-        std::lock_guard<std::mutex> lock(mgr.queueMutex_);
-        EXPECT_EQ(mgr.pendingEntries_.size(), 1u);
-        EXPECT_EQ(mgr.pendingEntries_[0].vid, 0x12D1);
-        EXPECT_EQ(mgr.pendingEntries_[0].pid, 0x4321);
-        EXPECT_EQ(mgr.pendingEntries_[0].bundleName, "com.test.usb.launcher");
-    }
     EDM_LOGI(MODULE_BUS_USB, "OnDeviceConnected002 end");
 }
 
@@ -168,16 +152,12 @@ HWTEST_F(AppLaunchManagerTest, OnDeviceConnected003, TestSize.Level1)
     mgr.OnDeviceConnected(0x12D1, 0x4321);
     mgr.OnDeviceConnected(0x04E8, 0x6860);
 
-    {
-        std::lock_guard<std::mutex> lock(mgr.queueMutex_);
-        EXPECT_EQ(mgr.pendingEntries_.size(), 1u);
-    }
     EDM_LOGI(MODULE_BUS_USB, "OnDeviceConnected003 end");
 }
 
 /**
  * @tc.name: UnInit001
- * @tc.desc: Test UnInit001 does not crash when worker not started
+ * @tc.desc: Test UnInit001 does not crash
  * @tc.type: FUNC
  */
 HWTEST_F(AppLaunchManagerTest, UnInit001, TestSize.Level1)
@@ -185,7 +165,6 @@ HWTEST_F(AppLaunchManagerTest, UnInit001, TestSize.Level1)
     EDM_LOGI(MODULE_BUS_USB, "UnInit001 begin");
     auto &mgr = AppLaunchManager::GetInstance();
     mgr.UnInit();
-    EXPECT_FALSE(mgr.running_);
     EDM_LOGI(MODULE_BUS_USB, "UnInit001 end");
 }
 

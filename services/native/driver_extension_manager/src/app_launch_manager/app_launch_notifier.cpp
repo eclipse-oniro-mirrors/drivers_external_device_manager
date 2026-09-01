@@ -93,7 +93,7 @@ static bool SetWantAgent(Notification::NotificationRequest &request, const std::
 bool AppLaunchNotifier::GetPixelMap(const std::string &path)
 {
     if (access(path.c_str(), F_OK) != 0) {
-        EDM_LOGE(MODULE_BUS_USB, "Icon file path not exists: %{public}s", path.c_str());
+        EDM_LOGE(MODULE_BUS_USB, "Icon file path not exists");
         iconPixelMap_ = nullptr;
         return false;
     }
@@ -118,7 +118,7 @@ bool AppLaunchNotifier::GetPixelMap(const std::string &path)
 
 int32_t AppLaunchNotifier::SendNotification(const AppLaunchEntry &entry)
 {
-    EDM_LOGI(MODULE_BUS_USB, "%{public}s enter, bundleName=%{public}s", __func__, entry.bundleName.c_str());
+    EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
 
     auto &localeConfig = NotificationLocale::GetInstance();
     localeConfig.ParseLocaleCfg();
@@ -162,11 +162,10 @@ int32_t AppLaunchNotifier::SendNotification(const AppLaunchEntry &entry)
 
     ErrCode publishResult = Notification::NotificationHelper::PublishNotification(request);
     if (publishResult != 0) {
-        EDM_LOGE(MODULE_BUS_USB, "PublishNotification failed for %{public}s, ret=%{public}d",
-            entry.bundleName.c_str(), publishResult);
+        EDM_LOGE(MODULE_BUS_USB, "PublishNotification failed, ret=%{public}d", publishResult);
         return EDM_NOK;
     }
-    EDM_LOGI(MODULE_BUS_USB, "SendNotification success for %{public}s", entry.bundleName.c_str());
+    EDM_LOGI(MODULE_BUS_USB, "SendNotification success");
     return EDM_OK;
 }
 
