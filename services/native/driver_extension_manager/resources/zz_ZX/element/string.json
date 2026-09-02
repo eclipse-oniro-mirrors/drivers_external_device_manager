@@ -1,12 +1,20 @@
 {
-    "string": [
+    "string":[
         {
-            "name": "usb_transmission_error_title",
-            "value": "[TS_1090964]_USB transfer error"
+            "name":"usb_transmission_error_title",
+            "value":"[TS_1090964]_USB transfer error"
         },
         {
-            "name": "usb_troubleshoot_message",
-            "value": "[TS_1090963]_Click to view details and solutions."
+            "name":"usb_troubleshoot_message",
+            "value":"[TS_1090963]_Click to view details and solutions."
+        },
+        {
+            "name":"usb_app_launch_message",
+            "value":"[TS_1252761]_Get the companion app for your wireless display adapter from AppGallery."
+        },
+        {
+            "name":"usb_app_launch_title",
+            "value":"[TS_1252760]_Wireless display adapter"
         }
     ]
 }

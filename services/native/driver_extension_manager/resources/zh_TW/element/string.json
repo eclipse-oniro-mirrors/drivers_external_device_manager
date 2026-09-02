@@ -1,17 +1,31 @@
 {
-    "string": [
+    "string":[
         {
-            "name": "usb_transmission_error_title",
-            "value": "USB 傳輸異常",
-            "attr": {
-                "priority": "translate"
+            "name":"usb_transmission_error_title",
+            "value":"USB 傳輸異常",
+            "attr":{
+                "priority":"translate"
             }
         },
         {
-            "name": "usb_troubleshoot_message",
-            "value": "輕觸查看異常原因及解決方案",
-            "attr": {
-                "priority": "translate"
+            "name":"usb_troubleshoot_message",
+            "value":"輕觸查看異常原因及解決方案",
+            "attr":{
+                "priority":"translate"
+            }
+        },
+        {
+            "name":"usb_app_launch_message",
+            "value":"偵測到符合可用的無線投影機應用程式，請輕觸前往應用程式商店下載並完成安裝",
+            "attr":{
+                "priority":"translate"
+            }
+        },
+        {
+            "name":"usb_app_launch_title",
+            "value":"無線投影機應用程式未安裝",
+            "attr":{
+                "priority":"translate"
             }
         }
     ]

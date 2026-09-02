@@ -1,17 +1,31 @@
 {
-    "string": [
+    "string":[
         {
-            "name": "usb_transmission_error_title",
-            "value": "\u200fUSB يوللاش خاتالىقى",
-            "attr": {
-                "priority": "translate"
+            "name":"usb_transmission_error_title",
+            "value":"\u200fUSB يوللاش خاتالىقى",
+            "attr":{
+                "priority":"translate"
             }
         },
         {
-            "name": "usb_troubleshoot_message",
-            "value": "چېكىپ سەۋەبى ۋە چارىسىنى كۆرۈڭ.",
-            "attr": {
-                "priority": "translate"
+            "name":"usb_troubleshoot_message",
+            "value":"چېكىپ سەۋەبى ۋە چارىسىنى كۆرۈڭ.",
+            "attr":{
+                "priority":"translate"
+            }
+        },
+        {
+            "name":"usb_app_launch_message",
+            "value":"ماس سىمسىز سۇنغۇچ ئەپ بايقالدى، چېكىپ ئەپ بازىرىغا كىرىپ چۈشۈرۈپ قاچىلاڭ.",
+            "attr":{
+                "priority":"translate"
+            }
+        },
+        {
+            "name":"usb_app_launch_title",
+            "value":"سىمسىز سۇنغۇچ قاچىلانمىغان",
+            "attr":{
+                "priority":"translate"
             }
         }
     ]
