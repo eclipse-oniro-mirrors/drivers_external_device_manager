@@ -16,14 +16,14 @@
         },
         {
             "name": "usb_app_launch_title",
-            "value": "Wireless display adapter app not installed",
+            "value": "Wireless display adapter",
             "attr": {
                 "priority": "translate"
             }
         },
         {
             "name": "usb_app_launch_message",
-            "value": "A compatible wireless display adapter app is detected. Tap to download and install from AppGallery.",
+            "value": "Get the companion app for your wireless display adapter from AppGallery.",
             "attr": {
                 "priority": "translate"
             }

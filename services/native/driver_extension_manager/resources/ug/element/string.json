@@ -13,6 +13,20 @@
             "attr": {
                 "priority": "translate"
             }
+        },
+        {
+            "name": "usb_app_launch_message",
+            "value": "ماس سىمسىز سۇنغۇچ ئەپ بايقالدى، چېكىپ ئەپ بازىرىغا كىرىپ چۈشۈرۈپ قاچىلاڭ.",
+            "attr": {
+                "priority": "translate"
+            }
+        },
+        {
+            "name": "usb_app_launch_title",
+            "value": "سىمسىز سۇنغۇچ قاچىلانمىغان",
+            "attr": {
+                "priority": "translate"
+            }
         }
     ]
 }
