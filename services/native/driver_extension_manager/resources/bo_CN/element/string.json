@@ -1,31 +1,31 @@
 {
-    "string":[
+    "string": [
         {
-            "name":"usb_transmission_error_title",
-            "value":"USB བརྒྱུད་གཏོང་རྒྱུན་ལྡན་མིན།",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_transmission_error_title",
+            "value": "USB བརྒྱུད་གཏོང་རྒྱུན་ལྡན་མིན།",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_troubleshoot_message",
-            "value":"བརྡབས་ནས་རྒྱུན་ལྡན་མིན་པའི་རྒྱུ་རྐྱེན་དང་གནད་དོན་སེལ་ཐབས་ལ་ལྟ་ཞིབ་བྱེད།",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_troubleshoot_message",
+            "value": "བརྡབས་ནས་རྒྱུན་ལྡན་མིན་པའི་རྒྱུ་རྐྱེན་དང་གནད་དོན་སེལ་ཐབས་ལ་ལྟ་ཞིབ་བྱེད།",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_app_launch_message",
-            "value":"སྤྱོད་རུང་བའི་སྐུད་མེད་ཐོག་བརྙན་ཡོལ་འཕྲོ་བའི་ཡོ་ཆས་ཀྱི་ཉེར་སྤྱོད་སྡེབ་སྒྲིག་བྱས་པ་ཞིབ་དཔྱད་ཚད་ལེན་བྱུང་ལ། བརྡབས་ནས་ཉེར་སྤྱོད་ཁྲོམ་རར་ཕེབས་ནས་ཕབ་ལེན་བྱེད་པ་མ་ཟད་སྒྲིག་འཇུག་ལེགས་འགྲུབ་བྱེད་རོགས།",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_app_launch_message",
+            "value": "སྤྱོད་རུང་བའི་སྐུད་མེད་ཐོག་བརྙན་ཡོལ་འཕྲོ་བའི་ཡོ་ཆས་ཀྱི་ཉེར་སྤྱོད་སྡེབ་སྒྲིག་བྱས་པ་ཞིབ་དཔྱད་ཚད་ལེན་བྱུང་ལ། བརྡབས་ནས་ཉེར་སྤྱོད་ཁྲོམ་རར་ཕེབས་ནས་ཕབ་ལེན་བྱེད་པ་མ་ཟད་སྒྲིག་འཇུག་ལེགས་འགྲུབ་བྱེད་རོགས།",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_app_launch_title",
-            "value":"སྐུད་མེད་ཐོག་བརྙན་ཡོལ་འཕྲོ་བའི་ཡོ་ཆས་ཀྱི་ཉེར་སྤྱོད་སྒྲིག་འཇུག་བྱས་མེད།",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_app_launch_title",
+            "value": "སྐུད་མེད་ཐོག་བརྙན་ཡོལ་འཕྲོ་བའི་ཡོ་ཆས་ཀྱི་ཉེར་སྤྱོད་སྒྲིག་འཇུག་བྱས་མེད།",
+            "attr": {
+                "priority": "translate"
             }
         }
     ]

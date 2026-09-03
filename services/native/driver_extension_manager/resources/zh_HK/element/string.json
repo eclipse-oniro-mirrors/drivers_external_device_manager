@@ -1,31 +1,31 @@
 {
-    "string":[
+    "string": [
         {
-            "name":"usb_transmission_error_title",
-            "value":"USB 傳輸出現異常",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_transmission_error_title",
+            "value": "USB 傳輸出現異常",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_troubleshoot_message",
-            "value":"輕觸檢視出現異常原因及解決方案",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_troubleshoot_message",
+            "value": "輕觸檢視出現異常原因及解決方案",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_app_launch_message",
-            "value":"偵測到配對可用的無線投影器應用程式，請輕觸前往應用程式市場下載並完成安裝",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_app_launch_message",
+            "value": "偵測到配對可用的無線投影器應用程式，請輕觸前往應用程式市場下載並完成安裝",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_app_launch_title",
-            "value":"無線投影器應用程式未安裝",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_app_launch_title",
+            "value": "無線投影器應用程式未安裝",
+            "attr": {
+                "priority": "translate"
             }
         }
     ]

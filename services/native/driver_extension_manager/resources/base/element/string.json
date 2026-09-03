@@ -1,31 +1,31 @@
 {
-    "string":[
+    "string": [
         {
-            "name":"usb_transmission_error_title",
-            "value":"USB transfer error",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_transmission_error_title",
+            "value": "USB transfer error",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_troubleshoot_message",
-            "value":"Click to view details and solutions.",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_troubleshoot_message",
+            "value": "Click to view details and solutions.",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_app_launch_title",
-            "value":"Wireless display adapter",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_app_launch_title",
+            "value": "Wireless display adapter",
+            "attr": {
+                "priority": "translate"
             }
         },
         {
-            "name":"usb_app_launch_message",
-            "value":"Get the companion app for your wireless display adapter from AppGallery.",
-            "attr":{
-                "priority":"translate"
+            "name": "usb_app_launch_message",
+            "value": "Get the companion app for your wireless display adapter from AppGallery.",
+            "attr": {
+                "priority": "translate"
             }
         }
     ]
