@@ -314,6 +314,13 @@ int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devM
         return USB_DDK_INVALID_PARAMETER;
     }
 
+    if (devMmap->offset > devMmap->size || devMmap->bufferLength > devMmap->size - devMmap->offset) {
+        EDM_LOGE(MODULE_USB_DDK,
+            "invalid offset or bufferLength: size=%{public}zu, offset=%{public}u, len=%{public}u",
+            devMmap->size, devMmap->offset, devMmap->bufferLength);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+
     auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_2::UsbRequestPipe *>(pipe);
     return TransToUsbCode(g_ddk->SendPipeRequest(
         *tmpSetUp, devMmap->size, devMmap->offset, devMmap->bufferLength, devMmap->transferedLength));
@@ -335,9 +342,17 @@ int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem 
         return USB_DDK_INVALID_PARAMETER;
     }
 
+    if (ashmem->offset > ashmem->size || ashmem->bufferLength > ashmem->size - ashmem->offset) {
+        EDM_LOGE(MODULE_USB_DDK,
+            "invalid offset or bufferLength: size=%{public}u, offset=%{public}u, len=%{public}u",
+            ashmem->size, ashmem->offset, ashmem->bufferLength);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+
     auto tmpSetUp = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_2::UsbRequestPipe *>(pipe);
     std::vector<uint8_t> address = std::vector<uint8_t>(ashmem->address, ashmem->address + ashmem->size);
-    OHOS::HDI::Usb::Ddk::V1_2::UsbAshmem usbAshmem = {ashmem->ashmemFd, address, ashmem->size, 0, ashmem->size, 0};
+    OHOS::HDI::Usb::Ddk::V1_2::UsbAshmem usbAshmem = {
+        ashmem->ashmemFd, address, ashmem->size, ashmem->offset, ashmem->bufferLength, 0};
     return TransToUsbCode(g_ddk->SendPipeRequestWithAshmem(*tmpSetUp, usbAshmem, ashmem->transferredLength));
 #else
     return USB_DDK_INVALID_OPERATION;
