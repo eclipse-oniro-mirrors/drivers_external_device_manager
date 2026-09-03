@@ -649,7 +649,7 @@ void ExtDeviceManager::SetDriverChangeCallback(shared_ptr<IDriverChangeCallback>
 }
 
 int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo> &driverInfo,
-   const unordered_set<std::string> &accessibleAppIds, uint32_t callingTokenId) const
+    const unordered_set<std::string> &accessibleAppIds, uint32_t callingTokenId) const
 {
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "the device does not have a matching driver");
