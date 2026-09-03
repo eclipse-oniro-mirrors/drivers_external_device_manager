@@ -105,5 +105,15 @@ bool ExtPermissionManager::GetPermissionValues(const std::string &permissionName
     cJSON_Delete(jsonObj);
     return !permissionValues.empty();
 }
+
+bool ExtPermissionManager::GetHapTokenInfo(uint32_t tokenId, HapTokenInfo &hapTokenInfo)
+{
+    int32_t ret = AccessTokenKit::GetHapTokenInfo(tokenId, hapTokenInfo);
+    if (ret != RET_SUCCESS) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s GetHapTokenInfo failed, ret: %{public}d", __func__, ret);
+        return false;
+    }
+    return true;
+}
 } // namespace ExternalDeviceManager
 } // namespace OHOS

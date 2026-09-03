@@ -21,6 +21,7 @@
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
+#include "bundle_mgr_proxy.h"
 #include "device.h"
 #include "ext_object.h"
 #include "idriver_change_callback.h"
@@ -30,6 +31,7 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
+using namespace OHOS::AppExecFwk;
 class ExtDeviceManager final {
     DECLARE_SINGLE_INSTANCE_BASE(ExtDeviceManager);
 
@@ -64,7 +66,9 @@ private:
     void UnLoadSelf(void);
     size_t GetTotalDeviceNum(void) const;
     int32_t CheckAccessPermission(const std::shared_ptr<DriverInfo> &driverInfo,
-        const unordered_set<std::string> &accessibleAppIds) const;
+        const unordered_set<std::string> &accessibleAppIds, uint32_t callingTokenId) const;
+    bool IsCallerMatchDriverApp(const std::string &driverAppIdentifier,
+        uint32_t callingTokenId, const sptr<IBundleMgr> &bundleManager) const;
     unordered_map<BusType, unordered_map<uint64_t, shared_ptr<Device>>> deviceMap_;
     unordered_map<string, unordered_set<uint64_t>> bundleMatchMap_; // driver matching table
     mutex deviceMapMutex_;

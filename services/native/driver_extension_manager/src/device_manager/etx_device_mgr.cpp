@@ -18,6 +18,7 @@
 #include "common_timer_errors.h"
 #include "driver_extension_controller.h"
 #include "driver_pkg_manager.h"
+#include "ext_permission_manager.h"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #include "iservice_registry.h"
@@ -592,7 +593,7 @@ int32_t ExtDeviceManager::ConnectDriverWithDeviceId(uint64_t deviceId, uint32_t 
         return EDM_NOK;
     }
 
-    int32_t ret = CheckAccessPermission(device->GetDriverInfo(), accessibleAppIds);
+    int32_t ret = CheckAccessPermission(device->GetDriverInfo(), accessibleAppIds, callingTokenId);
     if (ret != EDM_OK) {
         EDM_LOGE(MODULE_DEV_MGR, "failed to bind device verification with %{public}016" PRIX64 " deviceId", deviceId);
         auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_BIND);
@@ -648,7 +649,7 @@ void ExtDeviceManager::SetDriverChangeCallback(shared_ptr<IDriverChangeCallback>
 }
 
 int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo> &driverInfo,
-    const unordered_set<std::string> &accessibleAppIds) const
+   const unordered_set<std::string> &accessibleAppIds, uint32_t callingTokenId) const
 {
     if (driverInfo == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "the device does not have a matching driver");
@@ -677,20 +678,43 @@ int32_t ExtDeviceManager::CheckAccessPermission(const std::shared_ptr<DriverInfo
 
     std::string bundleName = driverInfo->GetBundleName();
     int32_t userId = driverInfo->GetUserId();
-    OHOS::AppExecFwk::AppProvisionInfo info;
-    ErrCode ret = bundleManager->GetAppProvisionInfo(bundleName, userId, info);
+    OHOS::AppExecFwk::AppProvisionInfo driverProvisionInfo;
+    ErrCode ret = bundleManager->GetAppProvisionInfo(bundleName, userId, driverProvisionInfo);
     if (ret != ERR_OK) {
-        EDM_LOGE(MODULE_DEV_MGR, "Failed to get app provision info, ret=%{public}d", ret);
+        EDM_LOGE(MODULE_DEV_MGR, "Failed to get driver app provision info, ret=%{public}d", ret);
         return EDM_ERR_NO_PERM;
     }
 
-    auto driverIter = accessibleAppIds.find(info.appIdentifier);
+    if (IsCallerMatchDriverApp(driverProvisionInfo.appIdentifier, callingTokenId, bundleManager)) {
+        EDM_LOGI(MODULE_DEV_MGR, "caller is the driver app itself, skip access permission check");
+        return EDM_OK;
+    }
+
+    auto driverIter = accessibleAppIds.find(driverProvisionInfo.appIdentifier);
     if (driverIter == accessibleAppIds.end()) {
         EDM_LOGE(MODULE_DEV_MGR, "%{public}s does not exist in ohos.permission.ACCESS_DDK_DRIVERS configuration",
             bundleName.c_str());
         return EDM_ERR_NO_PERM;
     }
     return EDM_OK;
+}
+
+bool ExtDeviceManager::IsCallerMatchDriverApp(const std::string &driverAppIdentifier,
+    uint32_t callingTokenId, const sptr<IBundleMgr> &bundleManager) const
+{
+    Security::AccessToken::HapTokenInfo callerHapTokenInfo;
+    if (!ExtPermissionManager::GetHapTokenInfo(callingTokenId, callerHapTokenInfo)) {
+        EDM_LOGW(MODULE_DEV_MGR, "Failed to get caller hap token info");
+        return false;
+    }
+    OHOS::AppExecFwk::AppProvisionInfo callerProvisionInfo;
+    ErrCode ret = bundleManager->GetAppProvisionInfo(
+        callerHapTokenInfo.bundleName, callerHapTokenInfo.userID, callerProvisionInfo);
+    if (ret != ERR_OK) {
+        EDM_LOGW(MODULE_DEV_MGR, "Failed to get caller app provision info, ret=%{public}d", ret);
+        return false;
+    }
+    return driverAppIdentifier == callerProvisionInfo.appIdentifier;
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS

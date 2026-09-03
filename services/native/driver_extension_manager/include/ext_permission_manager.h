@@ -19,6 +19,8 @@
 #include <iostream>
 #include <unordered_set>
 
+#include "hap_token_info.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 class ExtPermissionManager {
@@ -33,6 +35,7 @@ public:
 
     static bool GetPermissionValues(const std::string &permissionName,
         std::unordered_set<std::string> &permissionValues);
+    static bool GetHapTokenInfo(uint32_t tokenId, Security::AccessToken::HapTokenInfo &hapTokenInfo);
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS
