@@ -1471,7 +1471,7 @@ HWTEST_F(ScsiPeripheralTest, SendRequestByCdbNullTest008, TestSize.Level1)
 
 /**
  * @tc.name: SendRequestByCdbNullTest009
- * @tc.desc: Verify OH_ScsiPeripheral_SendRequestByCdb returns INVALID_PARAMETER when memMap.bufferLength is out of bounds.
+ * @tc.desc: Verify OH_ScsiPeripheral_SendRequestByCdb returns INVALID_PARAMETER memMap.bufferLength is out of bounds.
  * @tc.type: FUNC
  */
 HWTEST_F(ScsiPeripheralTest, SendRequestByCdbNullTest009, TestSize.Level1)
