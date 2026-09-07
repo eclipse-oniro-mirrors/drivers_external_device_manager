@@ -221,9 +221,8 @@ ErrCode DriverExtMgr::BindDriverWithDeviceId(int32_t &errorCode, uint64_t device
     uint32_t callingTokenId = ExtPermissionManager::GetCallingTokenID();
     unordered_set<std::string> accessibleAppIds;
     if (!ExtPermissionManager::GetPermissionValues(ACCESS_DDK_DRIVERS_PERMISSION, accessibleAppIds)) {
-        EDM_LOGE(MODULE_DEV_MGR, "%{public}s failed to get permission value", __func__);
-        errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NO_PERM);
-        return static_cast<int32_t>(UsbErrCode::EDM_OK);
+        EDM_LOGW(MODULE_DEV_MGR, "%{public}s the appIds parameter of the ACCESS_DDK_DRIVERS permission is"
+            "not set for the application.", __func__);
     }
     errorCode = static_cast<int32_t>(ExtDeviceManager::GetInstance().ConnectDriverWithDeviceId(deviceId, callingTokenId,
         accessibleAppIds, connectCallback));
