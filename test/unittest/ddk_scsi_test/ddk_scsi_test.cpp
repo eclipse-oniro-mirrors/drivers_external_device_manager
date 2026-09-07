@@ -50,15 +50,6 @@ constexpr int TEST_TIMES = 1;
 constexpr uint8_t CDB_LENGTH  = 1;
 constexpr size_t BUFFER_SIZE = 1024;
 
-class ScsiPeripheralTest : public testing::Test {
-protected:
-    void TearDown() override
-    {
-        OHOS::sptr<IScsiPeripheralDdk> nullDdk = nullptr;
-        SetDdk(nullDdk);
-    }
-};
-
 class MockScsiPeripheralDdk : public IScsiPeripheralDdk {
 public:
     MOCK_METHOD(int, Init, (), (override));
@@ -84,6 +75,14 @@ public:
         ScsiPeripheralResponse &response), (override));
 };
 
+class ScsiPeripheralTest : public testing::Test {
+protected:
+    void TearDown() override
+    {
+        OHOS::sptr<IScsiPeripheralDdk> nullDdk = nullptr;
+        SetDdk(nullDdk);
+    }
+};
 
 HWTEST_F(ScsiPeripheralTest, ReleaseErrorTest, TestSize.Level1)
 {
