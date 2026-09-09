@@ -15,12 +15,19 @@
 
 #ifndef DRIVER_EXTENSION_MANAGER_H
 #define DRIVER_EXTENSION_MANAGER_H
+#include <atomic>
+#include <condition_variable>
+#include <future>
+#include <mutex>
 #include <singleton.h>
 #include <system_ability.h>
-#include <future>
+#include <thread>
 
 #include "driver_ext_mgr_stub.h"
 #include "event_config.h"
+#ifdef ENABLE_PCIE
+#include "bus_extension/pcie/common/pcie_driver_types.h"
+#endif
 
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -33,13 +40,13 @@ public:
     void OnStop() override;
     int Dump(int fd, const std::vector<std::u16string> &args) override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
-    virtual ErrCode QueryDevice(int32_t &errorCode, uint32_t busType,
-        std::vector<std::shared_ptr<DeviceData>> &devices) override;
-    virtual ErrCode BindDevice(int32_t &errorCode, uint64_t deviceId,
-        const sptr<IDriverExtMgrCallback> &connectCallback) override;
+    virtual ErrCode QueryDevice(
+        int32_t &errorCode, uint32_t busType, std::vector<std::shared_ptr<DeviceData>> &devices) override;
+    virtual ErrCode BindDevice(
+        int32_t &errorCode, uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     virtual ErrCode UnBindDevice(int32_t &errorCode, uint64_t deviceId) override;
-    virtual ErrCode BindDriverWithDeviceId(int32_t &errorCode, uint64_t deviceId,
-        const sptr<IDriverExtMgrCallback> &connectCallback) override;
+    virtual ErrCode BindDriverWithDeviceId(
+        int32_t &errorCode, uint64_t deviceId, const sptr<IDriverExtMgrCallback> &connectCallback) override;
     virtual ErrCode UnBindDriverWithDeviceId(int32_t &errorCode, uint64_t deviceId) override;
     virtual ErrCode QueryDeviceInfo(int32_t &errorCode, std::vector<std::shared_ptr<DeviceInfoData>> &deviceInfos,
         bool isByDeviceId = false, const uint64_t deviceId = 0) override;
@@ -61,6 +68,17 @@ private:
     bool cesPromiseUsed_ = false;
     std::map<uint64_t, std::vector<sptr<IDriverExtMgrCallback>>> connectCallbackMap;
     EventConfig eventConfig_;
+#ifdef ENABLE_PCIE
+    std::shared_ptr<IPcieDriverManager> pcieDriverManager_;
+    std::mutex pcieDriverReconcileMutex_;
+    std::condition_variable pcieDriverReconcileCv_;
+    std::atomic<bool> pcieDriverReconcileDirty_ {false};
+    std::atomic<bool> pcieDriverReconcileStop_ {false};
+    std::thread pcieDriverReconcileWorker_;
+    void StartPcieDriverManager();
+    void PcieDriverReconcileWorker();
+    void StopPcieDriverReconcileWorker();
+#endif
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

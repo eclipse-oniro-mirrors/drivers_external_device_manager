@@ -200,6 +200,26 @@ void DrvBundleStateCallback::PrintTest()
     cout << "allBundleAbilityNames_ size = " << allBundleAbilityNames.size() << endl;
 }
 
+#ifdef ENABLE_PCIE
+void DrvBundleStateCallback::SetBundleChangeCallback(std::function<void()> callback)
+{
+    std::lock_guard<std::mutex> lock(bundleChangeCallbackMutex_);
+    bundleChangeCallback_ = std::move(callback);
+}
+
+void DrvBundleStateCallback::NotifyBundleChange()
+{
+    std::function<void()> callback;
+    {
+        std::lock_guard<std::mutex> lock(bundleChangeCallbackMutex_);
+        callback = bundleChangeCallback_;
+    }
+    if (callback) {
+        callback();
+    }
+}
+#endif
+
 void DrvBundleStateCallback::OnBundleStateChanged(const uint8_t installType, const int32_t resultCode,
     const std::string &resultMsg, const std::string &bundleName)
 {
@@ -222,19 +242,24 @@ void DrvBundleStateCallback::OnBundleAdded(const std::string &bundleName, const 
     std::vector<ExtensionAbilityInfo> driverInfos;
     if (!QueryDriverInfos(bundleName, userId, driverInfos)) {
         auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_PACKAGE_DATA_REFRESH);
-        if (extDevEvent == nullptr) {
-            return;
+        if (extDevEvent != nullptr) {
+            extDevEvent->bundleName = bundleName;
+            extDevEvent->userId = userId;
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+                ExtDevReportSysEvent::EventErrCode::QUERY_DRIVER_EXTENSION_FAILED);
         }
-        extDevEvent->bundleName = bundleName;
-        extDevEvent->userId = userId;
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
-            ExtDevReportSysEvent::EventErrCode::QUERY_DRIVER_EXTENSION_FAILED);
+#ifdef ENABLE_PCIE
+        NotifyBundleChange();
+#endif
         return;
     }
 
     if (!UpdateToRdb(driverInfos, bundleName, __func__)) {
         EDM_LOGE(MODULE_PKG_MGR, "OnBundleAdded error");
     }
+#ifdef ENABLE_PCIE
+    NotifyBundleChange();
+#endif
     FinishTrace(LABEL);
 }
 /**
@@ -252,24 +277,28 @@ void DrvBundleStateCallback::OnBundleUpdated(const std::string &bundleName, cons
     std::vector<ExtensionAbilityInfo> driverInfos;
     if (!QueryDriverInfos(bundleName, userId, driverInfos)) {
         auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_PACKAGE_DATA_REFRESH);
-        if (extDevEvent == nullptr) {
-            return;
+        if (extDevEvent != nullptr) {
+            extDevEvent->bundleName = bundleName;
+            extDevEvent->userId = userId;
+            ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
+                ExtDevReportSysEvent::EventErrCode::QUERY_DRIVER_EXTENSION_FAILED);
         }
-        extDevEvent->bundleName = bundleName;
-        extDevEvent->userId = userId;
-        ExtDevReportSysEvent::ReportExternalDeviceEvent(extDevEvent,
-            ExtDevReportSysEvent::EventErrCode::QUERY_DRIVER_EXTENSION_FAILED);
+#ifdef ENABLE_PCIE
+        NotifyBundleChange();
+#endif
         return;
     }
 
     if (driverInfos.empty()) {
         OnBundleDrvRemoved(bundleName, __func__);
-        return;
+    } else {
+        if (!UpdateToRdb(driverInfos, bundleName, __func__)) {
+            EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated error");
+        }
     }
-
-    if (!UpdateToRdb(driverInfos, bundleName, __func__)) {
-        EDM_LOGE(MODULE_PKG_MGR, "OnBundleUpdated error");
-    }
+#ifdef ENABLE_PCIE
+    NotifyBundleChange();
+#endif
     FinishTrace(LABEL);
 }
 
@@ -286,6 +315,9 @@ void DrvBundleStateCallback::OnBundleRemoved(const std::string &bundleName, cons
         return;
     }
     OnBundleDrvRemoved(bundleName, __func__);
+#ifdef ENABLE_PCIE
+    NotifyBundleChange();
+#endif
     FinishTrace(LABEL);
 }
 

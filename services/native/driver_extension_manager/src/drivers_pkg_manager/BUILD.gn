@@ -15,6 +15,7 @@ import("../../../../../extdevmgr.gni")
 
 config("drvext_manager_public_config") {
   include_dirs = [ "../../include/bus_extension/usb" ]
+  defines = pcie_defines
 }
 
 if (external_device_manager_enable_service) {
@@ -45,7 +46,6 @@ if (external_device_manager_enable_service) {
       "${utils_path}:utils_config",
     ]
     public_configs = [ ":drvext_manager_public_config" ]
-
     # Component internal dependencies
     deps = [
       "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",
@@ -115,7 +115,6 @@ if (external_device_manager_enable_service) {
       "${utils_path}:utils_config",
     ]
     public_configs = [ ":drvext_manager_public_config" ]
-
     # Component internal dependencies
     deps = [
       "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/core:driver_extension_bus_core",

@@ -88,6 +88,16 @@ int32_t DriverPkgManager::Init(shared_future<int32_t> bmsFuture, shared_future<i
     return EDM_OK;
 }
 
+#ifdef ENABLE_PCIE
+void DriverPkgManager::SetBundleChangeCallback(std::function<void()> callback)
+{
+    bundleChangeCallback_ = std::move(callback);
+    if (bundleStateCallback_ != nullptr) {
+        bundleStateCallback_->SetBundleChangeCallback(bundleChangeCallback_);
+    }
+}
+#endif
+
 bool DriverPkgManager::SubscribeOsAccountSwitch()
 {
     EDM_LOGI(MODULE_PKG_MGR, "SubscribeOsAccountSwitch start");

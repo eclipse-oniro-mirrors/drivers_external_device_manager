@@ -20,6 +20,8 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <functional>
+#include <mutex>
 
 #include "bundle_info.h"
 #include "bundle_mgr_proxy.h"
@@ -93,12 +95,20 @@ public:
 
     PCALLBACKFUN m_pFun = nullptr;
     std::shared_ptr<IBundleUpdateCallback> bundleUpdateCallback_ = nullptr;
+#ifdef ENABLE_PCIE
+    void SetBundleChangeCallback(std::function<void()> callback);
+#endif
 
     void ResetInitOnce();
     void ResetMatchedBundles(const int32_t userId);
 
 private:
     std::mutex bundleMgrMutex_;
+#ifdef ENABLE_PCIE
+    std::function<void()> bundleChangeCallback_ = nullptr;
+    std::mutex bundleChangeCallbackMutex_;
+    void NotifyBundleChange();
+#endif
     std::mutex initOnceMutex_;
     sptr<IBundleMgr> bundleMgr_ = nullptr;
     sptr<IRemoteObject::DeathRecipient> bmsDeathRecipient_ = nullptr;

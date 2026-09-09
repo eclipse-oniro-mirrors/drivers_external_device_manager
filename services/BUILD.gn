@@ -34,6 +34,9 @@ if (external_device_manager_enable_service) {
       "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/usb",
       "${ext_mgr_path}/services/native/driver_extension_manager/include/device_notification",
     ]
+    if (external_device_manager_enable_pcie) {
+      include_dirs += [ "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/pcie" ]
+    }
     if (external_device_manager_enable_app_launch) {
       include_dirs += [ "${ext_mgr_path}/services/native/driver_extension_manager/include/app_launch_manager" ]
     }
@@ -56,10 +59,16 @@ if (external_device_manager_enable_service) {
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     ]
+    if (external_device_manager_enable_pcie) {
+      deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/pcie:pcie_driver_manager" ]
+    }
     if (external_device_manager_enable_app_launch) {
       deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/app_launch_manager:app_launch_manager" ]
     }
     defines = external_device_defines
+    if (external_device_manager_enable_pcie) {
+      defines += pcie_defines
+    }
     if (external_device_manager_enable_app_launch) {
       defines += app_launch_defines
     }
@@ -81,6 +90,13 @@ if (external_device_manager_enable_service) {
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
+    if (external_device_manager_enable_pcie) {
+      external_deps += [
+        "drivers_interface_pcie:libpcie_interface_proxy_1.0",
+        "hdf_core:libhdf_utils",
+        "hdf_core:libhdi",
+      ]
+    }
     cflags_cc = [
       "-fno-asynchronous-unwind-tables",
       "-fno-unwind-tables",
@@ -142,6 +158,9 @@ if (external_device_manager_enable_service) {
       "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/core",
       "${ext_mgr_path}/services/native/driver_extension_manager/include/device_notification",
     ]
+    if (external_device_manager_enable_pcie) {
+      include_dirs += [ "${ext_mgr_path}/services/native/driver_extension_manager/include/bus_extension/pcie" ]
+    }
 
     configs = [ "${utils_path}:utils_config" ]
     deps = [
@@ -162,6 +181,9 @@ if (external_device_manager_enable_service) {
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_hisysevent:report_sys_event",
       "${ext_mgr_path}/services/native/driver_extension_manager/src/drivers_pkg_manager:drivers_pkg_manager",
     ]
+    if (external_device_manager_enable_pcie) {
+      deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/pcie:pcie_driver_manager" ]
+    }
     if (external_device_manager_enable_app_launch) {
       deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/app_launch_manager:app_launch_manager" ]
     }
@@ -182,7 +204,17 @@ if (external_device_manager_enable_service) {
       "safwk:system_ability_fwk",
       "samgr:samgr_proxy",
     ]
+    if (external_device_manager_enable_pcie) {
+      external_deps += [
+        "drivers_interface_pcie:libpcie_interface_proxy_1.0",
+        "hdf_core:libhdf_utils",
+        "hdf_core:libhdi",
+      ]
+    }
     defines = external_device_defines
+    if (external_device_manager_enable_pcie) {
+      defines += pcie_defines
+    }
     if (external_device_manager_enable_app_launch) {
       defines += app_launch_defines
     }

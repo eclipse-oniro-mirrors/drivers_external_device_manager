@@ -16,14 +16,15 @@
 #ifndef DRIVER_PKG_MANAGER_H
 #define DRIVER_PKG_MANAGER_H
 
+#include <functional>
 #include <iostream>
 #include <stdint.h>
 
 #include "bundle_monitor.h"
 #include "drv_bundle_state_callback.h"
+#include "ext_object.h"
 #include "ibus_extension.h"
 #include "single_instance.h"
-#include "ext_object.h"
 #include <future>
 namespace OHOS {
 namespace ExternalDeviceManager {
@@ -55,22 +56,28 @@ public:
      * @return Returns true if the function is successfully called; returns false otherwise.
      */
     int32_t Init();
-    int32_t Init(shared_future<int32_t> bmsFuture, shared_future<int32_t> accountFuture,
-        shared_future<int32_t> commEventFuture);
+    int32_t Init(
+        shared_future<int32_t> bmsFuture, shared_future<int32_t> accountFuture, shared_future<int32_t> commEventFuture);
     shared_ptr<DriverInfo> QueryMatchDriver(shared_ptr<DeviceInfo> devInfo, const std::string &type = "");
-    int32_t QueryDriverInfo(vector<shared_ptr<DriverInfo>> &driverInfos,
-        bool isByDriverUid = false, const std::string &driverUid = "");
+    int32_t QueryDriverInfo(
+        vector<shared_ptr<DriverInfo>> &driverInfos, bool isByDriverUid = false, const std::string &driverUid = "");
     int32_t RegisterOnBundleUpdate(PCALLBACKFUN pFun);
     int32_t RegisterBundleCallback(std::shared_ptr<IBundleUpdateCallback> callback);
     int32_t UnRegisterOnBundleUpdate();
     int32_t RegisterBundleStatusCallback();
     bool SubscribeOsAccountSwitch();
+#ifdef ENABLE_PCIE
+    void SetBundleChangeCallback(std::function<void()> callback);
+#endif
     ~DriverPkgManager();
 
 private:
     shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
     sptr<DrvBundleStateCallback> bundleStateCallback_ = nullptr;
     BundleInfoNames bundleInfoName_;
+#ifdef ENABLE_PCIE
+    std::function<void()> bundleChangeCallback_ = nullptr;
+#endif
 
     shared_future<int32_t> bmsFuture_;
     shared_future<int32_t> accountFuture_;

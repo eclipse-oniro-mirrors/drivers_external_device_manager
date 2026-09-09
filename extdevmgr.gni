@@ -21,6 +21,7 @@ declare_args() {
   external_device_manager_enable_service = true
   extdevmgr_feature_metrics_enable = false
   external_device_manager_enable_app_launch = false
+  external_device_manager_enable_pcie = false
 }
 
 if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
@@ -34,4 +35,8 @@ if (external_device_manager_enable_service) {
 app_launch_defines = []
 if (external_device_manager_enable_app_launch) {
   app_launch_defines = [ "ENABLE_APP_LAUNCH_MANAGER" ]
+}
+pcie_defines = []
+if (external_device_manager_enable_pcie) {
+  pcie_defines = [ "ENABLE_PCIE" ]
 }

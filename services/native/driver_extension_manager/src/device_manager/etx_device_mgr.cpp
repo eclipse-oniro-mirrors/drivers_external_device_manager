@@ -482,10 +482,26 @@ size_t ExtDeviceManager::GetTotalDeviceNum(void) const
     return totalNum;
 }
 
+void ExtDeviceManager::SetPcieDevicesPresent(bool devicesPresent)
+{
+    std::lock_guard<std::mutex> lock(deviceMapMutex_);
+    if (pcieDevicesPresent_.exchange(devicesPresent) == devicesPresent) {
+        return;
+    }
+    if (devicesPresent) {
+        unloadSelftimer_.Unregister(unloadSelftimerId_);
+        return;
+    }
+    UnLoadSelf();
+}
+
 void ExtDeviceManager::UnLoadSelf(void)
 {
     unloadSelftimer_.Unregister(unloadSelftimerId_);
     unloadSelftimer_.Shutdown();
+    if (pcieDevicesPresent_.load()) {
+        return;
+    }
     if (GetTotalDeviceNum() != 0) {
         EDM_LOGI(MODULE_DEV_MGR, "not need unload");
         return;
@@ -496,7 +512,7 @@ void ExtDeviceManager::UnLoadSelf(void)
         return;
     }
 
-    auto task = []() {
+    auto task = [this]() {
         auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (samgrProxy == nullptr) {
             EDM_LOGE(MODULE_DEV_MGR, "get samgr failed");
@@ -509,6 +525,9 @@ void ExtDeviceManager::UnLoadSelf(void)
             return;
         }
 
+        if (pcieDevicesPresent_.load()) {
+            return;
+        }
         auto ret = samgrProxy->UnloadSystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID);
         if (ret != EDM_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "unload failed");
