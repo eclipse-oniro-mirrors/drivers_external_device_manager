@@ -9,6 +9,10 @@
             "value": "base"
         },
         {
+            "name":"zh-Hant-CN",
+            "value":"zh_HK"
+        },
+        {
             "name":"zh-Hant-HK",
             "value":"zh_HK"
         },
