@@ -577,8 +577,16 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
 
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        std::lock_guard<std::mutex> mapLock(mapMutex);
-        g_callbackMap[data->deviceId] = data;
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            g_callbackMap.erase(data->deviceId);
+        }
+        if () {
+            ani_env *env_now;
+            data->vm->GetEnv(ANI_VERSION_1, &env_now);
+            env_now->GlobalReference_Delete(data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             set_business_error(PERMISSION_DENIED, "bindDevice: no permission");

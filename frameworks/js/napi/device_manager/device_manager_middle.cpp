@@ -520,10 +520,20 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     }
 
     UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
-    if (retCode != UsbErrCode::EDM_OK) {
-        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+    if (retCode != UsbErrCode::EDM_OK) {    
+        {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap[data->deviceId] = data;
+            g_callbackMap.erase(data->deviceId);
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        if (data->bindCallback != nullptr) {
+            napi_delete_reference(env, data->bindCallback);
+            data->bindCallback = nullptr;
+        }
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
         } else {
@@ -634,8 +644,18 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        std::lock_guard<std::mutex> mapLock(mapMutex);
-        g_callbackMap[data->deviceId] = data;
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            g_callbackMap.erase(data->deviceId);
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        if (data->bindCallback != nullptr) {
+            napi_delete_reference(env, data->bindCallback);
+            data->bindCallback = nullptr;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
