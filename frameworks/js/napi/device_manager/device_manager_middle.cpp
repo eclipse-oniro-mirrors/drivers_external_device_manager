@@ -520,7 +520,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     }
 
     UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
-    if (retCode != UsbErrCode::EDM_OK) {    
+    if (retCode != UsbErrCode::EDM_OK) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             g_callbackMap.erase(data->deviceId);
