@@ -581,7 +581,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
             std::lock_guard<std::mutex> mapLock(mapMutex);
             g_callbackMap.erase(data->deviceId);
         }
-        if () {
+        if (onDisconnect) {
             ani_env *env_now;
             data->vm->GetEnv(ANI_VERSION_1, &env_now);
             env_now->GlobalReference_Delete(data->onDisconnect);
