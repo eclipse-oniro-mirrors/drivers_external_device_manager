@@ -533,6 +533,16 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
             napi_delete_reference(env, data->bindCallback);
             data->bindCallback = nullptr;
         }
+        if (data->bindDeferred != nullptr) {
+            int32_t errCode = (retCode == UsbErrCode::EDM_ERR_NO_PERM)
+                ? PERMISSION_DENIED : SERVICE_EXCEPTION;
+            metrics.SetErrorCode(errCode);
+            napi_reject_deferred(env, data->bindDefered,
+                CreateBusinessError(env,errCode,
+                    GetNapiError(errCode).value_or("bindDevice failed")));
+            data->bindDeferred = nullptr;
+            return promise;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
@@ -655,6 +665,22 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         if (data->bindCallback != nullptr) {
             napi_delete_reference(env, data->bindCallback);
             data->bindCallback = nullptr;
+        }
+        if (data->bindDeferred != nullptr) {
+            int32_t errCode;
+            if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+                errCode = PERNISSION_DENIED;
+            } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
+                errCode = SERVICE_NOT_ALLOW_ACCESS;
+            } else {
+                errCode = SERVICE_EXCEPTION_NEW;
+            }
+            metrice.SetErrorCode(errCode);
+            napi_reject_deferred(env, data->bindDefered,
+                CreateBusinessError(env,errCode,
+                    GetNapiError(errCode).value_or("bindDevice failed")));
+            data->bindDeferred = nullptr;
+            return promise;
         }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
