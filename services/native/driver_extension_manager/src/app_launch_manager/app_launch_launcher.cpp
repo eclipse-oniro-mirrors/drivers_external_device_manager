@@ -18,6 +18,7 @@
 #include "ability_manager_client.h"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
+#include "start_options.h"
 #include "want.h"
 
 namespace OHOS {
@@ -40,7 +41,9 @@ int32_t AppLaunchLauncher::LaunchApp(const std::string &bundleName, const std::s
     AAFwk::Want want;
     want.SetElementName(bundleName, abilityName);
 
-    int32_t ret = abmc->StartAbility(want);
+    AAFwk::StartOptions startOptions;
+    startOptions.SetDisplayID(PRIMARY_DISPLAY_ID);
+    int32_t ret = abmc->StartAbility(want, startOptions, nullptr);
     if (ret != 0) {
         EDM_LOGE(MODULE_BUS_USB, "StartAbility failed, ret=%{public}d", ret);
         return EDM_NOK;
