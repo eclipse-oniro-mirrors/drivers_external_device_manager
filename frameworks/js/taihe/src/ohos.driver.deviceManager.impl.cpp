@@ -597,7 +597,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
         ani_object err = ConvertToBusinessError(env, ErrMsg(retCode, ""));
         env->PromiseResolver_Reject(data->bindDeferred, reinterpret_cast<ani_error>(err));
         data->bindDeferred = nullptr;
-        return nullptr;
+        return promise;
     }
     
     return promise;
