@@ -31,6 +31,7 @@ if (external_device_manager_enable_app_launch) {
 
     external_deps = [
       "ability_runtime:ability_manager",
+      "ability_runtime:ability_start_options",
       "bundle_framework:appexecfwk_base",
       "bundle_framework:appexecfwk_core",
       "cJSON:cjson",
