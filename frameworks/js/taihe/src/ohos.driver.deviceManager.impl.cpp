@@ -561,14 +561,11 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
 
     data->env = env;
     data->deviceId = static_cast<uint64_t>(deviceId);
+    
     if (ANI_OK != env->GlobalReference_Create(reinterpret_cast<ani_ref>(onDisconnect), &data->onDisconnect)) {
-        metrics.SetErrorCode(PARAMETER_ERROR);
-        set_business_error(PARAMETER_ERROR, "GlobalReference_Create failed");
-        return nullptr;
+        EDM_LOGE(MODULE_DEV_MGR, "GlobalReference_Create failed");
+        data->onDisconnect = nullptr;
     }
-
-    ani_object promise;
-    env->Promise_New(&data->bindDeferred, &promise);
 
     {
         std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -582,24 +579,24 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
             g_callbackMap.erase(data->deviceId);
         }
         if (data->onDisconnect != nullptr) {
-            ani_env *env_now;
-            data->vm->GetEnv(ANI_VERSION_1, &env_now);
             env_now->GlobalReference_Delete(data->onDisconnect);
             data->onDisconnect = nullptr;
         }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
+             set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
             metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
+            set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
         } else {
             metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+            set_business_error(SERVICE_EXCEPTION_NEW, "bindDevice service failed");
         }
-        ani_object err = ConvertToBusinessError(env, ErrMsg(retCode, ""));
-        env->PromiseResolver_Reject(data->bindDeferred, reinterpret_cast<ani_error>(err));
-        data->bindDeferred = nullptr;
-        return promise;
+        return nullptr;
     }
     
+    ani_object promise;
+    env->Promise_New(&data->bindDeferred, &promise);
     return promise;
 }
 
