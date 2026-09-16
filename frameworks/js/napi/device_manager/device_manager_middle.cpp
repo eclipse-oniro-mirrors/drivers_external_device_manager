@@ -533,17 +533,18 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     napi_status status = napi_ok;
     if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
-        static = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
+        status = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
     } else {
-        static = napi_create_promise(env, &data->bindDeferred, &promise);
+        status = napi_create_promise(env, &data->bindDeferred, &promise);
     }
-    if (static != napi_ok) {
+    if (status != napi_ok) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             g_callbackMap.erase(data->deviceId);
         }
         metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference failed");
+        return nullptr;
     }
     return promise;
 }
@@ -663,17 +664,17 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     napi_value promise = nullptr;
     napi_status status = napi_ok;
     if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
-        static = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
+        status = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
     } else {
-        static = napi_create_promise(env, &data->bindDeferred, &promise);
+        status = napi_create_promise(env, &data->bindDeferred, &promise);
     }
-    if (static != napi_ok) {
+    if (status != napi_ok) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             g_callbackMap.erase(data->deviceId);
         }
-        metrics.SetErrorCode(SERVICE_EXCEPTION);
-        ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference failed");
+        metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDevice: create reference failed");
         return nullptr;
     }
     return promise;

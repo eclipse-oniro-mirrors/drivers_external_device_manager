@@ -579,12 +579,12 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
             g_callbackMap.erase(data->deviceId);
         }
         if (data->onDisconnect != nullptr) {
-            env_now->GlobalReference_Delete(data->onDisconnect);
+            env->GlobalReference_Delete(data->onDisconnect);
             data->onDisconnect = nullptr;
         }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
-             set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
+            set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
             metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
             set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
