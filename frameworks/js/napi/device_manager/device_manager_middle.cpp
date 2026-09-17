@@ -518,7 +518,10 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     if (retCode != UsbErrCode::EDM_OK) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap.erase(data->deviceId);
+            auto it = g_callbackMap.find(data->deviceId);
+            if(it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
         }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
@@ -540,7 +543,10 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     if (status != napi_ok) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap.erase(data->deviceId);
+            auto it = g_callbackMap.find(data->deviceId);
+            if(it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
         }
         metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference failed");
@@ -645,7 +651,10 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     if (retCode != UsbErrCode::EDM_OK) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap.erase(data->deviceId);
+            auto it = g_callbackMap.find(data->deviceId);
+            if(it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
         }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
@@ -671,7 +680,10 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     if (status != napi_ok) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap.erase(data->deviceId);
+            auto it = g_callbackMap.find(data->deviceId);
+            if(it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
         }
         metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
         ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference failed");

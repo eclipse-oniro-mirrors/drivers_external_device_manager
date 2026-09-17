@@ -576,7 +576,10 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
     if (retCode != UsbErrCode::EDM_OK) {
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap.erase(data->deviceId);
+            auto it = g_callbackMap.find(data->deviceId);
+            if(it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
         }
         if (data->onDisconnect != nullptr) {
             env->GlobalReference_Delete(data->onDisconnect);
