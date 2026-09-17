@@ -602,7 +602,25 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
     }
     
     ani_object promise;
-    env->Promise_New(&data->bindDeferred, &promise);
+    if (ANI_OK != env->Promise_New(&data->bindDeferred, &promise)) {
+        EDM_LOGE(MODULE_DEV_MGR, "Promise_New failed");
+        data->bindDeferred = nullptr;
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            env->GlobalReference_Delete(data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        g_edmClient.UnbindDriverWithDeviceId(deviceId);
+        metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference failed");
+        return nullptr;
+    } 
     return promise;
 }
 
