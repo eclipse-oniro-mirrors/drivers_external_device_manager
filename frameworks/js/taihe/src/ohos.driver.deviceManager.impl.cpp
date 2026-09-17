@@ -565,6 +565,9 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
     if (ANI_OK != env->GlobalReference_Create(reinterpret_cast<ani_ref>(onDisconnect), &data->onDisconnect)) {
         EDM_LOGE(MODULE_DEV_MGR, "GlobalReference_Create failed");
         data->onDisconnect = nullptr;
+        metrics.SetErrorCode(PARAMETER_ERROR);
+        set_business_error(PARAMETER_ERROR, "GlobalReference_Create failed");
+        return nullptr;
     }
 
     {
@@ -577,7 +580,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             auto it = g_callbackMap.find(data->deviceId);
-            if(it != g_callbackMap.end() && it->second == data) {
+            if (it != g_callbackMap.end() && it->second == data) {
                 g_callbackMap.erase(it);
             }
         }

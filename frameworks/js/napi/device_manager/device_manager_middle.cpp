@@ -519,7 +519,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             auto it = g_callbackMap.find(data->deviceId);
-            if(it != g_callbackMap.end() && it->second == data) {
+            if (it != g_callbackMap.end() && it->second == data) {
                 g_callbackMap.erase(it);
             }
         }
@@ -544,7 +544,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             auto it = g_callbackMap.find(data->deviceId);
-            if(it != g_callbackMap.end() && it->second == data) {
+            if (it != g_callbackMap.end() && it->second == data) {
                 g_callbackMap.erase(it);
             }
         }
@@ -652,7 +652,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             auto it = g_callbackMap.find(data->deviceId);
-            if(it != g_callbackMap.end() && it->second == data) {
+            if (it != g_callbackMap.end() && it->second == data) {
                 g_callbackMap.erase(it);
             }
         }
@@ -681,7 +681,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         {
             std::lock_guard<std::mutex> mapLock(mapMutex);
             auto it = g_callbackMap.find(data->deviceId);
-            if(it != g_callbackMap.end() && it->second == data) {
+            if (it != g_callbackMap.end() && it->second == data) {
                 g_callbackMap.erase(it);
             }
         }
