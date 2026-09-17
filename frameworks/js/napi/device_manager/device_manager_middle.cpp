@@ -548,6 +548,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
                 g_callbackMap.erase(it);
             }
         }
+        g_edmClient.UnBindDevice(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference failed");
         return nullptr;
@@ -685,6 +686,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
                 g_callbackMap.erase(it);
             }
         }
+        g_edmClient.UnBindDevice(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
         ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference failed");
         return nullptr;
