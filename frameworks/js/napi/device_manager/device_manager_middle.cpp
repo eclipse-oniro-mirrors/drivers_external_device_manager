@@ -551,7 +551,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
                 g_callbackMap.erase(it);
             }
         }
-        if(data->onDisconnect != nullptr) {
+        if (data->onDisconnect != nullptr) {
             napi_delete_reference(env, data->onDisconnect);
             data->onDisconnect = nullptr;
         }
@@ -696,7 +696,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
                 g_callbackMap.erase(it);
             }
         }
-        if(data->onDisconnect != nullptr) {
+        if (data->onDisconnect != nullptr) {
             napi_delete_reference(env, data->onDisconnect);
             data->onDisconnect = nullptr;
         }
