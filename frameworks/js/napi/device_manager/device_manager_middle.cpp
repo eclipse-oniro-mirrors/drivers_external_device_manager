@@ -522,6 +522,10 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
                 g_callbackMap.erase(it);
             }
         }
+        if(data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
@@ -546,6 +550,10 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
             if (it != g_callbackMap.end() && it->second == data) {
                 g_callbackMap.erase(it);
             }
+        }
+        if(data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
         }
         g_edmClient.UnBindDevice(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION);
@@ -655,6 +663,10 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
                 g_callbackMap.erase(it);
             }
         }
+        if(data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
@@ -683,6 +695,10 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
             if (it != g_callbackMap.end() && it->second == data) {
                 g_callbackMap.erase(it);
             }
+        }
+        if(data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
         }
         g_edmClient.UnbindDriverWithDeviceId(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
