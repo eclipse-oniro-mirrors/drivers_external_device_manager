@@ -506,7 +506,6 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     }
     data->env = env;
     data->deviceId = deviceId;
-
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
 
     {
@@ -550,7 +549,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
         }
         g_edmClient.UnBindDevice(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION);
-        ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference failed");
+        ThrowErr(env, SERVICE_EXCEPTION, "bindDriver: create reference or promise failed");
         return nullptr;
     }
     return promise;
@@ -641,7 +640,6 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     data->deviceId = deviceId;
 
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
-    
 
     {
         std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -688,7 +686,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         }
         g_edmClient.UnbindDriverWithDeviceId(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
-        ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference failed");
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference or promise failed");
         return nullptr;
     }
     return promise;

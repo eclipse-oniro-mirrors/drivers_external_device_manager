@@ -590,13 +590,13 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
         }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
-            set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
+            set_business_error(PERMISSION_DENIED, "bindDriverWithDeviceId: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
             metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
-            set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
+            set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDriverWithDeviceId: service not allowed");
         } else {
             metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
-            set_business_error(SERVICE_EXCEPTION_NEW, "bindDevice service failed");
+            set_business_error(SERVICE_EXCEPTION_NEW, "bindDriverWithDeviceId service failed");
         }
         return nullptr;
     }
@@ -620,7 +620,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
         metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
         ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference failed");
         return nullptr;
-    } 
+    }
     return promise;
 }
 
