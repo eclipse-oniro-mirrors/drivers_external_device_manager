@@ -549,7 +549,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
         }
         g_edmClient.UnBindDevice(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION);
-        ThrowErr(env, SERVICE_EXCEPTION, "bindDriver: create reference or promise failed");
+        ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference or promise failed");
         return nullptr;
     }
     return promise;

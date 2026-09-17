@@ -618,7 +618,7 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
         }
         g_edmClient.UnbindDriverWithDeviceId(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
-        ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference failed");
+        set_business_error(SERVICE_EXCEPTION_NEW, "bindDriver: create promise failed");
         return nullptr;
     }
     return promise;
