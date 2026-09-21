@@ -561,14 +561,14 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
 
     data->env = env;
     data->deviceId = static_cast<uint64_t>(deviceId);
+    
     if (ANI_OK != env->GlobalReference_Create(reinterpret_cast<ani_ref>(onDisconnect), &data->onDisconnect)) {
+        EDM_LOGE(MODULE_DEV_MGR, "GlobalReference_Create failed");
+        data->onDisconnect = nullptr;
         metrics.SetErrorCode(PARAMETER_ERROR);
         set_business_error(PARAMETER_ERROR, "GlobalReference_Create failed");
         return nullptr;
     }
-
-    ani_object promise;
-    env->Promise_New(&data->bindDeferred, &promise);
 
     {
         std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -577,21 +577,50 @@ ani_object BindDriverWithDeviceIdSync([[maybe_unused]] ani_env *env, ani_long de
 
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        std::lock_guard<std::mutex> mapLock(mapMutex);
-        g_callbackMap[data->deviceId] = data;
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            env->GlobalReference_Delete(data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
-            set_business_error(PERMISSION_DENIED, "bindDevice: no permission");
+            set_business_error(PERMISSION_DENIED, "bindDriverWithDeviceId: no permission");
         } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_ALLOW_ACCESS) {
             metrics.SetErrorCode(SERVICE_NOT_ALLOW_ACCESS);
-            set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDevice: service not allowed");
+            set_business_error(SERVICE_NOT_ALLOW_ACCESS, "bindDriverWithDeviceId: service not allowed");
         } else {
             metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
-            set_business_error(SERVICE_EXCEPTION_NEW, "bindDevice service failed");
+            set_business_error(SERVICE_EXCEPTION_NEW, "bindDriverWithDeviceId service failed");
         }
         return nullptr;
     }
     
+    ani_object promise;
+    if (ANI_OK != env->Promise_New(&data->bindDeferred, &promise)) {
+        EDM_LOGE(MODULE_DEV_MGR, "Promise_New failed");
+        data->bindDeferred = nullptr;
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            env->GlobalReference_Delete(data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        g_edmClient.UnbindDriverWithDeviceId(deviceId);
+        metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+        set_business_error(SERVICE_EXCEPTION_NEW, "bindDriver: create promise failed");
+        return nullptr;
+    }
     return promise;
 }
 

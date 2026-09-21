@@ -507,12 +507,6 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     data->env = env;
     data->deviceId = deviceId;
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
-    napi_value promise = nullptr;
-    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
-        NAPI_CALL(env, napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback));
-    } else {
-        NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
-    }
 
     {
         std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -521,16 +515,49 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
 
     UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+        {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap[data->deviceId] = data;
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
         } else {
             metrics.SetErrorCode(SERVICE_EXCEPTION);
             ThrowErr(env, SERVICE_EXCEPTION, "bindDevice service failed");
         }
+        return nullptr;
+    }
 
+    napi_value promise = nullptr;
+    napi_status status = napi_ok;
+    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
+        status = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
+    } else {
+        status = napi_create_promise(env, &data->bindDeferred, &promise);
+    }
+    if (status != napi_ok) {
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        g_edmClient.UnBindDevice(deviceId);
+        metrics.SetErrorCode(SERVICE_EXCEPTION);
+        ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference or promise failed");
         return nullptr;
     }
     return promise;
@@ -619,13 +646,8 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     }
     data->env = env;
     data->deviceId = deviceId;
+
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
-    napi_value promise = nullptr;
-    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
-        NAPI_CALL(env, napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback));
-    } else {
-        NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
-    }
 
     {
         std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -634,8 +656,17 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        std::lock_guard<std::mutex> mapLock(mapMutex);
-        g_callbackMap[data->deviceId] = data;
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
@@ -650,6 +681,30 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    napi_value promise = nullptr;
+    napi_status status = napi_ok;
+    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
+        status = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
+    } else {
+        status = napi_create_promise(env, &data->bindDeferred, &promise);
+    }
+    if (status != napi_ok) {
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        g_edmClient.UnbindDriverWithDeviceId(deviceId);
+        metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference or promise failed");
+        return nullptr;
+    }
     return promise;
 }
 
