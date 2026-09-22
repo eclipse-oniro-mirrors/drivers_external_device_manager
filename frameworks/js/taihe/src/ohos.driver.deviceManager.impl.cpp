@@ -33,13 +33,16 @@ constexpr int32_t ANI_SCOPE_SIZE = 16;
 constexpr uint16_t TWO_PARAMETERS = 2;
 
 static const std::map<int32_t, std::string> ERROR_MESSAGES = {
-    {SERVICE_EXCEPTION,  "ExternalDeviceManager service exception."},
-    {PERMISSION_DENIED,  "Permission denied."},
-    {PERMISSION_NOT_SYSTEM_APP,  "Permission denied. A non-system application cannot call a system API."},
-    {PARAMETER_ERROR,  "The parameter check failed."},
-    {SERVICE_EXCEPTION_NEW, "ExternalDeviceManager service exception."},
-    {SERVICE_NOT_ALLOW_ACCESS, "Driver does not allow application access."},
-    {SERVICE_NOT_BOUND, "There is no binding relationship between the application and the driver."}
+    {SERVICE_EXCEPTION,         "ExternalDeviceManager service exception."                                   },
+    {PERMISSION_DENIED,
+     "Permission verification failed. The application does not have the permission required to call the API."},
+    {PERMISSION_NOT_SYSTEM_APP, "Permission denied. A non-system application cannot call a system API."      },
+    {PARAMETER_ERROR,
+     "Parameter error. Possible causes: 1. Mandatory parameters are left unspecified; 2. Incorrect parameter types; "
+        "3. Parameter verification failed."                                                                  },
+    {SERVICE_EXCEPTION_NEW,     "ExternalDeviceManager service exception."                                   },
+    {SERVICE_NOT_ALLOW_ACCESS,  "Driver does not allow application access."                                  },
+    {SERVICE_NOT_BOUND,         "There is no binding relationship between the application and the driver."   }
 };
 static std::mutex mapMutex;
 static std::map<uint64_t, OHOS::sptr<AsyncData>> g_callbackMap = {};
