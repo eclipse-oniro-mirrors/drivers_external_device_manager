@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,7 @@ bool ExtPermissionManager::VerifyPermission(std::string permissionName)
     return false;
 }
 
-bool ExtPermissionManager::IsSystemApp()
+bool ExtPermissionManager::IsSystemAppOrSa(void)
 {
     uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
     if (TokenIdKit::IsSystemAppByFullTokenID(fullTokenId)) {
@@ -59,14 +59,11 @@ bool ExtPermissionManager::IsSystemApp()
     }
     AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
-    return tokenType != ATokenTypeEnum::TOKEN_HAP;
-}
+    if (tokenType == TOKEN_NATIVE) {
+        return true;
+    }
 
-bool ExtPermissionManager::IsSa()
-{
-    AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    ATokenTypeEnum tokenType = AccessTokenKit::GetTokenTypeFlag(callerToken);
-    return tokenType == ATokenTypeEnum::TOKEN_NATIVE;
+    return false;
 }
 
 uint32_t ExtPermissionManager::GetCallingTokenID()
