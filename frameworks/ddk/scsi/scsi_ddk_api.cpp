@@ -116,7 +116,11 @@ static void RestoreMemMap(ScsiPeripheral_DeviceMemMap *data, uint32_t transferre
     if (len > data->size - data->offset) {
         len = data->size - data->offset;
     }
-    (void)memmove_s(data->address + data->offset, data->size - data->offset, data->address, len);
+    errno_t err = memmove_s(data->address + data->offset, data->size - data->offset, data->address, len);
+    if (err != EOK) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "memmove_s failed, err=%{public}d", err);
+        return;
+    }
 }
 #endif
 

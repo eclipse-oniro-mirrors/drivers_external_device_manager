@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,11 +27,9 @@ class ExtPermissionManager {
 public:
     static bool VerifyPermission(std::string permissionName);
 
-    static bool IsSystemApp();
+    static bool IsSystemAppOrSa(void);
 
-    static bool IsSa();
-
-    static uint32_t GetCallingTokenID();
+    static uint32_t GetCallingTokenID(void);
 
     static bool GetPermissionValues(const std::string &permissionName,
         std::unordered_set<std::string> &permissionValues);

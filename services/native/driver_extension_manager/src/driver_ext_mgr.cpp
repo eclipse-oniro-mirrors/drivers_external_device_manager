@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -334,8 +334,8 @@ ErrCode DriverExtMgr::QueryDeviceInfo(int32_t &errorCode, std::vector<std::share
     bool isByDeviceId, const uint64_t deviceId)
 {
     EDM_LOGD(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    if (!ExtPermissionManager::IsSystemApp()) {
-        EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
+    if (!ExtPermissionManager::IsSystemAppOrSa()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s neither system app nor sa", __func__);
         errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SYSTEM_APP);
         return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
@@ -366,8 +366,8 @@ ErrCode DriverExtMgr::QueryDeviceInfo(int32_t &errorCode, std::vector<std::share
 ErrCode DriverExtMgr::QueryDriverInfo(int32_t &errorCode, std::vector<std::shared_ptr<DriverInfoData>> &driverInfos,
     bool isByDriverUid, const std::string &driverUid)
 {
-    if (!ExtPermissionManager::IsSystemApp()) {
-        EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
+    if (!ExtPermissionManager::IsSystemAppOrSa()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s neither system app nor sa", __func__);
         errorCode = static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SYSTEM_APP);
         return static_cast<int32_t>(UsbErrCode::EDM_OK);
     }
@@ -399,8 +399,8 @@ ErrCode DriverExtMgr::QueryDriverInfo(int32_t &errorCode, std::vector<std::share
 
 ErrCode DriverExtMgr::NotifyUsbPeripheralFault(const std::string &domain, const std::string &faultName)
 {
-    if (!ExtPermissionManager::IsSystemApp()) {
-        EDM_LOGE(MODULE_DEV_MGR, "%{public}s none system app", __func__);
+    if (!ExtPermissionManager::IsSystemAppOrSa()) {
+        EDM_LOGE(MODULE_DEV_MGR, "%{public}s neither system app nor sa", __func__);
         return static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SYSTEM_APP);
     }
     
