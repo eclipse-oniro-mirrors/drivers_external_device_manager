@@ -28,6 +28,12 @@
 namespace OHOS {
 namespace ExternalDeviceManager {
 
+enum class AppInstallStatus {
+    INSTALLED,
+    NOT_INSTALLED,
+    ACCOUNT_NOT_READY,
+};
+
 class AppLaunchManager {
     DECLARE_SINGLE_INSTANCE_BASE(AppLaunchManager);
 public:
@@ -39,7 +45,7 @@ public:
 
 private:
     AppLaunchManager() = default;
-    bool IsAppInstalled(const std::string &bundleName);
+    AppInstallStatus CheckAppInstallStatus(const std::string &bundleName);
 
     AppLaunchConfig config_;
     AppLaunchParamSubscriber paramSubscriber_;
