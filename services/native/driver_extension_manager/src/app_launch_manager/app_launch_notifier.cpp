@@ -32,6 +32,7 @@ namespace ExternalDeviceManager {
 
 namespace {
 const int32_t NOTIFICATION_CONTROL_DIALOG_FLAG = 1 << 9;
+const int32_t PRIMARY_DISPLAY_ID = 0;
 constexpr const char *APP_LAUNCH_ICON_PATH = "system/etc/peripheral/resources/peripheral_fault_icon.png";
 } // namespace
 
@@ -72,6 +73,7 @@ static bool SetWantAgent(Notification::NotificationRequest &request, const std::
     std::shared_ptr<AAFwk::Want> want = std::make_shared<AAFwk::Want>();
     want->SetAction("ohos.want.action.appdetail");
     want->SetUri(uri);
+    want->SetParam(AAFwk::Want::PARAM_RESV_DISPLAY_ID, PRIMARY_DISPLAY_ID);
     std::vector<std::shared_ptr<AAFwk::Want>> wants;
     wants.push_back(want);
 

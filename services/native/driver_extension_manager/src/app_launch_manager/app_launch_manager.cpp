@@ -59,28 +59,31 @@ void AppLaunchManager::OnDeviceConnected(uint16_t vid, uint16_t pid)
         EDM_LOGI(MODULE_BUS_USB, "no config entry found for device");
         return;
     }
-    if (IsAppInstalled(entry->bundleName)) {
+    AppInstallStatus status = CheckAppInstallStatus(entry->bundleName);
+    if (status == AppInstallStatus::INSTALLED) {
         EDM_LOGI(MODULE_BUS_USB, "app is installed, launching");
         int32_t launchRet = launcher_.LaunchApp(entry->bundleName, entry->abilityName);
         if (launchRet != EDM_OK) {
             EDM_LOGE(MODULE_BUS_USB, "LaunchApp failed, ret=%{public}d", launchRet);
         }
-    } else {
+    } else if (status == AppInstallStatus::NOT_INSTALLED) {
         EDM_LOGI(MODULE_BUS_USB, "app is not installed, sending notification");
         int32_t notifyRet = notifier_.SendNotification(*entry);
         if (notifyRet != EDM_OK) {
             EDM_LOGE(MODULE_BUS_USB, "SendNotification failed, ret=%{public}d", notifyRet);
         }
+    } else {
+        EDM_LOGE(MODULE_BUS_USB, "account not ready, skip app launch for now");
     }
 }
 
-bool AppLaunchManager::IsAppInstalled(const std::string &bundleName)
+AppInstallStatus AppLaunchManager::CheckAppInstallStatus(const std::string &bundleName)
 {
     EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     if (!GetBundleMgrProxy()) {
         EDM_LOGE(MODULE_BUS_USB, "failed to GetBundleMgrProxy");
-        return false;
+        return AppInstallStatus::NOT_INSTALLED;
     }
 
     AppExecFwk::BundleInfo bundleInfo;
@@ -89,16 +92,16 @@ bool AppLaunchManager::IsAppInstalled(const std::string &bundleName)
     ErrCode getUserIdRet = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(userId);
     if (getUserIdRet != 0) {
         EDM_LOGE(MODULE_BUS_USB, "GetForegroundOsAccountLocalId failed, ret=%{public}d", getUserIdRet);
-        return false;
+        return AppInstallStatus::ACCOUNT_NOT_READY;
     }
     bool ret = bundleMgr_->GetBundleInfo(bundleName, flags, bundleInfo, userId);
     if (!ret) {
         EDM_LOGI(MODULE_BUS_USB, "app not installed");
-        return false;
+        return AppInstallStatus::NOT_INSTALLED;
     }
 
     EDM_LOGI(MODULE_BUS_USB, "app is installed");
-    return true;
+    return AppInstallStatus::INSTALLED;
 }
 
 bool AppLaunchManager::GetBundleMgrProxy()

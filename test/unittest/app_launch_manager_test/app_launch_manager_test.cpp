@@ -169,41 +169,41 @@ HWTEST_F(AppLaunchManagerTest, UnInit001, TestSize.Level1)
 }
 
 /**
- * @tc.name: IsAppInstalled001
- * @tc.desc: Test IsAppInstalled001 with mock BundleMgr returning true
+ * @tc.name: CheckAppInstallStatus001
+ * @tc.desc: Test CheckAppInstallStatus001 with mock BundleMgr returning true
  * @tc.type: FUNC
  */
-HWTEST_F(AppLaunchManagerTest, IsAppInstalled001, TestSize.Level1)
+HWTEST_F(AppLaunchManagerTest, CheckAppInstallStatus001, TestSize.Level1)
 {
-    EDM_LOGI(MODULE_BUS_USB, "IsAppInstalled001 begin");
+    EDM_LOGI(MODULE_BUS_USB, "CheckAppInstallStatus001 begin");
     auto &mgr = AppLaunchManager::GetInstance();
     auto mockBundleMgr = AppExecFwk::MockBundleMgr::GetInstance();
     EXPECT_CALL(*mockBundleMgr, GetBundleInfo(_, _, _, _))
         .WillOnce(Return(true));
     mgr.bundleMgr_ = mockBundleMgr;
 
-    bool installed = mgr.IsAppInstalled("com.test.installed");
-    EXPECT_TRUE(installed);
-    EDM_LOGI(MODULE_BUS_USB, "IsAppInstalled001 end");
+    auto status = mgr.CheckAppInstallStatus("com.test.installed");
+    EXPECT_EQ(status, AppInstallStatus::INSTALLED);
+    EDM_LOGI(MODULE_BUS_USB, "CheckAppInstallStatus001 end");
 }
 
 /**
- * @tc.name: IsAppInstalled002
- * @tc.desc: Test IsAppInstalled002 with mock BundleMgr returning false
+ * @tc.name: CheckAppInstallStatus002
+ * @tc.desc: Test CheckAppInstallStatus002 with mock BundleMgr returning false
  * @tc.type: FUNC
  */
-HWTEST_F(AppLaunchManagerTest, IsAppInstalled002, TestSize.Level1)
+HWTEST_F(AppLaunchManagerTest, CheckAppInstallStatus002, TestSize.Level1)
 {
-    EDM_LOGI(MODULE_BUS_USB, "IsAppInstalled002 begin");
+    EDM_LOGI(MODULE_BUS_USB, "CheckAppInstallStatus002 begin");
     auto &mgr = AppLaunchManager::GetInstance();
     auto mockBundleMgr = AppExecFwk::MockBundleMgr::GetInstance();
     EXPECT_CALL(*mockBundleMgr, GetBundleInfo(_, _, _, _))
         .WillOnce(Return(false));
     mgr.bundleMgr_ = mockBundleMgr;
 
-    bool installed = mgr.IsAppInstalled("com.test.notinstalled");
-    EXPECT_FALSE(installed);
-    EDM_LOGI(MODULE_BUS_USB, "IsAppInstalled002 end");
+    auto status = mgr.CheckAppInstallStatus("com.test.notinstalled");
+    EXPECT_EQ(status, AppInstallStatus::NOT_INSTALLED);
+    EDM_LOGI(MODULE_BUS_USB, "CheckAppInstallStatus002 end");
 }
 
 class AppLaunchLauncherTest : public testing::Test {
