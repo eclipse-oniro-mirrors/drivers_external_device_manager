@@ -23,6 +23,7 @@
 #include "app_launch_launcher.h"
 #include "app_launch_notifier.h"
 #include "app_launch_param_subscriber.h"
+#include "iremote_object.h"
 #include "single_instance.h"
 
 namespace OHOS {
@@ -46,6 +47,7 @@ public:
 private:
     AppLaunchManager() = default;
     AppInstallStatus CheckAppInstallStatus(const std::string &bundleName);
+    void ResetBundleMgr();
 
     AppLaunchConfig config_;
     AppLaunchParamSubscriber paramSubscriber_;
@@ -53,7 +55,18 @@ private:
     AppLaunchNotifier notifier_;
     std::mutex bundleMgrMutex_;
     sptr<AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
-    bool GetBundleMgrProxy();
+    sptr<IRemoteObject::DeathRecipient> bmsDeathRecipient_ = nullptr;
+    sptr<AppExecFwk::IBundleMgr> GetBundleMgrProxy();
+
+    friend class AppLaunchBmsDeathRecipient;
+};
+
+class AppLaunchBmsDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    void OnRemoteDied(const wptr<IRemoteObject> &remote) override
+    {
+        AppLaunchManager::GetInstance().ResetBundleMgr();
+    }
 };
 
 } // namespace ExternalDeviceManager

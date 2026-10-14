@@ -49,6 +49,12 @@ void AppLaunchManager::UnInit()
 {
     EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
     paramSubscriber_.UnsubscribeEvent();
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    if (bundleMgr_ != nullptr && bundleMgr_->AsObject()) {
+        bundleMgr_->AsObject()->RemoveDeathRecipient(bmsDeathRecipient_);
+    }
+    bundleMgr_ = nullptr;
+    bmsDeathRecipient_ = nullptr;
 }
 
 void AppLaunchManager::OnDeviceConnected(uint16_t vid, uint16_t pid)
@@ -80,21 +86,22 @@ void AppLaunchManager::OnDeviceConnected(uint16_t vid, uint16_t pid)
 AppInstallStatus AppLaunchManager::CheckAppInstallStatus(const std::string &bundleName)
 {
     EDM_LOGI(MODULE_BUS_USB, "%{public}s enter", __func__);
-    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
-    if (!GetBundleMgrProxy()) {
+    sptr<AppExecFwk::IBundleMgr> bundleMgr = GetBundleMgrProxy();
+    if (bundleMgr == nullptr) {
         EDM_LOGE(MODULE_BUS_USB, "failed to GetBundleMgrProxy");
-        return AppInstallStatus::NOT_INSTALLED;
+        return AppInstallStatus::ACCOUNT_NOT_READY;
     }
 
-    AppExecFwk::BundleInfo bundleInfo;
-    int32_t flags = static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT);
     int32_t userId = 0;
     ErrCode getUserIdRet = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(userId);
     if (getUserIdRet != 0) {
         EDM_LOGE(MODULE_BUS_USB, "GetForegroundOsAccountLocalId failed, ret=%{public}d", getUserIdRet);
         return AppInstallStatus::ACCOUNT_NOT_READY;
     }
-    bool ret = bundleMgr_->GetBundleInfo(bundleName, flags, bundleInfo, userId);
+
+    AppExecFwk::BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT);
+    bool ret = bundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
     if (!ret) {
         EDM_LOGI(MODULE_BUS_USB, "app not installed");
         return AppInstallStatus::NOT_INSTALLED;
@@ -104,33 +111,59 @@ AppInstallStatus AppLaunchManager::CheckAppInstallStatus(const std::string &bund
     return AppInstallStatus::INSTALLED;
 }
 
-bool AppLaunchManager::GetBundleMgrProxy()
+sptr<AppExecFwk::IBundleMgr> AppLaunchManager::GetBundleMgrProxy()
 {
-    if (bundleMgr_ != nullptr) {
-        return true;
+    {
+        std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+        if (bundleMgr_ != nullptr) {
+            return bundleMgr_;
+        }
     }
 
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
         EDM_LOGE(MODULE_BUS_USB, "GetSystemAbilityManager is null");
-        return false;
+        return nullptr;
     }
 
     sptr<IRemoteObject> remoteObj =
         systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (remoteObj == nullptr) {
         EDM_LOGE(MODULE_BUS_USB, "GetSystemAbility BUNDLE_MGR is null");
-        return false;
+        return nullptr;
     }
 
-    bundleMgr_ = iface_cast<AppExecFwk::IBundleMgr>(remoteObj);
-    if (bundleMgr_ == nullptr) {
+    sptr<AppExecFwk::IBundleMgr> bundleMgr = iface_cast<AppExecFwk::IBundleMgr>(remoteObj);
+    if (bundleMgr == nullptr) {
         EDM_LOGE(MODULE_BUS_USB, "iface_cast IBundleMgr get null");
-        return false;
+        return nullptr;
     }
 
-    return true;
+    auto deathRecipient = new (std::nothrow) AppLaunchBmsDeathRecipient();
+    if (deathRecipient == nullptr) {
+        EDM_LOGE(MODULE_BUS_USB, "failed to create BmsDeathRecipient");
+        return nullptr;
+    }
+    remoteObj->AddDeathRecipient(deathRecipient);
+
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    if (bundleMgr_ != nullptr) {
+        remoteObj->RemoveDeathRecipient(deathRecipient);
+        return bundleMgr_;
+    }
+    bundleMgr_ = bundleMgr;
+    bmsDeathRecipient_ = deathRecipient;
+    return bundleMgr_;
+}
+
+void AppLaunchManager::ResetBundleMgr()
+{
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    if (bundleMgr_ != nullptr && bundleMgr_->AsObject()) {
+        bundleMgr_->AsObject()->RemoveDeathRecipient(bmsDeathRecipient_);
+    }
+    bundleMgr_ = nullptr;
 }
 
 } // namespace ExternalDeviceManager

@@ -39,7 +39,7 @@ static const std::string VALID_JSON = R"(
         "pid": "4321",
         "bundleName": "com.test.usb.launcher",
         "abilityName": "MainAbility",
-        "appStoreUri": "market://detail?id=com.test.usb.launcher"
+        "appStoreUri": "store://detail?id=com.test.usb.launcher"
     }
 ]
 )";
@@ -91,6 +91,8 @@ HWTEST_F(AppLaunchManagerTest, OnDeviceConnected001, TestSize.Level1)
 {
     EDM_LOGI(MODULE_BUS_USB, "OnDeviceConnected001 begin");
     auto &mgr = AppLaunchManager::GetInstance();
+    std::optional<AppLaunchEntry> entry = mgr.config_.FindEntry(0xFFFF, 0xFFFF);
+    EXPECT_FALSE(entry.has_value());
     mgr.OnDeviceConnected(0xFFFF, 0xFFFF);
 
     EDM_LOGI(MODULE_BUS_USB, "OnDeviceConnected001 end");
@@ -112,9 +114,13 @@ HWTEST_F(AppLaunchManagerTest, OnDeviceConnected002, TestSize.Level1)
         entry.pid = 0x4321;
         entry.bundleName = "com.test.usb.launcher";
         entry.abilityName = "MainAbility";
-        entry.appStoreUri = "market://detail?id=com.test.usb.launcher";
+        entry.appStoreUri = "store://detail?id=com.test.usb.launcher";
         mgr.config_.entryMap_[mgr.config_.MakeKey(0x12D1, 0x4321)] = entry;
     }
+
+    std::optional<AppLaunchEntry> foundEntry = mgr.config_.FindEntry(0x12D1, 0x4321);
+    EXPECT_TRUE(foundEntry.has_value());
+    EXPECT_EQ(foundEntry->bundleName, "com.test.usb.launcher");
 
     mgr.OnDeviceConnected(0x12D1, 0x4321);
 
@@ -137,7 +143,7 @@ HWTEST_F(AppLaunchManagerTest, OnDeviceConnected003, TestSize.Level1)
         entry1.pid = 0x4321;
         entry1.bundleName = "com.test.duplicate";
         entry1.abilityName = "MainAbility";
-        entry1.appStoreUri = "market://detail?id=test";
+        entry1.appStoreUri = "store://detail?id=test";
         mgr.config_.entryMap_[mgr.config_.MakeKey(0x12D1, 0x4321)] = entry1;
 
         AppLaunchEntry entry2;
@@ -145,9 +151,15 @@ HWTEST_F(AppLaunchManagerTest, OnDeviceConnected003, TestSize.Level1)
         entry2.pid = 0x6860;
         entry2.bundleName = "com.test.duplicate";
         entry2.abilityName = "MainAbility";
-        entry2.appStoreUri = "market://detail?id=test";
+        entry2.appStoreUri = "store://detail?id=test";
         mgr.config_.entryMap_[mgr.config_.MakeKey(0x04E8, 0x6860)] = entry2;
     }
+
+    std::optional<AppLaunchEntry> entry1 = mgr.config_.FindEntry(0x12D1, 0x4321);
+    std::optional<AppLaunchEntry> entry2 = mgr.config_.FindEntry(0x04E8, 0x6860);
+    EXPECT_TRUE(entry1.has_value());
+    EXPECT_TRUE(entry2.has_value());
+    EXPECT_EQ(entry1->bundleName, entry2->bundleName);
 
     mgr.OnDeviceConnected(0x12D1, 0x4321);
     mgr.OnDeviceConnected(0x04E8, 0x6860);
@@ -165,6 +177,8 @@ HWTEST_F(AppLaunchManagerTest, UnInit001, TestSize.Level1)
     EDM_LOGI(MODULE_BUS_USB, "UnInit001 begin");
     auto &mgr = AppLaunchManager::GetInstance();
     mgr.UnInit();
+    EXPECT_EQ(mgr.bundleMgr_, nullptr);
+    EXPECT_EQ(mgr.bmsDeathRecipient_, nullptr);
     EDM_LOGI(MODULE_BUS_USB, "UnInit001 end");
 }
 
@@ -274,7 +288,7 @@ HWTEST_F(AppLaunchNotifierTest, SendNotification001, TestSize.Level1)
     entry.pid = 0x4321;
     entry.bundleName = "com.test.usb.launcher";
     entry.abilityName = "MainAbility";
-    entry.appStoreUri = "market://detail?id=com.test.usb.launcher";
+    entry.appStoreUri = "store://detail?id=com.test.usb.launcher";
     int32_t ret = notifier.SendNotification(entry);
     EXPECT_NE(ret, EDM_OK);
     EDM_LOGI(MODULE_BUS_USB, "SendNotification001 end");
@@ -290,9 +304,8 @@ HWTEST_F(AppLaunchNotifierTest, GetPixelMap001, TestSize.Level1)
     EDM_LOGI(MODULE_BUS_USB, "GetPixelMap001 begin");
     AppLaunchNotifier notifier;
     std::string path = "";
-    bool ret = notifier.GetPixelMap(path);
-    EXPECT_FALSE(ret);
-    EXPECT_EQ(notifier.iconPixelMap_, nullptr);
+    std::shared_ptr<Media::PixelMap> ret = notifier.GetPixelMap(path);
+    EXPECT_EQ(ret, nullptr);
     EXPECT_FALSE(std::filesystem::exists(path)) << "Test file does not exist: " + path;
     EDM_LOGI(MODULE_BUS_USB, "GetPixelMap001 end");
 }
@@ -307,13 +320,11 @@ HWTEST_F(AppLaunchNotifierTest, GetPixelMap002, TestSize.Level1)
     EDM_LOGI(MODULE_BUS_USB, "GetPixelMap002 begin");
     AppLaunchNotifier notifier;
     std::string path = "/system/etc/peripheral/resources/peripheral_fault_icon.png";
-    bool ret = notifier.GetPixelMap(path);
+    std::shared_ptr<Media::PixelMap> ret = notifier.GetPixelMap(path);
     if (std::filesystem::exists(path)) {
-        EXPECT_TRUE(ret);
-        EXPECT_NE(notifier.iconPixelMap_, nullptr);
+        EXPECT_NE(ret, nullptr);
     } else {
-        EXPECT_FALSE(ret);
-        EXPECT_EQ(notifier.iconPixelMap_, nullptr);
+        EXPECT_EQ(ret, nullptr);
     }
     EDM_LOGI(MODULE_BUS_USB, "GetPixelMap002 end");
 }

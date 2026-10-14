@@ -92,12 +92,11 @@ static bool SetWantAgent(Notification::NotificationRequest &request, const std::
     return true;
 }
 
-bool AppLaunchNotifier::GetPixelMap(const std::string &path)
+std::shared_ptr<Media::PixelMap> AppLaunchNotifier::GetPixelMap(const std::string &path)
 {
     if (access(path.c_str(), F_OK) != 0) {
         EDM_LOGE(MODULE_BUS_USB, "Icon file path not exists");
-        iconPixelMap_ = nullptr;
-        return false;
+        return nullptr;
     }
     uint32_t errorCode = 0;
     Media::SourceOptions opts;
@@ -105,17 +104,15 @@ bool AppLaunchNotifier::GetPixelMap(const std::string &path)
     std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(path, opts, errorCode);
     if (imageSource == nullptr) {
         EDM_LOGE(MODULE_BUS_USB, "ImageSource nullptr, errorCode=%{public}u", errorCode);
-        iconPixelMap_ = nullptr;
-        return false;
+        return nullptr;
     }
     Media::DecodeOptions decodeOpts;
     std::unique_ptr<Media::PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, errorCode);
     if (pixelMap == nullptr) {
         EDM_LOGE(MODULE_BUS_USB, "CreatePixelMap failed, errorCode=%{public}u", errorCode);
-        return false;
+        return nullptr;
     }
-    iconPixelMap_ = std::shared_ptr<Media::PixelMap>(pixelMap.release());
-    return true;
+    return std::shared_ptr<Media::PixelMap>(pixelMap.release());
 }
 
 int32_t AppLaunchNotifier::SendNotification(const AppLaunchEntry &entry)
@@ -150,8 +147,9 @@ int32_t AppLaunchNotifier::SendNotification(const AppLaunchEntry &entry)
 
     int32_t notificationId = static_cast<int32_t>(std::hash<std::string>()(entry.bundleName));
     Notification::NotificationRequest request(notificationId);
-    if (GetPixelMap(APP_LAUNCH_ICON_PATH) && iconPixelMap_ != nullptr) {
-        request.SetLittleIcon(iconPixelMap_);
+    std::shared_ptr<Media::PixelMap> iconPixelMap = GetPixelMap(APP_LAUNCH_ICON_PATH);
+    if (iconPixelMap != nullptr) {
+        request.SetLittleIcon(iconPixelMap);
         request.SetBadgeIconStyle(Notification::NotificationRequest::BadgeStyle::LITTLE);
     }
     request.SetContent(notificationContent);
