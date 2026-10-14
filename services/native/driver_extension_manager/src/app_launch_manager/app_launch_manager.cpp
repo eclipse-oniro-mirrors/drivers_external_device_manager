@@ -140,12 +140,12 @@ sptr<AppExecFwk::IBundleMgr> AppLaunchManager::GetBundleMgrProxy()
         return nullptr;
     }
 
-    auto deathRecipient_ = new (std::nothrow) AppLaunchBmsDeathRecipient();
-    if (deathRecipient_ == nullptr) {
+    auto deathRecipient = new (std::nothrow) AppLaunchBmsDeathRecipient();
+    if (deathRecipient == nullptr) {
         EDM_LOGE(MODULE_BUS_USB, "failed to create BmsDeathRecipient");
         return nullptr;
     }
-    remoteObj->AddDeathRecipient(deathRecipient_);
+    remoteObj->AddDeathRecipient(deathRecipient);
 
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     if (bundleMgr_ != nullptr) {
