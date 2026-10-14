@@ -35,8 +35,7 @@ public:
     int32_t SendNotification(const AppLaunchEntry &entry);
 
 private:
-    bool GetPixelMap(const std::string &path);
-    std::shared_ptr<Media::PixelMap> iconPixelMap_;
+    std::shared_ptr<Media::PixelMap> GetPixelMap(const std::string &path);
 };
 
 } // namespace ExternalDeviceManager

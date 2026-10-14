@@ -51,7 +51,7 @@ private:
         AppLaunchParamSubscriber &registry_;
     };
 
-    void HandleParamUpdate(const AAFwk::Want &want);
+    void HandleParamUpdate(const AAFwk::Want &want, const std::function<void()> &callback);
 
     std::shared_ptr<ParamEventSubscriber> subscriber_ = nullptr;
     std::function<void()> updateCallback_ = nullptr;

@@ -60,6 +60,15 @@ std::vector<std::string> AppLaunchConfig::SplitString(const std::string &str, ch
     return result;
 }
 
+bool AppLaunchConfig::IsValidAppStoreUri(const std::string &uri)
+{
+    static const std::string ALLOWED_SCHEME = "store://";
+    if (uri.size() <= ALLOWED_SCHEME.size()) {
+        return false;
+    }
+    return uri.compare(0, ALLOWED_SCHEME.size(), ALLOWED_SCHEME) == 0;
+}
+
 std::vector<std::string> AppLaunchConfig::GetVersionNums(const std::string &filePath)
 {
     struct stat fileStat;
@@ -285,6 +294,11 @@ bool AppLaunchConfig::ParseDeviceItemTo(cJSON *deviceItem,
     if (!ParseStringField(deviceItem, "bundleName", entry.bundleName) ||
         !ParseStringField(deviceItem, "abilityName", entry.abilityName) ||
         !ParseStringField(deviceItem, "appStoreUri", entry.appStoreUri)) {
+        return false;
+    }
+
+    if (!IsValidAppStoreUri(entry.appStoreUri)) {
+        EDM_LOGE(MODULE_BUS_USB, "invalid appStoreUri");
         return false;
     }
 
