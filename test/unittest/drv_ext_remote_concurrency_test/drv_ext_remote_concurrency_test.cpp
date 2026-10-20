@@ -118,7 +118,7 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, GetDrvExtRemoteProtectedByMutexTest, TestS
 {
     device_->drvExtRemoteMutex_.lock();
     std::atomic<bool> done {false};
-    std::thread worker([&]() {
+    std::thread worker([&device_, &done]() {
         device_->GetDrvExtRemote();
         done.store(true, std::memory_order_release);
     });
@@ -137,7 +137,7 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, UpdateDrvExtRemoteProtectedByMutexTest, Te
     device_->drvExtRemoteMutex_.lock();
     std::atomic<bool> done {false};
     sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
-    std::thread worker([&]() {
+    std::thread worker([&device_, &remote, &done]() {
         device_->UpdateDrvExtRemote(remote);
         done.store(true, std::memory_order_release);
     });
@@ -155,7 +155,7 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ClearDrvExtRemoteProtectedByMutexTest, Tes
 {
     device_->drvExtRemoteMutex_.lock();
     std::atomic<bool> done {false};
-    std::thread worker([&]() {
+    std::thread worker([&device_, &done]() {
         device_->ClearDrvExtRemote();
         done.store(true, std::memory_order_release);
     });
@@ -183,19 +183,19 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConcurrentUpdateClearGetStressTest, TestSi
     std::atomic<bool> stop {false};
     std::atomic<int> badSnapshot {0};
 
-    auto updater = [&]() {
+    auto updater = [&device_, iterPerThread, &remotes]() {
         int idx = 0;
         for (int i = 0; i < iterPerThread; i++) {
             device_->UpdateDrvExtRemote(remotes[idx % remotes.size()]);
             idx++;
         }
     };
-    auto clearer = [&]() {
+    auto clearer = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             device_->ClearDrvExtRemote();
         }
     };
-    auto getter = [&]() {
+    auto getter = [&device_, &stop, &remotes, &badSnapshot]() {
         while (!stop.load(std::memory_order_relaxed)) {
             sptr<IRemoteObject> snap = device_->GetDrvExtRemote();
             if (snap != nullptr && std::find(remotes.begin(), remotes.end(), snap) == remotes.end()) {
@@ -240,25 +240,25 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level
     const int iterPerThread = 500;
     const int threadCount = 8;
 
-    auto onConnectWorker = [&]() {
+    auto onConnectWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
             device_->OnConnect(remote, 0);
         }
     };
-    auto onDisconnectWorker = [&]() {
+    auto onDisconnectWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             device_->OnDisconnect(0);
         }
     };
-    auto getterWorker = [&]() {
+    auto getterWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             auto snap = device_->GetDrvExtRemote();
             (void)snap;
         }
     };
 
-    auto runner = [&]() {
+    auto runner = [&onConnectWorker, &onDisconnectWorker, &getterWorker, threadCount]() {
         std::vector<std::thread> threads;
         for (int i = 0; i < threadCount / 2; i++) {
             threads.emplace_back(onConnectWorker);
@@ -294,25 +294,25 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConnectCallbackAndOnConnectConcurrentNoDea
 
     const int iterPerThread = 200;
 
-    auto connectWorker = [&]() {
+    auto connectWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             sptr<IDriverExtMgrCallback> callback = sptr<TestDriverExtMgrCallback>::MakeSptr();
             device_->Connect(callback, 100 + i);
         }
     };
-    auto onConnectWorker = [&]() {
+    auto onConnectWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
             device_->OnConnect(remote, 0);
         }
     };
-    auto onDisconnectWorker = [&]() {
+    auto onDisconnectWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             device_->OnDisconnect(0);
         }
     };
 
-    auto runner = [&]() {
+    auto runner = [&connectWorker, &onConnectWorker, &onDisconnectWorker]() {
         std::vector<std::thread> threads;
         threads.emplace_back(connectWorker);
         threads.emplace_back(onConnectWorker);
