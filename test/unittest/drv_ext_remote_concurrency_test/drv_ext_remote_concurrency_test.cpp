@@ -166,20 +166,20 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConcurrentUpdateClearGetStressTest, TestSi
         while (cur < prev && !minLiveCount.compare_exchange_weak(prev, cur)) { }
     };
 
-    auto updater = [&device_, iterPerThread, &recordMin]() {
+    auto updater = [this, iterPerThread, &recordMin]() {
         for (int i = 0; i < iterPerThread; i++) {
             sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
             device_->UpdateDrvExtRemote(remote);
             recordMin(TestRemoteObject::GetLiveCount());
         }
     };
-    auto clearer = [&device_, iterPerThread, &recordMin]() {
+    auto clearer = [this, iterPerThread, &recordMin]() {
         for (int i = 0; i < iterPerThread; i++) {
             device_->ClearDrvExtRemote();
             recordMin(TestRemoteObject::GetLiveCount());
         }
     };
-    auto getter = [&device_, &stop, &recordMin]() {
+    auto getter = [this, &stop, &recordMin]() {
         while (!stop.load(std::memory_order_relaxed)) {
             sptr<IRemoteObject> snap = device_->GetDrvExtRemote();
             (void)snap;
@@ -234,19 +234,19 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level
         remotes.push_back(sptr<TestRemoteObject>::MakeSptr());
     }
 
-    auto updateWorker = [&device_, iterPerThread, &remotes]() {
+    auto updateWorker = [this, iterPerThread, &remotes]() {
         int idx = 0;
         for (int i = 0; i < iterPerThread; i++) {
             device_->UpdateDrvExtRemote(remotes[idx % remotes.size()]);
             idx++;
         }
     };
-    auto clearWorker = [&device_, iterPerThread]() {
+    auto clearWorker = [this, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             device_->ClearDrvExtRemote();
         }
     };
-    auto getterWorker = [&device_, iterPerThread]() {
+    auto getterWorker = [this, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             auto snap = device_->GetDrvExtRemote();
             (void)snap;
@@ -289,19 +289,19 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConnectCallbackAndOnConnectConcurrentNoDea
         remotes.push_back(sptr<TestRemoteObject>::MakeSptr());
     }
 
-    auto updateWorker = [&device_, iterPerThread, &remotes]() {
+    auto updateWorker = [this, iterPerThread, &remotes]() {
         int idx = 0;
         for (int i = 0; i < iterPerThread; i++) {
             device_->UpdateDrvExtRemote(remotes[idx % remotes.size()]);
             idx++;
         }
     };
-    auto clearWorker = [&device_, iterPerThread]() {
+    auto clearWorker = [this, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             device_->ClearDrvExtRemote();
         }
     };
-    auto getterWorker = [&device_, iterPerThread]() {
+    auto getterWorker = [this, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             auto snap = device_->GetDrvExtRemote();
             (void)snap;
