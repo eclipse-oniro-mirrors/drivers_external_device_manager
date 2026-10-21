@@ -111,9 +111,66 @@ public:
         TestRemoteObject::ResetLiveCount();
     }
 
+    // Worker bodies extracted as static methods so the HWTEST_F stays under 50 lines
+    // (G.FUD.05) and the lambdas only capture-and-forward.
+    static void UpdaterBody(Device &device, int iterPerThread, std::atomic<int32_t> &minLive)
+    {
+        for (int i = 0; i < iterPerThread; i++) {
+            sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
+            device.UpdateDrvExtRemote(remote);
+            RecordMinLive(minLive);
+        }
+    }
+    static void ClearerBody(Device &device, int iterPerThread, std::atomic<int32_t> &minLive)
+    {
+        for (int i = 0; i < iterPerThread; i++) {
+            device.ClearDrvExtRemote();
+            RecordMinLive(minLive);
+        }
+    }
+    static void GetterBody(Device &device, std::atomic<bool> &stop, std::atomic<int32_t> &minLive)
+    {
+        while (!stop.load(std::memory_order_relaxed)) {
+            sptr<IRemoteObject> snap = device.GetDrvExtRemote();
+            (void)snap;
+            RecordMinLive(minLive);
+        }
+    }
+    // Simple deadlock-test workers (no live-count tracking). Extracted to keep
+    // HWTEST_F functions under 50 lines (G.FUD.05).
+    static void UpdateWorkerBody(Device &device, int iterPerThread, const std::vector<sptr<IRemoteObject>> &remotes)
+    {
+        int idx = 0;
+        for (int i = 0; i < iterPerThread; i++) {
+            device.UpdateDrvExtRemote(remotes[idx % remotes.size()]);
+            idx++;
+        }
+    }
+    static void ClearWorkerBody(Device &device, int iterPerThread)
+    {
+        for (int i = 0; i < iterPerThread; i++) {
+            device.ClearDrvExtRemote();
+        }
+    }
+    static void GetterWorkerBody(Device &device, int iterPerThread)
+    {
+        for (int i = 0; i < iterPerThread; i++) {
+            auto snap = device.GetDrvExtRemote();
+            (void)snap;
+        }
+    }
+
 protected:
     shared_ptr<Device> device_;
     shared_ptr<DeviceInfo> deviceInfo_;
+
+private:
+    static void RecordMinLive(std::atomic<int32_t> &minLive)
+    {
+        int32_t cur = TestRemoteObject::GetLiveCount();
+        int32_t prev = minLive.load(std::memory_order_relaxed);
+        while (cur < prev && !minLive.compare_exchange_weak(prev, cur)) { }
+    }
 };
 
 // Baseline: Update -> Get -> Clear -> Get behaves as expected (functional sanity).
@@ -155,36 +212,17 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConcurrentUpdateClearGetStressTest, TestSi
     const int updaterCount = 6;
     const int clearerCount = 6;
     const int getterCount = 4;
-
     std::atomic<bool> stop {false};
-    // Track the minimum observed live count. A negative value means a TestRemoteObject
-    // destructor ran more times than its constructor -> double-free from the race.
     std::atomic<int32_t> minLiveCount {INT32_MAX};
 
-    auto recordMin = [&minLiveCount](int32_t cur) {
-        int32_t prev = minLiveCount.load(std::memory_order_relaxed);
-        while (cur < prev && !minLiveCount.compare_exchange_weak(prev, cur)) { }
+    auto updater = [this, iterPerThread, &minLiveCount]() {
+        UpdaterBody(*device_, iterPerThread, minLiveCount);
     };
-
-    auto updater = [this, iterPerThread, &recordMin]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
-            device_->UpdateDrvExtRemote(remote);
-            recordMin(TestRemoteObject::GetLiveCount());
-        }
+    auto clearer = [this, iterPerThread, &minLiveCount]() {
+        ClearerBody(*device_, iterPerThread, minLiveCount);
     };
-    auto clearer = [this, iterPerThread, &recordMin]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            device_->ClearDrvExtRemote();
-            recordMin(TestRemoteObject::GetLiveCount());
-        }
-    };
-    auto getter = [this, &stop, &recordMin]() {
-        while (!stop.load(std::memory_order_relaxed)) {
-            sptr<IRemoteObject> snap = device_->GetDrvExtRemote();
-            (void)snap;
-            recordMin(TestRemoteObject::GetLiveCount());
-        }
+    auto getter = [this, &stop, &minLiveCount]() {
+        GetterBody(*device_, stop, minLiveCount);
     };
 
     std::vector<std::thread> threads;
@@ -197,7 +235,6 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConcurrentUpdateClearGetStressTest, TestSi
     for (int i = 0; i < getterCount; i++) {
         threads.emplace_back(getter);
     }
-
     const int writerCount = updaterCount + clearerCount;
     for (int i = 0; i < writerCount; i++) {
         threads[i].join();
@@ -206,14 +243,9 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConcurrentUpdateClearGetStressTest, TestSi
     for (int i = writerCount; i < writerCount + getterCount; i++) {
         threads[i].join();
     }
-
-    // Release any remote still held by the device, then let everything settle.
     device_->ClearDrvExtRemote();
     int32_t finalLive = TestRemoteObject::GetLiveCount();
     int32_t observedMin = minLiveCount.load(std::memory_order_acquire);
-
-    // Pre-fix: observedMin goes negative (double-free) -> this ASSERT fails.
-    // Post-fix: refcount is always correct -> observedMin >= 0.
     ASSERT_GE(observedMin, 0) << "data race detected: TestRemoteObject live count went negative (" << observedMin
                               << ") -> double DecStrongRef on unprotected drvExtRemote_";
     ASSERT_GE(finalLive, 0) << "leak/double-free detected: final live count negative";
@@ -233,26 +265,15 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level
     for (int i = 0; i < 4; i++) {
         remotes.push_back(sptr<TestRemoteObject>::MakeSptr());
     }
-
     auto updateWorker = [this, iterPerThread, &remotes]() {
-        int idx = 0;
-        for (int i = 0; i < iterPerThread; i++) {
-            device_->UpdateDrvExtRemote(remotes[idx % remotes.size()]);
-            idx++;
-        }
+        UpdateWorkerBody(*device_, iterPerThread, remotes);
     };
     auto clearWorker = [this, iterPerThread]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            device_->ClearDrvExtRemote();
-        }
+        ClearWorkerBody(*device_, iterPerThread);
     };
     auto getterWorker = [this, iterPerThread]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            auto snap = device_->GetDrvExtRemote();
-            (void)snap;
-        }
+        GetterWorkerBody(*device_, iterPerThread);
     };
-
     auto runner = [&updateWorker, &clearWorker, &getterWorker, threadCount]() {
         std::vector<std::thread> threads;
         for (int i = 0; i < threadCount / 2; i++) {
@@ -270,7 +291,6 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level
             }
         }
     };
-
     std::future<void> fut = std::async(std::launch::async, runner);
     auto status = fut.wait_for(std::chrono::seconds(30));
     ASSERT_EQ(status, std::future_status::ready) << "threads did not finish within 30s, likely AB-BA deadlock";
@@ -288,26 +308,15 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConnectCallbackAndOnConnectConcurrentNoDea
     for (int i = 0; i < 4; i++) {
         remotes.push_back(sptr<TestRemoteObject>::MakeSptr());
     }
-
     auto updateWorker = [this, iterPerThread, &remotes]() {
-        int idx = 0;
-        for (int i = 0; i < iterPerThread; i++) {
-            device_->UpdateDrvExtRemote(remotes[idx % remotes.size()]);
-            idx++;
-        }
+        UpdateWorkerBody(*device_, iterPerThread, remotes);
     };
     auto clearWorker = [this, iterPerThread]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            device_->ClearDrvExtRemote();
-        }
+        ClearWorkerBody(*device_, iterPerThread);
     };
     auto getterWorker = [this, iterPerThread]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            auto snap = device_->GetDrvExtRemote();
-            (void)snap;
-        }
+        GetterWorkerBody(*device_, iterPerThread);
     };
-
     auto runner = [&updateWorker, &clearWorker, &getterWorker]() {
         std::vector<std::thread> threads;
         threads.emplace_back(updateWorker);
@@ -319,7 +328,6 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, ConnectCallbackAndOnConnectConcurrentNoDea
             }
         }
     };
-
     std::future<void> fut = std::async(std::launch::async, runner);
     auto status = fut.wait_for(std::chrono::seconds(30));
     ASSERT_EQ(status, std::future_status::ready) << "threads did not finish within 30s, likely AB-BA deadlock";
