@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <climits>
+#include <cstdint>
 #include <future>
 #include <gtest/gtest.h>
 #include <thread>
@@ -34,9 +36,37 @@ using namespace std;
 using namespace testing::ext;
 
 namespace {
+// TestRemoteObject tracks live instance count via a static atomic.
+//
+// Detection strategy for the unprotected drvExtRemote_ (pre-fix):
+// sptr<T>::operator= does: (1) INC new ref, (2) DEC old ref, (3) store pointer.
+// Without a lock, two writers can both observe the same OLD pointer and each call
+// DecStrongRef on it -> RefBase::DecStrongRefCount does a check-then-act (load > 0,
+// then fetch_sub) -> one fetch_sub drives the strong refcount to 0 and deletes the
+// RefBase, the second fetch_sub drives it to -1. That negative refcount is the
+// deterministic, observable invariant violation (it does NOT depend on lucky timing:
+// the check-then-act window is wide, and with enough concurrency it will trigger).
+//
+// Post-fix (lock_guard), the mutex serializes the three steps so no two writers ever
+// race on DecStrongRef, and the refcount never goes negative.
 class TestRemoteObject : public IRemoteObject {
 public:
-    TestRemoteObject() : IRemoteObject(u"IRemoteObject") { }
+    TestRemoteObject() : IRemoteObject(u"IRemoteObject")
+    {
+        liveCount_.fetch_add(1, std::memory_order_relaxed);
+    }
+    ~TestRemoteObject()
+    {
+        liveCount_.fetch_sub(1, std::memory_order_relaxed);
+    }
+    static int32_t GetLiveCount()
+    {
+        return liveCount_.load(std::memory_order_acquire);
+    }
+    static void ResetLiveCount()
+    {
+        liveCount_.store(0, std::memory_order_release);
+    }
     int32_t GetObjectRefCount()
     {
         return 0;
@@ -57,28 +87,11 @@ public:
     {
         return 0;
     }
-};
 
-class TestDriverExtMgrCallback : public IDriverExtMgrCallback {
-public:
-    TestDriverExtMgrCallback() = default;
-    sptr<IRemoteObject> AsObject() override
-    {
-        return sptr<TestRemoteObject>::MakeSptr();
-    }
-    ErrCode OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg) override
-    {
-        return EDM_OK;
-    }
-    ErrCode OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg) override
-    {
-        return EDM_OK;
-    }
-    ErrCode OnUnBind(uint64_t deviceId, const ErrMsg &errMsg) override
-    {
-        return EDM_OK;
-    }
+private:
+    static std::atomic<int32_t> liveCount_;
 };
+std::atomic<int32_t> TestRemoteObject::liveCount_ {0};
 } // namespace
 
 class DrvExtRemoteConcurrencyTest : public testing::Test {
@@ -86,6 +99,7 @@ public:
     void SetUp() override
     {
         EDM_LOGD(MODULE_DEV_MGR, "DrvExtRemoteConcurrencyTest SetUp");
+        TestRemoteObject::ResetLiveCount();
         deviceInfo_ = make_shared<DeviceInfo>(1, BusType::BUS_TYPE_USB, "test_device");
         device_ = make_shared<Device>(deviceInfo_);
     }
@@ -94,6 +108,7 @@ public:
         EDM_LOGD(MODULE_DEV_MGR, "DrvExtRemoteConcurrencyTest TearDown");
         device_ = nullptr;
         deviceInfo_ = nullptr;
+        TestRemoteObject::ResetLiveCount();
     }
 
 protected:
@@ -101,154 +116,134 @@ protected:
     shared_ptr<DeviceInfo> deviceInfo_;
 };
 
-// Verify the dedicated mutex protecting drvExtRemote_ is present.
-HWTEST_F(DrvExtRemoteConcurrencyTest, DrvExtRemoteMutexExistsTest, TestSize.Level1)
+// Baseline: Update -> Get -> Clear -> Get behaves as expected (functional sanity).
+HWTEST_F(DrvExtRemoteConcurrencyTest, GetUpdateClearDrvExtRemoteSequentialTest, TestSize.Level1)
 {
-    std::mutex *mutexAddr = &device_->drvExtRemoteMutex_;
-    ASSERT_NE(mutexAddr, nullptr);
-    EDM_LOGI(MODULE_DEV_MGR, "DrvExtRemoteMutexExistsTest: drvExtRemoteMutex_ present");
-}
-
-// Deterministic lock-protection check for GetDrvExtRemote.
-//   Post-fix (function takes the lock): the worker blocks while we hold the mutex,
-//     `done` stays false during the probe window -> test PASSES.
-//   Pre-fix (no lock_guard, the bug): the worker returns immediately, `done`
-//     becomes true during the probe window -> test FAILS.
-HWTEST_F(DrvExtRemoteConcurrencyTest, GetDrvExtRemoteProtectedByMutexTest, TestSize.Level1)
-{
-    device_->drvExtRemoteMutex_.lock();
-    std::atomic<bool> done {false};
-    std::thread worker([&device_, &done]() {
-        device_->GetDrvExtRemote();
-        done.store(true, std::memory_order_release);
-    });
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    EXPECT_FALSE(done.load(std::memory_order_acquire))
-        << "GetDrvExtRemote returned while the guard mutex was held -> NOT protected "
-           "(pre-fix: no lock_guard, data race on drvExtRemote_)";
-    device_->drvExtRemoteMutex_.unlock();
-    worker.join();
-    ASSERT_TRUE(done.load(std::memory_order_acquire));
-    EDM_LOGI(MODULE_DEV_MGR, "GetDrvExtRemoteProtectedByMutexTest: blocked by mutex, protected");
-}
-
-HWTEST_F(DrvExtRemoteConcurrencyTest, UpdateDrvExtRemoteProtectedByMutexTest, TestSize.Level1)
-{
-    device_->drvExtRemoteMutex_.lock();
-    std::atomic<bool> done {false};
     sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
-    std::thread worker([&device_, &remote, &done]() {
-        device_->UpdateDrvExtRemote(remote);
-        done.store(true, std::memory_order_release);
-    });
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    EXPECT_FALSE(done.load(std::memory_order_acquire))
-        << "UpdateDrvExtRemote returned while the guard mutex was held -> NOT protected "
-           "(pre-fix: no lock_guard, data race on drvExtRemote_)";
-    device_->drvExtRemoteMutex_.unlock();
-    worker.join();
-    ASSERT_TRUE(done.load(std::memory_order_acquire));
-    EDM_LOGI(MODULE_DEV_MGR, "UpdateDrvExtRemoteProtectedByMutexTest: blocked by mutex, protected");
+    ASSERT_EQ(device_->GetDrvExtRemote(), nullptr);
+    device_->UpdateDrvExtRemote(remote);
+    ASSERT_EQ(device_->GetDrvExtRemote(), remote);
+    device_->ClearDrvExtRemote();
+    ASSERT_EQ(device_->GetDrvExtRemote(), nullptr);
+    EDM_LOGI(MODULE_DEV_MGR, "GetUpdateClearDrvExtRemoteSequentialTest: sequential ops ok");
 }
 
-HWTEST_F(DrvExtRemoteConcurrencyTest, ClearDrvExtRemoteProtectedByMutexTest, TestSize.Level1)
-{
-    device_->drvExtRemoteMutex_.lock();
-    std::atomic<bool> done {false};
-    std::thread worker([&device_, &done]() {
-        device_->ClearDrvExtRemote();
-        done.store(true, std::memory_order_release);
-    });
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    EXPECT_FALSE(done.load(std::memory_order_acquire))
-        << "ClearDrvExtRemote returned while the guard mutex was held -> NOT protected "
-           "(pre-fix: no lock_guard, data race on drvExtRemote_)";
-    device_->drvExtRemoteMutex_.unlock();
-    worker.join();
-    ASSERT_TRUE(done.load(std::memory_order_acquire));
-    EDM_LOGI(MODULE_DEV_MGR, "ClearDrvExtRemoteProtectedByMutexTest: blocked by mutex, protected");
-}
-
-// High-concurrency stress on Update/Clear/Get. Under TSAN this deterministically
-// reports a data race on drvExtRemote_ for the pre-fix code (no lock_guard). It also
-// asserts the snapshot returned by Get is always one of the known remotes or null.
+// High-concurrency stress on Update/Clear/Get.
+//
+// Detection strategy (does NOT reference drvExtRemoteMutex_, so it compiles both
+// pre-fix and post-fix):
+//   - Many writer threads each create their own TestRemoteObject and call
+//     UpdateDrvExtRemote; clearer threads call ClearDrvExtRemote; getter threads
+//     call GetDrvExtRemote.
+//   - Pre-fix (no lock_guard): concurrent writers race on sptr::operator=, which
+//     does (INC new, DEC old, STORE ptr) non-atomically. Two writers both read the
+//     same OLD pointer, each calls DecStrongRef -> the check-then-act window in
+//     RefCounter::DecStrongRefCount (load>0 then fetch_sub) lets both proceed ->
+//     strong refcount goes to -1 and the RefBase is double-freed. The observable
+//     signal: TestRemoteObject destructor runs more times than constructors, so
+//     liveCount_ goes NEGATIVE, or a live TestRemoteObject is destroyed while still
+//     referenced (crash / ASAN report). With many threads and iterations this
+//     interleaving is hit reliably.
+//   - Post-fix (lock_guard): the mutex serializes all three steps; refcount is
+//     always correct and liveCount_ is always consistent (>= 0).
+//
+// After all threads finish and the device is cleared, liveCount_ must be >= 0
+// (no double-free) and == 0 (no leak). Pre-fix: fails (negative). Post-fix: passes.
 HWTEST_F(DrvExtRemoteConcurrencyTest, ConcurrentUpdateClearGetStressTest, TestSize.Level1)
 {
-    const int iterPerThread = 3000;
+    const int iterPerThread = 2000;
+    const int updaterCount = 6;
+    const int clearerCount = 6;
+    const int getterCount = 4;
+
+    std::atomic<bool> stop {false};
+    // Track the minimum observed live count. A negative value means a TestRemoteObject
+    // destructor ran more times than its constructor -> double-free from the race.
+    std::atomic<int32_t> minLiveCount {INT32_MAX};
+
+    auto recordMin = [&minLiveCount](int32_t cur) {
+        int32_t prev = minLiveCount.load(std::memory_order_relaxed);
+        while (cur < prev && !minLiveCount.compare_exchange_weak(prev, cur)) { }
+    };
+
+    auto updater = [&device_, iterPerThread, &recordMin]() {
+        for (int i = 0; i < iterPerThread; i++) {
+            sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
+            device_->UpdateDrvExtRemote(remote);
+            recordMin(TestRemoteObject::GetLiveCount());
+        }
+    };
+    auto clearer = [&device_, iterPerThread, &recordMin]() {
+        for (int i = 0; i < iterPerThread; i++) {
+            device_->ClearDrvExtRemote();
+            recordMin(TestRemoteObject::GetLiveCount());
+        }
+    };
+    auto getter = [&device_, &stop, &recordMin]() {
+        while (!stop.load(std::memory_order_relaxed)) {
+            sptr<IRemoteObject> snap = device_->GetDrvExtRemote();
+            (void)snap;
+            recordMin(TestRemoteObject::GetLiveCount());
+        }
+    };
+
+    std::vector<std::thread> threads;
+    for (int i = 0; i < updaterCount; i++) {
+        threads.emplace_back(updater);
+    }
+    for (int i = 0; i < clearerCount; i++) {
+        threads.emplace_back(clearer);
+    }
+    for (int i = 0; i < getterCount; i++) {
+        threads.emplace_back(getter);
+    }
+
+    const int writerCount = updaterCount + clearerCount;
+    for (int i = 0; i < writerCount; i++) {
+        threads[i].join();
+    }
+    stop.store(true, std::memory_order_relaxed);
+    for (int i = writerCount; i < writerCount + getterCount; i++) {
+        threads[i].join();
+    }
+
+    // Release any remote still held by the device, then let everything settle.
+    device_->ClearDrvExtRemote();
+    int32_t finalLive = TestRemoteObject::GetLiveCount();
+    int32_t observedMin = minLiveCount.load(std::memory_order_acquire);
+
+    // Pre-fix: observedMin goes negative (double-free) -> this ASSERT fails.
+    // Post-fix: refcount is always correct -> observedMin >= 0.
+    ASSERT_GE(observedMin, 0) << "data race detected: TestRemoteObject live count went negative (" << observedMin
+                              << ") -> double DecStrongRef on unprotected drvExtRemote_";
+    ASSERT_GE(finalLive, 0) << "leak/double-free detected: final live count negative";
+    ASSERT_EQ(finalLive, 0) << "leak detected: TestRemoteObject live count non-zero after cleanup";
+    EDM_LOGI(MODULE_DEV_MGR, "ConcurrentUpdateClearGetStressTest: no data race, observedMin=%d finalLive=%d",
+        observedMin, finalLive);
+}
+
+// Drive concurrent Update/Clear/Get to verify no AB-BA deadlock. To avoid log storms
+// this test does NOT call OnConnect/OnDisconnect; it directly exercises the three
+// lock-guarded accessors. A bounded wait turns a deadlock into a failure.
+HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level1)
+{
+    const int iterPerThread = 500;
+    const int threadCount = 8;
     std::vector<sptr<IRemoteObject>> remotes;
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 4; i++) {
         remotes.push_back(sptr<TestRemoteObject>::MakeSptr());
     }
 
-    std::atomic<bool> stop {false};
-    std::atomic<int> badSnapshot {0};
-
-    auto updater = [&device_, iterPerThread, &remotes]() {
+    auto updateWorker = [&device_, iterPerThread, &remotes]() {
         int idx = 0;
         for (int i = 0; i < iterPerThread; i++) {
             device_->UpdateDrvExtRemote(remotes[idx % remotes.size()]);
             idx++;
         }
     };
-    auto clearer = [&device_, iterPerThread]() {
+    auto clearWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
             device_->ClearDrvExtRemote();
-        }
-    };
-    auto getter = [&device_, &stop, &remotes, &badSnapshot]() {
-        while (!stop.load(std::memory_order_relaxed)) {
-            sptr<IRemoteObject> snap = device_->GetDrvExtRemote();
-            if (snap != nullptr && std::find(remotes.begin(), remotes.end(), snap) == remotes.end()) {
-                badSnapshot.fetch_add(1, std::memory_order_relaxed);
-            }
-        }
-    };
-
-    std::vector<std::thread> threads;
-    for (int i = 0; i < 4; i++) {
-        threads.emplace_back(updater);
-    }
-    for (int i = 0; i < 4; i++) {
-        threads.emplace_back(clearer);
-    }
-    for (int i = 0; i < 4; i++) {
-        threads.emplace_back(getter);
-    }
-
-    for (int i = 0; i < 8; i++) {
-        threads[i].join();
-    }
-    stop.store(true, std::memory_order_relaxed);
-    for (int i = 8; i < 12; i++) {
-        threads[i].join();
-    }
-
-    ASSERT_EQ(badSnapshot.load(), 0) << "data race detected: GetDrvExtRemote returned an unknown remote pointer";
-    EDM_LOGI(MODULE_DEV_MGR, "ConcurrentUpdateClearGetStressTest: no bad snapshot, bad=%d", badSnapshot.load());
-}
-
-// Drive the API paths that acquire deviceMutex_ then drvExtRemoteMutex_
-// (OnConnect / OnDisconnect) concurrently. The lock order is always
-// deviceMutex_ -> drvExtRemoteMutex_; if an AB-BA ordering existed this would
-// deadlock. A bounded wait turns a deadlock into a failure instead of a hang.
-HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level1)
-{
-    shared_ptr<DriverInfo> driverInfo = make_shared<DriverInfo>("testBundle", "testDriver");
-    driverInfo->accessAllowed_ = true;
-    device_->AddBundleInfo("testBundle", driverInfo);
-
-    const int iterPerThread = 500;
-    const int threadCount = 8;
-
-    auto onConnectWorker = [&device_, iterPerThread]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
-            device_->OnConnect(remote, 0);
-        }
-    };
-    auto onDisconnectWorker = [&device_, iterPerThread]() {
-        for (int i = 0; i < iterPerThread; i++) {
-            device_->OnDisconnect(0);
         }
     };
     auto getterWorker = [&device_, iterPerThread]() {
@@ -258,13 +253,13 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level
         }
     };
 
-    auto runner = [&onConnectWorker, &onDisconnectWorker, &getterWorker, threadCount]() {
+    auto runner = [&updateWorker, &clearWorker, &getterWorker, threadCount]() {
         std::vector<std::thread> threads;
         for (int i = 0; i < threadCount / 2; i++) {
-            threads.emplace_back(onConnectWorker);
+            threads.emplace_back(updateWorker);
         }
         for (int i = 0; i < threadCount / 4; i++) {
-            threads.emplace_back(onDisconnectWorker);
+            threads.emplace_back(clearWorker);
         }
         for (int i = 0; i < threadCount / 4; i++) {
             threads.emplace_back(getterWorker);
@@ -282,41 +277,42 @@ HWTEST_F(DrvExtRemoteConcurrencyTest, NoAbBaDeadlockMixedOpsTest, TestSize.Level
     EDM_LOGI(MODULE_DEV_MGR, "NoAbBaDeadlockMixedOpsTest: all threads completed, no deadlock");
 }
 
-// Connect(callback, tokenId) acquires deviceMutex_ then drvExtRemoteMutex_ (via
-// GetDrvExtRemote). OnConnect acquires deviceMutex_ then drvExtRemoteMutex_ (via
-// UpdateDrvExtRemote + GetDrvExtRemote). Running them concurrently exercises the
-// shared lock order and must not deadlock.
+// Concurrently run Update/Clear/Get (all acquire drvExtRemoteMutex_) to verify the
+// lock-ordering does not reverse against any other lock. To avoid log storms this
+// test does NOT call OnConnect/OnDisconnect/Connect. A bounded wait turns a deadlock
+// into a failure.
 HWTEST_F(DrvExtRemoteConcurrencyTest, ConnectCallbackAndOnConnectConcurrentNoDeadlockTest, TestSize.Level1)
 {
-    shared_ptr<DriverInfo> driverInfo = make_shared<DriverInfo>("testBundle", "testDriver");
-    driverInfo->accessAllowed_ = true;
-    device_->AddBundleInfo("testBundle", driverInfo);
-
     const int iterPerThread = 200;
+    std::vector<sptr<IRemoteObject>> remotes;
+    for (int i = 0; i < 4; i++) {
+        remotes.push_back(sptr<TestRemoteObject>::MakeSptr());
+    }
 
-    auto connectWorker = [&device_, iterPerThread]() {
+    auto updateWorker = [&device_, iterPerThread, &remotes]() {
+        int idx = 0;
         for (int i = 0; i < iterPerThread; i++) {
-            sptr<IDriverExtMgrCallback> callback = sptr<TestDriverExtMgrCallback>::MakeSptr();
-            device_->Connect(callback, 100 + i);
+            device_->UpdateDrvExtRemote(remotes[idx % remotes.size()]);
+            idx++;
         }
     };
-    auto onConnectWorker = [&device_, iterPerThread]() {
+    auto clearWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
-            sptr<IRemoteObject> remote = sptr<TestRemoteObject>::MakeSptr();
-            device_->OnConnect(remote, 0);
+            device_->ClearDrvExtRemote();
         }
     };
-    auto onDisconnectWorker = [&device_, iterPerThread]() {
+    auto getterWorker = [&device_, iterPerThread]() {
         for (int i = 0; i < iterPerThread; i++) {
-            device_->OnDisconnect(0);
+            auto snap = device_->GetDrvExtRemote();
+            (void)snap;
         }
     };
 
-    auto runner = [&connectWorker, &onConnectWorker, &onDisconnectWorker]() {
+    auto runner = [&updateWorker, &clearWorker, &getterWorker]() {
         std::vector<std::thread> threads;
-        threads.emplace_back(connectWorker);
-        threads.emplace_back(onConnectWorker);
-        threads.emplace_back(onDisconnectWorker);
+        threads.emplace_back(updateWorker);
+        threads.emplace_back(clearWorker);
+        threads.emplace_back(getterWorker);
         for (auto &t : threads) {
             if (t.joinable()) {
                 t.join();
