@@ -169,7 +169,16 @@ private:
     {
         int32_t cur = TestRemoteObject::GetLiveCount();
         int32_t prev = minLive.load(std::memory_order_relaxed);
-        while (cur < prev && !minLive.compare_exchange_weak(prev, cur)) { }
+        // CAS loop: compare_exchange_weak updates `prev` on failure, so we must
+        // re-check the condition. Written as a while with an explicit body so the
+        // loop control variable update is visible to static analysis (G.CTL.03).
+        while (cur < prev) {
+            if (minLive.compare_exchange_weak(prev, cur)) {
+                break;
+            }
+            // compare_exchange_weak failed: `prev` has been loaded with the current
+            // value of minLive; loop back and re-check cur < prev.
+        }
     }
 };
 
