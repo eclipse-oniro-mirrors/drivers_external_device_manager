@@ -15,7 +15,6 @@
 
 #include "usb_ddk_api.h"
 #include <cerrno>
-#include <iproxy_broker.h>
 #include <memory.h>
 #include <mutex>
 #include <securec.h>
@@ -49,7 +48,6 @@ std::unordered_map<int32_t, int32_t> g_errorMap = {
 std::unordered_map<uint8_t*, int32_t> g_fdMap;
 static std::shared_mutex g_mutex;
 static std::mutex g_lifecycleMutex;
-static OHOS::sptr<OHOS::IRemoteObject::DeathRecipient> g_ddkRecipient = nullptr;
 static bool g_initialized = false;
 
 OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> GetDdk()
@@ -58,48 +56,6 @@ OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> GetDdk()
     return g_ddk;
 }
 
-class UsbDdkDeathRecipient : public OHOS::IRemoteObject::DeathRecipient {
-public:
-    UsbDdkDeathRecipient() = default;
-    virtual ~UsbDdkDeathRecipient() = default;
-
-    void OnRemoteDied(const OHOS::wptr<OHOS::IRemoteObject> &remote) override;
-};
-
-static void UnregisterDeathRecipient(const OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> &ddk,
-    const OHOS::sptr<OHOS::IRemoteObject::DeathRecipient> &recipient)
-{
-    if (ddk == nullptr || recipient == nullptr) {
-        return;
-    }
-    OHOS::sptr<OHOS::IRemoteObject> remoteObject =
-        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk>(ddk);
-    if (remoteObject != nullptr) {
-        remoteObject->RemoveDeathRecipient(recipient);
-    }
-}
-
-void UsbDdkDeathRecipient::OnRemoteDied(const OHOS::wptr<OHOS::IRemoteObject> &remote)
-{
-    (void)remote;
-    OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> ddk = nullptr;
-    OHOS::sptr<OHOS::IRemoteObject::DeathRecipient> recipient = nullptr;
-    {
-        std::unique_lock<std::shared_mutex> lock(g_mutex);
-        EDM_LOGW(MODULE_USB_DDK, "usb ddk remote died");
-        g_initialized = false;
-        if (g_ddk == nullptr) {
-            return;
-        }
-        ddk = g_ddk;
-        recipient = g_ddkRecipient;
-        g_ddkRecipient.clear();
-        g_ddk.clear();
-    }
-
-    UnregisterDeathRecipient(ddk, recipient);
-    EDM_LOGW(MODULE_USB_DDK, "remove death recipient success");
-}
 } // namespace
 
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -133,18 +89,9 @@ int32_t OH_Usb_Init(void)
         return USB_DDK_INVALID_OPERATION;
     }
 
-    OHOS::sptr<OHOS::IRemoteObject::DeathRecipient> recipient = new UsbDdkDeathRecipient();
-    OHOS::sptr<OHOS::IRemoteObject> remoteObject =
-        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk>(ddk);
-    if (remoteObject == nullptr || !remoteObject->AddDeathRecipient(recipient)) {
-        EDM_LOGE(MODULE_USB_DDK, "add death recipient failed");
-        recipient.clear();
-    }
-
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
         g_ddk = ddk;
-        g_ddkRecipient = recipient;
     }
 
     int32_t ret = TransToUsbCode(ddk->Init());
@@ -165,7 +112,6 @@ void OH_Usb_Release(void)
 #else
     std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
     OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> ddk = nullptr;
-    OHOS::sptr<OHOS::IRemoteObject::DeathRecipient> recipient = nullptr;
     std::unordered_map<uint8_t*, int32_t> fdMap;
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
@@ -174,7 +120,6 @@ void OH_Usb_Release(void)
             return;
         }
         ddk = g_ddk;
-        recipient = g_ddkRecipient;
         fdMap.swap(g_fdMap);
     }
     for (const auto& fdPair : fdMap) {
@@ -186,11 +131,9 @@ void OH_Usb_Release(void)
     if (ret == USB_DDK_SUCCESS) {
         {
             std::unique_lock<std::shared_mutex> lock(g_mutex);
-            g_ddkRecipient.clear();
             g_ddk.clear();
             g_initialized = false;
         }
-        UnregisterDeathRecipient(ddk, recipient);
     }
 #endif
 }
@@ -200,7 +143,6 @@ int32_t OH_Usb_ReleaseResource()
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
     OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> ddk = nullptr;
-    OHOS::sptr<OHOS::IRemoteObject::DeathRecipient> recipient = nullptr;
     std::unordered_map<uint8_t*, int32_t> fdMap;
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
@@ -209,7 +151,6 @@ int32_t OH_Usb_ReleaseResource()
             return USB_DDK_INVALID_OPERATION;
         }
         ddk = g_ddk;
-        recipient = g_ddkRecipient;
         fdMap.swap(g_fdMap);
     }
     for (const auto& fdPair : fdMap) {
@@ -221,11 +162,9 @@ int32_t OH_Usb_ReleaseResource()
     if (ret == USB_DDK_SUCCESS) {
         {
             std::unique_lock<std::shared_mutex> lock(g_mutex);
-            g_ddkRecipient.clear();
             g_ddk.clear();
             g_initialized = false;
         }
-        UnregisterDeathRecipient(ddk, recipient);
     }
     return ret;
 #else
