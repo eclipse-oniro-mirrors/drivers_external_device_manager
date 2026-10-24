@@ -17,6 +17,7 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
+#include <iproxy_broker.h>
 #include <memory.h>
 #include <mutex>
 #include <securec.h>
@@ -29,7 +30,6 @@
 #include "v1_1/ihid_ddk.h"
 #include "hilog_wrapper.h"
 #include "ipc_error_code.h"
-#include <iproxy_broker.h>
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;

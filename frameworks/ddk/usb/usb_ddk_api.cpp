@@ -15,6 +15,7 @@
 
 #include "usb_ddk_api.h"
 #include <cerrno>
+#include <iproxy_broker.h>
 #include <memory.h>
 #include <mutex>
 #include <securec.h>
@@ -28,7 +29,6 @@
 #include "hilog_wrapper.h"
 #include "usb_config_desc_parser.h"
 #include "usb_ddk_types.h"
-#include <iproxy_broker.h>
 #include "v1_2/iusb_ddk.h"
 
 using namespace OHOS::ExternalDeviceManager;

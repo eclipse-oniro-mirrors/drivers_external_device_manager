@@ -15,6 +15,7 @@
 
 #include "usb_serial_api.h"
 #include <cerrno>
+#include <iproxy_broker.h>
 #include <memory.h>
 #include <mutex>
 #include <securec.h>
@@ -27,7 +28,6 @@
 #include "hilog_wrapper.h"
 #include "v1_0/iusb_serial_ddk.h"
 #include "ipc_error_code.h"
-#include <iproxy_broker.h>
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
