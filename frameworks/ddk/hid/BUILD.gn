@@ -23,6 +23,7 @@ ohos_shared_library("hid") {
   include_dirs = [
     "${ext_mgr_path}/interfaces/ddk/hid/",
     "${utils_path}/include/",
+    "//drivers/hdf_core/adapter/uhdf2/ipc/include",
   ]
 
   defines = external_device_defines
