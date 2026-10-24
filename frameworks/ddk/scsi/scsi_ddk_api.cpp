@@ -15,11 +15,11 @@
 
 #include "scsi_peripheral_api.h"
 #include <cerrno>
-#include <iproxy_broker.h>
 #include <memory.h>
 #include <mutex>
 #include <scsi/sg.h>
 #include <securec.h>
+#include <shared_mutex>
 #include <string>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -37,7 +37,15 @@ using namespace OHOS::ExternalDeviceManager;
 namespace {
 OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
-std::mutex g_mutex;
+std::shared_mutex g_mutex;
+static std::mutex g_lifecycleMutex;
+static bool g_initialized = false;
+
+OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> GetDdk()
+{
+    std::shared_lock<std::shared_mutex> lock(g_mutex);
+    return g_ddk;
+}
 
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 constexpr uint8_t ONE_BYTE = 1;
@@ -332,36 +340,77 @@ public:
     void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 
-void ScsiPeripheralDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+static void UnregisterDeathRecipient(const OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> &ddk,
+    const OHOS::sptr<IRemoteObject::DeathRecipient> &recipient)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
-    EDM_LOGI(MODULE_SCSIPERIPHERAL_DDK, "scsi_ddk remote died");
-    if (g_ddk == nullptr) {
+    if (ddk == nullptr || recipient == nullptr) {
         return;
     }
-    auto remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk>(g_ddk);
-    remote->RemoveDeathRecipient(recipient_);
-    recipient_.clear();
-    g_ddk = nullptr;
+    auto remote = ddk->AsObject();
+    if (remote != nullptr) {
+        remote->RemoveDeathRecipient(recipient);
+    }
+}
+
+void ScsiPeripheralDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    (void)object;
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = nullptr;
+    OHOS::sptr<IRemoteObject::DeathRecipient> recipient = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        EDM_LOGI(MODULE_SCSIPERIPHERAL_DDK, "scsi_ddk remote died");
+        g_initialized = false;
+        if (g_ddk == nullptr) {
+            return;
+        }
+        ddk = g_ddk;
+        recipient = recipient_;
+        recipient_.clear();
+        g_ddk = nullptr;
+    }
+
+    UnregisterDeathRecipient(ddk, recipient);
     EDM_LOGI(MODULE_SCSIPERIPHERAL_DDK, "remove death recipient success");
 }
 
 int32_t OH_ScsiPeripheral_Init(void)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    {
+        std::shared_lock<std::shared_mutex> lock(g_mutex);
+        if (g_initialized && g_ddk != nullptr) {
+            EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "already initialized");
+            return SCSIPERIPHERAL_DDK_SUCCESS;
+        }
+    }
+
     auto ddk = OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk::Get();
-    SetDdk(ddk);
-    if (g_ddk == nullptr) {
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "get ddk failed");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
-    recipient_ = new ScsiPeripheralDeathRecipient();
-    sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk>(g_ddk);
-    if (!remote->AddDeathRecipient(recipient_)) {
+
+    sptr<IRemoteObject::DeathRecipient> recipient = new ScsiPeripheralDeathRecipient();
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_ddk = ddk;
+        recipient_ = recipient;
+    }
+
+    sptr<IRemoteObject> remote = ddk->AsObject();
+    if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "add DeathRecipient failed");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
-    return TransToDdkErrCode(g_ddk->Init());
+
+    int32_t ret = TransToDdkErrCode(ddk->Init());
+    if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_initialized = true;
+    }
+    return ret;
 #else
     return SCSIPERIPHERAL_DDK_INVALID_OPERATION;
 #endif
@@ -370,14 +419,30 @@ int32_t OH_ScsiPeripheral_Init(void)
 int32_t OH_ScsiPeripheral_Release(void)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
-        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "ddk is null");
-        return SCSIPERIPHERAL_DDK_INIT_ERROR;
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = nullptr;
+    OHOS::sptr<IRemoteObject::DeathRecipient> recipient = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        if (g_ddk == nullptr) {
+            EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "ddk is null");
+            return SCSIPERIPHERAL_DDK_INIT_ERROR;
+        }
+        ddk = g_ddk;
+        recipient = recipient_;
     }
-    int32_t ret = g_ddk->Release();
-    g_ddk.clear();
 
-    return TransToDdkErrCode(ret);
+    int32_t ret = TransToDdkErrCode(ddk->Release());
+    if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+        {
+            std::unique_lock<std::shared_mutex> lock(g_mutex);
+            recipient_.clear();
+            g_ddk.clear();
+            g_initialized = false;
+        }
+        UnregisterDeathRecipient(ddk, recipient);
+    }
+    return ret;
 #else
     return SCSIPERIPHERAL_DDK_INVALID_OPERATION;
 #endif
@@ -386,7 +451,8 @@ int32_t OH_ScsiPeripheral_Release(void)
 int32_t OH_ScsiPeripheral_Open(uint64_t deviceId, uint8_t interfaceIndex, ScsiPeripheral_Device **dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -401,7 +467,7 @@ int32_t OH_ScsiPeripheral_Open(uint64_t deviceId, uint8_t interfaceIndex, ScsiPe
         return SCSIPERIPHERAL_DDK_MEMORY_ERROR;
     }
 
-    return TransToDdkErrCode(g_ddk->Open(deviceId, interfaceIndex, (*dev)->impl, (*dev)->memMapFd));
+    return TransToDdkErrCode(ddk->Open(deviceId, interfaceIndex, (*dev)->impl, (*dev)->memMapFd));
 #else
     return SCSIPERIPHERAL_DDK_INVALID_OPERATION;
 #endif
@@ -410,7 +476,8 @@ int32_t OH_ScsiPeripheral_Open(uint64_t deviceId, uint8_t interfaceIndex, ScsiPe
 int32_t OH_ScsiPeripheral_Close(ScsiPeripheral_Device **dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -419,7 +486,7 @@ int32_t OH_ScsiPeripheral_Close(ScsiPeripheral_Device **dev)
         return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
     }
 
-    int32_t ret = TransToDdkErrCode(g_ddk->Close((*dev)->impl));
+    int32_t ret = TransToDdkErrCode(ddk->Close((*dev)->impl));
     if (close((*dev)->memMapFd)) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "close memMapFd failed, errno=%{public}d", errno);
         if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
@@ -437,7 +504,8 @@ int32_t OH_ScsiPeripheral_TestUnitReady(ScsiPeripheral_Device *dev, ScsiPeripher
     ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -449,7 +517,7 @@ int32_t OH_ScsiPeripheral_TestUnitReady(ScsiPeripheral_Device *dev, ScsiPeripher
     auto hdiRequest = reinterpret_cast<OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralTestUnitReadyRequest *>(request);
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
-    int32_t ret = TransToDdkErrCode(g_ddk->TestUnitReady(dev->impl, *hdiRequest, hdiResponse));
+    int32_t ret = TransToDdkErrCode(ddk->TestUnitReady(dev->impl, *hdiRequest, hdiResponse));
     if (ret != SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "test unit ready failed");
         return ret;
@@ -465,7 +533,8 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
     ScsiPeripheral_InquiryInfo *inquiryInfo, ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -495,7 +564,7 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
 
-    ret = TransToDdkErrCode(g_ddk->Inquiry(dev->impl, hdiInquiryRequest, hdiInquiryInfo, hdiResponse));
+    ret = TransToDdkErrCode(ddk->Inquiry(dev->impl, hdiInquiryRequest, hdiInquiryInfo, hdiResponse));
     if (ret != SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "inquiry failed");
         return ret;
@@ -527,7 +596,8 @@ int32_t OH_ScsiPeripheral_ReadCapacity10(ScsiPeripheral_Device *dev, ScsiPeriphe
     ScsiPeripheral_CapacityInfo *capacityInfo, ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -541,7 +611,7 @@ int32_t OH_ScsiPeripheral_ReadCapacity10(ScsiPeripheral_Device *dev, ScsiPeriphe
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
 
-    int32_t ret = TransToDdkErrCode(g_ddk->ReadCapacity10(dev->impl, *hdiRequest, hdiCapacityInfo,
+    int32_t ret = TransToDdkErrCode(ddk->ReadCapacity10(dev->impl, *hdiRequest, hdiCapacityInfo,
         hdiResponse));
     if (ret != SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "readcapacity10 failed");
@@ -561,7 +631,8 @@ int32_t OH_ScsiPeripheral_RequestSense(ScsiPeripheral_Device *dev, ScsiPeriphera
     ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -573,7 +644,7 @@ int32_t OH_ScsiPeripheral_RequestSense(ScsiPeripheral_Device *dev, ScsiPeriphera
     auto hdiRequest = reinterpret_cast<OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralRequestSenseRequest *>(request);
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
-    int32_t ret = TransToDdkErrCode(g_ddk->RequestSense(dev->impl, *hdiRequest, hdiResponse));
+    int32_t ret = TransToDdkErrCode(ddk->RequestSense(dev->impl, *hdiRequest, hdiResponse));
     if (ret != SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "request sense failed");
         return ret;
@@ -589,8 +660,9 @@ int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORe
     ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
     EDM_LOGD(MODULE_SCSIPERIPHERAL_DDK, "Read10 start");
-    if (g_ddk == nullptr) {
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -609,7 +681,7 @@ int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORe
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
 
-    ret = TransToDdkErrCode(g_ddk->Read10(dev->impl, hdiIORequest, hdiResponse));
+    ret = TransToDdkErrCode(ddk->Read10(dev->impl, hdiIORequest, hdiResponse));
     if (ret !=  SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "read10 failed");
         return ret;
@@ -628,7 +700,8 @@ int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IOR
     ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -647,7 +720,7 @@ int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IOR
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
 
-    ret = TransToDdkErrCode(g_ddk->Write10(dev->impl, hdiIORequest, hdiResponse));
+    ret = TransToDdkErrCode(ddk->Write10(dev->impl, hdiIORequest, hdiResponse));
     if (ret !=  SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "write10 failed");
         return ret;
@@ -666,7 +739,8 @@ int32_t OH_ScsiPeripheral_Verify10(ScsiPeripheral_Device *dev, ScsiPeripheral_Ve
     ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -685,7 +759,7 @@ int32_t OH_ScsiPeripheral_Verify10(ScsiPeripheral_Device *dev, ScsiPeripheral_Ve
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
 
-    int32_t ret = TransToDdkErrCode(g_ddk->Verify10(dev->impl, hdiVerifyRequest, hdiResponse));
+    int32_t ret = TransToDdkErrCode(ddk->Verify10(dev->impl, hdiVerifyRequest, hdiResponse));
     if (ret != SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "verify10 failed");
         return ret;
@@ -701,8 +775,9 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
     ScsiPeripheral_Response *response)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> ddk = GetDdk();
     EDM_LOGD(MODULE_SCSIPERIPHERAL_DDK, "SendRequestByCDB start");
-    if (g_ddk == nullptr) {
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
     }
@@ -729,7 +804,7 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralResponse hdiResponse;
     hdiResponse.senseData.resize(sizeof(response->senseData));
 
-    ret = TransToDdkErrCode(g_ddk->SendRequestByCDB(dev->impl, hdiRequest, hdiResponse));
+    ret = TransToDdkErrCode(ddk->SendRequestByCDB(dev->impl, hdiRequest, hdiResponse));
     if (ret !=  SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "send request by cdb failed");
         return ret;

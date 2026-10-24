@@ -17,9 +17,10 @@
 #include <cerrno>
 #include <cstdint>
 #include <cstring>
-#include <iproxy_broker.h>
 #include <memory.h>
+#include <mutex>
 #include <securec.h>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -34,7 +35,15 @@ using namespace OHOS::ExternalDeviceManager;
 namespace {
 static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
-std::mutex g_mutex;
+std::shared_mutex g_mutex;
+static std::mutex g_lifecycleMutex;
+static bool g_initialized = false;
+
+OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> GetDdk()
+{
+    std::shared_lock<std::shared_mutex> lock(g_mutex);
+    return g_ddk;
+}
 
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 constexpr uint32_t MAX_EMIT_ITEM_NUM = 20;
@@ -105,17 +114,38 @@ public:
         void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 
+static void UnregisterDeathRecipient(const sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> &ddk,
+    const sptr<IRemoteObject::DeathRecipient> &recipient)
+{
+    if (ddk == nullptr || recipient == nullptr) {
+        return;
+    }
+    sptr<IRemoteObject> remote = ddk->AsObject();
+    if (remote != nullptr) {
+        remote->RemoveDeathRecipient(recipient);
+    }
+}
+
 void HidDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
-    EDM_LOGI(MODULE_HID_DDK, "hid_ddk remote died");
-    if (g_ddk != nullptr) {
-        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_0::IHidDdk>(g_ddk);
-        remote->RemoveDeathRecipient(recipient_);
+    (void)object;
+    sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = nullptr;
+    sptr<IRemoteObject::DeathRecipient> recipient = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        EDM_LOGI(MODULE_HID_DDK, "hid_ddk remote died");
+        g_initialized = false;
+        if (g_ddk == nullptr) {
+            return;
+        }
+        ddk = g_ddk;
+        recipient = recipient_;
         recipient_.clear();
         g_ddk = nullptr;
-        EDM_LOGI(MODULE_HID_DDK, "remove death recipient success");
     }
+
+    UnregisterDeathRecipient(ddk, recipient);
+    EDM_LOGI(MODULE_HID_DDK, "remove death recipient success");
 }
 
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -131,24 +161,33 @@ static uint32_t GetRealDeviceId(int32_t deviceId)
 
 static int32_t Connect(void)
 {
-    if (g_ddk == nullptr) {
-        g_ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
-        if (g_ddk == nullptr) {
-            EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
-            return HID_DDK_FAILURE;
-        }
-        if (g_deviceMap.size() > 0) {
-            for (const auto &[_, value] : g_deviceMap) {
-                (void)g_ddk->CreateDevice(value->tempDevice, value->tempProperties, value->realId);
-            }
-        }
-        recipient_ = new HidDeathRecipient();
-        sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_1::IHidDdk>(g_ddk);
-        if (!remote->AddDeathRecipient(recipient_)) {
-            EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
-            return HID_DDK_FAILURE;
-        }
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+
+    auto ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
+    if (ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
+        return HID_DDK_FAILURE;
     }
+
+    std::unordered_map<int32_t, std::shared_ptr<struct TempDevice>> devices;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_mutex);
+        devices = g_deviceMap;
+    }
+    for (const auto &[_, value] : devices) {
+        (void)ddk->CreateDevice(value->tempDevice, value->tempProperties, value->realId);
+    }
+
+    sptr<IRemoteObject::DeathRecipient> recipient = new HidDeathRecipient();
+    sptr<IRemoteObject> remote = ddk->AsObject();
+    if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
+        EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
+        return HID_DDK_FAILURE;
+    }
+
+    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    g_ddk = ddk;
+    recipient_ = recipient;
     return HID_DDK_SUCCESS;
 }
 
@@ -235,7 +274,10 @@ static int32_t CacheDeviceInfor(OHOS::HDI::Input::Ddk::V1_0::Hid_Device tempDevi
     device->tempProperties = tempProperties;
     device->realId = deviceId;
 
-    g_deviceMap[id] = device;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_deviceMap[id] = device;
+    }
     return id;
 }
 
@@ -267,7 +309,6 @@ static bool CheckHidDevice(Hid_Device *hidDevice)
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
     }
@@ -310,7 +351,9 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
     auto tempEventProperties = ParseHidEventProperties(hidEventProperties);
 
     uint32_t deviceId = 0;
-    auto ret = g_ddk->CreateDevice(tempDevice, tempEventProperties, deviceId);
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    auto ret = ddk->CreateDevice(tempDevice, tempEventProperties, deviceId);
     ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "create device failed:%{public}d", ret);
@@ -325,24 +368,31 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    std::lock_guard<std::mutex> lock(g_mutex);
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = nullptr;
+    uint32_t realId = 0;
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
     }
 
-    if (deviceId < 0) {
-        EDM_LOGE(MODULE_HID_DDK, "device id is invaild");
-        return HID_DDK_INVALID_PARAMETER;
-    }
+    {
+        std::shared_lock<std::shared_mutex> lock(g_mutex);
+        if (deviceId < 0) {
+            EDM_LOGE(MODULE_HID_DDK, "device id is invaild");
+            return HID_DDK_INVALID_PARAMETER;
+        }
 
-    if (length > MAX_EMIT_ITEM_NUM) {
-        EDM_LOGE(MODULE_HID_DDK, "items length is out of range");
-        return HID_DDK_INVALID_PARAMETER;
-    }
+        if (length > MAX_EMIT_ITEM_NUM) {
+            EDM_LOGE(MODULE_HID_DDK, "items length is out of range");
+            return HID_DDK_INVALID_PARAMETER;
+        }
 
-    if (items == nullptr) {
-        EDM_LOGE(MODULE_HID_DDK, "items is null");
-        return HID_DDK_INVALID_PARAMETER;
+        if (items == nullptr) {
+            EDM_LOGE(MODULE_HID_DDK, "items is null");
+            return HID_DDK_INVALID_PARAMETER;
+        }
+
+        realId = GetRealDeviceId(deviceId);
+        ddk = g_ddk;
     }
 
     std::vector<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem> itemsTemp;
@@ -350,7 +400,7 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
         return *reinterpret_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem *>(&item);
     });
 
-    auto ret = g_ddk->EmitEvent(GetRealDeviceId(deviceId), itemsTemp);
+    auto ret = ddk->EmitEvent(realId, itemsTemp);
     ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "emit event failed:%{public}d", ret);
@@ -365,19 +415,31 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
 int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
         return HID_DDK_INVALID_OPERATION;
     }
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
+        EDM_LOGE(MODULE_HID_DDK, "ddk is null");
+        return HID_DDK_INVALID_OPERATION;
+    }
 
-    auto ret = g_ddk->DestroyDevice(GetRealDeviceId(deviceId));
+    uint32_t realId = 0;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_mutex);
+        realId = GetRealDeviceId(deviceId);
+    }
+    auto ret = ddk->DestroyDevice(realId);
     ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "destroy device failed:%{public}d", ret);
         return ret;
     }
 
-    g_deviceMap.erase(deviceId);
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_deviceMap.erase(deviceId);
+    }
     return HID_DDK_SUCCESS;
 #else
     return HID_DDK_INVALID_OPERATION;
@@ -387,13 +449,40 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 int32_t OH_Hid_Init(void)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    g_ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
-    if (g_ddk == nullptr) {
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    {
+        std::shared_lock<std::shared_mutex> lock(g_mutex);
+        if (g_initialized && g_ddk != nullptr) {
+            return HID_DDK_SUCCESS;
+        }
+    }
+
+    auto ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "get ddk failed");
         return HID_DDK_INIT_ERROR;
     }
 
-    return TransToHidCode(g_ddk->Init());
+    sptr<IRemoteObject::DeathRecipient> recipient = new HidDeathRecipient();
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_ddk = ddk;
+        recipient_ = recipient;
+    }
+
+    sptr<IRemoteObject> remote = ddk->AsObject();
+    if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
+        EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        recipient_.clear();
+    }
+
+    int32_t ret = TransToHidCode(ddk->Init());
+    if (ret == HID_DDK_SUCCESS) {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_initialized = true;
+    }
+    return ret;
 #else
     return HID_DDK_INVALID_OPERATION;
 #endif
@@ -402,14 +491,30 @@ int32_t OH_Hid_Init(void)
 int32_t OH_Hid_Release(void)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
-        EDM_LOGE(MODULE_HID_DDK, "ddk is null");
-        return HID_DDK_INIT_ERROR;
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = nullptr;
+    sptr<IRemoteObject::DeathRecipient> recipient = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        if (g_ddk == nullptr) {
+            EDM_LOGE(MODULE_HID_DDK, "ddk is null");
+            return HID_DDK_INIT_ERROR;
+        }
+        ddk = g_ddk;
+        recipient = recipient_;
     }
-    int32_t ret = g_ddk->Release();
-    g_ddk.clear();
+    int32_t ret = TransToHidCode(ddk->Release());
+    if (ret == HID_DDK_SUCCESS) {
+        {
+            std::unique_lock<std::shared_mutex> lock(g_mutex);
+            recipient_.clear();
+            g_ddk.clear();
+            g_initialized = false;
+        }
+        UnregisterDeathRecipient(ddk, recipient);
+    }
 
-    return TransToHidCode(ret);
+    return ret;
 #else
     return HID_DDK_INVALID_OPERATION;
 #endif
@@ -418,7 +523,8 @@ int32_t OH_Hid_Release(void)
 int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle **dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -433,7 +539,7 @@ int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle 
         return HID_DDK_MEMORY_ERROR;
     }
 
-    return TransToHidCode(g_ddk->Open(deviceId, interfaceIndex, (*dev)->impl));
+    return TransToHidCode(ddk->Open(deviceId, interfaceIndex, (*dev)->impl));
 #else
     return HID_DDK_INVALID_OPERATION;
 #endif
@@ -442,7 +548,8 @@ int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle 
 int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -451,7 +558,7 @@ int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
         return HID_DDK_INVALID_PARAMETER;
     }
 
-    int32_t ret = g_ddk->Close((*dev)->impl);
+    int32_t ret = ddk->Close((*dev)->impl);
     DeleteHidDeviceHandle(dev);
 
     return TransToHidCode(ret);
@@ -463,7 +570,8 @@ int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
 int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint32_t *bytesWritten)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -475,7 +583,7 @@ int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint
     }
 
     std::vector<uint8_t> writeData(data, data + length);
-    int32_t ret =  TransToHidCode(g_ddk->Write(dev->impl, writeData, *bytesWritten));
+    int32_t ret =  TransToHidCode(ddk->Write(dev->impl, writeData, *bytesWritten));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "write failed");
         *bytesWritten = 0;
@@ -490,7 +598,8 @@ int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint
 int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, int timeout, uint32_t *bytesRead)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -502,7 +611,7 @@ int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSiz
     }
 
     std::vector<uint8_t> readData(bufSize);
-    int32_t ret = TransToHidCode(g_ddk->ReadTimeout(dev->impl, readData, bufSize, timeout, *bytesRead));
+    int32_t ret = TransToHidCode(ddk->ReadTimeout(dev->impl, readData, bufSize, timeout, *bytesRead));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "read timeout failed");
         return ret;
@@ -522,7 +631,8 @@ int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSiz
 int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint32_t *bytesRead)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -534,7 +644,7 @@ int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint
     }
 
     std::vector<uint8_t> readData(bufSize);
-    int32_t ret = TransToHidCode(g_ddk->ReadTimeout(dev->impl, readData, bufSize, (dev->impl.nonBlock) ? 0 : -1,
+    int32_t ret = TransToHidCode(ddk->ReadTimeout(dev->impl, readData, bufSize, (dev->impl.nonBlock) ? 0 : -1,
         *bytesRead));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "read failed");
@@ -555,7 +665,8 @@ int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint
 int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -565,7 +676,7 @@ int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
         return HID_DDK_INVALID_PARAMETER;
     }
 
-    int32_t ret = g_ddk->SetNonBlocking(dev->impl, nonBlock);
+    int32_t ret = ddk->SetNonBlocking(dev->impl, nonBlock);
     if (ret == HID_DDK_SUCCESS) {
         dev->impl.nonBlock = nonBlock;
     }
@@ -578,7 +689,8 @@ int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
 int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -589,7 +701,7 @@ int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
     }
 
     OHOS::HDI::Input::Ddk::V1_1::HidRawDevInfo tmpRawDevInfo;
-    int32_t ret = TransToHidCode(g_ddk->GetRawInfo(dev->impl, tmpRawDevInfo));
+    int32_t ret = TransToHidCode(ddk->GetRawInfo(dev->impl, tmpRawDevInfo));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "get raw info failed");
         return ret;
@@ -608,7 +720,8 @@ int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
 int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -619,7 +732,7 @@ int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
     }
 
     std::vector<uint8_t> tmpData(bufSize);
-    int32_t ret = TransToHidCode(g_ddk->GetRawName(dev->impl, tmpData, bufSize));
+    int32_t ret = TransToHidCode(ddk->GetRawName(dev->impl, tmpData, bufSize));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "get raw name failed");
         return ret;
@@ -640,7 +753,8 @@ int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -651,7 +765,7 @@ int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bu
     }
 
     std::vector<uint8_t> tmpData(bufSize);
-    int32_t ret = TransToHidCode(g_ddk->GetPhysicalAddress(dev->impl, tmpData, bufSize));
+    int32_t ret = TransToHidCode(ddk->GetPhysicalAddress(dev->impl, tmpData, bufSize));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "get physical address failed");
         return ret;
@@ -672,7 +786,8 @@ int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bu
 int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -683,7 +798,7 @@ int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t buf
     }
 
     std::vector<uint8_t> tmpData(bufSize);
-    int32_t ret = TransToHidCode(g_ddk->GetRawUniqueId(dev->impl, tmpData, bufSize));
+    int32_t ret = TransToHidCode(ddk->GetRawUniqueId(dev->impl, tmpData, bufSize));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "get raw unique id address failed");
         return ret;
@@ -704,7 +819,8 @@ int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t buf
 int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, const uint8_t *data, uint32_t length)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -716,7 +832,7 @@ int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, cons
 
     const std::vector<uint8_t> tmpData(data, data + length);
     auto tmpReportType = static_cast<OHOS::HDI::Input::Ddk::V1_1::HidReportType>(reportType);
-    int32_t ret = TransToHidCode(g_ddk->SendReport(dev->impl, tmpReportType, tmpData));
+    int32_t ret = TransToHidCode(ddk->SendReport(dev->impl, tmpReportType, tmpData));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "send report failed");
         return ret;
@@ -731,7 +847,8 @@ int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, cons
 int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8_t *data, uint32_t bufSize)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -744,7 +861,7 @@ int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8
     std::vector<uint8_t> tmpData(bufSize);
     auto reportNumber = data[0];
     auto tmpReportType = static_cast<OHOS::HDI::Input::Ddk::V1_1::HidReportType>(reportType);
-    int32_t ret = TransToHidCode(g_ddk->GetReport(dev->impl, tmpReportType, reportNumber, tmpData, bufSize));
+    int32_t ret = TransToHidCode(ddk->GetReport(dev->impl, tmpReportType, reportNumber, tmpData, bufSize));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "get report failed");
         return ret;
@@ -765,7 +882,8 @@ int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8
 int32_t OH_Hid_GetReportDescriptor(Hid_DeviceHandle *dev, uint8_t *buf, uint32_t bufSize, uint32_t *bytesRead)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_ddk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
         return HID_DDK_INIT_ERROR;
     }
@@ -777,7 +895,7 @@ int32_t OH_Hid_GetReportDescriptor(Hid_DeviceHandle *dev, uint8_t *buf, uint32_t
     }
 
     std::vector<uint8_t> tmpBuf(bufSize);
-    int32_t ret = TransToHidCode(g_ddk->GetReportDescriptor(dev->impl, tmpBuf, bufSize, *bytesRead));
+    int32_t ret = TransToHidCode(ddk->GetReportDescriptor(dev->impl, tmpBuf, bufSize, *bytesRead));
     if (ret != HID_DDK_SUCCESS) {
         EDM_LOGE(MODULE_HID_DDK, "get report descriptor failed");
         return ret;

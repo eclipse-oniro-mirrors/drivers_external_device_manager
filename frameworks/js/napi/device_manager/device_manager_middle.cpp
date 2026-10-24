@@ -58,9 +58,57 @@ static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errM
 static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId);
 static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj);
 
+static void EnvCleanupHook(void *arg)
+{
+    auto *env = static_cast<napi_env>(arg);
+    if (env == nullptr) {
+        return;
+    }
+
+    std::vector<sptr<AsyncData>> alive;
+    {
+        std::lock_guard<std::mutex> lock(mapMutex);
+        for (auto it = g_callbackMap.begin(); it != g_callbackMap.end();) {
+            auto data = it->second;
+            if (data != nullptr && data->env == env) {
+                alive.push_back(data);
+                it = g_callbackMap.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+    for (auto &data : alive) {
+        data->DeleteNapiRefDirect();
+    }
+    EDM_LOGI(MODULE_DEV_MGR, "env cleanup done, active: %{public}zu", alive.size());
+}
+
+void AsyncData::DeleteNapiRefDirect()
+{
+    if (env == nullptr) {
+        return;
+    }
+    if (bindCallback != nullptr) {
+        (void)napi_delete_reference(env, bindCallback);
+        bindCallback = nullptr;
+    }
+    if (onDisconnect != nullptr) {
+        (void)napi_delete_reference(env, onDisconnect);
+        onDisconnect = nullptr;
+    }
+    if (unbindCallback != nullptr) {
+        (void)napi_delete_reference(env, unbindCallback);
+        unbindCallback = nullptr;
+    }
+}
+
 void AsyncData::DeleteNapiRef()
 {
     if (env == nullptr) {
+        return;
+    }
+    if (bindCallback == nullptr && onDisconnect == nullptr && unbindCallback == nullptr) {
         return;
     }
     auto env_ = env;
@@ -80,7 +128,8 @@ void AsyncData::DeleteNapiRef()
         }
     };
     if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_immediate)) {
-        EDM_LOGE(MODULE_DEV_MGR, "delete napi ref send event failed.");
+        EDM_LOGE(MODULE_DEV_MGR,
+            "DeleteNapiRef send event failed, leak refs, deviceId: %{public}016" PRIX64, deviceId);
     }
 }
 
@@ -118,10 +167,13 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
             }
             EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
         }
+        if (!errMsg.IsOk()) {
+            data->DeleteNapiRefDirect();
+        }
         napi_close_handle_scope(data->env, scope);
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
-        EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
+        EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed, deviceId: %{public}016" PRIX64, deviceId);
         return EDM_NOK;
     }
     return EDM_OK;
@@ -171,10 +223,11 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
                 napi_reject_deferred(data->env, data->unbindDeferred, err);
             EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
         }
+        data->DeleteNapiRefDirect();
         napi_close_handle_scope(data->env, scope);
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
-        EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
+        EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed, deviceId: %{public}016" PRIX64, deviceId);
         data->DecStrongRef(nullptr);
         return EDM_NOK;
     }
@@ -887,6 +940,10 @@ EXTERN_C_START
  */
 static napi_value ExtDeviceManagerInit(napi_env env, napi_value exports)
 {
+    if (napi_add_env_cleanup_hook(env, EnvCleanupHook, env) != napi_status::napi_ok) {
+        EDM_LOGE(MODULE_DEV_MGR, "add env cleanup hook failed");
+    }
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryDevices", QueryDevices),
         DECLARE_NAPI_FUNCTION("bindDevice", BindDevice),
