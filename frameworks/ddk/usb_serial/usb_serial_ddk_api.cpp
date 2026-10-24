@@ -27,6 +27,7 @@
 #include "hilog_wrapper.h"
 #include "v1_0/iusb_serial_ddk.h"
 #include "ipc_error_code.h"
+#include "iproxy_broker.h"
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
@@ -109,7 +110,8 @@ static void UnregisterDeathRecipient(
     if (ddk == nullptr || recipient == nullptr) {
         return;
     }
-    auto remote = ddk->AsObject();
+    auto remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk>(ddk);
     if (remote != nullptr) {
         remote->RemoveDeathRecipient(recipient);
     }
@@ -162,7 +164,8 @@ int32_t OH_UsbSerial_Init(void)
         recipient_ = recipient;
     }
 
-    sptr<IRemoteObject> remote = ddk->AsObject();
+    sptr<IRemoteObject> remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk>(ddk);
     if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "add DeathRecipient failed");
         return USB_SERIAL_DDK_INIT_ERROR;

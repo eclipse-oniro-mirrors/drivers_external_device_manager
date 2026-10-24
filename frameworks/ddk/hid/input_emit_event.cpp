@@ -29,6 +29,7 @@
 #include "v1_1/ihid_ddk.h"
 #include "hilog_wrapper.h"
 #include "ipc_error_code.h"
+#include "iproxy_broker.h"
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
@@ -120,7 +121,8 @@ static void UnregisterDeathRecipient(const sptr<OHOS::HDI::Input::Ddk::V1_1::IHi
     if (ddk == nullptr || recipient == nullptr) {
         return;
     }
-    sptr<IRemoteObject> remote = ddk->AsObject();
+    sptr<IRemoteObject> remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_1::IHidDdk>(ddk);
     if (remote != nullptr) {
         remote->RemoveDeathRecipient(recipient);
     }
@@ -179,7 +181,8 @@ static int32_t Connect(void)
     }
 
     sptr<IRemoteObject::DeathRecipient> recipient = new HidDeathRecipient();
-    sptr<IRemoteObject> remote = ddk->AsObject();
+    sptr<IRemoteObject> remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_1::IHidDdk>(ddk);
     if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
         EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
         return HID_DDK_FAILURE;
@@ -470,7 +473,8 @@ int32_t OH_Hid_Init(void)
         recipient_ = recipient;
     }
 
-    sptr<IRemoteObject> remote = ddk->AsObject();
+    sptr<IRemoteObject> remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_1::IHidDdk>(ddk);
     if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
         EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
         std::unique_lock<std::shared_mutex> lock(g_mutex);

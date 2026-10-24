@@ -30,6 +30,7 @@
 #include "usb_ddk_types.h"
 #include "iremote_object.h"
 #include "iremote_broker.h"
+#include "iproxy_broker.h"
 #include "v1_2/iusb_ddk.h"
 
 using namespace OHOS::ExternalDeviceManager;
@@ -73,7 +74,8 @@ static void UnregisterDeathRecipient(const OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2:
     if (ddk == nullptr || recipient == nullptr) {
         return;
     }
-    OHOS::sptr<OHOS::IRemoteObject> remoteObject = ddk->AsObject();
+    OHOS::sptr<OHOS::IRemoteObject> remoteObject =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk>(ddk);
     if (remoteObject != nullptr) {
         remoteObject->RemoveDeathRecipient(recipient);
     }
@@ -134,7 +136,8 @@ int32_t OH_Usb_Init(void)
     }
 
     OHOS::sptr<OHOS::IRemoteObject::DeathRecipient> recipient = new UsbDdkDeathRecipient();
-    OHOS::sptr<OHOS::IRemoteObject> remoteObject = ddk->AsObject();
+    OHOS::sptr<OHOS::IRemoteObject> remoteObject =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk>(ddk);
     if (remoteObject == nullptr || !remoteObject->AddDeathRecipient(recipient)) {
         EDM_LOGE(MODULE_USB_DDK, "add death recipient failed");
         recipient.clear();

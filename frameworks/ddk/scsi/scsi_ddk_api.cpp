@@ -31,6 +31,7 @@
 #include "ipc_error_code.h"
 #include "scsi_peripheral_types.h"
 #include "v1_0/scsi_peripheral_ddk_service.h"
+#include "iproxy_broker.h"
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
@@ -346,7 +347,8 @@ static void UnregisterDeathRecipient(const OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V
     if (ddk == nullptr || recipient == nullptr) {
         return;
     }
-    auto remote = ddk->AsObject();
+    auto remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk>(ddk);
     if (remote != nullptr) {
         remote->RemoveDeathRecipient(recipient);
     }
@@ -399,7 +401,8 @@ int32_t OH_ScsiPeripheral_Init(void)
         recipient_ = recipient;
     }
 
-    sptr<IRemoteObject> remote = ddk->AsObject();
+    sptr<IRemoteObject> remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk>(ddk);
     if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "add DeathRecipient failed");
         return SCSIPERIPHERAL_DDK_INIT_ERROR;
