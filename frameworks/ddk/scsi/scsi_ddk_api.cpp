@@ -31,7 +31,7 @@
 #include "ipc_error_code.h"
 #include "scsi_peripheral_types.h"
 #include "v1_0/scsi_peripheral_ddk_service.h"
-#include "iproxy_broker.h"
+#include <iproxy_broker.h>
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;

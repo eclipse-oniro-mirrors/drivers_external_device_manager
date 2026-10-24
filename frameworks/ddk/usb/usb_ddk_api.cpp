@@ -28,9 +28,7 @@
 #include "hilog_wrapper.h"
 #include "usb_config_desc_parser.h"
 #include "usb_ddk_types.h"
-#include "iremote_object.h"
-#include "iremote_broker.h"
-#include "iproxy_broker.h"
+#include <iproxy_broker.h>
 #include "v1_2/iusb_ddk.h"
 
 using namespace OHOS::ExternalDeviceManager;
