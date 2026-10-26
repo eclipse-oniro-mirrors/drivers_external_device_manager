@@ -130,7 +130,7 @@ void OH_Usb_Release(void)
             if (fdPair.second != -1) {
                 close(fdPair.second);
             }
-        }   
+        }
     }
     
     int32_t ret = TransToUsbCode(ddk->Release());
