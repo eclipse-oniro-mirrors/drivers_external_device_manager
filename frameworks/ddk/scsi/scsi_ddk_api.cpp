@@ -397,7 +397,6 @@ int32_t OH_ScsiPeripheral_Init(void)
     sptr<IRemoteObject::DeathRecipient> recipient = new ScsiPeripheralDeathRecipient();
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_ddk = ddk;
         recipient_ = recipient;
     }
 
@@ -409,10 +408,14 @@ int32_t OH_ScsiPeripheral_Init(void)
     }
 
     int32_t ret = TransToDdkErrCode(ddk->Init());
-    if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+    {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_initialized = true;
+        g_ddk = ddk
+        if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+            g_initialized = true;
+        }
     }
+    
     return ret;
 #else
     return SCSIPERIPHERAL_DDK_INVALID_OPERATION;

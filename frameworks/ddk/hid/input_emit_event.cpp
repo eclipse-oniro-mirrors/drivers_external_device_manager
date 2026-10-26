@@ -482,9 +482,12 @@ int32_t OH_Hid_Init(void)
     }
 
     int32_t ret = TransToHidCode(ddk->Init());
-    if (ret == HID_DDK_SUCCESS) {
+    {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_initialized = true;
+        g_ddk = ddk;
+        if (ret == HID_DDK_SUCCESS) {
+            g_initialized = true;
+        }
     }
     return ret;
 #else
