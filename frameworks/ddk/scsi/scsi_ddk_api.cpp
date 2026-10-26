@@ -415,7 +415,6 @@ int32_t OH_ScsiPeripheral_Init(void)
             g_initialized = true;
         }
     }
-    
     return ret;
 #else
     return SCSIPERIPHERAL_DDK_INVALID_OPERATION;
