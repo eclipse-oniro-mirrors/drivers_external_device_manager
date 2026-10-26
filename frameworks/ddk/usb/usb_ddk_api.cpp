@@ -33,7 +33,7 @@
 
 using namespace OHOS::ExternalDeviceManager;
 namespace {
-OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> g_ddk = nullptr;
+OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> g_ddk = nullptr;
 std::unordered_map<int32_t, int32_t> g_errorMap = {
     {HDF_SUCCESS, USB_DDK_SUCCESS},
     {HDF_ERR_NOT_SUPPORT, USB_DDK_INVALID_OPERATION},
