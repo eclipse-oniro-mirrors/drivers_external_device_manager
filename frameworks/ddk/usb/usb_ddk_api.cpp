@@ -139,7 +139,7 @@ void OH_Usb_Release(void)
         g_ddk.clear();
         if (ret == USB_DDK_SUCCESS) {
             g_initialized = false;
-        }    
+        }
     }
     
 #endif
@@ -158,7 +158,6 @@ int32_t OH_Usb_ReleaseResource()
             return USB_DDK_INVALID_OPERATION;
         }
         ddk = g_ddk;
-        
     }
     {
         std::unordered_map<uint8_t*, int32_t> fdMap;
@@ -177,7 +176,7 @@ int32_t OH_Usb_ReleaseResource()
         g_ddk.clear();
         if (ret == USB_DDK_SUCCESS) {
             g_initialized = false;
-        }    
+        }
     }
     return ret;
 #else
