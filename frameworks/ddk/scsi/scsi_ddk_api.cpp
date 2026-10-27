@@ -410,7 +410,7 @@ int32_t OH_ScsiPeripheral_Init(void)
     int32_t ret = TransToDdkErrCode(ddk->Init());
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_ddk = ddk
+        g_ddk = ddk;
         if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
             g_initialized = true;
         }

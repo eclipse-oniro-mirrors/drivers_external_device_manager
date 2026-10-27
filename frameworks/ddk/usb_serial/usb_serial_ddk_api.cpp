@@ -173,7 +173,7 @@ int32_t OH_UsbSerial_Init(void)
     int32_t ret = TransToUsbSerialCode(ddk->Init());
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_ddk = ddk;
+        g_serialDdk = ddk;
         if (ret == USB_SERIAL_DDK_SUCCESS) {
             g_initialized = true;
         }

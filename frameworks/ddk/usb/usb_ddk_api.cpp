@@ -438,7 +438,6 @@ int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem 
 int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMap **devMmap)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
     if (devMmap == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "invalid param");
         return USB_DDK_INVALID_PARAMETER;
@@ -458,6 +457,7 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
         return USB_DDK_MEMORY_ERROR;
     }
 
+    std::unique_lock<std::shared_mutex> lock(g_fdMapMutex);
     if (g_fdMap.find(buffer) != g_fdMap.end() && g_fdMap[buffer] != -1) {
         EDM_LOGW(MODULE_USB_DDK, "fd exist, close old fd");
         close(g_fdMap[buffer]);
