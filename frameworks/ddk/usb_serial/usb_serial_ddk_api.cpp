@@ -29,6 +29,14 @@
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
+#ifdef IS_EMULATOR
+#define DDK_EMULATOR_NOT_SUPPORT static_cast<int32_t>(804)
+#define EDM_EMULATOR_NOT_SUPPORT_GUARD() return DDK_EMULATOR_NOT_SUPPORT
+#define EDM_EMULATOR_NOT_SUPPORT_VOID_GUARD() return
+#else
+#define EDM_EMULATOR_NOT_SUPPORT_GUARD()
+#define EDM_EMULATOR_NOT_SUPPORT_VOID_GUARD()
+#endif
 namespace {
 OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> g_serialDdk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
@@ -109,6 +117,7 @@ void UsbSerialDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 
 int32_t OH_UsbSerial_Init(void)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     g_serialDdk = OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk::Get();
     if (g_serialDdk == nullptr) {
@@ -129,6 +138,7 @@ int32_t OH_UsbSerial_Init(void)
 
 int32_t OH_UsbSerial_Release(void)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -144,6 +154,7 @@ int32_t OH_UsbSerial_Release(void)
 
 int32_t OH_UsbSerial_Open(uint64_t deviceId, uint8_t interfaceIndex, UsbSerial_Device **dev)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -166,6 +177,7 @@ int32_t OH_UsbSerial_Open(uint64_t deviceId, uint8_t interfaceIndex, UsbSerial_D
 
 int32_t OH_UsbSerial_Close(UsbSerial_Device **dev)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -185,6 +197,7 @@ int32_t OH_UsbSerial_Close(UsbSerial_Device **dev)
 
 int32_t OH_UsbSerial_Read(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferSize, uint32_t *bytesRead)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -221,6 +234,7 @@ int32_t OH_UsbSerial_Read(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferS
 
 int32_t OH_UsbSerial_Write(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferSize, uint32_t *bytesWritten)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -245,6 +259,7 @@ int32_t OH_UsbSerial_Write(UsbSerial_Device *dev, uint8_t *buff, uint32_t buffer
 
 int32_t OH_UsbSerial_SetBaudRate(UsbSerial_Device *dev, uint32_t baudRate)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -262,6 +277,7 @@ int32_t OH_UsbSerial_SetBaudRate(UsbSerial_Device *dev, uint32_t baudRate)
 
 int32_t OH_UsbSerial_SetParams(UsbSerial_Device *dev, UsbSerial_Params *params)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -284,6 +300,7 @@ int32_t OH_UsbSerial_SetParams(UsbSerial_Device *dev, UsbSerial_Params *params)
 
 int32_t OH_UsbSerial_SetTimeout(UsbSerial_Device *dev, int timeout)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -301,6 +318,7 @@ int32_t OH_UsbSerial_SetTimeout(UsbSerial_Device *dev, int timeout)
 
 int32_t OH_UsbSerial_SetFlowControl(UsbSerial_Device *dev, UsbSerial_FlowControl flowControl)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -319,6 +337,7 @@ int32_t OH_UsbSerial_SetFlowControl(UsbSerial_Device *dev, UsbSerial_FlowControl
 
 int32_t OH_UsbSerial_Flush(UsbSerial_Device *dev)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -336,6 +355,7 @@ int32_t OH_UsbSerial_Flush(UsbSerial_Device *dev)
 
 int32_t OH_UsbSerial_FlushInput(UsbSerial_Device *dev)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
@@ -353,6 +373,7 @@ int32_t OH_UsbSerial_FlushInput(UsbSerial_Device *dev)
 
 int32_t OH_UsbSerial_FlushOutput(UsbSerial_Device *dev)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_serialDdk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");

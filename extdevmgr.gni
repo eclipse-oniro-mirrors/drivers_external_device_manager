@@ -31,6 +31,10 @@ external_device_defines = []
 if (external_device_manager_enable_service) {
   external_device_defines = [ "ENABLE_EXTERNAL_DEVICE_DDK_SERVICE" ]
 }
+external_device_emulator_defines = []
+if (is_emulator) {
+  external_device_emulator_defines = [ "IS_EMULATOR" ]
+}
 app_launch_defines = []
 if (external_device_manager_enable_app_launch) {
   app_launch_defines = [ "ENABLE_APP_LAUNCH_MANAGER" ]

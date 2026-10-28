@@ -24,6 +24,12 @@
 #define PORT_MAX 7
 
 using namespace OHOS::ExternalDeviceManager;
+#ifdef IS_EMULATOR
+#define DDK_EMULATOR_NOT_SUPPORT static_cast<DDK_RetCode>(804)
+#define EDM_EMULATOR_NOT_SUPPORT_GUARD() return DDK_EMULATOR_NOT_SUPPORT
+#else
+#define EDM_EMULATOR_NOT_SUPPORT_GUARD()
+#endif
 namespace {
 static std::unordered_map<int32_t, OHOS::sptr<OHOS::Ashmem>> g_shareMemoryMap;
 std::mutex g_mutex;
@@ -31,6 +37,7 @@ std::mutex g_mutex;
 
 DDK_RetCode OH_DDK_CreateAshmem(const uint8_t *name, uint32_t size, DDK_Ashmem **ashmem)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (name == nullptr) {
         EDM_LOGE(MODULE_BASE_DDK, "invalid buffer name!");
@@ -91,8 +98,10 @@ static DDK_RetCode AshmemValidityCheck(DDK_Ashmem *ashmem)
 }
 #endif
 
+
 DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
@@ -122,6 +131,7 @@ DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 
 DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
@@ -140,6 +150,7 @@ DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 
 DDK_RetCode OH_DDK_DestroyAshmem(DDK_Ashmem *ashmem)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);

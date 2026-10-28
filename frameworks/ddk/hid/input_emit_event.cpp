@@ -31,6 +31,14 @@
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
+#ifdef IS_EMULATOR
+#define DDK_EMULATOR_NOT_SUPPORT static_cast<int32_t>(804)
+#define EDM_EMULATOR_NOT_SUPPORT_GUARD() return DDK_EMULATOR_NOT_SUPPORT
+#define EDM_EMULATOR_NOT_SUPPORT_VOID_GUARD() return
+#else
+#define EDM_EMULATOR_NOT_SUPPORT_GUARD()
+#define EDM_EMULATOR_NOT_SUPPORT_VOID_GUARD()
+#endif
 namespace {
 static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
@@ -266,6 +274,7 @@ static bool CheckHidDevice(Hid_Device *hidDevice)
 
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
@@ -324,6 +333,7 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
 
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
@@ -364,6 +374,7 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
 
 int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     if (Connect() != HID_DDK_SUCCESS) {
@@ -386,6 +397,7 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 
 int32_t OH_Hid_Init(void)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     g_ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
     if (g_ddk == nullptr) {
@@ -401,6 +413,7 @@ int32_t OH_Hid_Init(void)
 
 int32_t OH_Hid_Release(void)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "ddk is null");
@@ -417,6 +430,7 @@ int32_t OH_Hid_Release(void)
 
 int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle **dev)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -441,6 +455,7 @@ int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle 
 
 int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -462,6 +477,7 @@ int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
 
 int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint32_t *bytesWritten)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -489,6 +505,7 @@ int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint
 
 int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, int timeout, uint32_t *bytesRead)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -521,6 +538,7 @@ int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSiz
 
 int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint32_t *bytesRead)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -554,6 +572,7 @@ int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint
 
 int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -577,6 +596,7 @@ int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
 
 int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -607,6 +627,7 @@ int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
 
 int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -639,6 +660,7 @@ int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 
 int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -671,6 +693,7 @@ int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bu
 
 int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -703,6 +726,7 @@ int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t buf
 
 int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, const uint8_t *data, uint32_t length)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -730,6 +754,7 @@ int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, cons
 
 int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8_t *data, uint32_t bufSize)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
@@ -764,6 +789,7 @@ int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8
 
 int32_t OH_Hid_GetReportDescriptor(Hid_DeviceHandle *dev, uint8_t *buf, uint32_t bufSize, uint32_t *bytesRead)
 {
+    EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_HID_DDK, "invalid obj");
