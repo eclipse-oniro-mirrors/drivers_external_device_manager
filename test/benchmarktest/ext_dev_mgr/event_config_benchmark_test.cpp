@@ -201,8 +201,8 @@ BENCHMARK_F(EventConfigBenchmarkTest, ExtractFaultInfo)(benchmark::State &state)
 {
     EventConfig &eventConfig = EventConfig::GetInstance();
     const char *jsonStr = R"({"faultName":"TEST_FAULT","type":"FAULT",)"
-                          R"("title":"test_title","msg":"test_msg",)"
-                          R"("uri":"www.test.com"})";
+        R"("title":"test_title","msg":"test_msg",)"
+        R"("uri":"www.test.com"})";
     cJSON *faultItem = cJSON_Parse(jsonStr);
     ASSERT_NE(faultItem, nullptr);
     FaultInfo faultInfo;
