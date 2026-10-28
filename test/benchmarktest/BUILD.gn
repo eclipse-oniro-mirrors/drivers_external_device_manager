@@ -30,7 +30,7 @@ ohos_benchmarktest("hdf_etx_device_mgr_benchmark_test") {
     "${ext_mgr_path}/utils/include/",
   ]
 
-  sources = [ "etx_device_mgr_benchmark_test.cpp" ]
+  sources = [ "ext_dev_mgr/etx_device_mgr_benchmark_test.cpp" ]
 
   deps = [
     "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
@@ -67,7 +67,7 @@ ohos_benchmarktest("hdf_ext_permission_manager_benchmark_test") {
     "${ext_mgr_path}/utils/include/",
   ]
 
-  sources = [ "ext_permission_manager_benchmark_test.cpp" ]
+  sources = [ "ext_dev_mgr/ext_permission_manager_benchmark_test.cpp" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
@@ -100,7 +100,7 @@ ohos_benchmarktest("hdf_event_config_benchmark_test") {
 
   sources = [
     "${ext_mgr_path}/services/native/driver_extension_manager/src/event_config.cpp",
-    "event_config_benchmark_test.cpp",
+    "ext_dev_mgr/event_config_benchmark_test.cpp",
   ]
 
   external_deps = [
