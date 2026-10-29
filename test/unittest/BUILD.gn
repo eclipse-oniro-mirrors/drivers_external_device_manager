@@ -173,6 +173,15 @@ if (external_device_manager_enable_service) {
         "app_launch_manager_test:app_launch_manager_test",
       ]
     }
+    if (is_emulator) {
+      deps += [
+        "ddk_base_test:ddk_base_emulator_test",
+        "ddk_hid_test:ddk_hid_emulator_test",
+        "ddk_scsi_test:ddk_scsi_emulator_test",
+        "ddk_usb_serial_test:ddk_usb_serial_emulator_test",
+        "ddk_usb_test:ddk_usb_emulator_test",
+      ]
+    }
   }
 } else {
   group("external_device_manager_ut") {}
