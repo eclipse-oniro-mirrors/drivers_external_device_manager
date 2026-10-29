@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
+#include <atomic>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
+#include <thread>
+#include <vector>
 #include "usb_serial_api.h"
 #include "v1_0/iusb_serial_ddk.h"
 
@@ -44,6 +47,7 @@ UsbSerial_Device *NewSerialDeviceHandle();
 namespace {
 
 constexpr int TEST_TIMES = 1;
+constexpr uint32_t CONCURRENT_THREADS = 8;
 constexpr uint32_t USB_SERIAL_TEST_BAUDRATE = 9600;
 constexpr uint8_t USB_SERIAL_TEST_DATA_BITS = 8;
 
@@ -66,6 +70,12 @@ public:
 };
 
 class UsbSerialTest : public testing::Test {
+protected:
+    void TearDown() override
+    {
+        OHOS::sptr<IUsbSerialDdk> nullDdk = nullptr;
+        SetDdk(nullDdk);
+    }
 };
 
 HWTEST_F(UsbSerialTest, ReleaseErrorTest, TestSize.Level1)
@@ -431,5 +441,102 @@ HWTEST_F(UsbSerialTest, FlushOutputErrorTest002, TestSize.Level1)
     SetDdk(ddk);
     auto dev = NewSerialDeviceHandle();
     ASSERT_EQ(OH_UsbSerial_FlushOutput(dev), USB_SERIAL_DDK_IO_ERROR);
+}
+
+/*
+ * @tc.name: ReleaseThenApiInitErrorTest
+ * @tc.desc: After OH_UsbSerial_Release clears the cached handle, every read path must report
+ *           USB_SERIAL_DDK_INIT_ERROR instead of touching a released proxy.
+ */
+HWTEST_F(UsbSerialTest, ReleaseThenApiInitErrorTest, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockUsbSerialDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Release()).Times(TEST_TIMES).WillOnce(testing::Return(USB_SERIAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IUsbSerialDdk>(mockDdk);
+    SetDdk(ddk);
+    ASSERT_EQ(OH_UsbSerial_Release(), USB_SERIAL_DDK_SUCCESS);
+
+    UsbSerial_Device *dev = nullptr;
+    ASSERT_EQ(OH_UsbSerial_Open(0, 0, &dev), USB_SERIAL_DDK_INIT_ERROR);
+    ASSERT_EQ(dev, nullptr);
+    ASSERT_EQ(OH_UsbSerial_Close(&dev), USB_SERIAL_DDK_INIT_ERROR);
+    ASSERT_EQ(OH_UsbSerial_Flush(nullptr), USB_SERIAL_DDK_INIT_ERROR);
+}
+
+/*
+ * @tc.name: ReleaseTwiceTest
+ * @tc.desc: The second OH_UsbSerial_Release has no handle to release and must return
+ *           USB_SERIAL_DDK_INIT_ERROR without calling into HDI again.
+ */
+HWTEST_F(UsbSerialTest, ReleaseTwiceTest, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockUsbSerialDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Release()).Times(TEST_TIMES).WillOnce(testing::Return(USB_SERIAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IUsbSerialDdk>(mockDdk);
+    SetDdk(ddk);
+    ASSERT_EQ(OH_UsbSerial_Release(), USB_SERIAL_DDK_SUCCESS);
+    ASSERT_EQ(OH_UsbSerial_Release(), USB_SERIAL_DDK_INIT_ERROR);
+}
+
+/*
+ * @tc.name: ReinjectAfterReleaseTest
+ * @tc.desc: After Release clears the cached handle, injecting a new proxy must restore the read
+ *           path, which proves Release only drops the cached snapshot instead of poisoning it.
+ */
+HWTEST_F(UsbSerialTest, ReinjectAfterReleaseTest, TestSize.Level1)
+{
+    auto firstDdk = OHOS::sptr<MockUsbSerialDdk>::MakeSptr();
+    ASSERT_NE(firstDdk, nullptr);
+    EXPECT_CALL(*firstDdk, Release()).Times(TEST_TIMES).WillOnce(testing::Return(USB_SERIAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IUsbSerialDdk>(firstDdk);
+    SetDdk(ddk);
+    ASSERT_EQ(OH_UsbSerial_Release(), USB_SERIAL_DDK_SUCCESS);
+
+    auto secondDdk = OHOS::sptr<MockUsbSerialDdk>::MakeSptr();
+    ASSERT_NE(secondDdk, nullptr);
+    EXPECT_CALL(*secondDdk, Open(testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Return(USB_SERIAL_DDK_IO_ERROR));
+    auto reinjected = OHOS::sptr<IUsbSerialDdk>(secondDdk);
+    SetDdk(reinjected);
+
+    UsbSerial_Device *dev = nullptr;
+    ASSERT_EQ(OH_UsbSerial_Open(0, 0, &dev), USB_SERIAL_DDK_IO_ERROR);
+}
+
+/*
+ * @tc.name: ConcurrentReleaseTest
+ * @tc.desc: Concurrent OH_UsbSerial_Release calls must serialise on the shared mutex so that
+ *           exactly one caller reaches HDI Release and the others observe a cleared handle.
+ */
+HWTEST_F(UsbSerialTest, ConcurrentReleaseTest, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockUsbSerialDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Release()).Times(testing::AtMost(CONCURRENT_THREADS))
+        .WillRepeatedly(testing::Return(USB_SERIAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IUsbSerialDdk>(mockDdk);
+    SetDdk(ddk);
+
+    std::atomic<uint32_t> successCount {0};
+    std::atomic<uint32_t> initErrorCount {0};
+    std::vector<std::thread> threads;
+    for (uint32_t i = 0; i < CONCURRENT_THREADS; ++i) {
+        threads.emplace_back([&successCount, &initErrorCount]() {
+            int32_t ret = OH_UsbSerial_Release();
+            if (ret == USB_SERIAL_DDK_SUCCESS) {
+                ++successCount;
+            } else if (ret == USB_SERIAL_DDK_INIT_ERROR) {
+                ++initErrorCount;
+            }
+        });
+    }
+    for (auto &thread : threads) {
+        thread.join();
+    }
+    ASSERT_GE(successCount.load(), 1u);
+    ASSERT_EQ(successCount.load() + initErrorCount.load(), CONCURRENT_THREADS);
 }
 } // namespace

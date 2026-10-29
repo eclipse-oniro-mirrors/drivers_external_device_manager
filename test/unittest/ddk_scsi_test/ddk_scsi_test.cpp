@@ -13,9 +13,12 @@
  * limitations under the License.
  */
 
+#include <atomic>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
+#include <thread>
+#include <vector>
 #include "scsi_peripheral_api.h"
 #include "scsi_peripheral_types.h"
 #include "v1_0/iscsi_peripheral_ddk.h"
@@ -47,6 +50,7 @@ void DeleteScsiPeripheralDevice(ScsiPeripheral_Device **dev);
 namespace {
 
 constexpr int TEST_TIMES = 1;
+constexpr uint32_t CONCURRENT_THREADS = 8;
 constexpr uint8_t CDB_LENGTH  = 1;
 constexpr size_t BUFFER_SIZE = 1024;
 
@@ -1490,5 +1494,102 @@ HWTEST_F(ScsiPeripheralTest, SendRequestByCdbNullTest009, TestSize.Level1)
     int ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
     DeleteScsiPeripheralDevice(&dev);
     ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
+}
+
+/*
+ * @tc.name: ReleaseThenApiInitErrorTest
+ * @tc.desc: After OH_ScsiPeripheral_Release clears the cached handle, every read path must report
+ *           SCSIPERIPHERAL_DDK_INIT_ERROR instead of touching a released proxy.
+ */
+HWTEST_F(ScsiPeripheralTest, ReleaseThenApiInitErrorTest, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Release()).Times(TEST_TIMES).WillOnce(testing::Return(SCSIPERIPHERAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+    ASSERT_EQ(OH_ScsiPeripheral_Release(), SCSIPERIPHERAL_DDK_SUCCESS);
+
+    ScsiPeripheral_Device *dev = nullptr;
+    ASSERT_EQ(OH_ScsiPeripheral_Open(0, 0, &dev), SCSIPERIPHERAL_DDK_INIT_ERROR);
+    ASSERT_EQ(dev, nullptr);
+    ASSERT_EQ(OH_ScsiPeripheral_Close(&dev), SCSIPERIPHERAL_DDK_INIT_ERROR);
+    ASSERT_EQ(OH_ScsiPeripheral_TestUnitReady(nullptr, nullptr, nullptr), SCSIPERIPHERAL_DDK_INIT_ERROR);
+}
+
+/*
+ * @tc.name: ReleaseTwiceTest
+ * @tc.desc: The second OH_ScsiPeripheral_Release has no handle to release and must return
+ *           SCSIPERIPHERAL_DDK_INIT_ERROR without calling into HDI again.
+ */
+HWTEST_F(ScsiPeripheralTest, ReleaseTwiceTest, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Release()).Times(TEST_TIMES).WillOnce(testing::Return(SCSIPERIPHERAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+    ASSERT_EQ(OH_ScsiPeripheral_Release(), SCSIPERIPHERAL_DDK_SUCCESS);
+    ASSERT_EQ(OH_ScsiPeripheral_Release(), SCSIPERIPHERAL_DDK_INIT_ERROR);
+}
+
+/*
+ * @tc.name: ReinjectAfterReleaseTest
+ * @tc.desc: After Release clears the cached handle, injecting a new proxy must restore the read
+ *           path, which proves Release only drops the cached snapshot instead of poisoning it.
+ */
+HWTEST_F(ScsiPeripheralTest, ReinjectAfterReleaseTest, TestSize.Level1)
+{
+    auto firstDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(firstDdk, nullptr);
+    EXPECT_CALL(*firstDdk, Release()).Times(TEST_TIMES).WillOnce(testing::Return(SCSIPERIPHERAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(firstDdk);
+    SetDdk(ddk);
+    ASSERT_EQ(OH_ScsiPeripheral_Release(), SCSIPERIPHERAL_DDK_SUCCESS);
+
+    auto secondDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(secondDdk, nullptr);
+    EXPECT_CALL(*secondDdk, Open(testing::_, testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Return(SCSIPERIPHERAL_DDK_IO_ERROR));
+    auto reinjected = OHOS::sptr<IScsiPeripheralDdk>(secondDdk);
+    SetDdk(reinjected);
+
+    ScsiPeripheral_Device *dev = nullptr;
+    ASSERT_EQ(OH_ScsiPeripheral_Open(0, 0, &dev), SCSIPERIPHERAL_DDK_IO_ERROR);
+}
+
+/*
+ * @tc.name: ConcurrentReleaseTest
+ * @tc.desc: Concurrent OH_ScsiPeripheral_Release calls must serialise on the shared mutex so that
+ *           exactly one caller reaches HDI Release and the others observe a cleared handle.
+ */
+HWTEST_F(ScsiPeripheralTest, ConcurrentReleaseTest, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Release()).Times(testing::AtMost(CONCURRENT_THREADS))
+        .WillRepeatedly(testing::Return(SCSIPERIPHERAL_DDK_SUCCESS));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+
+    std::atomic<uint32_t> successCount {0};
+    std::atomic<uint32_t> initErrorCount {0};
+    std::vector<std::thread> threads;
+    for (uint32_t i = 0; i < CONCURRENT_THREADS; ++i) {
+        threads.emplace_back([&successCount, &initErrorCount]() {
+            int32_t ret = OH_ScsiPeripheral_Release();
+            if (ret == SCSIPERIPHERAL_DDK_SUCCESS) {
+                ++successCount;
+            } else if (ret == SCSIPERIPHERAL_DDK_INIT_ERROR) {
+                ++initErrorCount;
+            }
+        });
+    }
+    for (auto &thread : threads) {
+        thread.join();
+    }
+    ASSERT_GE(successCount.load(), 1u);
+    ASSERT_EQ(successCount.load() + initErrorCount.load(), CONCURRENT_THREADS);
 }
 } // namespace

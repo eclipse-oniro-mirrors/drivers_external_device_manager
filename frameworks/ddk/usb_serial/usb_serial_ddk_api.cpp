@@ -17,7 +17,9 @@
 #include <cerrno>
 #include <iproxy_broker.h>
 #include <memory.h>
+#include <mutex>
 #include <securec.h>
+#include <shared_mutex>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <vector>
@@ -32,7 +34,15 @@ using namespace OHOS::ExternalDeviceManager;
 namespace {
 OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> g_serialDdk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
-std::mutex g_mutex;
+std::shared_mutex g_mutex;
+static std::mutex g_lifecycleMutex;
+static bool g_initialized = false;
+
+OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> GetDdk()
+{
+    std::shared_lock<std::shared_mutex> lock(g_mutex);
+    return g_serialDdk;
+}
 
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 constexpr uint32_t MAX_BUFFER_SIZE = 4096;
@@ -93,35 +103,83 @@ public:
     void OnRemoteDied(const wptr<IRemoteObject> &object) override;
 };
 
-void UsbSerialDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+static void UnregisterDeathRecipient(
+    const OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> &ddk,
+    const OHOS::sptr<IRemoteObject::DeathRecipient> &recipient)
 {
-    std::lock_guard<std::mutex> lock(g_mutex);
-    EDM_LOGI(MODULE_USB_SERIAL_DDK, "usbSerial_ddk remote died");
-    if (g_serialDdk == nullptr) {
+    if (ddk == nullptr || recipient == nullptr) {
         return;
     }
-    auto remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk>(g_serialDdk);
-    remote->RemoveDeathRecipient(recipient_);
-    recipient_.clear();
-    g_serialDdk = nullptr;
+    auto remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk>(ddk);
+    if (remote != nullptr) {
+        remote->RemoveDeathRecipient(recipient);
+    }
+}
+
+void UsbSerialDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    (void)object;
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = nullptr;
+    OHOS::sptr<IRemoteObject::DeathRecipient> recipient = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        EDM_LOGI(MODULE_USB_SERIAL_DDK, "usbSerial_ddk remote died");
+        g_initialized = false;
+        if (g_serialDdk == nullptr) {
+            return;
+        }
+        ddk = g_serialDdk;
+        recipient = recipient_;
+        recipient_.clear();
+        g_serialDdk = nullptr;
+    }
+
+    UnregisterDeathRecipient(ddk, recipient);
     EDM_LOGI(MODULE_USB_SERIAL_DDK, "remove death recipient success");
 }
 
 int32_t OH_UsbSerial_Init(void)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    g_serialDdk = OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk::Get();
-    if (g_serialDdk == nullptr) {
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    {
+        std::shared_lock<std::shared_mutex> lock(g_mutex);
+        if (g_initialized && g_serialDdk != nullptr) {
+            EDM_LOGW(MODULE_USB_SERIAL_DDK, "already initialized");
+            return USB_SERIAL_DDK_SUCCESS;
+        }
+    }
+
+    auto ddk = OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk::Get();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "get ddk failed");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
-    recipient_ = new UsbSerialDeathRecipient();
-    sptr<IRemoteObject> remote = OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk>(g_serialDdk);
-    if (!remote->AddDeathRecipient(recipient_)) {
+
+    sptr<IRemoteObject::DeathRecipient> recipient = new UsbSerialDeathRecipient();
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        recipient_ = recipient;
+    }
+
+    sptr<IRemoteObject> remote =
+        OHOS::HDI::hdi_objcast<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk>(ddk);
+    if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "add DeathRecipient failed");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
-    return TransToUsbSerialCode(g_serialDdk->Init());
+
+    int32_t ret = TransToUsbSerialCode(ddk->Init());
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_serialDdk = ddk;
+        if (ret == USB_SERIAL_DDK_SUCCESS) {
+            g_initialized = true;
+        }
+    }
+    
+    return ret;
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -130,13 +188,29 @@ int32_t OH_UsbSerial_Init(void)
 int32_t OH_UsbSerial_Release(void)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
-        EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
-        return USB_SERIAL_DDK_INIT_ERROR;
+    std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = nullptr;
+    OHOS::sptr<IRemoteObject::DeathRecipient> recipient = nullptr;
+    {
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        if (g_serialDdk == nullptr) {
+            EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
+            return USB_SERIAL_DDK_INIT_ERROR;
+        }
+        ddk = g_serialDdk;
+        recipient = recipient_;
     }
-    int32_t ret = g_serialDdk->Release();
-    g_serialDdk.clear();
-    return TransToUsbSerialCode(ret);
+    int32_t ret = TransToUsbSerialCode(ddk->Release());
+    if (ret == USB_SERIAL_DDK_SUCCESS) {
+        {
+            std::unique_lock<std::shared_mutex> lock(g_mutex);
+            recipient_.clear();
+            g_serialDdk.clear();
+            g_initialized = false;
+        }
+        UnregisterDeathRecipient(ddk, recipient);
+    }
+    return ret;
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -145,7 +219,8 @@ int32_t OH_UsbSerial_Release(void)
 int32_t OH_UsbSerial_Open(uint64_t deviceId, uint8_t interfaceIndex, UsbSerial_Device **dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -158,7 +233,7 @@ int32_t OH_UsbSerial_Open(uint64_t deviceId, uint8_t interfaceIndex, UsbSerial_D
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "Failed to allocate memory for device, errno=%{public}d", errno);
         return USB_SERIAL_DDK_MEMORY_ERROR;
     }
-    return TransToUsbSerialCode(g_serialDdk->Open(deviceId, interfaceIndex, (*dev)->impl));
+    return TransToUsbSerialCode(ddk->Open(deviceId, interfaceIndex, (*dev)->impl));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -167,7 +242,8 @@ int32_t OH_UsbSerial_Open(uint64_t deviceId, uint8_t interfaceIndex, UsbSerial_D
 int32_t OH_UsbSerial_Close(UsbSerial_Device **dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -175,7 +251,7 @@ int32_t OH_UsbSerial_Close(UsbSerial_Device **dev)
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "param is null");
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
-    int32_t ret = g_serialDdk->Close((*dev)->impl);
+    int32_t ret = ddk->Close((*dev)->impl);
     DeleteUsbSerialDeviceHandle(dev);
     return TransToUsbSerialCode(ret);
 #else
@@ -186,7 +262,8 @@ int32_t OH_UsbSerial_Close(UsbSerial_Device **dev)
 int32_t OH_UsbSerial_Read(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferSize, uint32_t *bytesRead)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -196,10 +273,12 @@ int32_t OH_UsbSerial_Read(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferS
     }
     uint32_t readBufferSize = bufferSize;
     if (readBufferSize > MAX_BUFFER_SIZE) {
+        EDM_LOGE(MODULE_USB_SERIAL_DDK, "bufferSize %{public}u exceeds max %{public}u, truncated", bufferSize,
+            MAX_BUFFER_SIZE);
         readBufferSize = MAX_BUFFER_SIZE;
     }
     std::vector<uint8_t> readBuff;
-    int32_t ret = g_serialDdk->Read(dev->impl, readBufferSize, readBuff);
+    int32_t ret = ddk->Read(dev->impl, readBufferSize, readBuff);
     if (ret != HDF_SUCCESS) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "read error.");
         return TransToUsbSerialCode(ret);
@@ -222,7 +301,8 @@ int32_t OH_UsbSerial_Read(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferS
 int32_t OH_UsbSerial_Write(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferSize, uint32_t *bytesWritten)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -231,7 +311,7 @@ int32_t OH_UsbSerial_Write(UsbSerial_Device *dev, uint8_t *buff, uint32_t buffer
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
     std::vector<uint8_t> writeBuff(buff, buff + bufferSize);
-    int32_t ret = g_serialDdk->Write(dev->impl, writeBuff, *bytesWritten);
+    int32_t ret = ddk->Write(dev->impl, writeBuff, *bytesWritten);
     if (ret != HDF_SUCCESS) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "write error.");
         *bytesWritten = 0;
@@ -246,7 +326,8 @@ int32_t OH_UsbSerial_Write(UsbSerial_Device *dev, uint8_t *buff, uint32_t buffer
 int32_t OH_UsbSerial_SetBaudRate(UsbSerial_Device *dev, uint32_t baudRate)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -254,7 +335,7 @@ int32_t OH_UsbSerial_SetBaudRate(UsbSerial_Device *dev, uint32_t baudRate)
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "param is null");
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
-    return TransToUsbSerialCode(g_serialDdk->SetBaudRate(dev->impl, baudRate));
+    return TransToUsbSerialCode(ddk->SetBaudRate(dev->impl, baudRate));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -263,7 +344,8 @@ int32_t OH_UsbSerial_SetBaudRate(UsbSerial_Device *dev, uint32_t baudRate)
 int32_t OH_UsbSerial_SetParams(UsbSerial_Device *dev, UsbSerial_Params *params)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -276,7 +358,7 @@ int32_t OH_UsbSerial_SetParams(UsbSerial_Device *dev, UsbSerial_Params *params)
     hidParams.nDataBits = params->nDataBits;
     hidParams.nStopBits = params->nStopBits;
     hidParams.parity = static_cast<OHOS::HDI::Usb::UsbSerialDdk::V1_0::UsbSerialParity>(params->parity);
-    return TransToUsbSerialCode(g_serialDdk->SetParams(dev->impl, hidParams));
+    return TransToUsbSerialCode(ddk->SetParams(dev->impl, hidParams));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -285,7 +367,8 @@ int32_t OH_UsbSerial_SetParams(UsbSerial_Device *dev, UsbSerial_Params *params)
 int32_t OH_UsbSerial_SetTimeout(UsbSerial_Device *dev, int timeout)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -293,7 +376,7 @@ int32_t OH_UsbSerial_SetTimeout(UsbSerial_Device *dev, int timeout)
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "param is null");
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
-    return TransToUsbSerialCode(g_serialDdk->SetTimeout(dev->impl, timeout));
+    return TransToUsbSerialCode(ddk->SetTimeout(dev->impl, timeout));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -302,7 +385,8 @@ int32_t OH_UsbSerial_SetTimeout(UsbSerial_Device *dev, int timeout)
 int32_t OH_UsbSerial_SetFlowControl(UsbSerial_Device *dev, UsbSerial_FlowControl flowControl)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -311,7 +395,7 @@ int32_t OH_UsbSerial_SetFlowControl(UsbSerial_Device *dev, UsbSerial_FlowControl
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
     auto hdiFlowControl = (OHOS::HDI::Usb::UsbSerialDdk::V1_0::UsbSerialFlowControl)flowControl;
-    return TransToUsbSerialCode(g_serialDdk->SetFlowControl(dev->impl, hdiFlowControl));
+    return TransToUsbSerialCode(ddk->SetFlowControl(dev->impl, hdiFlowControl));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -320,7 +404,8 @@ int32_t OH_UsbSerial_SetFlowControl(UsbSerial_Device *dev, UsbSerial_FlowControl
 int32_t OH_UsbSerial_Flush(UsbSerial_Device *dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -328,7 +413,7 @@ int32_t OH_UsbSerial_Flush(UsbSerial_Device *dev)
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "param is null");
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
-    return TransToUsbSerialCode(g_serialDdk->Flush(dev->impl));
+    return TransToUsbSerialCode(ddk->Flush(dev->impl));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -337,7 +422,8 @@ int32_t OH_UsbSerial_Flush(UsbSerial_Device *dev)
 int32_t OH_UsbSerial_FlushInput(UsbSerial_Device *dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -345,7 +431,7 @@ int32_t OH_UsbSerial_FlushInput(UsbSerial_Device *dev)
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "param is null");
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
-    return TransToUsbSerialCode(g_serialDdk->FlushInput(dev->impl));
+    return TransToUsbSerialCode(ddk->FlushInput(dev->impl));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
@@ -354,7 +440,8 @@ int32_t OH_UsbSerial_FlushInput(UsbSerial_Device *dev)
 int32_t OH_UsbSerial_FlushOutput(UsbSerial_Device *dev)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    if (g_serialDdk == nullptr) {
+    OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "ddk is null");
         return USB_SERIAL_DDK_INIT_ERROR;
     }
@@ -362,7 +449,7 @@ int32_t OH_UsbSerial_FlushOutput(UsbSerial_Device *dev)
         EDM_LOGE(MODULE_USB_SERIAL_DDK, "param is null");
         return USB_SERIAL_DDK_INVALID_PARAMETER;
     }
-    return TransToUsbSerialCode(g_serialDdk->FlushOutput(dev->impl));
+    return TransToUsbSerialCode(ddk->FlushOutput(dev->impl));
 #else
     return USB_SERIAL_DDK_INVALID_OPERATION;
 #endif
