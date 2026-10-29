@@ -346,7 +346,7 @@ BENCHMARK_F(EtxDeviceMgrBenchmarkTest, SetDriverChangeCallback)(benchmark::State
 {
     ExtDeviceManager &mgr = ExtDeviceManager::GetInstance();
     for (auto _ : state) {
-        auto callback = std::make_shared<MockDriverChangeCallback>();
+        shared_ptr<IDriverChangeCallback> callback = std::make_shared<MockDriverChangeCallback>();
         mgr.SetDriverChangeCallback(callback);
     }
 }
