@@ -162,6 +162,7 @@ if (extdevmgr_benchmarktest_enable) {
     ]
   }
 } else {
-  group("external_device_manager_benchmark") {
+  group("hdf_etx_device_mgr_benchmark") {
+    testonly = true
   }
 }
