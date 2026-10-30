@@ -22,7 +22,11 @@ if (extdevmgr_benchmarktest_enable) {
 
   ohos_benchmarktest("hdf_etx_device_mgr_benchmark_test") {
     module_out_path = module_output_path
-
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     include_dirs = [
       "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
       "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
@@ -69,7 +73,11 @@ if (extdevmgr_benchmarktest_enable) {
 
   ohos_benchmarktest("hdf_ext_permission_manager_benchmark_test") {
     module_out_path = module_output_path
-
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     include_dirs = [
       "${ext_mgr_path}/services/native/driver_extension_manager/include",
       "${ext_mgr_path}/services/native/driver_extension_manager/include/device_manager",
