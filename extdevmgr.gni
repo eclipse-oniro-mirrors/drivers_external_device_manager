@@ -21,6 +21,11 @@ declare_args() {
   external_device_manager_enable_service = true
   extdevmgr_feature_metrics_enable = false
   external_device_manager_enable_app_launch = false
+  # The benchmark cases of test/benchmarktest are opt in, so that a product or a
+  # test build does not compile them unless the benchmark numbers are required:
+  #   ./build.sh --product-name rk3568 --gn-args extdevmgr_benchmarktest_enable=true \
+  #     --build-target drivers/external_device_manager/test/benchmarktest:hdf_etx_device_mgr_benchmark
+  extdevmgr_benchmarktest_enable = false
 }
 
 if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
