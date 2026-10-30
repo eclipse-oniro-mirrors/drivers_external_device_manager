@@ -97,7 +97,8 @@
                 "//drivers/external_device_manager/test/unittest:external_device_manager_ut",
                 "//drivers/external_device_manager/test/unittest/driver_extension_context_test:driver_extension_context_test",
                 "//drivers/external_device_manager/test/fuzztest:fuzztest",
-                "//drivers/external_device_manager/test/moduletest:external_device_manager_mt"
+                "//drivers/external_device_manager/test/moduletest:external_device_manager_mt",
+                "//drivers/external_device_manager/test/benchmarktest:hdf_etx_device_mgr_benchmark"
             ]
         }
     }
