@@ -754,6 +754,7 @@ int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, cons
 
 int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8_t *data, uint32_t bufSize)
 {
+    EDM_LOGE(MODULE_HID_DDK, "OH_Hid_GetReport");
     EDM_EMULATOR_NOT_SUPPORT_GUARD();
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
