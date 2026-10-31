@@ -173,10 +173,12 @@ int32_t OH_Usb_ReleaseResource()
     int32_t ret = TransToUsbCode(ddk->Release());
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_ddk.clear();
         if (ret == USB_DDK_SUCCESS) {
+            EDM_LOGE(MODULE_USB_DDK, "release failed: %{public}d", ret);
+        } else {
             g_initialized = false;
         }
+        g_ddk.clear();
     }
     return ret;
 #else
@@ -442,9 +444,14 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
         EDM_LOGE(MODULE_USB_DDK, "invalid param");
         return USB_DDK_INVALID_PARAMETER;
     }
+    OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "invalid obj");
+        return USB_DDK_INVALID_OPERATION;
+    }
 
     int32_t fd = -1;
-    int32_t ret = TransToUsbCode(g_ddk->GetDeviceMemMapFd(deviceId, fd));
+    int32_t ret = TransToUsbCode(ddk->GetDeviceMemMapFd(deviceId, fd));
     if (ret != USB_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "get fd failed, errno=%{public}d", errno);
         return ret;

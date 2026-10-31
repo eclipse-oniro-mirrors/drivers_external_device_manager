@@ -164,33 +164,34 @@ static uint32_t GetRealDeviceId(int32_t deviceId)
 static int32_t Connect(void)
 {
     std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
+    if (g_ddk == nullptr) {
+        auto ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
+        if (ddk == nullptr) {
+            EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
+            return HID_DDK_FAILURE;
+        }
 
-    auto ddk = OHOS::HDI::Input::Ddk::V1_1::IHidDdk::Get();
-    if (ddk == nullptr) {
-        EDM_LOGE(MODULE_HID_DDK, "get hid ddk faild");
-        return HID_DDK_FAILURE;
-    }
+        std::unordered_map<int32_t, std::shared_ptr<struct TempDevice>> devices;
+        {
+            std::shared_lock<std::shared_mutex> lock(g_mutex);
+            devices = g_deviceMap;
+        }
+        for (const auto &[_, value] : devices) {
+            (void)ddk->CreateDevice(value->tempDevice, value->tempProperties, value->realId);
+        }
 
-    std::unordered_map<int32_t, std::shared_ptr<struct TempDevice>> devices;
-    {
-        std::shared_lock<std::shared_mutex> lock(g_mutex);
-        devices = g_deviceMap;
-    }
-    for (const auto &[_, value] : devices) {
-        (void)ddk->CreateDevice(value->tempDevice, value->tempProperties, value->realId);
-    }
+        sptr<IRemoteObject::DeathRecipient> recipient = new HidDeathRecipient();
+        sptr<IRemoteObject> remote =
+            OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_1::IHidDdk>(ddk);
+        if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
+            EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
+            return HID_DDK_FAILURE;
+        }
 
-    sptr<IRemoteObject::DeathRecipient> recipient = new HidDeathRecipient();
-    sptr<IRemoteObject> remote =
-        OHOS::HDI::hdi_objcast<OHOS::HDI::Input::Ddk::V1_1::IHidDdk>(ddk);
-    if (remote == nullptr || !remote->AddDeathRecipient(recipient)) {
-        EDM_LOGE(MODULE_HID_DDK, "add DeathRecipient failed");
-        return HID_DDK_FAILURE;
+        std::unique_lock<std::shared_mutex> lock(g_mutex);
+        g_ddk = ddk;
+        recipient_ = recipient;
     }
-
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
-    g_ddk = ddk;
-    recipient_ = recipient;
     return HID_DDK_SUCCESS;
 }
 
@@ -469,7 +470,6 @@ int32_t OH_Hid_Init(void)
     sptr<IRemoteObject::DeathRecipient> recipient = new HidDeathRecipient();
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_ddk = ddk;
         recipient_ = recipient;
     }
 
