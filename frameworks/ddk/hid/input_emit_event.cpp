@@ -240,7 +240,7 @@ static OHOS::HDI::Input::Ddk::V1_0::Hid_EventProperties ParseHidEventProperties(
                 return static_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_KeyCode>(n);
             });
     }
-    
+
     if (hidEventProperties->hidAbs.hidAbsAxes != nullptr) {
         std::transform(hidEventProperties->hidAbs.hidAbsAxes,
             hidEventProperties->hidAbs.hidAbsAxes + hidEventProperties->hidAbs.length,
