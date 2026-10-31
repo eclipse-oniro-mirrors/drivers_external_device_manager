@@ -50,6 +50,7 @@ std::unordered_map<uint8_t*, int32_t> g_fdMap;
 static std::shared_mutex g_mutex;
 static std::shared_mutex g_fdMapMutex;
 static std::mutex g_lifecycleMutex;
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 static bool g_initialized = false;
 
 OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> GetDdk()
@@ -57,7 +58,7 @@ OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> GetDdk()
     std::shared_lock<std::shared_mutex> lock(g_mutex);
     return g_ddk;
 }
-
+#endif
 } // namespace
 
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -99,7 +100,7 @@ int32_t OH_Usb_Init(void)
             g_initialized = true;
         }
     }
-    
+
     return ret;
 #else
     return USB_DDK_INVALID_OPERATION;
@@ -113,7 +114,7 @@ void OH_Usb_Release(void)
 #else
     std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
     OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = nullptr;
-    
+
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
         if (g_ddk == nullptr) {
@@ -132,7 +133,7 @@ void OH_Usb_Release(void)
             }
         }
     }
-    
+
     int32_t ret = TransToUsbCode(ddk->Release());
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
@@ -141,7 +142,7 @@ void OH_Usb_Release(void)
             g_initialized = false;
         }
     }
-    
+
 #endif
 }
 
@@ -150,7 +151,7 @@ int32_t OH_Usb_ReleaseResource()
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
     OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = nullptr;
-    
+
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
         if (g_ddk == nullptr) {
@@ -164,19 +165,21 @@ int32_t OH_Usb_ReleaseResource()
         std::unique_lock<std::shared_mutex> lock(g_fdMapMutex);
         fdMap.swap(g_fdMap);
         for (const auto& fdPair : fdMap) {
-                if (fdPair.second != -1) {
-                    close(fdPair.second);
-                }
+            if (fdPair.second != -1) {
+                close(fdPair.second);
             }
+        }
     }
-    
+
     int32_t ret = TransToUsbCode(ddk->Release());
     {
         std::unique_lock<std::shared_mutex> lock(g_mutex);
-        g_ddk.clear();
-        if (ret == USB_DDK_SUCCESS) {
+        if (ret != USB_DDK_SUCCESS) {
+            EDM_LOGE(MODULE_USB_DDK, "release failed: %{public}d", ret);
+        } else {
             g_initialized = false;
         }
+        g_ddk.clear();
     }
     return ret;
 #else
@@ -442,9 +445,14 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
         EDM_LOGE(MODULE_USB_DDK, "invalid param");
         return USB_DDK_INVALID_PARAMETER;
     }
+    OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
+        return USB_DDK_INVALID_OPERATION;
+    }
 
     int32_t fd = -1;
-    int32_t ret = TransToUsbCode(g_ddk->GetDeviceMemMapFd(deviceId, fd));
+    int32_t ret = TransToUsbCode(ddk->GetDeviceMemMapFd(deviceId, fd));
     if (ret != USB_DDK_SUCCESS) {
         EDM_LOGE(MODULE_USB_DDK, "get fd failed, errno=%{public}d", errno);
         return ret;
@@ -490,7 +498,7 @@ void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap)
 
     uint8_t *buffer = devMmap->address;
     if (munmap(devMmap->address, devMmap->size) != 0) {
-        EDM_LOGE(MODULE_USB_DDK, "munmap failed, retry allowed, address=%{public}zu, size="
+        EDM_LOGE(MODULE_USB_DDK, "munmap failed, retry allowed, address=%{private}zu, size="
             "%{public}zu, errno=%{public}d", reinterpret_cast<size_t>(devMmap->address), devMmap->size, errno);
         return;
     }
@@ -503,6 +511,7 @@ void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap)
         g_fdMap.erase(it);
     }
     delete devMmap;
+    devMmap = nullptr;
 #endif
 }
 
@@ -541,7 +550,7 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
     uint32_t timeout)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::shared_lock<std::shared_mutex> lock(g_mutex);
     auto ddk_1_2 = OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk::CastFrom(g_ddk);
     if (g_ddk == nullptr || ddk_1_2 == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
@@ -577,7 +586,7 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
 int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::shared_lock<std::shared_mutex> lock(g_mutex);
     auto ddk_1_2 = OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk::CastFrom(g_ddk);
     if (g_ddk == nullptr || ddk_1_2 == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
