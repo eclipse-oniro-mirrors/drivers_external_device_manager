@@ -44,7 +44,7 @@ ohos_shared_library("devicemanager_napi") {
     "node:node_header_notice"
   ]
 
-  defines = []
+  defines = external_device_emulator_defines
 
   if (extdevmgr_feature_metrics_enable) {
     defines += [ "EDM_MANAGER_METRICS_ENABLE" ]

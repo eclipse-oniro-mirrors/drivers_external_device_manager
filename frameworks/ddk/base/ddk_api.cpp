@@ -19,17 +19,21 @@
 #include <mutex>
 #include "ddk_api.h"
 #include "ddk_types.h"
+#include "ddk_errors.h"
 #include "hilog_wrapper.h"
 
 #define PORT_MAX 7
 
 using namespace OHOS::ExternalDeviceManager;
+static bool IsEmulatorNotSupported()
+{
 #ifdef IS_EMULATOR
-#define DDK_EMULATOR_NOT_SUPPORT static_cast<DDK_RetCode>(804)
-#define EDM_EMULATOR_NOT_SUPPORT_GUARD() return DDK_EMULATOR_NOT_SUPPORT
+    EDM_LOGW(MODULE_BASE_DDK, "The capability is not supported on the emulator at this time.");
+    return true;
 #else
-#define EDM_EMULATOR_NOT_SUPPORT_GUARD()
+    return false;
 #endif
+}
 namespace {
 static std::unordered_map<int32_t, OHOS::sptr<OHOS::Ashmem>> g_shareMemoryMap;
 std::mutex g_mutex;
@@ -37,7 +41,9 @@ std::mutex g_mutex;
 
 DDK_RetCode OH_DDK_CreateAshmem(const uint8_t *name, uint32_t size, DDK_Ashmem **ashmem)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (name == nullptr) {
         EDM_LOGE(MODULE_BASE_DDK, "invalid buffer name!");
@@ -101,7 +107,9 @@ static DDK_RetCode AshmemValidityCheck(DDK_Ashmem *ashmem)
 
 DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
@@ -131,7 +139,9 @@ DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 
 DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
@@ -150,7 +160,9 @@ DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 
 DDK_RetCode OH_DDK_DestroyAshmem(DDK_Ashmem *ashmem)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);

@@ -26,6 +26,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "ddk_errors.h"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #include "ipc_error_code.h"
@@ -34,14 +35,15 @@
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
+static bool IsEmulatorNotSupported()
+{
 #ifdef IS_EMULATOR
-#define DDK_EMULATOR_NOT_SUPPORT static_cast<int32_t>(804)
-#define EDM_EMULATOR_NOT_SUPPORT_GUARD() return DDK_EMULATOR_NOT_SUPPORT
-#define EDM_EMULATOR_NOT_SUPPORT_VOID_GUARD() return
+    EDM_LOGW(MODULE_SCSIPERIPHERAL_DDK, "The capability is not supported on the emulator at this time.");
+    return true;
 #else
-#define EDM_EMULATOR_NOT_SUPPORT_GUARD()
-#define EDM_EMULATOR_NOT_SUPPORT_VOID_GUARD()
+    return false;
 #endif
+}
 namespace {
 OHOS::sptr<OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
@@ -356,7 +358,9 @@ void ScsiPeripheralDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &objec
 
 int32_t OH_ScsiPeripheral_Init(void)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     auto ddk = OHOS::HDI::Usb::ScsiDdk::V1_0::IScsiPeripheralDdk::Get();
     SetDdk(ddk);
@@ -378,7 +382,9 @@ int32_t OH_ScsiPeripheral_Init(void)
 
 int32_t OH_ScsiPeripheral_Release(void)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "ddk is null");
@@ -395,7 +401,9 @@ int32_t OH_ScsiPeripheral_Release(void)
 
 int32_t OH_ScsiPeripheral_Open(uint64_t deviceId, uint8_t interfaceIndex, ScsiPeripheral_Device **dev)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -420,7 +428,9 @@ int32_t OH_ScsiPeripheral_Open(uint64_t deviceId, uint8_t interfaceIndex, ScsiPe
 
 int32_t OH_ScsiPeripheral_Close(ScsiPeripheral_Device **dev)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -448,7 +458,9 @@ int32_t OH_ScsiPeripheral_Close(ScsiPeripheral_Device **dev)
 int32_t OH_ScsiPeripheral_TestUnitReady(ScsiPeripheral_Device *dev, ScsiPeripheral_TestUnitReadyRequest *request,
     ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -477,7 +489,9 @@ int32_t OH_ScsiPeripheral_TestUnitReady(ScsiPeripheral_Device *dev, ScsiPeripher
 int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_InquiryRequest *request,
     ScsiPeripheral_InquiryInfo *inquiryInfo, ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -540,7 +554,9 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
 int32_t OH_ScsiPeripheral_ReadCapacity10(ScsiPeripheral_Device *dev, ScsiPeripheral_ReadCapacityRequest *request,
     ScsiPeripheral_CapacityInfo *capacityInfo, ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -575,7 +591,9 @@ int32_t OH_ScsiPeripheral_ReadCapacity10(ScsiPeripheral_Device *dev, ScsiPeriphe
 int32_t OH_ScsiPeripheral_RequestSense(ScsiPeripheral_Device *dev, ScsiPeripheral_RequestSenseRequest *request,
     ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -604,7 +622,9 @@ int32_t OH_ScsiPeripheral_RequestSense(ScsiPeripheral_Device *dev, ScsiPeriphera
 int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORequest *request,
     ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     EDM_LOGD(MODULE_SCSIPERIPHERAL_DDK, "Read10 start");
     if (g_ddk == nullptr) {
@@ -644,7 +664,9 @@ int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORe
 int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORequest *request,
     ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -683,7 +705,9 @@ int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IOR
 int32_t OH_ScsiPeripheral_Verify10(ScsiPeripheral_Device *dev, ScsiPeripheral_VerifyRequest *request,
     ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (g_ddk == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "invalid obj");
@@ -719,7 +743,9 @@ int32_t OH_ScsiPeripheral_Verify10(ScsiPeripheral_Device *dev, ScsiPeripheral_Ve
 int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPeripheral_Request *request,
     ScsiPeripheral_Response *response)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     EDM_LOGD(MODULE_SCSIPERIPHERAL_DDK, "SendRequestByCDB start");
     if (g_ddk == nullptr) {
@@ -767,7 +793,9 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
 int32_t OH_ScsiPeripheral_CreateDeviceMemMap(ScsiPeripheral_Device *dev, size_t size,
     ScsiPeripheral_DeviceMemMap **devMmap)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (dev == nullptr || devMmap == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "param is null");
@@ -800,7 +828,9 @@ int32_t OH_ScsiPeripheral_CreateDeviceMemMap(ScsiPeripheral_Device *dev, size_t 
 
 int32_t OH_ScsiPeripheral_DestroyDeviceMemMap(ScsiPeripheral_DeviceMemMap *devMmap)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (devMmap == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "devMmap is nullptr");
@@ -822,7 +852,9 @@ int32_t OH_ScsiPeripheral_DestroyDeviceMemMap(ScsiPeripheral_DeviceMemMap *devMm
 int32_t OH_ScsiPeripheral_ParseBasicSenseInfo(uint8_t *senseData, uint8_t senseDataLen,
     ScsiPeripheral_BasicSenseInfo *senseInfo)
 {
-    EDM_EMULATOR_NOT_SUPPORT_GUARD();
+    if (IsEmulatorNotSupported()) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (senseData == nullptr || senseInfo == nullptr) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "param is null");
