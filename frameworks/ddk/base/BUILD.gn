@@ -25,7 +25,7 @@ ohos_shared_library("ddk_base") {
     "${utils_path}/include/",
   ]
 
-  defines = external_device_defines + external_device_emulator_defines
+  defines = external_device_defines
   sources = [ "ddk_api.cpp" ]
 
   external_deps = [

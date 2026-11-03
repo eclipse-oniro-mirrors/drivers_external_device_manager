@@ -25,7 +25,7 @@ ohos_shared_library("usb_serial_ndk") {
     "${utils_path}/include/",
   ]
 
-  defines = external_device_defines + external_device_emulator_defines
+  defines = external_device_defines
   sources = [ "usb_serial_ddk_api.cpp" ]
 
   external_deps = [
