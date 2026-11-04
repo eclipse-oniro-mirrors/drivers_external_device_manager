@@ -19,12 +19,12 @@
 #include <mutex>
 #include "ddk_api.h"
 #include "ddk_types.h"
-#include "ddk_errors.h"
 #include "hilog_wrapper.h"
 
 #define PORT_MAX 7
 
 using namespace OHOS::ExternalDeviceManager;
+#define DDK_EMULATOR_NOT_SUPPORT 804
 static bool IsEmulatorNotSupported()
 {
 #ifdef IS_EMULATOR

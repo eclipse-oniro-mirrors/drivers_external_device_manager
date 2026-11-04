@@ -26,7 +26,6 @@
 #include <vector>
 #include <unordered_map>
 
-#include "ddk_errors.h"
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
 #include "ipc_error_code.h"
@@ -35,6 +34,7 @@
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
+#define DDK_EMULATOR_NOT_SUPPORT 804
 static bool IsEmulatorNotSupported()
 {
 #ifdef IS_EMULATOR

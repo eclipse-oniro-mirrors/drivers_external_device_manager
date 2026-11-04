@@ -25,7 +25,6 @@
 
 #include "napi_remote_object.h"
 #include "device_manager_middle.h"
-#include "ddk_errors.h"
 #include "edm_errors.h"
 #include "ext_dev_api_metrics.h"
 
@@ -36,6 +35,7 @@ constexpr int32_t PARAM_COUNT_1 = 1;
 constexpr int32_t PARAM_COUNT_2 = 2;
 constexpr int32_t PARAM_COUNT_3 = 3;
 constexpr uint64_t MAX_JS_NUMBER = 9007199254740991;
+#define DDK_EMULATOR_NOT_SUPPORT 804
 
 static const std::map<int32_t, std::string> ERROR_MESSAGES = {
     {SERVICE_EXCEPTION,         "ExternalDeviceManager service exception."                                   },
