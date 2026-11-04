@@ -1349,5 +1349,466 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
+
+    /**
+     * @tc.name       : testUsbCreateDeviceMemBuffer001
+     * @tc.desc       : OH_Usb_CreateDeviceMemBuffer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbCreateDeviceMemBuffer001', 0, async (done: Function) => {
+      console.info('----------------------testUsbCreateDeviceMemBuffer001---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbCreateDeviceMemBufferOne(deviceId);
+        console.info("Test Result testUsbCreateDeviceMemBuffer001 : " + ret);
+        expect(ret).assertEqual(USB_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbCreateDeviceMemBuffer001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbCreateDeviceMemBuffer002
+     * @tc.desc       : OH_Usb_CreateDeviceMemBuffer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbCreateDeviceMemBuffer002', 0, async (done: Function) => {
+      console.info('----------------------testUsbCreateDeviceMemBuffer002---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbCreateDeviceMemBufferTwo();
+        console.info("Test Result testUsbCreateDeviceMemBuffer002 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbCreateDeviceMemBuffer002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbCreateDeviceMemBuffer003
+     * @tc.desc       : OH_Usb_CreateDeviceMemBuffer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbCreateDeviceMemBuffer003', 0, async (done: Function) => {
+      console.info('----------------------testUsbCreateDeviceMemBuffer003---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbCreateDeviceMemBufferThree();
+        console.info("Test Result testUsbCreateDeviceMemBuffer003 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbCreateDeviceMemBuffer003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbDestroyDeviceMemBuffer001
+     * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbDestroyDeviceMemBuffer001', 0, async (done: Function) => {
+      console.info('----------------------testUsbDestroyDeviceMemBuffer001---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbDestroyDeviceMemBufferOne(deviceId);
+        console.info("Test Result testUsbDestroyDeviceMemBuffer001 : " + ret);
+        expect(ret).assertEqual(USB_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbDestroyDeviceMemBuffer001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbDestroyDeviceMemBuffer002
+     * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbDestroyDeviceMemBuffer002', 0, async (done: Function) => {
+      console.info('----------------------testUsbDestroyDeviceMemBuffer002---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbDestroyDeviceMemBufferTwo();
+        console.info("Test Result testUsbDestroyDeviceMemBuffer002 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbDestroyDeviceMemBuffer002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbDestroyDeviceMemBuffer003
+     * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbDestroyDeviceMemBuffer003', 0, async (done: Function) => {
+      console.info('----------------------testUsbDestroyDeviceMemBuffer003---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbDestroyDeviceMemBufferThree();
+        console.info("Test Result testUsbDestroyDeviceMemBuffer003 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbDestroyDeviceMemBuffer003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbDestroyDeviceMemBuffer004
+     * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbDestroyDeviceMemBuffer004', 0, async (done: Function) => {
+      console.info('----------------------testUsbDestroyDeviceMemBuffer004---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbDestroyDeviceMemBufferFour();
+        console.info("Test Result testUsbDestroyDeviceMemBuffer004 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbDestroyDeviceMemBuffer004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe001
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe001', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe001---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbWritePipeOne(deviceId);
+        console.info("Test Result testUsbWritePipe001 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe002
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe002', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe002---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbWritePipeTwo();
+        console.info("Test Result testUsbWritePipe002 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe003
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe003', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe003---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbWritePipeThree();
+        console.info("Test Result testUsbWritePipe003 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe004
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe004', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe004---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbWritePipeFour();
+        console.info("Test Result testUsbWritePipe004 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe005
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe005', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe005---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbWritePipeFive();
+        console.info("Test Result testUsbWritePipe005 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe006
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe006', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe006---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbWritePipeSix();
+        console.info("Test Result testUsbWritePipe006 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe006 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe007
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe007', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe007---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbWritePipeSeven();
+        console.info("Test Result testUsbWritePipe007 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe007 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbWritePipe008
+     * @tc.desc       : OH_Usb_WritePipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe008', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe008---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbWritePipeEight();
+        console.info("Test Result testUsbWritePipe008 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe008 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe001
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe001', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe001---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbReadPipeOne(deviceId);
+        console.info("Test Result testUsbReadPipe001 : " + ret);
+        expect(ret).assertEqual(USB_DDK_SUCCESS);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe001 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe002
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe002', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe002---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbReadPipeTwo();
+        console.info("Test Result testUsbReadPipe002 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe002 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe003
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe003', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe003---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbReadPipeThree();
+        console.info("Test Result testUsbReadPipe003 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe003 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe004
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe004', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe004---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbReadPipeFour();
+        console.info("Test Result testUsbReadPipe004 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe005
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe005', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe005---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbReadPipeFive();
+        console.info("Test Result testUsbReadPipe005 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_OPERATION);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe005 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe006
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe006', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe006---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbReadPipeSix();
+        console.info("Test Result testUsbReadPipe006 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe006 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe007
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe007', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe007---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbReadPipeSeven();
+        console.info("Test Result testUsbReadPipe007 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe007 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+ 
+    /**
+     * @tc.name       : testUsbReadPipe008
+     * @tc.desc       : OH_Usb_ReadPipe Interface testing
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe008', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe008---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbReadPipeEight();
+        console.info("Test Result testUsbReadPipe008 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe008 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
   })
 }
