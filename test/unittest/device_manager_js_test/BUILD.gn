@@ -19,3 +19,11 @@ ohos_js_unittest("DeviceManagerJsTest") {
   hap_profile = "./config.json"
   certificate_profile = "./openharmony_sx.p7b"
 }
+
+if (is_emulator) {
+  ohos_js_unittest("DeviceManagerEmulatorTest") {
+    module_out_path = module_output_path
+    hap_profile = "./config.json"
+    certificate_profile = "./openharmony_sx.p7b"
+  }
+}

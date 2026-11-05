@@ -180,6 +180,7 @@ if (external_device_manager_enable_service) {
         "ddk_scsi_test:ddk_scsi_emulator_test",
         "ddk_usb_serial_test:ddk_usb_serial_emulator_test",
         "ddk_usb_test:ddk_usb_emulator_test",
+        "device_manager_js_test:DeviceManagerEmulatorTest",
       ]
     }
   }
