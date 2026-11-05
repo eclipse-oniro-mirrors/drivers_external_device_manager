@@ -24,21 +24,12 @@
 #include <unordered_map>
 
 #include "hilog_wrapper.h"
+#include "ddk_emulator_utils.h"
 #include "v1_0/iusb_serial_ddk.h"
 #include "ipc_error_code.h"
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
-#define DDK_EMULATOR_NOT_SUPPORT 804
-static bool IsEmulatorNotSupported()
-{
-#ifdef IS_EMULATOR
-    EDM_LOGW(MODULE_USB_SERIAL_DDK, "The capability is not supported on the emulator at this time.");
-    return true;
-#else
-    return false;
-#endif
-}
 namespace {
 OHOS::sptr<OHOS::HDI::Usb::UsbSerialDdk::V1_0::IUsbSerialDdk> g_serialDdk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
@@ -119,7 +110,7 @@ void UsbSerialDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 
 int32_t OH_UsbSerial_Init(void)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -142,7 +133,7 @@ int32_t OH_UsbSerial_Init(void)
 
 int32_t OH_UsbSerial_Release(void)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -160,7 +151,7 @@ int32_t OH_UsbSerial_Release(void)
 
 int32_t OH_UsbSerial_Open(uint64_t deviceId, uint8_t interfaceIndex, UsbSerial_Device **dev)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -185,7 +176,7 @@ int32_t OH_UsbSerial_Open(uint64_t deviceId, uint8_t interfaceIndex, UsbSerial_D
 
 int32_t OH_UsbSerial_Close(UsbSerial_Device **dev)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -207,7 +198,7 @@ int32_t OH_UsbSerial_Close(UsbSerial_Device **dev)
 
 int32_t OH_UsbSerial_Read(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferSize, uint32_t *bytesRead)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -246,7 +237,7 @@ int32_t OH_UsbSerial_Read(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferS
 
 int32_t OH_UsbSerial_Write(UsbSerial_Device *dev, uint8_t *buff, uint32_t bufferSize, uint32_t *bytesWritten)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -273,7 +264,7 @@ int32_t OH_UsbSerial_Write(UsbSerial_Device *dev, uint8_t *buff, uint32_t buffer
 
 int32_t OH_UsbSerial_SetBaudRate(UsbSerial_Device *dev, uint32_t baudRate)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -293,7 +284,7 @@ int32_t OH_UsbSerial_SetBaudRate(UsbSerial_Device *dev, uint32_t baudRate)
 
 int32_t OH_UsbSerial_SetParams(UsbSerial_Device *dev, UsbSerial_Params *params)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -318,7 +309,7 @@ int32_t OH_UsbSerial_SetParams(UsbSerial_Device *dev, UsbSerial_Params *params)
 
 int32_t OH_UsbSerial_SetTimeout(UsbSerial_Device *dev, int timeout)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -338,7 +329,7 @@ int32_t OH_UsbSerial_SetTimeout(UsbSerial_Device *dev, int timeout)
 
 int32_t OH_UsbSerial_SetFlowControl(UsbSerial_Device *dev, UsbSerial_FlowControl flowControl)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -359,7 +350,7 @@ int32_t OH_UsbSerial_SetFlowControl(UsbSerial_Device *dev, UsbSerial_FlowControl
 
 int32_t OH_UsbSerial_Flush(UsbSerial_Device *dev)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -379,7 +370,7 @@ int32_t OH_UsbSerial_Flush(UsbSerial_Device *dev)
 
 int32_t OH_UsbSerial_FlushInput(UsbSerial_Device *dev)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -399,7 +390,7 @@ int32_t OH_UsbSerial_FlushInput(UsbSerial_Device *dev)
 
 int32_t OH_UsbSerial_FlushOutput(UsbSerial_Device *dev)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_SERIAL_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE

@@ -27,20 +27,11 @@
 #include "hid_ddk_types.h"
 #include "v1_1/ihid_ddk.h"
 #include "hilog_wrapper.h"
+#include "ddk_emulator_utils.h"
 #include "ipc_error_code.h"
 
 using namespace OHOS;
 using namespace OHOS::ExternalDeviceManager;
-#define DDK_EMULATOR_NOT_SUPPORT 804
-static bool IsEmulatorNotSupported()
-{
-#ifdef IS_EMULATOR
-    EDM_LOGW(MODULE_HID_DDK, "The capability is not supported on the emulator at this time.");
-    return true;
-#else
-    return false;
-#endif
-}
 namespace {
 static OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> g_ddk = nullptr;
 static OHOS::sptr<IRemoteObject::DeathRecipient> recipient_ = nullptr;
@@ -276,7 +267,7 @@ static bool CheckHidDevice(Hid_Device *hidDevice)
 
 int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEventProperties)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -337,7 +328,7 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
 
 int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t length)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -380,7 +371,7 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
 
 int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -405,7 +396,7 @@ int32_t OH_Hid_DestroyDevice(int32_t deviceId)
 
 int32_t OH_Hid_Init(void)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -423,7 +414,7 @@ int32_t OH_Hid_Init(void)
 
 int32_t OH_Hid_Release(void)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -442,7 +433,7 @@ int32_t OH_Hid_Release(void)
 
 int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle **dev)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -469,7 +460,7 @@ int32_t OH_Hid_Open(uint64_t deviceId, uint8_t interfaceIndex, Hid_DeviceHandle 
 
 int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -493,7 +484,7 @@ int32_t OH_Hid_Close(Hid_DeviceHandle **dev)
 
 int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint32_t *bytesWritten)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -523,7 +514,7 @@ int32_t OH_Hid_Write(Hid_DeviceHandle *dev, uint8_t *data, uint32_t length, uint
 
 int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, int timeout, uint32_t *bytesRead)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -558,7 +549,7 @@ int32_t OH_Hid_ReadTimeout(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSiz
 
 int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint32_t *bytesRead)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -594,7 +585,7 @@ int32_t OH_Hid_Read(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize, uint
 
 int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -620,7 +611,7 @@ int32_t OH_Hid_SetNonBlocking(Hid_DeviceHandle *dev, int nonBlock)
 
 int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -653,7 +644,7 @@ int32_t OH_Hid_GetRawInfo(Hid_DeviceHandle *dev, Hid_RawDevInfo *rawDevInfo)
 
 int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -688,7 +679,7 @@ int32_t OH_Hid_GetRawName(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 
 int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bufSize)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -723,7 +714,7 @@ int32_t OH_Hid_GetPhysicalAddress(Hid_DeviceHandle *dev, char *data, uint32_t bu
 
 int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t bufSize)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -758,7 +749,7 @@ int32_t OH_Hid_GetRawUniqueId(Hid_DeviceHandle *dev, uint8_t *data, uint32_t buf
 
 int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, const uint8_t *data, uint32_t length)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -789,7 +780,7 @@ int32_t OH_Hid_SendReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, cons
 int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8_t *data, uint32_t bufSize)
 {
     EDM_LOGE(MODULE_HID_DDK, "OH_Hid_GetReport");
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -826,7 +817,7 @@ int32_t OH_Hid_GetReport(Hid_DeviceHandle *dev, Hid_ReportType reportType, uint8
 
 int32_t OH_Hid_GetReportDescriptor(Hid_DeviceHandle *dev, uint8_t *buf, uint32_t bufSize, uint32_t *bytesRead)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_HID_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE

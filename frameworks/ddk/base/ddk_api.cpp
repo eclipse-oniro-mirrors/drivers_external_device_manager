@@ -20,20 +20,11 @@
 #include "ddk_api.h"
 #include "ddk_types.h"
 #include "hilog_wrapper.h"
+#include "ddk_emulator_utils.h"
 
 #define PORT_MAX 7
 
 using namespace OHOS::ExternalDeviceManager;
-#define DDK_EMULATOR_NOT_SUPPORT 804
-static bool IsEmulatorNotSupported()
-{
-#ifdef IS_EMULATOR
-    EDM_LOGW(MODULE_BASE_DDK, "The capability is not supported on the emulator at this time.");
-    return true;
-#else
-    return false;
-#endif
-}
 namespace {
 static std::unordered_map<int32_t, OHOS::sptr<OHOS::Ashmem>> g_shareMemoryMap;
 std::mutex g_mutex;
@@ -41,7 +32,7 @@ std::mutex g_mutex;
 
 DDK_RetCode OH_DDK_CreateAshmem(const uint8_t *name, uint32_t size, DDK_Ashmem **ashmem)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
         return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -107,7 +98,7 @@ static DDK_RetCode AshmemValidityCheck(DDK_Ashmem *ashmem)
 
 DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
         return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -139,7 +130,7 @@ DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 
 DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
         return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -160,7 +151,7 @@ DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 
 DDK_RetCode OH_DDK_DestroyAshmem(DDK_Ashmem *ashmem)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
         return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE

@@ -56,6 +56,7 @@ describe("DeviceManagerEmulatorTest", function () {
             expect(false).assertTrue();
         } catch (error) {
             expect(error.code).assertEqual(EMULATOR_NOT_SUPPORT_CODE);
+            expect(error.message).assertEqual(EMULATOR_NOT_SUPPORT_MESSAGE);
         }
     })
 
@@ -71,6 +72,7 @@ describe("DeviceManagerEmulatorTest", function () {
             expect(false).assertTrue();
         } catch (error) {
             expect(error.code).assertEqual(EMULATOR_NOT_SUPPORT_CODE);
+            expect(error.message).assertEqual(EMULATOR_NOT_SUPPORT_MESSAGE);
         }
     })
 
@@ -86,6 +88,7 @@ describe("DeviceManagerEmulatorTest", function () {
             expect(false).assertTrue();
         } catch (error) {
             expect(error.code).assertEqual(EMULATOR_NOT_SUPPORT_CODE);
+            expect(error.message).assertEqual(EMULATOR_NOT_SUPPORT_MESSAGE);
         }
     })
 
@@ -101,6 +104,7 @@ describe("DeviceManagerEmulatorTest", function () {
             expect(false).assertTrue();
         } catch (error) {
             expect(error.code).assertEqual(EMULATOR_NOT_SUPPORT_CODE);
+            expect(error.message).assertEqual(EMULATOR_NOT_SUPPORT_MESSAGE);
         }
     })
 
@@ -116,6 +120,7 @@ describe("DeviceManagerEmulatorTest", function () {
             expect(false).assertTrue();
         } catch (error) {
             expect(error.code).assertEqual(EMULATOR_NOT_SUPPORT_CODE);
+            expect(error.message).assertEqual(EMULATOR_NOT_SUPPORT_MESSAGE);
         }
     })
 
@@ -131,6 +136,7 @@ describe("DeviceManagerEmulatorTest", function () {
             expect(false).assertTrue();
         } catch (error) {
             expect(error.code).assertEqual(EMULATOR_NOT_SUPPORT_CODE);
+            expect(error.message).assertEqual(EMULATOR_NOT_SUPPORT_MESSAGE);
         }
     })
 
@@ -146,6 +152,7 @@ describe("DeviceManagerEmulatorTest", function () {
             expect(false).assertTrue();
         } catch (error) {
             expect(error.code).assertEqual(EMULATOR_NOT_SUPPORT_CODE);
+            expect(error.message).assertEqual(EMULATOR_NOT_SUPPORT_MESSAGE);
         }
     })
 })

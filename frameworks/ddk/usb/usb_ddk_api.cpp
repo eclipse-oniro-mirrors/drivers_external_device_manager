@@ -24,21 +24,12 @@
 
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
+#include "ddk_emulator_utils.h"
 #include "usb_config_desc_parser.h"
 #include "usb_ddk_types.h"
 #include "v1_2/iusb_ddk.h"
 
 using namespace OHOS::ExternalDeviceManager;
-#define DDK_EMULATOR_NOT_SUPPORT 804
-static bool IsEmulatorNotSupported()
-{
-#ifdef IS_EMULATOR
-    EDM_LOGW(MODULE_USB_DDK, "The capability is not supported on the emulator at this time.");
-    return true;
-#else
-    return false;
-#endif
-}
 namespace {
 OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk> g_ddk = nullptr;
 std::unordered_map<int32_t, int32_t> g_errorMap = {
@@ -71,7 +62,7 @@ static int32_t TransToUsbCode(int32_t ret, int32_t defaultCode = USB_DDK_SUCCESS
 
 int32_t OH_Usb_Init(void)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -89,7 +80,7 @@ int32_t OH_Usb_Init(void)
 
 void OH_Usb_Release(void)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return;
     }
 #ifndef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -112,7 +103,7 @@ void OH_Usb_Release(void)
 
 int32_t OH_Usb_ReleaseResource()
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -139,7 +130,7 @@ int32_t OH_Usb_ReleaseResource()
 
 int32_t OH_Usb_GetDeviceDescriptor(uint64_t deviceId, UsbDeviceDescriptor *desc)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -167,7 +158,7 @@ int32_t OH_Usb_GetDeviceDescriptor(uint64_t deviceId, UsbDeviceDescriptor *desc)
 int32_t OH_Usb_GetConfigDescriptor(
     uint64_t deviceId, uint8_t configIndex, struct UsbDdkConfigDescriptor ** const config)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -194,7 +185,7 @@ int32_t OH_Usb_GetConfigDescriptor(
 
 void OH_Usb_FreeConfigDescriptor(UsbDdkConfigDescriptor * const config)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return;
     }
 #ifndef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -206,7 +197,7 @@ void OH_Usb_FreeConfigDescriptor(UsbDdkConfigDescriptor * const config)
 
 int32_t OH_Usb_ClaimInterface(uint64_t deviceId, uint8_t interfaceIndex, uint64_t *interfaceHandle)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -227,7 +218,7 @@ int32_t OH_Usb_ClaimInterface(uint64_t deviceId, uint8_t interfaceIndex, uint64_
 
 int32_t OH_Usb_ReleaseInterface(uint64_t interfaceHandle)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -244,7 +235,7 @@ int32_t OH_Usb_ReleaseInterface(uint64_t interfaceHandle)
 
 int32_t OH_Usb_SelectInterfaceSetting(uint64_t interfaceHandle, uint8_t settingIndex)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -261,7 +252,7 @@ int32_t OH_Usb_SelectInterfaceSetting(uint64_t interfaceHandle, uint8_t settingI
 
 int32_t OH_Usb_GetCurrentInterfaceSetting(uint64_t interfaceHandle, uint8_t *settingIndex)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -284,7 +275,7 @@ int32_t OH_Usb_GetCurrentInterfaceSetting(uint64_t interfaceHandle, uint8_t *set
 int32_t OH_Usb_SendControlReadRequest(
     uint64_t interfaceHandle, const UsbControlRequestSetup *setup, uint32_t timeout, uint8_t *data, uint32_t *dataLen)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -325,7 +316,7 @@ int32_t OH_Usb_SendControlReadRequest(
 int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const UsbControlRequestSetup *setup, uint32_t timeout,
     const uint8_t *data, uint32_t dataLen)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -349,7 +340,7 @@ int32_t OH_Usb_SendControlWriteRequest(uint64_t interfaceHandle, const UsbContro
 
 int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devMmap)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -380,7 +371,7 @@ int32_t OH_Usb_SendPipeRequest(const UsbRequestPipe *pipe, UsbDeviceMemMap *devM
 
 int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem *ashmem)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -413,7 +404,7 @@ int32_t OH_Usb_SendPipeRequestWithAshmem(const UsbRequestPipe *pipe, DDK_Ashmem 
 
 int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMap **devMmap)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -457,7 +448,7 @@ int32_t OH_Usb_CreateDeviceMemMap(uint64_t deviceId, size_t size, UsbDeviceMemMa
 
 void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return;
     }
 #ifndef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -487,7 +478,7 @@ void OH_Usb_DestroyDeviceMemMap(UsbDeviceMemMap *devMmap)
 
 int32_t OH_Usb_GetDevices(struct Usb_DeviceArray *devices)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -521,7 +512,7 @@ int32_t OH_Usb_GetDevices(struct Usb_DeviceArray *devices)
 int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequestSetup *setupPacket, uint8_t *data,
     uint32_t timeout)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
@@ -558,7 +549,7 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
 
 int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub)
 {
-    if (IsEmulatorNotSupported()) {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
