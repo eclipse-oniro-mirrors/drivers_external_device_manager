@@ -52,6 +52,9 @@ static std::shared_mutex g_fdMapMutex;
 static std::mutex g_lifecycleMutex;
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
 static bool g_initialized = false;
+std::unordered_map<uint8_t*, size_t> g_bufferSizeMap;
+constexpr uint8_t USB_DDK_ENDPOINT_DIR_MASK = 0x80;
+constexpr uint8_t USB_DDK_DIR_IN = 0x80;
 
 OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> GetDdk()
 {
@@ -125,12 +128,17 @@ void OH_Usb_Release(void)
     }
     {
         std::unordered_map<uint8_t*, int32_t> fdMap;
+        std::unordered_map<uint8_t*, size_t> bufferSizeMap;
         std::unique_lock<std::shared_mutex> lock(g_fdMapMutex);
         fdMap.swap(g_fdMap);
         for (const auto& fdPair : fdMap) {
             if (fdPair.second != -1) {
                 close(fdPair.second);
             }
+        }
+        bufferSizeMap.swap(g_bufferSizeMap);
+        for (const auto& bufPair : bufferSizeMap) {
+            munmap(bufPair.first, bufPair.second);
         }
     }
 
@@ -162,12 +170,17 @@ int32_t OH_Usb_ReleaseResource()
     }
     {
         std::unordered_map<uint8_t*, int32_t> fdMap;
+        std::unordered_map<uint8_t*, size_t> bufferSizeMap;
         std::unique_lock<std::shared_mutex> lock(g_fdMapMutex);
         fdMap.swap(g_fdMap);
         for (const auto& fdPair : fdMap) {
             if (fdPair.second != -1) {
                 close(fdPair.second);
             }
+        }
+        bufferSizeMap.swap(g_bufferSizeMap);
+        for (const auto& bufPair : bufferSizeMap) {
+            munmap(bufPair.first, bufPair.second);
         }
     }
 
@@ -610,6 +623,161 @@ int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub)
     }
 
     return USB_DDK_SUCCESS;
+#else
+    return USB_DDK_INVALID_OPERATION;
+#endif
+}
+
+UsbDdkErrCode OH_Usb_CreateDeviceMemBuffer(uint64_t deviceId, size_t size, uint8_t **buffer)
+{
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    if (buffer == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+    OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
+        return USB_DDK_INVALID_OPERATION;
+    }
+ 
+    int32_t fd = -1;
+    int32_t ret = TransToUsbCode(ddk->GetDeviceMemMapFd(deviceId, fd));
+    if (ret != USB_DDK_SUCCESS) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: get fd failed, errno=%{public}d", __func__, errno);
+        return static_cast<UsbDdkErrCode>(ret);
+    }
+    ftruncate(fd, size);
+
+    auto bufferAddr = static_cast<uint8_t *>(mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0));
+    if (bufferAddr == MAP_FAILED) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: mmap failed, errno=%{public}d", __func__, errno);
+        close(fd);
+        return USB_DDK_MEMORY_ERROR;
+    }
+
+    {
+        std::unique_lock<std::shared_mutex> lock(g_fdMapMutex);
+        if (g_fdMap.find(bufferAddr) != g_fdMap.end() && g_fdMap[bufferAddr] != -1) {
+            EDM_LOGW(MODULE_USB_DDK, "%{public}s: fd exist, close old fd", __func__);
+            close(g_fdMap[bufferAddr]);
+        }
+        g_fdMap[bufferAddr] = fd;
+        g_bufferSizeMap[bufferAddr] = size;
+    }
+ 
+    *buffer = bufferAddr;
+    return USB_DDK_SUCCESS;
+#else
+    return USB_DDK_INVALID_OPERATION;
+#endif
+}
+ 
+UsbDdkErrCode OH_Usb_DestroyDeviceMemBuffer(uint8_t **buffer)
+{
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    if (buffer == nullptr || *buffer == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+ 
+    uint8_t *bufferAddr = *buffer;
+    std::unique_lock<std::shared_mutex> lock(g_fdMapMutex);
+    auto sizeIt = g_bufferSizeMap.find(bufferAddr);
+    if (sizeIt == g_bufferSizeMap.end()) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: buffer not found in size map", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+    size_t size = sizeIt->second;
+
+    auto fdIt = g_fdMap.find(bufferAddr);
+    if (fdIt != g_fdMap.end()) {
+        if (fdIt->second != -1) {
+            close(fdIt->second);
+        }
+        g_fdMap.erase(fdIt);
+    }
+
+    if (munmap(bufferAddr, size) != 0) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: munmap failed, errno=%{public}d", __func__, errno);
+        g_bufferSizeMap.erase(sizeIt);
+        return USB_DDK_MEMORY_ERROR;
+    }
+
+    g_bufferSizeMap.erase(sizeIt);
+    *buffer = nullptr;
+    return USB_DDK_SUCCESS;
+#else
+    (void)buffer;
+    return USB_DDK_INVALID_OPERATION;
+#endif
+}
+ 
+UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, size_t bufferSize,
+    uint32_t offset, uint32_t writeLength, uint32_t *transferredLength)
+{
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
+        return USB_DDK_INVALID_OPERATION;
+    }
+    if (pipe == nullptr || buffer == nullptr || transferredLength == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+ 
+    if (offset > bufferSize || writeLength > bufferSize - offset) {
+        EDM_LOGE(MODULE_USB_DDK,
+            "%{public}s: invalid offset or writeLength: size=%{public}zu, offset=%{public}u, len=%{public}u",
+            __func__, bufferSize, offset, writeLength);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+ 
+    if ((pipe->endpoint & USB_DDK_ENDPOINT_DIR_MASK) == USB_DDK_DIR_IN) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: endpoint is IN(read), cannot write: endpoint=%{public}u",
+            __func__, pipe->endpoint);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+ 
+    auto tmpPipe = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_1::UsbRequestPipe *>(pipe);
+    return static_cast<UsbDdkErrCode>(TransToUsbCode(ddk->SendPipeRequest(
+        *tmpPipe, static_cast<uint32_t>(bufferSize), offset, writeLength, *transferredLength)));
+#else
+    return USB_DDK_INVALID_OPERATION;
+#endif
+}
+ 
+UsbDdkErrCode OH_Usb_ReadPipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, size_t bufferSize,
+    uint32_t offset, uint32_t readLength, uint32_t *transferredLength)
+{
+#ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: invalid obj", __func__);
+        return USB_DDK_INVALID_OPERATION;
+    }
+    if (pipe == nullptr || buffer == nullptr || transferredLength == nullptr) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+ 
+    if (offset > bufferSize || readLength > bufferSize - offset) {
+        EDM_LOGE(MODULE_USB_DDK,
+            "%{public}s: invalid offset or readLength: size=%{public}zu, offset=%{public}u, len=%{public}u",
+            __func__, bufferSize, offset, readLength);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+ 
+    if ((pipe->endpoint & USB_DDK_ENDPOINT_DIR_MASK) != USB_DDK_DIR_IN) {
+        EDM_LOGE(MODULE_USB_DDK, "%{public}s: endpoint is OUT(write), cannot read: endpoint=%{public}u",
+            __func__, pipe->endpoint);
+        return USB_DDK_INVALID_PARAMETER;
+    }
+ 
+    auto tmpPipe = reinterpret_cast<const OHOS::HDI::Usb::Ddk::V1_1::UsbRequestPipe *>(pipe);
+    return static_cast<UsbDdkErrCode>(TransToUsbCode(ddk->SendPipeRequest(
+        *tmpPipe, static_cast<uint32_t>(bufferSize), offset, readLength, *transferredLength)));
 #else
     return USB_DDK_INVALID_OPERATION;
 #endif

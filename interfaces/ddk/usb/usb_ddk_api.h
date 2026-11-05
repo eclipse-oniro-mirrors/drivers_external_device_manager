@@ -294,6 +294,93 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
  * @since 26.0.0
  */
 int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub);
+
+/**
+ * @brief Creates a device memory buffer. To avoid resource leakage, call {@link OH_Usb_DestroyDeviceMemBuffer} to
+ * destroy the buffer after the buffer has been used.
+ *
+ * @permission ohos.permission.ACCESS_DDK_USB
+ * @param deviceId Indicates the device ID.
+ * @param size Buffer size.
+ * @param buffer Data buffer. This parameter is used to return the created buffer to the caller.
+ * @return {@link USB_DDK_SUCCESS} The API is successfully called.
+ *     <br>{@link USB_DDK_NO_PERM} Permission check failed. Check whether the app has obtained the
+ *     ohos.permission.ACCESS_DDK_USB permission.
+ *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **buffer** or ***buffer** is a null pointer. Check the
+ *     parameter validity.
+ *     <br>{@link USB_DDK_MEMORY_ERROR} Memory allocation failed. Check the memory size and validity.
+ * @since 26.1.0
+ */
+UsbDdkErrCode OH_Usb_CreateDeviceMemBuffer(uint64_t deviceId, size_t size, uint8_t **buffer);
+ 
+/**
+ * @brief Destroy the device memory buffer. To prevent resource leakage, destroy the buffer immediately after using the
+ * buffer.
+ *
+ * @param buffer Destroy the buffer created by {@link OH_Usb_CreateDeviceMemBuffer}.
+ * @return {@link USB_DDK_SUCCESS} The API is successfully called.
+ *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **buffer** is a null pointer. Check the parameter
+ *     validity.
+ * @since 26.1.0
+ */
+UsbDdkErrCode OH_Usb_DestroyDeviceMemBuffer(uint8_t **buffer);
+ 
+/**
+ * @brief Send a pipe write request. This interface operates in synchronous mode and is suitable for interrupt transfers
+ * and bulk transfers.
+ *
+ * @permission ohos.permission.ACCESS_DDK_USB
+ * @param pipe A pipe used to transfer data.
+ * @param buffer Data buffer, which is the device memory-mapped buffer.
+ * @param bufferSize Buffer size.
+ * @param offset Start position of the data in the buffer.
+ * @param writeLength Length of the buffer to be used, indicating the length of the data written from the offset
+ *     position.
+ * @param transferredLength Output parameter, indicating the length of the actually transmitted data. This parameter
+ *     is valid only when the function returns 0.
+ * @return {@link USB_DDK_SUCCESS} The API is successfully called.
+ *     <br>{@link USB_DDK_NO_PERM} Permission check failed. Check whether the app has obtained the
+ *     ohos.permission.ACCESS_DDK_USB permission.
+ *     <br>{@link USB_DDK_INVALID_OPERATION} Failed to connect to the USB DDK service. Call {@link OH_Usb_Init}
+ *     to complete initialization.
+ *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **pipe**, **buffer**, or **transferredLength**
+ *     is a null pointer. Check the parameter validity.
+ *     <br>{@link USB_DDK_MEMORY_ERROR} Failed to copy the memory for storing write data. Check the memory size and
+ *     validity.
+ *     <br>{@link USB_DDK_IO_FAILED} Data I/O error. Check parameters and device specifications.
+ *     <br>{@link USB_DDK_TIMEOUT} Operation timed out. Check the transmission parameters and device status.
+ * @since 26.1.0
+ */
+UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, size_t bufferSize,
+    uint32_t offset, uint32_t writeLength, uint32_t *transferredLength);
+ 
+/**
+ * @brief Send a pipe read request. This interface operates in synchronous mode and is suitable for interrupt transfers
+ * and bulk transfers.
+ *
+ * @permission ohos.permission.ACCESS_DDK_USB
+ * @param pipe A pipe used to transfer data.
+ * @param buffer Data buffer, which is the device memory-mapped buffer.
+ * @param bufferSize Buffer size.
+ * @param offset Start position of the data in the buffer.
+ * @param readLength Length of the buffer to be used, indicating the length of the data read from the offset position.
+ * @param transferredLength Output parameter, indicating the length of the actually transmitted data. This parameter
+ *     is valid only when the function returns 0.
+ * @return {@link USB_DDK_SUCCESS} The API is successfully called.
+ *     <br>{@link USB_DDK_NO_PERM} Permission check failed. Check whether the app has obtained the
+ *     ohos.permission.ACCESS_DDK_USB permission.
+ *     <br>{@link USB_DDK_INVALID_OPERATION} Failed to connect to the USB DDK service. Call {@link OH_Usb_Init}
+ *     to complete initialization.
+ *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **pipe**, **buffer**, or **transferredLength**
+ *     is a null pointer. Check the parameter validity.
+ *     <br>{@link USB_DDK_MEMORY_ERROR} Failed to copy the memory for storing read data. Check the memory size
+ *     and validity.
+ *     <br>{@link USB_DDK_IO_FAILED} Data I/O error. Check parameters and device specifications.
+ *     <br>{@link USB_DDK_TIMEOUT} Operation timed out. Check the transmission parameters and device status.
+ * @since 26.1.0
+ */
+UsbDdkErrCode OH_Usb_ReadPipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, size_t bufferSize,
+    uint32_t offset, uint32_t readLength, uint32_t *transferredLength);
 /** @} */
 #ifdef __cplusplus
 }
