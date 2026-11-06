@@ -31,3 +31,22 @@ ohos_unittest("ddk_base_test") {
   ]
   configs = [ "${utils_path}:utils_config" ]
 }
+
+if (is_emulator) {
+  ohos_unittest("ddk_base_emulator_test") {
+    module_out_path = "${module_output_path}"
+    sources = [ "ddk_base_emulator_test.cpp" ]
+    include_dirs = [
+      "${ext_mgr_path}/interfaces/ddk/base/",
+      "${utils_path}/include/",
+    ]
+    deps = [ "${ext_mgr_path}/frameworks/ddk/base:ddk_base" ]
+    external_deps = [
+      "c_utils:utils",
+      "hilog:libhilog",
+      "ipc:ipc_core",
+      "samgr:samgr_proxy",
+    ]
+    configs = [ "${utils_path}:utils_config" ]
+  }
+}

@@ -25,6 +25,7 @@
 
 #include "napi_remote_object.h"
 #include "device_manager_middle.h"
+#include "ddk_emulator_utils.h"
 #include "edm_errors.h"
 #include "ext_dev_api_metrics.h"
 
@@ -46,7 +47,8 @@ static const std::map<int32_t, std::string> ERROR_MESSAGES = {
         "3. Parameter verification failed."                                                                  },
     {SERVICE_EXCEPTION_NEW,     "ExternalDeviceManager service exception."                                   },
     {SERVICE_NOT_ALLOW_ACCESS,  "Driver does not allow application access."                                  },
-    {SERVICE_NOT_BOUND,         "There is no binding relationship between the application and the driver."   }
+    {SERVICE_NOT_BOUND,         "There is no binding relationship between the application and the driver."   },
+    {DDK_EMULATOR_NOT_SUPPORT,  "The capability is not supported on the emulator at this time."             }
 };
 
 static std::mutex mapMutex;
@@ -352,6 +354,19 @@ void ThrowErr(const napi_env &env, const int32_t errCode, const std::string &pri
     napi_close_handle_scope(env, scope);
 }
 
+static bool CheckEmulatorNotSupported(napi_env env, const std::string &apiName)
+{
+#ifdef IS_EMULATOR
+    EDM_LOGW(MODULE_DEV_MGR, "The capability is not supported on the emulator at this time.");
+    ThrowErr(env, DDK_EMULATOR_NOT_SUPPORT, apiName);
+    return true;
+#else
+    (void)env;
+    (void)apiName;
+    return false;
+#endif
+}
+
 static napi_value ConvertDeviceToJsDevice(napi_env& env, std::shared_ptr<DeviceData> device)
 {
     napi_value object;
@@ -475,6 +490,9 @@ static napi_value ConvertToJsDriverInfo(napi_env& env, std::shared_ptr<DriverInf
 
 static napi_value QueryDevices(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "queryDevices")) {
+        return nullptr;
+    }
     EDM_LOGI(MODULE_DEV_MGR, "queryDevices start");
     ExtDevApiMetrics metrics("queryDevices");
     size_t argc = PARAM_COUNT_1;
@@ -530,6 +548,9 @@ static bool ParseDeviceId(const napi_env& env, const napi_value& value, uint64_t
 
 static napi_value BindDevice(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "bindDevice")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("bindDevice");
     size_t argc = PARAM_COUNT_3;
     napi_value argv[PARAM_COUNT_3] = {nullptr};
@@ -621,6 +642,9 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
 
 static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "unbindDevice")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("unbindDevice");
     size_t argc = PARAM_COUNT_2;
     napi_value argv[PARAM_COUNT_2] = {nullptr};
@@ -670,6 +694,9 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 
 static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "bindDriverWithDeviceId")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("bindDriverWithDeviceId");
     size_t argc = PARAM_COUNT_3;
     napi_value argv[PARAM_COUNT_3] = {nullptr};
@@ -766,6 +793,9 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
 static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "unbindDriverWithDeviceId")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("unbindDriverWithDeviceId");
     size_t argc = PARAM_COUNT_2;
     napi_value argv[PARAM_COUNT_2] = {nullptr};
@@ -818,6 +848,9 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
 
 static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "queryDeviceInfo")) {
+        return nullptr;
+    }
     size_t argc = PARAM_COUNT_1;
     ExtDevApiMetrics metrics("queryDeviceInfo");
     napi_value argv[PARAM_COUNT_1] = {nullptr};
@@ -862,6 +895,9 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 
 static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "queryDriverInfo")) {
+        return nullptr;
+    }
     size_t argc = PARAM_COUNT_1;
     ExtDevApiMetrics metrics("queryDriverInfo");
     napi_value argv[PARAM_COUNT_1] = {nullptr};

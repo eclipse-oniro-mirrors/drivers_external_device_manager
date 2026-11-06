@@ -36,3 +36,26 @@ ohos_unittest("ddk_scsi_test") {
   ]
   configs = [ "${utils_path}:utils_config" ]
 }
+
+if (is_emulator) {
+  ohos_unittest("ddk_scsi_emulator_test") {
+    module_out_path = "${module_output_path}"
+    sources = [ "ddk_scsi_emulator_test.cpp" ]
+    include_dirs = [
+      "${ext_mgr_path}/interfaces/ddk/scsi/",
+      "${utils_path}/include/",
+    ]
+    deps = [ "${ext_mgr_path}/frameworks/ddk/scsi:scsi" ]
+    external_deps = [
+      "c_utils:utils",
+      "drivers_interface_usb:libscsi_ddk_proxy_1.0",
+      "drivers_interface_usb:libscsi_ddk_stub_1.0",
+      "googletest:gmock_main",
+      "googletest:gtest_main",
+      "hilog:libhilog",
+      "ipc:ipc_core",
+      "samgr:samgr_proxy",
+    ]
+    configs = [ "${utils_path}:utils_config" ]
+  }
+}
