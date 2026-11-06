@@ -1374,7 +1374,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbCreateDeviceMemBuffer002
      * @tc.desc       : OH_Usb_CreateDeviceMemBuffer Interface testing
@@ -1393,7 +1393,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbCreateDeviceMemBuffer003
      * @tc.desc       : OH_Usb_CreateDeviceMemBuffer Interface testing
@@ -1412,7 +1412,26 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
+    /**
+     * @tc.name       : testUsbCreateDeviceMemBuffer004
+     * @tc.desc       : OH_Usb_CreateDeviceMemBuffer with size=0
+     * @tc.type       : Function
+     */
+    it('testUsbCreateDeviceMemBuffer004', 0, async (done: Function) => {
+      console.info('----------------------testUsbCreateDeviceMemBuffer004---------------------------');
+      try {
+        const ret = usbDdkNdkTest.usbCreateDeviceMemBufferFour();
+        console.info("Test Result testUsbCreateDeviceMemBuffer004 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbCreateDeviceMemBuffer004 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
     /**
      * @tc.name       : testUsbDestroyDeviceMemBuffer001
      * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
@@ -1437,7 +1456,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbDestroyDeviceMemBuffer002
      * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
@@ -1456,7 +1475,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbDestroyDeviceMemBuffer003
      * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
@@ -1475,7 +1494,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbDestroyDeviceMemBuffer004
      * @tc.desc       : OH_Usb_DestroyDeviceMemBuffer Interface testing
@@ -1494,7 +1513,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe001
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1519,7 +1538,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe002
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1538,7 +1557,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe003
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1557,7 +1576,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe004
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1576,7 +1595,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe005
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1595,7 +1614,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe006
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1614,7 +1633,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe007
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1633,7 +1652,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbWritePipe008
      * @tc.desc       : OH_Usb_WritePipe Interface testing
@@ -1652,7 +1671,32 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
+    /**
+     * @tc.name       : testUsbWritePipe009
+     * @tc.desc       : OH_Usb_WritePipe with bufferSize not matching realSize
+     * @tc.type       : Function
+     */
+    it('testUsbWritePipe009', 0, async (done: Function) => {
+      console.info('----------------------testUsbWritePipe009---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbWritePipeNine(deviceId);
+        console.info("Test Result testUsbWritePipe009 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbWritePipe009 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
     /**
      * @tc.name       : testUsbReadPipe001
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1677,7 +1721,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbReadPipe002
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1696,7 +1740,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbReadPipe003
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1715,7 +1759,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbReadPipe004
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1734,7 +1778,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbReadPipe005
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1753,7 +1797,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbReadPipe006
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1772,7 +1816,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbReadPipe007
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1791,7 +1835,7 @@ export default function usbDdkNdkJsTest() {
         done();
       }
     });
- 
+
     /**
      * @tc.name       : testUsbReadPipe008
      * @tc.desc       : OH_Usb_ReadPipe Interface testing
@@ -1806,6 +1850,31 @@ export default function usbDdkNdkJsTest() {
         done();
       } catch (err) {
         console.error(TAG, `testUsbReadPipe008 failed, message is ${err.message}`);
+        expect(false).assertTrue();
+        done();
+      }
+    });
+
+    /**
+     * @tc.name       : testUsbReadPipe009
+     * @tc.desc       : OH_Usb_ReadPipe with bufferSize not matching realSize
+     * @tc.type       : Function
+     */
+    it('testUsbReadPipe009', 0, async (done: Function) => {
+      console.info('----------------------testUsbReadPipe009---------------------------');
+      try {
+        if (deviceId < 0) {
+          console.info("Test USB device not connected");
+          expect(true).assertTrue();
+          done();
+          return;
+        }
+        const ret = usbDdkNdkTest.usbReadPipeNine(deviceId);
+        console.info("Test Result testUsbReadPipe009 : " + ret);
+        expect(ret).assertEqual(USB_DDK_INVALID_PARAMETER);
+        done();
+      } catch (err) {
+        console.error(TAG, `testUsbReadPipe009 failed, message is ${err.message}`);
         expect(false).assertTrue();
         done();
       }

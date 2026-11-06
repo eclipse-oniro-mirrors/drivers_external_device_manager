@@ -301,30 +301,34 @@ int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub);
  *
  * @permission ohos.permission.ACCESS_DDK_USB
  * @param deviceId Indicates the device ID.
- * @param size Buffer size.
+ * @param size Buffer size. The value must be greater than 0.
  * @param buffer Data buffer. This parameter is used to return the created buffer to the caller.
  * @return {@link USB_DDK_SUCCESS} The API is successfully called.
  *     <br>{@link USB_DDK_NO_PERM} Permission check failed. Check whether the app has obtained the
  *     ohos.permission.ACCESS_DDK_USB permission.
- *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **buffer** or ***buffer** is a null pointer. Check the
- *     parameter validity.
+ *     <br>{@link USB_DDK_INVALID_OPERATION} Failed to connect to the USB DDK service. Call {@link OH_Usb_Init}
+ *     to complete initialization.
+ *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **buffer** is a null pointer, or **size** is 0.
+ *     Check the parameter validity.
  *     <br>{@link USB_DDK_MEMORY_ERROR} Memory allocation failed. Check the memory size and validity.
  * @since 26.1.0
  */
-UsbDdkErrCode OH_Usb_CreateDeviceMemBuffer(uint64_t deviceId, size_t size, uint8_t **buffer);
- 
+UsbDdkErrCode OH_Usb_CreateDeviceMemBuffer(uint64_t deviceId, uint32_t size, uint8_t **buffer);
+
 /**
  * @brief Destroy the device memory buffer. To prevent resource leakage, destroy the buffer immediately after using the
  * buffer.
  *
  * @param buffer Destroy the buffer created by {@link OH_Usb_CreateDeviceMemBuffer}.
  * @return {@link USB_DDK_SUCCESS} The API is successfully called.
- *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **buffer** is a null pointer. Check the parameter
- *     validity.
+ *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **buffer** is a null pointer, or **buffer** points
+ *     to a buffer not created by {@link OH_Usb_CreateDeviceMemBuffer}. Check the parameter validity.
+ *     <br>{@link USB_DDK_MEMORY_ERROR} Failed to unmap the memory. Check whether the buffer address has been
+ *     unmapped by another call.
  * @since 26.1.0
  */
 UsbDdkErrCode OH_Usb_DestroyDeviceMemBuffer(uint8_t **buffer);
- 
+
 /**
  * @brief Send a pipe write request. This interface operates in synchronous mode and is suitable for interrupt transfers
  * and bulk transfers.
@@ -344,16 +348,19 @@ UsbDdkErrCode OH_Usb_DestroyDeviceMemBuffer(uint8_t **buffer);
  *     <br>{@link USB_DDK_INVALID_OPERATION} Failed to connect to the USB DDK service. Call {@link OH_Usb_Init}
  *     to complete initialization.
  *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **pipe**, **buffer**, or **transferredLength**
- *     is a null pointer. Check the parameter validity.
+ *     is a null pointer; or **buffer** was not created by
+ *     {@link OH_Usb_CreateDeviceMemBuffer}; or **bufferSize** does not match the actual buffer size;
+ *     or **offset** plus **writeLength** exceeds the actual buffer size;
+ *     or the endpoint direction of **pipe** is IN (read), which does not support write. Check the parameter validity.
  *     <br>{@link USB_DDK_MEMORY_ERROR} Failed to copy the memory for storing write data. Check the memory size and
  *     validity.
  *     <br>{@link USB_DDK_IO_FAILED} Data I/O error. Check parameters and device specifications.
  *     <br>{@link USB_DDK_TIMEOUT} Operation timed out. Check the transmission parameters and device status.
  * @since 26.1.0
  */
-UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, size_t bufferSize,
+UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, uint32_t bufferSize,
     uint32_t offset, uint32_t writeLength, uint32_t *transferredLength);
- 
+
 /**
  * @brief Send a pipe read request. This interface operates in synchronous mode and is suitable for interrupt transfers
  * and bulk transfers.
@@ -372,14 +379,17 @@ UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, const uint8_t 
  *     <br>{@link USB_DDK_INVALID_OPERATION} Failed to connect to the USB DDK service. Call {@link OH_Usb_Init}
  *     to complete initialization.
  *     <br>{@link USB_DDK_INVALID_PARAMETER} The input parameter **pipe**, **buffer**, or **transferredLength**
- *     is a null pointer. Check the parameter validity.
+ *     is a null pointer; or **buffer** was not created by
+ *     {@link OH_Usb_CreateDeviceMemBuffer}; or **bufferSize** does not match the actual buffer size;
+ *     or **offset** plus **readLength** exceeds the actual buffer size;
+ *     or the endpoint direction of **pipe** is OUT (write), which does not support read. Check the parameter validity.
  *     <br>{@link USB_DDK_MEMORY_ERROR} Failed to copy the memory for storing read data. Check the memory size
  *     and validity.
  *     <br>{@link USB_DDK_IO_FAILED} Data I/O error. Check parameters and device specifications.
  *     <br>{@link USB_DDK_TIMEOUT} Operation timed out. Check the transmission parameters and device status.
  * @since 26.1.0
  */
-UsbDdkErrCode OH_Usb_ReadPipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, size_t bufferSize,
+UsbDdkErrCode OH_Usb_ReadPipe(const struct UsbRequestPipe *pipe, uint8_t *buffer, uint32_t bufferSize,
     uint32_t offset, uint32_t readLength, uint32_t *transferredLength);
 /** @} */
 #ifdef __cplusplus
