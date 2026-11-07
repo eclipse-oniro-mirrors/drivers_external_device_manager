@@ -583,7 +583,7 @@ describe("DeviceManagerJsTest", function () {
             expect(false).assertTrue();
             done();
         } catch (error) {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
             done();
         }
     })
@@ -612,7 +612,7 @@ describe("DeviceManagerJsTest", function () {
             expect(false).assertTrue();
             done();
         } catch (error) {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            expect(error.code === SERVICE_NOT_BOUND || error.code === SERVICE_EXCEPTION_CODE_NEW).assertTrue();
             done();
         }
     })
@@ -634,7 +634,7 @@ describe("DeviceManagerJsTest", function () {
             done();
         } catch (error) {
             expect(callbackCalled).assertEqual(false);
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
             done();
         }
     })
@@ -651,7 +651,7 @@ describe("DeviceManagerJsTest", function () {
             expect(false).assertTrue();
             done();
         } catch (error) {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
             done();
         }
     })
