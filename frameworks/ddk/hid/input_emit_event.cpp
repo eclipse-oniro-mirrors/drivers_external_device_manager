@@ -361,6 +361,9 @@ int32_t OH_Hid_CreateDevice(Hid_Device *hidDevice, Hid_EventProperties *hidEvent
     uint32_t deviceId = 0;
     std::lock_guard<std::mutex> lifecycleLock(g_lifecycleMutex);
     OHOS::sptr<OHOS::HDI::Input::Ddk::V1_1::IHidDdk> ddk = GetDdk();
+    if (ddk == nullptr) {
+        return HID_DDK_INVALID_OPERATION;
+    }
     auto ret = ddk->CreateDevice(tempDevice, tempEventProperties, deviceId);
     ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {

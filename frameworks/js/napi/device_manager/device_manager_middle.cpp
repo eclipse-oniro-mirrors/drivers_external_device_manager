@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <optional>
+#include <set>
 #include <string>
 #include <map>
 #include <vector>
@@ -51,10 +52,24 @@ static const std::map<int32_t, std::string> ERROR_MESSAGES = {
     {DDK_EMULATOR_NOT_SUPPORT,  "The capability is not supported on the emulator at this time."             }
 };
 
-static std::mutex mapMutex;
+static std::mutex g_mapMutex;
 static std::map<uint64_t, sptr<AsyncData>> g_callbackMap = {};
 static DriverExtMgrClient &g_edmClient = DriverExtMgrClient::GetInstance();
 static sptr<DeviceManagerCallback> g_edmCallback = new (std::nothrow) DeviceManagerCallback;
+static std::mutex g_envCleanupMutex;
+static std::set<napi_env> g_cleanedEnvSet;
+
+static bool IsEnvCleaned(napi_env env)
+{
+    std::lock_guard<std::mutex> lock(g_envCleanupMutex);
+    return g_cleanedEnvSet.find(env) != g_cleanedEnvSet.end();
+}
+
+static void MarkEnvActive(napi_env env)
+{
+    std::lock_guard<std::mutex> lock(g_envCleanupMutex);
+    g_cleanedEnvSet.erase(env);
+}
 
 static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errMsg);
 static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId);
@@ -69,7 +84,7 @@ static void EnvCleanupHook(void *arg)
 
     std::vector<sptr<AsyncData>> alive;
     {
-        std::lock_guard<std::mutex> lock(mapMutex);
+        std::lock_guard<std::mutex> lock(g_mapMutex);
         for (auto it = g_callbackMap.begin(); it != g_callbackMap.end();) {
             auto data = it->second;
             if (data != nullptr && data->env == env) {
@@ -83,50 +98,72 @@ static void EnvCleanupHook(void *arg)
     for (auto &data : alive) {
         data->DeleteNapiRefDirect();
     }
+    {
+        std::lock_guard<std::mutex> lock(g_envCleanupMutex);
+        g_cleanedEnvSet.insert(env);
+    }
     EDM_LOGI(MODULE_DEV_MGR, "env cleanup done, active: %{public}zu", alive.size());
 }
 
 void AsyncData::DeleteNapiRefDirect()
 {
-    if (env == nullptr) {
+    if (env == nullptr || IsEnvCleaned(env)) {
         return;
     }
-    if (bindCallback != nullptr) {
-        (void)napi_delete_reference(env, bindCallback);
+    napi_ref bindRef = nullptr;
+    napi_ref disconnectRef = nullptr;
+    napi_ref unbindRef = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(dataMutex);
+        bindRef = bindCallback;
+        disconnectRef = onDisconnect;
+        unbindRef = unbindCallback;
         bindCallback = nullptr;
-    }
-    if (onDisconnect != nullptr) {
-        (void)napi_delete_reference(env, onDisconnect);
         onDisconnect = nullptr;
-    }
-    if (unbindCallback != nullptr) {
-        (void)napi_delete_reference(env, unbindCallback);
         unbindCallback = nullptr;
+    }
+    if (bindRef != nullptr) {
+        (void)napi_delete_reference(env, bindRef);
+    }
+    if (disconnectRef != nullptr) {
+        (void)napi_delete_reference(env, disconnectRef);
+    }
+    if (unbindRef != nullptr) {
+        (void)napi_delete_reference(env, unbindRef);
     }
 }
 
 void AsyncData::DeleteNapiRef()
 {
-    if (env == nullptr) {
+    if (env == nullptr || IsEnvCleaned(env)) {
         return;
     }
-    if (bindCallback == nullptr && onDisconnect == nullptr && unbindCallback == nullptr) {
-        return;
+    napi_ref bindRef = nullptr;
+    napi_ref disconnectRef = nullptr;
+    napi_ref unbindRef = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(dataMutex);
+        if (bindCallback == nullptr && onDisconnect == nullptr && unbindCallback == nullptr) {
+            return;
+        }
+        bindRef = bindCallback;
+        disconnectRef = onDisconnect;
+        unbindRef = unbindCallback;
+        bindCallback = nullptr;
+        onDisconnect = nullptr;
+        unbindCallback = nullptr;
     }
     auto env_ = env;
-    auto bindCallback_ = bindCallback;
-    auto onDisconnect_ = onDisconnect;
-    auto unbindCallback_ = unbindCallback;
-    auto task = [env_, bindCallback_, onDisconnect_, unbindCallback_]() {
+    auto task = [env_, bindRef, disconnectRef, unbindRef]() {
         EDM_LOGE(MODULE_DEV_MGR, "DeleteNapiRef async task is run.");
-        if (bindCallback_ != nullptr) {
-            napi_delete_reference(env_, bindCallback_);
+        if (bindRef != nullptr) {
+            napi_delete_reference(env_, bindRef);
         }
-        if (onDisconnect_ != nullptr) {
-            napi_delete_reference(env_, onDisconnect_);
+        if (disconnectRef != nullptr) {
+            napi_delete_reference(env_, disconnectRef);
         }
-        if (unbindCallback_ != nullptr) {
-            napi_delete_reference(env_, unbindCallback_);
+        if (unbindRef != nullptr) {
+            napi_delete_reference(env_, unbindRef);
         }
     };
     if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_immediate)) {
@@ -138,7 +175,7 @@ void AsyncData::DeleteNapiRef()
 ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj, const ErrMsg &errMsg)
 {
     EDM_LOGE(MODULE_DEV_MGR, "bind device callback: %{public}016" PRIX64, deviceId);
-    std::lock_guard<std::mutex> mapLock(mapMutex);
+    std::lock_guard<std::mutex> mapLock(g_mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device OnConnect is null");
         return EDM_NOK;
@@ -154,23 +191,29 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
         napi_open_handle_scope(data->env, &scope);
         napi_value result = GetCallbackResult(data->env, data->deviceId, drvExtObj);
         napi_value err = ConvertToBusinessError(data->env, errMsg);
-        if (data->bindCallback != nullptr) {
+
+        napi_ref bindCallbackRef = nullptr;
+        napi_deferred bindDeferredLocal = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(data->dataMutex);
+            bindCallbackRef = data->bindCallback;
+            bindDeferredLocal = data->bindDeferred;
+        }
+
+        if (bindCallbackRef != nullptr) {
             napi_value callback;
-            napi_get_reference_value(data->env, data->bindCallback, &callback);
+            napi_get_reference_value(data->env, bindCallbackRef, &callback);
             napi_value argv[PARAM_COUNT_2] = {err, result};
             napi_value callResult;
             napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
             EDM_LOGI(MODULE_DEV_MGR, "bind device callback finish.");
-        } else if (data->bindDeferred != nullptr) {
+        } else if (bindDeferredLocal != nullptr) {
             if (errMsg.IsOk()) {
-                napi_resolve_deferred(data->env, data->bindDeferred, result);
+                napi_resolve_deferred(data->env, bindDeferredLocal, result);
             } else {
-                napi_reject_deferred(data->env, data->bindDeferred, err);
+                napi_reject_deferred(data->env, bindDeferredLocal, err);
             }
             EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
-        }
-        if (!errMsg.IsOk()) {
-            data->DeleteNapiRefDirect();
         }
         napi_close_handle_scope(data->env, scope);
     };
@@ -184,7 +227,7 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
 ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGE(MODULE_DEV_MGR, "device onDisconnect: %{public}016" PRIX64, deviceId);
-    std::lock_guard<std::mutex> mapLock(mapMutex);
+    std::lock_guard<std::mutex> mapLock(g_mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device callback map is null");
         return EDM_NOK;
@@ -192,9 +235,12 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
 
     auto data = g_callbackMap[deviceId];
     g_callbackMap.erase(deviceId);
-    if (data->onDisconnect == nullptr && data->unbindCallback == nullptr && data->unbindDeferred == nullptr) {
-        EDM_LOGE(MODULE_DEV_MGR, "device callback is null");
-        return EDM_NOK;
+    {
+        std::lock_guard<std::mutex> lock(data->dataMutex);
+        if (data->onDisconnect == nullptr && data->unbindCallback == nullptr && data->unbindDeferred == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "device callback is null");
+            return EDM_NOK;
+        }
     }
     data->IncStrongRef(nullptr);
     auto task = [data, errMsg]() {
@@ -202,9 +248,23 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
         data->DecStrongRef(nullptr);
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(data->env, &scope);
-        napi_value disConnCallback;
+        napi_value disConnCallback = nullptr;
         napi_value result = ConvertToJsDeviceId(data->env, data->deviceId);
-        if (napi_get_reference_value(data->env, data->onDisconnect, &disConnCallback) == napi_ok) {
+
+        napi_ref onDisconnectRef = nullptr;
+        napi_ref unbindCallbackRef = nullptr;
+        napi_deferred unbindDeferredLocal = nullptr;
+        ErrMsg unBindErrMsgLocal;
+        {
+            std::lock_guard<std::mutex> lock(data->dataMutex);
+            onDisconnectRef = data->onDisconnect;
+            unbindCallbackRef = data->unbindCallback;
+            unbindDeferredLocal = data->unbindDeferred;
+            unBindErrMsgLocal = data->unBindErrMsg;
+        }
+
+        if (onDisconnectRef != nullptr &&
+            napi_get_reference_value(data->env, onDisconnectRef, &disConnCallback) == napi_ok) {
             napi_value err = ConvertToBusinessError(data->env, errMsg);
             napi_value argv[PARAM_COUNT_2] = {err, result};
             napi_value callResult;
@@ -212,17 +272,17 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
             EDM_LOGI(MODULE_DEV_MGR, "onDisconnect callback finish.");
         }
 
-        napi_value err = ConvertToBusinessError(data->env, data->unBindErrMsg);
-        if (data->unbindCallback != nullptr) {
+        napi_value err = ConvertToBusinessError(data->env, unBindErrMsgLocal);
+        if (unbindCallbackRef != nullptr) {
             napi_value callback;
-            NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, data->unbindCallback, &callback));
+            NAPI_CALL_RETURN_VOID(data->env, napi_get_reference_value(data->env, unbindCallbackRef, &callback));
             napi_value argv[PARAM_COUNT_2] = {err, result};
             napi_value callResult;
             napi_call_function(data->env, nullptr, callback, PARAM_COUNT_2, argv, &callResult);
             EDM_LOGI(MODULE_DEV_MGR, "unbind device callback finish.");
-        } else if (data->unbindDeferred != nullptr) {
-            data->unBindErrMsg.IsOk() ? napi_resolve_deferred(data->env, data->unbindDeferred, result) :
-                napi_reject_deferred(data->env, data->unbindDeferred, err);
+        } else if (unbindDeferredLocal != nullptr) {
+            unBindErrMsgLocal.IsOk() ? napi_resolve_deferred(data->env, unbindDeferredLocal, result) :
+                napi_reject_deferred(data->env, unbindDeferredLocal, err);
             EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
         }
         data->DeleteNapiRefDirect();
@@ -239,18 +299,25 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
 ErrCode DeviceManagerCallback::OnUnBind(uint64_t deviceId, const ErrMsg &errMsg)
 {
     EDM_LOGI(MODULE_DEV_MGR, "unbind device callback: %{public}016" PRIX64, deviceId);
-    std::lock_guard<std::mutex> mapLock(mapMutex);
+    std::lock_guard<std::mutex> mapLock(g_mapMutex);
     if (g_callbackMap.count(deviceId) == 0) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind map is null");
         return EDM_NOK;
     }
 
     auto asyncData = g_callbackMap[deviceId];
-    if (asyncData == nullptr || (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr)) {
+    if (asyncData == nullptr) {
         EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
         return EDM_NOK;
     }
-    asyncData->unBindErrMsg = errMsg;
+    {
+        std::lock_guard<std::mutex> lock(asyncData->dataMutex);
+        if (asyncData->unbindCallback == nullptr && asyncData->unbindDeferred == nullptr) {
+            EDM_LOGE(MODULE_DEV_MGR, "device unbind is null");
+            return EDM_NOK;
+        }
+        asyncData->unBindErrMsg = errMsg;
+    }
     return EDM_OK;
 }
 
@@ -546,6 +613,87 @@ static bool ParseDeviceId(const napi_env& env, const napi_value& value, uint64_t
     return true;
 }
 
+static void CleanupCallbackData(const sptr<AsyncData> &data, uint64_t deviceId)
+{
+    {
+        std::lock_guard<std::mutex> mapLock(g_mapMutex);
+        auto it = g_callbackMap.find(deviceId);
+        if (it != g_callbackMap.end() && it->second == data) {
+            g_callbackMap.erase(it);
+        }
+    }
+    napi_ref disconnectRef = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(data->dataMutex);
+        disconnectRef = data->onDisconnect;
+        data->onDisconnect = nullptr;
+    }
+    if (disconnectRef != nullptr) {
+        napi_delete_reference(data->env, disconnectRef);
+    }
+}
+
+static void CleanupUnbindCallback(napi_env env, const sptr<AsyncData> &data, int32_t errCode)
+{
+    napi_ref unbindCallbackRef = nullptr;
+    napi_deferred unbindDeferredLocal = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(data->dataMutex);
+        unbindCallbackRef = data->unbindCallback;
+        unbindDeferredLocal = data->unbindDeferred;
+        data->unbindCallback = nullptr;
+        data->unbindDeferred = nullptr;
+    }
+    if (unbindCallbackRef != nullptr) {
+        napi_delete_reference(env, unbindCallbackRef);
+    }
+    if (unbindDeferredLocal != nullptr) {
+        auto errMsg = GetNapiError(errCode);
+        napi_value err = CreateBusinessError(env, errCode, errMsg.value_or(""));
+        napi_reject_deferred(env, unbindDeferredLocal, err);
+    }
+}
+
+static void CleanupOldData(const sptr<AsyncData> &oldData, napi_env currentEnv, int32_t errCode)
+{
+    if (oldData == nullptr) {
+        return;
+    }
+    auto doCleanup = [oldData, errCode]() {
+        oldData->DeleteNapiRefDirect();
+        napi_deferred bindDeferredLocal = nullptr;
+        napi_deferred unbindDeferredLocal = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(oldData->dataMutex);
+            bindDeferredLocal = oldData->bindDeferred;
+            unbindDeferredLocal = oldData->unbindDeferred;
+            oldData->bindDeferred = nullptr;
+            oldData->unbindDeferred = nullptr;
+        }
+        if (bindDeferredLocal != nullptr || unbindDeferredLocal != nullptr) {
+            napi_value err = CreateBusinessError(oldData->env, errCode, GetNapiError(errCode).value_or(""));
+            if (bindDeferredLocal != nullptr) {
+                napi_reject_deferred(oldData->env, bindDeferredLocal, err);
+            }
+            if (unbindDeferredLocal != nullptr) {
+                napi_reject_deferred(oldData->env, unbindDeferredLocal, err);
+            }
+        }
+    };
+    if (oldData->env == currentEnv) {
+        doCleanup();
+        return;
+    }
+    if (IsEnvCleaned(oldData->env)) {
+        EDM_LOGW(MODULE_DEV_MGR, "replaced binding belongs to a cleaned env, skip cleanup");
+        return;
+    }
+    if (napi_status::napi_ok != napi_send_event(oldData->env, doCleanup, napi_eprio_immediate)) {
+        EDM_LOGE(MODULE_DEV_MGR, "CleanupOldData send event failed, deviceId: %{public}016" PRIX64,
+            oldData->deviceId);
+    }
+}
+
 static napi_value BindDevice(napi_env env, napi_callback_info info)
 {
     if (CheckEmulatorNotSupported(env, "bindDevice")) {
@@ -585,24 +733,22 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     data->deviceId = deviceId;
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
 
+    sptr<AsyncData> oldData = nullptr;
     {
-        std::lock_guard<std::mutex> mapLock(mapMutex);
+        std::lock_guard<std::mutex> mapLock(g_mapMutex);
+        auto it = g_callbackMap.find(data->deviceId);
+        if (it != g_callbackMap.end()) {
+            EDM_LOGW(MODULE_DEV_MGR, "device is already bound, replace old callback data");
+            oldData = it->second;
+            g_callbackMap.erase(it);
+        }
         g_callbackMap[data->deviceId] = data;
     }
+    CleanupOldData(oldData, env, SERVICE_EXCEPTION);
 
     UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        {
-            std::lock_guard<std::mutex> mapLock(mapMutex);
-            auto it = g_callbackMap.find(data->deviceId);
-            if (it != g_callbackMap.end() && it->second == data) {
-                g_callbackMap.erase(it);
-            }
-        }
-        if (data->onDisconnect != nullptr) {
-            napi_delete_reference(env, data->onDisconnect);
-            data->onDisconnect = nullptr;
-        }
+        CleanupCallbackData(data, deviceId);
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
@@ -621,17 +767,7 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
         status = napi_create_promise(env, &data->bindDeferred, &promise);
     }
     if (status != napi_ok) {
-        {
-            std::lock_guard<std::mutex> mapLock(mapMutex);
-            auto it = g_callbackMap.find(data->deviceId);
-            if (it != g_callbackMap.end() && it->second == data) {
-                g_callbackMap.erase(it);
-            }
-        }
-        if (data->onDisconnect != nullptr) {
-            napi_delete_reference(env, data->onDisconnect);
-            data->onDisconnect = nullptr;
-        }
+        CleanupCallbackData(data, deviceId);
         g_edmClient.UnBindDevice(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference or promise failed");
@@ -663,8 +799,33 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDevice:%{public}016" PRIX64, deviceId);
 
+    sptr<AsyncData> data = nullptr;
+    {
+        std::lock_guard<std::mutex> mapLock(g_mapMutex);
+        auto it = g_callbackMap.find(deviceId);
+        if (it == g_callbackMap.end()) {
+            EDM_LOGW(MODULE_DEV_MGR, "unbindDevice: device is not bound: %{public}016" PRIX64, deviceId);
+        } else {
+            data = it->second;
+        }
+    }
+
+    napi_value promise = nullptr;
+    if (data != nullptr) {
+        std::lock_guard<std::mutex> lock(data->dataMutex);
+        if (argc > PARAM_COUNT_1 && IsMatchType(env, argv[1], napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->unbindCallback));
+        } else {
+            NAPI_CALL(env, napi_create_promise(env, &data->unbindDeferred, &promise));
+        }
+    }
+
     UsbErrCode retCode = g_edmClient.UnBindDevice(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
+        if (data != nullptr) {
+            CleanupUnbindCallback(env, data,
+                retCode == UsbErrCode::EDM_ERR_NO_PERM ? PERMISSION_DENIED : SERVICE_EXCEPTION);
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "unbindDevice: no permission");
@@ -675,18 +836,10 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
-    std::lock_guard<std::mutex> mapLock(mapMutex);
-    if (g_callbackMap.find(deviceId) == g_callbackMap.end()) {
+    if (data == nullptr) {
         metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "Unbind callback does not exist");
         return nullptr;
-    }
-    auto data = g_callbackMap[deviceId];
-    napi_value promise = nullptr;
-    if (argc > PARAM_COUNT_1 && IsMatchType(env, argv[1], napi_function)) {
-        NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->unbindCallback));
-    } else {
-        NAPI_CALL(env, napi_create_promise(env, &data->unbindDeferred, &promise));
     }
 
     return promise;
@@ -732,24 +885,22 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
 
+    sptr<AsyncData> oldData = nullptr;
     {
-        std::lock_guard<std::mutex> mapLock(mapMutex);
+        std::lock_guard<std::mutex> mapLock(g_mapMutex);
+        auto it = g_callbackMap.find(data->deviceId);
+        if (it != g_callbackMap.end()) {
+            EDM_LOGW(MODULE_DEV_MGR, "device is already bound, replace old callback data");
+            oldData = it->second;
+            g_callbackMap.erase(it);
+        }
         g_callbackMap[data->deviceId] = data;
     }
+    CleanupOldData(oldData, env, SERVICE_EXCEPTION_NEW);
 
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        {
-            std::lock_guard<std::mutex> mapLock(mapMutex);
-            auto it = g_callbackMap.find(data->deviceId);
-            if (it != g_callbackMap.end() && it->second == data) {
-                g_callbackMap.erase(it);
-            }
-        }
-        if (data->onDisconnect != nullptr) {
-            napi_delete_reference(env, data->onDisconnect);
-            data->onDisconnect = nullptr;
-        }
+        CleanupCallbackData(data, deviceId);
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
@@ -772,17 +923,7 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         status = napi_create_promise(env, &data->bindDeferred, &promise);
     }
     if (status != napi_ok) {
-        {
-            std::lock_guard<std::mutex> mapLock(mapMutex);
-            auto it = g_callbackMap.find(data->deviceId);
-            if (it != g_callbackMap.end() && it->second == data) {
-                g_callbackMap.erase(it);
-            }
-        }
-        if (data->onDisconnect != nullptr) {
-            napi_delete_reference(env, data->onDisconnect);
-            data->onDisconnect = nullptr;
-        }
+        CleanupCallbackData(data, deviceId);
         g_edmClient.UnbindDriverWithDeviceId(deviceId);
         metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
         ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference or promise failed");
@@ -814,8 +955,38 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDriver:%{public}016" PRIX64, deviceId);
 
+    sptr<AsyncData> data = nullptr;
+    {
+        std::lock_guard<std::mutex> mapLock(g_mapMutex);
+        auto it = g_callbackMap.find(deviceId);
+        if (it == g_callbackMap.end()) {
+            EDM_LOGW(MODULE_DEV_MGR, "unbindDriver: device is not bound: %{public}016" PRIX64, deviceId);
+        } else {
+            data = it->second;
+        }
+    }
+
+    napi_value promise = nullptr;
+    if (data != nullptr) {
+        std::lock_guard<std::mutex> lock(data->dataMutex);
+        if (argc > PARAM_COUNT_1 && IsMatchType(env, argv[1], napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->unbindCallback));
+        } else {
+            NAPI_CALL(env, napi_create_promise(env, &data->unbindDeferred, &promise));
+        }
+    }
+
     UsbErrCode retCode = g_edmClient.UnbindDriverWithDeviceId(deviceId);
     if (retCode != UsbErrCode::EDM_OK) {
+        int32_t errCode = SERVICE_EXCEPTION_NEW;
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+            errCode = PERMISSION_DENIED;
+        } else if (retCode == UsbErrCode::EDM_ERR_SERVICE_NOT_BOUND) {
+            errCode = SERVICE_NOT_BOUND;
+        }
+        if (data != nullptr) {
+            CleanupUnbindCallback(env, data, errCode);
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "unbindDriver: no permission");
@@ -829,20 +1000,12 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
         return nullptr;
     }
 
-    std::lock_guard<std::mutex> mapLock(mapMutex);
-    if (g_callbackMap.find(deviceId) == g_callbackMap.end()) {
+    if (data == nullptr) {
         metrics.SetErrorCode(SERVICE_EXCEPTION);
         ThrowErr(env, SERVICE_EXCEPTION, "Unbind callback does not exist");
         return nullptr;
     }
-    auto data = g_callbackMap[deviceId];
-    napi_value promise = nullptr;
-    if (argc > PARAM_COUNT_1 && IsMatchType(env, argv[1], napi_function)) {
-        NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->unbindCallback));
-    } else {
-        NAPI_CALL(env, napi_create_promise(env, &data->unbindDeferred, &promise));
-    }
-
+ 
     return promise;
 }
 
@@ -979,6 +1142,7 @@ static napi_value ExtDeviceManagerInit(napi_env env, napi_value exports)
     if (napi_add_env_cleanup_hook(env, EnvCleanupHook, env) != napi_status::napi_ok) {
         EDM_LOGE(MODULE_DEV_MGR, "add env cleanup hook failed");
     }
+    MarkEnvActive(env);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryDevices", QueryDevices),

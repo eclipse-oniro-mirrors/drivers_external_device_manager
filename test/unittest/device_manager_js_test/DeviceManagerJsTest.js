@@ -274,6 +274,52 @@ describe("DeviceManagerJsTest", function () {
     })
 
     /*
+     * @tc.name:DeviceManager_bindDevices_cleanup_001
+     * @tc.desc:verify bindDevice failure cleans up without invoking onDisconnect
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_bindDevices_cleanup_001", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDevices_cleanup_001---------------------------');
+        let onDisconnectCalled = false;
+        try {
+            deviceManager.bindDevice(12345, (error, data) => {
+                onDisconnectCalled = true;
+                done();
+            }, (error, data) => {
+                expect(false).assertTrue();
+                done();
+            });
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(onDisconnectCalled).assertEqual(false);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_bindDevices_cleanup_002
+     * @tc.desc:verify repeated bindDevice failure on same device stays clean
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_bindDevices_cleanup_002", 0, async function (done) {
+        console.info('----------------------DeviceManager_bindDevices_cleanup_002---------------------------');
+        let codes = [];
+        for (let i = 0; i < 2; i++) {
+            try {
+                deviceManager.bindDevice(12345, (error, data) => {});
+            } catch (error) {
+                codes.push(error.code);
+            }
+        }
+        expect(codes.length).assertEqual(2);
+        expect(codes[0]).assertEqual(SERVICE_EXCEPTION_CODE);
+        expect(codes[1]).assertEqual(SERVICE_EXCEPTION_CODE);
+        done();
+    })
+
+    /*
      * @tc.name:DeviceManager_bindDeviceDriver_011
      * @tc.desc:verify bindDeviceDriver promise
      * @tc.type: FUNC
@@ -374,6 +420,23 @@ describe("DeviceManagerJsTest", function () {
                 expect(false).assertTrue();
                 done();
             });
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_unbindDevices_016
+     * @tc.desc:verify unbindDevice with non-function second param falls back to promise
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_unbindDevices_016", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDevices_016---------------------------');
+        try {
+            deviceManager.unbindDevice(12345, 23456);
             expect(false).assertTrue();
             done();
         } catch (error) {
@@ -520,7 +583,7 @@ describe("DeviceManagerJsTest", function () {
             expect(false).assertTrue();
             done();
         } catch (error) {
-            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE_NEW);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
             done();
         }
     })
@@ -549,7 +612,46 @@ describe("DeviceManagerJsTest", function () {
             expect(false).assertTrue();
             done();
         } catch (error) {
-            expect(error.code).assertEqual(SERVICE_NOT_BOUND);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_unbindDriverWithDeviceId_004
+     * @tc.desc:verify unbindDriverWithDeviceId callback not invoked on failure
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_unbindDriverWithDeviceId_004", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDriverWithDeviceId_004---------------------------');
+        let callbackCalled = false;
+        try {
+            deviceManager.unbindDriverWithDeviceId(12345, (error, data) => {
+                callbackCalled = true;
+                done();
+            });
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(callbackCalled).assertEqual(false);
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
+            done();
+        }
+    })
+
+    /*
+     * @tc.name:DeviceManager_unbindDriverWithDeviceId_005
+     * @tc.desc:verify unbindDriverWithDeviceId with non-function second param
+     * @tc.type: FUNC
+     */
+    it("DeviceManager_unbindDriverWithDeviceId_005", 0, async function (done) {
+        console.info('----------------------DeviceManager_unbindDriverWithDeviceId_005---------------------------');
+        try {
+            deviceManager.unbindDriverWithDeviceId(12345, 23456);
+            expect(false).assertTrue();
+            done();
+        } catch (error) {
+            expect(error.code).assertEqual(SERVICE_EXCEPTION_CODE);
             done();
         }
     })
