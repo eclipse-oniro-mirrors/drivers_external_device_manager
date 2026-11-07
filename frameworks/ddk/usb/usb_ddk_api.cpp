@@ -618,6 +618,7 @@ int32_t OH_Usb_ControlTransfer(uint64_t deviceID, const struct UsbControlRequest
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::shared_lock<std::shared_mutex> lock(g_mutex);
     auto ddk_1_2 = OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk::CastFrom(g_ddk);
     if (g_ddk == nullptr || ddk_1_2 == nullptr) {
@@ -657,6 +658,7 @@ int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub)
         return DDK_EMULATOR_NOT_SUPPORT;
     }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
+    #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::shared_lock<std::shared_mutex> lock(g_mutex);
     auto ddk_1_2 = OHOS::HDI::Usb::Ddk::V1_2::IUsbDdk::CastFrom(g_ddk);
     if (g_ddk == nullptr || ddk_1_2 == nullptr) {
