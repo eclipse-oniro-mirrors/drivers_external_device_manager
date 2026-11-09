@@ -780,7 +780,7 @@ UsbDdkErrCode OH_Usb_DestroyDeviceMemBuffer(uint8_t **buffer)
 #endif
 }
 
-UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, const uint8_t *buffer, uint32_t bufferSize,
+UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, uint8_t *buffer, uint32_t bufferSize,
     uint32_t offset, uint32_t writeLength, uint32_t *transferredLength)
 {
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
