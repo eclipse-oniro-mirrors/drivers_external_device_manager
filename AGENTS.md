@@ -57,6 +57,21 @@ If you cannot determine the category or applicable constraints, ask the user bef
 
 Read the relevant files **before** editing.
 
+### Knowledge docs routing (docs/knowledge, six-file plugin structure)
+
+System-generated knowledge base covering business, architecture, standards, terminology, entities and technical mechanisms. Route to it by question type:
+
+| Question | Read first |
+| --- | --- |
+| Business positioning, responsibility boundaries, upstream/downstream | [docs/knowledge/business-context.md](docs/knowledge/business-context.md) |
+| Architecture, call chains, layering, concurrency boundaries | [docs/knowledge/architecture.md](docs/knowledge/architecture.md) |
+| Domain constraints before changing code | [docs/knowledge/coding-standards.md](docs/knowledge/coding-standards.md) |
+| Terminology and easily confused concepts (deviceId encodings, driverUid vs bundleInfo, three error-code systems) | [docs/knowledge/glossary.md](docs/knowledge/glossary.md) |
+| Entities, states, relationships, lifecycles (Device, DriverInfo, binding relation, DDK transfer resources) | [docs/knowledge/edm-Entity.md](docs/knowledge/edm-Entity.md) |
+| Technical mechanisms: principles, usage and constraints (IPC, bus extension, matching, persistence, permissions, DDK, self-unload, DFX, fault notification) | [docs/knowledge/edm-Technology.md](docs/knowledge/edm-Technology.md) |
+
+On-demand reading order: for a task touching the bind/match flow read business-context.md then edm-Technology.md (matching + lifecycle sections); for API/compatibility questions read coding-standards.md then architecture.md (constraints); look up single terms in glossary.md directly.
+
 ### Task-based routing
 
 | When the task involves... | Read these first |
