@@ -174,13 +174,14 @@ if (external_device_manager_enable_service) {
       ]
     }
     if (is_emulator) {
+      deps = []
       deps += [
         "ddk_base_test:ddk_base_emulator_test",
         "ddk_hid_test:ddk_hid_emulator_test",
         "ddk_scsi_test:ddk_scsi_emulator_test",
         "ddk_usb_serial_test:ddk_usb_serial_emulator_test",
         "ddk_usb_test:ddk_usb_emulator_test",
-        "device_manager_js_test:DeviceManagerEmulatorTest",
+        "device_manager_emulator_js_test:DeviceManagerEmulatorTest",
       ]
     }
   }
