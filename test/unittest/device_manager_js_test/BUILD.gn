@@ -14,14 +14,13 @@
 import("//build/test.gni")
 
 module_output_path = "external_device_manager/extension_device_manager"
-ohos_js_unittest("DeviceManagerJsTest") {
-  module_out_path = module_output_path
-  hap_profile = "./config.json"
-  certificate_profile = "./openharmony_sx.p7b"
-}
 
-if (is_emulator) {
-  ohos_js_unittest("DeviceManagerEmulatorTest") {
+# All deviceManager JS APIs throw DDK_EMULATOR_NOT_SUPPORT(804) on emulator
+# builds, so the real-device cases can only run on real devices; emulator
+# behavior is covered by DeviceManagerEmulatorTest in
+# device_manager_emulator_js_test.
+if (!is_emulator) {
+  ohos_js_unittest("DeviceManagerJsTest") {
     module_out_path = module_output_path
     hap_profile = "./config.json"
     certificate_profile = "./openharmony_sx.p7b"
