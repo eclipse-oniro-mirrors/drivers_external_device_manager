@@ -49,7 +49,7 @@
           "name": "com.example.myapplication.MainAbility",
           "icon": "$media:icon",
           "description": "$string:mainability_description",
-          "label": "SensorJsTest",
+          "label": "DeviceManagerEmulatorTest",
           "type": "page",
           "launchType": "standard"
         }
