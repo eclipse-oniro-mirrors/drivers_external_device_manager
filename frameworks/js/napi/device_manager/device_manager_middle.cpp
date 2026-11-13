@@ -285,7 +285,6 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
                 napi_reject_deferred(data->env, unbindDeferredLocal, err);
             EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
         }
-        data->DeleteNapiRefDirect();
         napi_close_handle_scope(data->env, scope);
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
