@@ -414,6 +414,10 @@ int32_t OH_Hid_EmitEvent(int32_t deviceId, const Hid_EmitItem items[], uint16_t 
         return *reinterpret_cast<OHOS::HDI::Input::Ddk::V1_0::Hid_EmitItem *>(&item);
     });
 
+    if (ddk == nullptr) {
+        return HID_DDK_INVALID_OPERATION;
+    }
+
     auto ret = ddk->EmitEvent(realId, itemsTemp);
     ret = (ret == HDF_ERR_NOPERM) ? HID_DDK_NO_PERM : ret;
     if (ret != HID_DDK_SUCCESS) {
