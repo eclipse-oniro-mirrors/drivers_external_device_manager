@@ -612,7 +612,7 @@ describe("DeviceManagerJsTest", function () {
             expect(false).assertTrue();
             done();
         } catch (error) {
-            expect(error.code === SERVICE_NOT_BOUND || error.code === SERVICE_EXCEPTION_CODE_NEW).assertTrue();
+            expect(error.code === SERVICE_NOT_BOUND).assertTrue();
             done();
         }
     })
