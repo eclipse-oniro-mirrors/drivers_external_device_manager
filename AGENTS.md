@@ -61,6 +61,8 @@ Read the relevant files **before** editing.
 
 System-generated knowledge base covering business, architecture, standards, terminology, entities and technical mechanisms. Route to it by question type:
 
+Provenance and refresh rules (generation baseline commit, priority over code drift, which code changes require refreshing which doc): see [docs/knowledge/README.md](docs/knowledge/README.md). **When these docs conflict with code, code wins.**
+
 | Question | Read first |
 | --- | --- |
 | Business positioning, responsibility boundaries, upstream/downstream | [docs/knowledge/business-context.md](docs/knowledge/business-context.md) |

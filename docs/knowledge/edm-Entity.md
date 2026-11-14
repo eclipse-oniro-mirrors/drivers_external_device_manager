@@ -2,6 +2,8 @@
 
 external_device_manager 模块核心业务实体的完整知识定义，涵盖静态概念、动态运行、规则约束与代码映射。路径相对仓根。
 
+> 行号基线：commit 1412c92（2026-11-10 生成）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
+
 ## 外部设备（Device / DeviceInfo / UsbDeviceInfo）
 
 ### 实体概念

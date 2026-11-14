@@ -2,6 +2,8 @@
 
 external_device_manager 模块核心技术框架和机制的知识定义，涵盖价值认知、原理、使用方式和代码关联。路径相对仓根。
 
+> 行号基线：commit 1412c92（2026-11-10 生成）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
+
 ## SA 服务与 IPC 接口机制（DriverExtMgr / SA 5110）
 
 ### 解决的问题（Problem）

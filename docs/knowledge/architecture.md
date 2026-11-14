@@ -1,6 +1,7 @@
 # 架构设计及约束
 
 > 模块：external_device_manager。源码路径相对仓根。
+> 行号基线：commit 1412c92（2026-11-10 生成）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
 
 ## 架构设计
 

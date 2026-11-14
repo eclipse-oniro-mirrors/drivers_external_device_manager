@@ -1,6 +1,7 @@
 # 术语表
 
 > 路径相对仓根；数值与枚举位均经代码核实。
+> 行号基线：commit 1412c92（2026-11-10 生成）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
 
 ## 外部设备管理器（external_device_manager / EDM）
 OpenHarmony HDF 子系统的组件（@ohos/external_device_manager，bundle.json:12），实现"外设驱动应用化"的框架：驱动包管理、设备-驱动匹配绑定、DDK 接口。进程内常以 EDM 缩写出现（EDM_OK、EDM_LOGI、edm_errors.h）。区别于 USB 子系统的 usb_manager（负责主机模式接口与授权），本组件不直接管理 USB 主机协议栈，而是驱动框架层。
