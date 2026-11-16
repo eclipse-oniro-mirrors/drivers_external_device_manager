@@ -136,5 +136,27 @@ HWTEST_F(DdkUsbEmulatorTest, OH_Usb_GetNonRootHubs_Emulator_001, TestSize.Level1
     struct Usb_NonRootHubArray *nonRootHub = nullptr;
     EXPECT_EQ(OH_Usb_GetNonRootHubs(nonRootHub), EMULATOR_NOT_SUPPORT_CODE);
 }
+
+HWTEST_F(DdkUsbEmulatorTest, OH_Usb_CreateDeviceMemBuffer_Emulator_001, TestSize.Level1)
+{
+    uint8_t *buffer = nullptr;
+    EXPECT_EQ(OH_Usb_CreateDeviceMemBuffer(1, 1024, &buffer), EMULATOR_NOT_SUPPORT_CODE);
+}
+
+HWTEST_F(DdkUsbEmulatorTest, OH_Usb_DestroyDeviceMemBuffer_Emulator_001, TestSize.Level1)
+{
+    uint8_t *buffer = nullptr;
+    EXPECT_EQ(OH_Usb_DestroyDeviceMemBuffer(&buffer), EMULATOR_NOT_SUPPORT_CODE);
+}
+
+HWTEST_F(DdkUsbEmulatorTest, OH_Usb_WritePipe_Emulator_001, TestSize.Level1)
+{
+    EXPECT_EQ(OH_Usb_WritePipe(nullptr, nullptr, 0, 0, 0, nullptr), EMULATOR_NOT_SUPPORT_CODE);
+}
+
+HWTEST_F(DdkUsbEmulatorTest, OH_Usb_ReadPipe_Emulator_001, TestSize.Level1)
+{
+    EXPECT_EQ(OH_Usb_ReadPipe(nullptr, nullptr, 0, 0, 0, nullptr), EMULATOR_NOT_SUPPORT_CODE);
+}
 } // ExternalDeviceManager
 } // OHOS

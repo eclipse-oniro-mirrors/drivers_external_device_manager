@@ -688,6 +688,9 @@ int32_t OH_Usb_GetNonRootHubs(struct Usb_NonRootHubArray *nonRootHub)
 
 UsbDdkErrCode OH_Usb_CreateDeviceMemBuffer(uint64_t deviceId, uint32_t size, uint8_t **buffer)
 {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (buffer == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
@@ -742,6 +745,9 @@ UsbDdkErrCode OH_Usb_CreateDeviceMemBuffer(uint64_t deviceId, uint32_t size, uin
 
 UsbDdkErrCode OH_Usb_DestroyDeviceMemBuffer(uint8_t **buffer)
 {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (buffer == nullptr || *buffer == nullptr) {
         EDM_LOGE(MODULE_USB_DDK, "%{public}s: param is null", __func__);
@@ -783,6 +789,9 @@ UsbDdkErrCode OH_Usb_DestroyDeviceMemBuffer(uint8_t **buffer)
 UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, uint8_t *buffer, uint32_t bufferSize,
     uint32_t offset, uint32_t writeLength, uint32_t *transferredLength)
 {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = GetDdk();
     if (ddk == nullptr) {
@@ -828,6 +837,9 @@ UsbDdkErrCode OH_Usb_WritePipe(const struct UsbRequestPipe *pipe, uint8_t *buffe
 UsbDdkErrCode OH_Usb_ReadPipe(const struct UsbRequestPipe *pipe, uint8_t *buffer, uint32_t bufferSize,
     uint32_t offset, uint32_t readLength, uint32_t *transferredLength)
 {
+    if (IsEmulatorNotSupported(MODULE_USB_DDK)) {
+        return DDK_EMULATOR_NOT_SUPPORT;
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     OHOS::sptr<OHOS::HDI::Usb::Ddk::V1_1::IUsbDdk> ddk = GetDdk();
     if (ddk == nullptr) {
