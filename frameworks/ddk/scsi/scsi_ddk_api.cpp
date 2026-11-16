@@ -608,6 +608,10 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "copy revProduct failed");
         return SCSIPERIPHERAL_DDK_MEMORY_ERROR;
     }
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
+    }
     inquiryInfo->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
     return CopyResponse(hdiResponse, response);
@@ -720,6 +724,11 @@ int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORe
         return ret;
     }
 
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
+    }
+
     RestoreMemMap(request->data, static_cast<uint32_t>(hdiResponse.transferredLength));
     request->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
@@ -760,6 +769,11 @@ int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IOR
     if (ret !=  SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "write10 failed");
         return ret;
+    }
+
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
     }
 
     RestoreMemMap(request->data, static_cast<uint32_t>(hdiResponse.transferredLength));
@@ -850,6 +864,11 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
     if (ret !=  SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "send request by cdb failed");
         return ret;
+    }
+
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
     }
 
     RestoreMemMap(request->data, static_cast<uint32_t>(hdiResponse.transferredLength));
