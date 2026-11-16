@@ -594,6 +594,11 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
         return ret;
     }
 
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
+    }
+
     RestoreMemMap(inquiryInfo->data, static_cast<uint32_t>(hdiResponse.transferredLength));
     inquiryInfo->deviceType = hdiInquiryInfo.deviceType;
     if (!CopyDataToArray(hdiInquiryInfo.idVendor, inquiryInfo->idVendor, sizeof(inquiryInfo->idVendor))) {
@@ -607,10 +612,6 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
     if (!CopyDataToArray(hdiInquiryInfo.revProduct, inquiryInfo->revProduct, sizeof(inquiryInfo->revProduct))) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "copy revProduct failed");
         return SCSIPERIPHERAL_DDK_MEMORY_ERROR;
-    }
-    if (hdiResponse.transferredLength < 0) {
-        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
-        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
     }
     inquiryInfo->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
