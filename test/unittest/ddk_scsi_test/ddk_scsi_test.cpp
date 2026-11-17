@@ -1496,6 +1496,33 @@ HWTEST_F(ScsiPeripheralTest, SendRequestByCdbNullTest009, TestSize.Level1)
     ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
 }
 
+/**
+ * @tc.name: SendRequestByCdbCdbLengthTest001
+ * @tc.desc: Verify OH_ScsiPeripheral_SendRequestByCdb clamps cdbLength to SCSIPERIPHERAL_MAX_CMD_DESC_BLOCK_LEN
+ *           when it exceeds the maximum, and the call still succeeds instead of reading out of bounds.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScsiPeripheralTest, SendRequestByCdbCdbLengthTest001, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, SendRequestByCDB(testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Return(0));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+    auto dev = NewScsiPeripheralDevice();
+    ScsiPeripheral_Request request = {{0}};
+    uint8_t buffer[BUFFER_SIZE] = {0};
+    ScsiPeripheral_DeviceMemMap memMap = {buffer, BUFFER_SIZE, 0, BUFFER_SIZE, 0};
+    request.data = &memMap;
+    request.cdbLength = SCSIPERIPHERAL_MAX_CMD_DESC_BLOCK_LEN + 1;
+    ScsiPeripheral_Response response = {{0}};
+    int ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
+    DeleteScsiPeripheralDevice(&dev);
+    ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_SUCCESS);
+}
+
 /*
  * @tc.name: ReleaseThenApiInitErrorTest
  * @tc.desc: After OH_ScsiPeripheral_Release clears the cached handle, every read path must report
