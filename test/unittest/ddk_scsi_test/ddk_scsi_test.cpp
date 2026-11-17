@@ -1496,6 +1496,33 @@ HWTEST_F(ScsiPeripheralTest, SendRequestByCdbNullTest009, TestSize.Level1)
     ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
 }
 
+/**
+ * @tc.name: SendRequestByCdbCdbLengthTest001
+ * @tc.desc: Verify OH_ScsiPeripheral_SendRequestByCdb clamps cdbLength to SCSIPERIPHERAL_MAX_CMD_DESC_BLOCK_LEN
+ *           when it exceeds the maximum, and the call still succeeds instead of reading out of bounds.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScsiPeripheralTest, SendRequestByCdbCdbLengthTest001, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, SendRequestByCDB(testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Return(0));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+    auto dev = NewScsiPeripheralDevice();
+    ScsiPeripheral_Request request = {{0}};
+    uint8_t buffer[BUFFER_SIZE] = {0};
+    ScsiPeripheral_DeviceMemMap memMap = {buffer, BUFFER_SIZE, 0, BUFFER_SIZE, 0};
+    request.data = &memMap;
+    request.cdbLength = SCSIPERIPHERAL_MAX_CMD_DESC_BLOCK_LEN + 1;
+    ScsiPeripheral_Response response = {{0}};
+    int ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
+    DeleteScsiPeripheralDevice(&dev);
+    ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_SUCCESS);
+}
+
 /*
  * @tc.name: ReleaseThenApiInitErrorTest
  * @tc.desc: After OH_ScsiPeripheral_Release clears the cached handle, every read path must report
@@ -1591,5 +1618,125 @@ HWTEST_F(ScsiPeripheralTest, ConcurrentReleaseTest, TestSize.Level1)
     }
     ASSERT_GE(successCount.load(), 1u);
     ASSERT_EQ(successCount.load() + initErrorCount.load(), CONCURRENT_THREADS);
+}
+
+/**
+ * @tc.name: InquiryTransferredLengthTest001
+ * @tc.desc: Verify OH_ScsiPeripheral_Inquiry returns INVALID_PARAMETER when transferredLength is negative.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScsiPeripheralTest, InquiryTransferredLengthTest001, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Inquiry(testing::_, testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Invoke([](const ScsiPeripheralDevice &, const ScsiPeripheralInquiryRequest &,
+            ScsiPeripheralInquiryInfo &, ScsiPeripheralResponse &response) -> int {
+            response.transferredLength = -1;
+            return 0;
+        }));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+
+    auto dev = NewScsiPeripheralDevice();
+    ScsiPeripheral_InquiryRequest request = {0};
+    uint8_t buffer[BUFFER_SIZE] = {0};
+    ScsiPeripheral_InquiryInfo inquiryInfo = {0};
+    ScsiPeripheral_DeviceMemMap memMap = {buffer, BUFFER_SIZE, 0, BUFFER_SIZE, 0};
+    inquiryInfo.data = &memMap;
+    ScsiPeripheral_Response response = {{0}};
+
+    int ret = OH_ScsiPeripheral_Inquiry(dev, &request, &inquiryInfo, &response);
+    DeleteScsiPeripheralDevice(&dev);
+    ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: Read10TransferredLengthTest001
+ * @tc.desc: Verify OH_ScsiPeripheral_Read10 returns INVALID_PARAMETER when transferredLength is negative.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScsiPeripheralTest, Read10TransferredLengthTest001, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Read10(testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Invoke([](const ScsiPeripheralDevice &, const ScsiPeripheralIORequest &,
+            ScsiPeripheralResponse &response) -> int {
+            response.transferredLength = -1;
+            return 0;
+        }));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+    auto dev = NewScsiPeripheralDevice();
+    ScsiPeripheral_IORequest request = {0};
+    uint8_t buffer[BUFFER_SIZE] = {0};
+    ScsiPeripheral_DeviceMemMap memMap = {buffer, BUFFER_SIZE, 0, BUFFER_SIZE, 0};
+    request.data = &memMap;
+    ScsiPeripheral_Response response = {{0}};
+    int ret = OH_ScsiPeripheral_Read10(dev, &request, &response);
+    DeleteScsiPeripheralDevice(&dev);
+    ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: Write10TransferredLengthTest001
+ * @tc.desc: Verify OH_ScsiPeripheral_Write10 returns INVALID_PARAMETER when transferredLength is negative.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScsiPeripheralTest, Write10TransferredLengthTest001, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, Write10(testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Invoke([](const ScsiPeripheralDevice &, const ScsiPeripheralIORequest &,
+            ScsiPeripheralResponse &response) -> int {
+            response.transferredLength = -1;
+            return 0;
+        }));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+    auto dev = NewScsiPeripheralDevice();
+    ScsiPeripheral_IORequest request = {0};
+    uint8_t buffer[BUFFER_SIZE] = {0};
+    ScsiPeripheral_DeviceMemMap memMap = {buffer, BUFFER_SIZE, 0, BUFFER_SIZE, 0};
+    request.data = &memMap;
+    ScsiPeripheral_Response response = {{0}};
+    int ret = OH_ScsiPeripheral_Write10(dev, &request, &response);
+    DeleteScsiPeripheralDevice(&dev);
+    ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name: SendRequestByCdbTransferredLengthTest001
+ * @tc.desc: Verify OH_ScsiPeripheral_SendRequestByCdb returns INVALID_PARAMETER when transferredLength is negative.
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScsiPeripheralTest, SendRequestByCdbTransferredLengthTest001, TestSize.Level1)
+{
+    auto mockDdk = OHOS::sptr<MockScsiPeripheralDdk>::MakeSptr();
+    ASSERT_NE(mockDdk, nullptr);
+    EXPECT_CALL(*mockDdk, SendRequestByCDB(testing::_, testing::_, testing::_))
+        .Times(TEST_TIMES)
+        .WillOnce(testing::Invoke([](const ScsiPeripheralDevice &, const ScsiPeripheralRequest &,
+            ScsiPeripheralResponse &response) -> int {
+            response.transferredLength = -1;
+            return 0;
+        }));
+    auto ddk = OHOS::sptr<IScsiPeripheralDdk>(mockDdk);
+    SetDdk(ddk);
+    auto dev = NewScsiPeripheralDevice();
+    ScsiPeripheral_Request request = {{0}};
+    uint8_t buffer[BUFFER_SIZE] = {0};
+    ScsiPeripheral_DeviceMemMap memMap = {buffer, BUFFER_SIZE, 0, BUFFER_SIZE, 0};
+    request.data = &memMap;
+    request.cdbLength = CDB_LENGTH;
+    ScsiPeripheral_Response response = {{0}};
+    int ret = OH_ScsiPeripheral_SendRequestByCdb(dev, &request, &response);
+    DeleteScsiPeripheralDevice(&dev);
+    ASSERT_EQ(ret, SCSIPERIPHERAL_DDK_INVALID_PARAMETER);
 }
 } // namespace

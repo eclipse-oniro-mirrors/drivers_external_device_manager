@@ -217,6 +217,16 @@ static inline uint64_t GetUint64(unsigned char *buf, int start)
     );
 }
 
+static uint8_t ClampCdbLength(uint8_t cdbLength)
+{
+    if (cdbLength > SCSIPERIPHERAL_MAX_CMD_DESC_BLOCK_LEN) {
+        EDM_LOGW(MODULE_SCSIPERIPHERAL_DDK, "cdb length %{public}u exceeds max, clamp to %{public}d",
+            cdbLength, SCSIPERIPHERAL_MAX_CMD_DESC_BLOCK_LEN);
+        return SCSIPERIPHERAL_MAX_CMD_DESC_BLOCK_LEN;
+    }
+    return cdbLength;
+}
+
 static bool CopyDataToArray(const std::vector<uint8_t> &data, char *arr, uint32_t arrLen)
 {
     if (arr == nullptr || data.size() > arrLen) {
@@ -594,6 +604,11 @@ int32_t OH_ScsiPeripheral_Inquiry(ScsiPeripheral_Device *dev, ScsiPeripheral_Inq
         return ret;
     }
 
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
+    }
+
     RestoreMemMap(inquiryInfo->data, static_cast<uint32_t>(hdiResponse.transferredLength));
     inquiryInfo->deviceType = hdiInquiryInfo.deviceType;
     if (!CopyDataToArray(hdiInquiryInfo.idVendor, inquiryInfo->idVendor, sizeof(inquiryInfo->idVendor))) {
@@ -720,6 +735,11 @@ int32_t OH_ScsiPeripheral_Read10(ScsiPeripheral_Device *dev, ScsiPeripheral_IORe
         return ret;
     }
 
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
+    }
+
     RestoreMemMap(request->data, static_cast<uint32_t>(hdiResponse.transferredLength));
     request->data->transferredLength = static_cast<uint32_t>(hdiResponse.transferredLength);
 
@@ -760,6 +780,11 @@ int32_t OH_ScsiPeripheral_Write10(ScsiPeripheral_Device *dev, ScsiPeripheral_IOR
     if (ret !=  SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "write10 failed");
         return ret;
+    }
+
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
     }
 
     RestoreMemMap(request->data, static_cast<uint32_t>(hdiResponse.transferredLength));
@@ -831,6 +856,7 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "cdb length is 0");
         return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
     }
+    uint8_t cdbLength = ClampCdbLength(request->cdbLength);
 
     int32_t ret = NormalizeMemMap(request->data);
     if (ret != SCSIPERIPHERAL_DDK_SUCCESS) {
@@ -839,7 +865,7 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
 
     OHOS::HDI::Usb::ScsiDdk::V1_0::ScsiPeripheralRequest hdiRequest;
     hdiRequest.commandDescriptorBlock.assign(request->commandDescriptorBlock,
-        request->commandDescriptorBlock + request->cdbLength);
+        request->commandDescriptorBlock + cdbLength);
     hdiRequest.dataTransferDirection = request->dataTransferDirection;
     hdiRequest.memMapSize = request->data->bufferLength;
     hdiRequest.timeout = request->timeout;
@@ -850,6 +876,11 @@ int32_t OH_ScsiPeripheral_SendRequestByCdb(ScsiPeripheral_Device *dev, ScsiPerip
     if (ret !=  SCSIPERIPHERAL_DDK_SUCCESS) {
         EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "send request by cdb failed");
         return ret;
+    }
+
+    if (hdiResponse.transferredLength < 0) {
+        EDM_LOGE(MODULE_SCSIPERIPHERAL_DDK, "transferredLength is invalid: %{public}d", hdiResponse.transferredLength);
+        return SCSIPERIPHERAL_DDK_INVALID_PARAMETER;
     }
 
     RestoreMemMap(request->data, static_cast<uint32_t>(hdiResponse.transferredLength));
