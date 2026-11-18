@@ -20,6 +20,7 @@
 #include "ddk_api.h"
 #include "ddk_types.h"
 #include "hilog_wrapper.h"
+#include "ddk_emulator_utils.h"
 
 #define PORT_MAX 7
 
@@ -31,6 +32,9 @@ std::mutex g_mutex;
 
 DDK_RetCode OH_DDK_CreateAshmem(const uint8_t *name, uint32_t size, DDK_Ashmem **ashmem)
 {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     if (name == nullptr) {
         EDM_LOGE(MODULE_BASE_DDK, "invalid buffer name!");
@@ -91,8 +95,12 @@ static DDK_RetCode AshmemValidityCheck(DDK_Ashmem *ashmem)
 }
 #endif
 
+
 DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
@@ -122,6 +130,9 @@ DDK_RetCode OH_DDK_MapAshmem(DDK_Ashmem *ashmem, const uint8_t ashmemMapType)
 
 DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);
@@ -140,6 +151,9 @@ DDK_RetCode OH_DDK_UnmapAshmem(DDK_Ashmem *ashmem)
 
 DDK_RetCode OH_DDK_DestroyAshmem(DDK_Ashmem *ashmem)
 {
+    if (IsEmulatorNotSupported(MODULE_BASE_DDK)) {
+        return static_cast<DDK_RetCode>(DDK_EMULATOR_NOT_SUPPORT);
+    }
 #ifdef ENABLE_EXTERNAL_DEVICE_DDK_SERVICE
     std::lock_guard<std::mutex> lock(g_mutex);
     DDK_RetCode ret = AshmemValidityCheck(ashmem);

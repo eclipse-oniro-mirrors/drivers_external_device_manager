@@ -92,16 +92,19 @@ public:
 
     sptr<IRemoteObject> GetDrvExtRemote()
     {
+        std::lock_guard<std::mutex> lock(drvExtRemoteMutex_);
         return drvExtRemote_;
     }
 
     void UpdateDrvExtRemote(const sptr<IRemoteObject> &remote)
     {
+        std::lock_guard<std::mutex> lock(drvExtRemoteMutex_);
         drvExtRemote_ = remote;
     }
 
     void ClearDrvExtRemote()
     {
+        std::lock_guard<std::mutex> lock(drvExtRemoteMutex_);
         drvExtRemote_ = nullptr;
     }
 
@@ -174,6 +177,7 @@ private:
     std::shared_ptr<DeviceInfo> info_;
 
     std::recursive_mutex deviceMutex_;
+    std::mutex drvExtRemoteMutex_;
     sptr<IRemoteObject> drvExtRemote_;
     std::set<sptr<IDriverExtMgrCallback>, DrvExtMgrCallbackCompare> callbacks_;
     std::shared_ptr<DrvExtConnNotify> connectNofitier_;

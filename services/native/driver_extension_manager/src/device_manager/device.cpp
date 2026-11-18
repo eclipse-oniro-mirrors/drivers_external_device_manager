@@ -79,7 +79,7 @@ int32_t Device::Connect()
             "%{public}s sleep 100ms to reconnect %{public}s %{public}s, ret %{public}d, retry %{public}d",
             __func__, bundleName.c_str(), abilityName.c_str(), ret, retry);
         usleep(waitTimeMs * msToUs);
-        drvExtRemote_ = nullptr;
+        ClearDrvExtRemote();
         if (connectNofitier_ != nullptr) {
             connectNofitier_->ClearDrvExtConnectionInfo();
         }
@@ -99,8 +99,9 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
     auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_BIND);
     ExtDevReportSysEvent::ParseToExtDevEvent(GetDeviceInfo(), GetDriverInfo(), extDevEvent);
-    if (drvExtRemote_ != nullptr) {
-        connectCallback->OnConnect(GetDeviceInfo()->GetDeviceId(), drvExtRemote_, {UsbErrCode::EDM_OK, ""});
+    sptr<IRemoteObject> remoteCopy = GetDrvExtRemote();
+    if (remoteCopy != nullptr) {
+        connectCallback->OnConnect(GetDeviceInfo()->GetDeviceId(), remoteCopy, {UsbErrCode::EDM_OK, ""});
         int32_t ret = RegisterDrvExtMgrCallback(connectCallback);
         if (ret != UsbErrCode::EDM_OK) {
             EDM_LOGE(MODULE_DEV_MGR, "failed to register callback object");
@@ -181,14 +182,15 @@ void Device::OnConnect(const sptr<IRemoteObject> &remote, int resultCode)
     }
 
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    drvExtRemote_ = remote;
+    UpdateDrvExtRemote(remote);
     for (auto &[callingTokenId, callerInfo] : boundCallerInfos_) {
         callerInfo.isBound = true;
     }
 
+    sptr<IRemoteObject> remoteCopy = GetDrvExtRemote();
     // notify application
     for (auto &callback : callbacks_) {
-        callback->OnConnect(GetDeviceInfo()->GetDeviceId(), drvExtRemote_, {static_cast<UsbErrCode>(resultCode), ""});
+        callback->OnConnect(GetDeviceInfo()->GetDeviceId(), remoteCopy, {static_cast<UsbErrCode>(resultCode), ""});
     }
 }
 
@@ -200,7 +202,7 @@ void Device::OnDisconnect(int resultCode)
     }
 
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    drvExtRemote_ = nullptr;
+    ClearDrvExtRemote();
     if (connectNofitier_ != nullptr) {
         connectNofitier_->ClearDrvExtConnectionInfo();
     }

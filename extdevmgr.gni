@@ -22,6 +22,11 @@ declare_args() {
   extdevmgr_feature_metrics_enable = false
   external_device_manager_enable_app_launch = false
   external_device_manager_enable_pcie = false
+  # The benchmark cases of test/benchmarktest are opt in, so that a product or a
+  # test build does not compile them unless the benchmark numbers are required:
+  #   ./build.sh --product-name rk3568 --gn-args extdevmgr_benchmarktest_enable=true \
+  #     --build-target drivers/external_device_manager/test/benchmarktest:hdf_etx_device_mgr_benchmark
+  extdevmgr_benchmarktest_enable = false
 }
 
 if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metrics)) {
@@ -30,7 +35,10 @@ if (defined(global_parts_info) && defined(global_parts_info.hiviewdfx_api_metric
 
 external_device_defines = []
 if (external_device_manager_enable_service) {
-  external_device_defines = [ "ENABLE_EXTERNAL_DEVICE_DDK_SERVICE" ]
+  external_device_defines += [ "ENABLE_EXTERNAL_DEVICE_DDK_SERVICE" ]
+}
+if (is_emulator) {
+  external_device_defines += [ "IS_EMULATOR" ]
 }
 app_launch_defines = []
 if (external_device_manager_enable_app_launch) {

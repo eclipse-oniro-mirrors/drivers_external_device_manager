@@ -60,6 +60,7 @@ ohos_unittest("app_launch_manager_test") {
 
   external_deps = [
     "ability_runtime:ability_manager",
+    "ability_runtime:ability_start_options",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "cJSON:cjson",

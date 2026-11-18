@@ -54,6 +54,7 @@ private:
     static void Trim(std::string &inputStr);
     static bool IsNumber(const std::string &str);
     static std::vector<std::string> SplitString(const std::string &str, char pattern);
+    static bool IsValidAppStoreUri(const std::string &uri);
 
     static constexpr const char *PRESET_CONFIG_DATA_PATH =
         "/system/etc/UsbWirelessDisplayAdapterApp/generic/";

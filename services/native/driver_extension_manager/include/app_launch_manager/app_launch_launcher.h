@@ -27,6 +27,9 @@ public:
     ~AppLaunchLauncher() = default;
 
     int32_t LaunchApp(const std::string &bundleName, const std::string &abilityName);
+
+private:
+    static constexpr int32_t PRIMARY_DISPLAY_ID = 0;
 };
 
 } // namespace ExternalDeviceManager

@@ -25,6 +25,7 @@
 
 #include "napi_remote_object.h"
 #include "device_manager_middle.h"
+#include "ddk_emulator_utils.h"
 #include "edm_errors.h"
 #include "ext_dev_api_metrics.h"
 
@@ -37,13 +38,17 @@ constexpr int32_t PARAM_COUNT_3 = 3;
 constexpr uint64_t MAX_JS_NUMBER = 9007199254740991;
 
 static const std::map<int32_t, std::string> ERROR_MESSAGES = {
-    {SERVICE_EXCEPTION,  "ExternalDeviceManager service exception."},
-    {PERMISSION_DENIED,  "Permission denied."},
-    {PERMISSION_NOT_SYSTEM_APP,  "Permission denied. A non-system application cannot call a system API."},
-    {PARAMETER_ERROR,  "The parameter check failed."},
-    {SERVICE_EXCEPTION_NEW, "ExternalDeviceManager service exception."},
-    {SERVICE_NOT_ALLOW_ACCESS, "Driver does not allow application access."},
-    {SERVICE_NOT_BOUND, "There is no binding relationship between the application and the driver."}
+    {SERVICE_EXCEPTION,         "ExternalDeviceManager service exception."                                   },
+    {PERMISSION_DENIED,
+     "Permission verification failed. The application does not have the permission required to call the API."},
+    {PERMISSION_NOT_SYSTEM_APP, "Permission denied. A non-system application cannot call a system API."      },
+    {PARAMETER_ERROR,
+     "Parameter error. Possible causes: 1. Mandatory parameters are left unspecified; 2. Incorrect parameter types; "
+        "3. Parameter verification failed."                                                                  },
+    {SERVICE_EXCEPTION_NEW,     "ExternalDeviceManager service exception."                                   },
+    {SERVICE_NOT_ALLOW_ACCESS,  "Driver does not allow application access."                                  },
+    {SERVICE_NOT_BOUND,         "There is no binding relationship between the application and the driver."   },
+    {DDK_EMULATOR_NOT_SUPPORT,  "The capability is not supported on the emulator at this time."             }
 };
 
 static std::mutex mapMutex;
@@ -55,9 +60,57 @@ static napi_value ConvertToBusinessError(const napi_env &env, const ErrMsg &errM
 static napi_value ConvertToJsDeviceId(const napi_env &env, uint64_t deviceId);
 static napi_value GetCallbackResult(const napi_env &env, uint64_t deviceId, const sptr<IRemoteObject> &drvExtObj);
 
+static void EnvCleanupHook(void *arg)
+{
+    auto *env = static_cast<napi_env>(arg);
+    if (env == nullptr) {
+        return;
+    }
+
+    std::vector<sptr<AsyncData>> alive;
+    {
+        std::lock_guard<std::mutex> lock(mapMutex);
+        for (auto it = g_callbackMap.begin(); it != g_callbackMap.end();) {
+            auto data = it->second;
+            if (data != nullptr && data->env == env) {
+                alive.push_back(data);
+                it = g_callbackMap.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+    for (auto &data : alive) {
+        data->DeleteNapiRefDirect();
+    }
+    EDM_LOGI(MODULE_DEV_MGR, "env cleanup done, active: %{public}zu", alive.size());
+}
+
+void AsyncData::DeleteNapiRefDirect()
+{
+    if (env == nullptr) {
+        return;
+    }
+    if (bindCallback != nullptr) {
+        (void)napi_delete_reference(env, bindCallback);
+        bindCallback = nullptr;
+    }
+    if (onDisconnect != nullptr) {
+        (void)napi_delete_reference(env, onDisconnect);
+        onDisconnect = nullptr;
+    }
+    if (unbindCallback != nullptr) {
+        (void)napi_delete_reference(env, unbindCallback);
+        unbindCallback = nullptr;
+    }
+}
+
 void AsyncData::DeleteNapiRef()
 {
     if (env == nullptr) {
+        return;
+    }
+    if (bindCallback == nullptr && onDisconnect == nullptr && unbindCallback == nullptr) {
         return;
     }
     auto env_ = env;
@@ -77,7 +130,8 @@ void AsyncData::DeleteNapiRef()
         }
     };
     if (napi_status::napi_ok != napi_send_event(env, task, napi_eprio_immediate)) {
-        EDM_LOGE(MODULE_DEV_MGR, "delete napi ref send event failed.");
+        EDM_LOGE(MODULE_DEV_MGR,
+            "DeleteNapiRef send event failed, leak refs, deviceId: %{public}016" PRIX64, deviceId);
     }
 }
 
@@ -115,10 +169,13 @@ ErrCode DeviceManagerCallback::OnConnect(uint64_t deviceId, const sptr<IRemoteOb
             }
             EDM_LOGI(MODULE_DEV_MGR, "bind device promise finish.");
         }
+        if (!errMsg.IsOk()) {
+            data->DeleteNapiRefDirect();
+        }
         napi_close_handle_scope(data->env, scope);
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
-        EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed.");
+        EDM_LOGE(MODULE_DEV_MGR, "OnConnect send event failed, deviceId: %{public}016" PRIX64, deviceId);
         return EDM_NOK;
     }
     return EDM_OK;
@@ -168,10 +225,11 @@ ErrCode DeviceManagerCallback::OnDisconnect(uint64_t deviceId, const ErrMsg &err
                 napi_reject_deferred(data->env, data->unbindDeferred, err);
             EDM_LOGI(MODULE_DEV_MGR, "unbind device promise finish.");
         }
+        data->DeleteNapiRefDirect();
         napi_close_handle_scope(data->env, scope);
     };
     if (napi_status::napi_ok != napi_send_event(data->env, task, napi_eprio_immediate)) {
-        EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed.");
+        EDM_LOGE(MODULE_DEV_MGR, "OnDisconnect send event failed, deviceId: %{public}016" PRIX64, deviceId);
         data->DecStrongRef(nullptr);
         return EDM_NOK;
     }
@@ -294,6 +352,71 @@ void ThrowErr(const napi_env &env, const int32_t errCode, const std::string &pri
     napi_value error = CreateBusinessError(env, errCode, msg.value());
     napi_throw(env, error);
     napi_close_handle_scope(env, scope);
+}
+
+static std::string GetNapiValueTypeString(napi_valuetype type)
+{
+    switch (type) {
+        case napi_undefined:
+            return "undefined";
+        case napi_null:
+            return "null";
+        case napi_boolean:
+            return "boolean";
+        case napi_number:
+            return "number";
+        case napi_string:
+            return "string";
+        case napi_symbol:
+            return "symbol";
+        case napi_object:
+            return "object";
+        case napi_function:
+            return "function";
+        case napi_bigint:
+            return "bigint";
+        default:
+            return "unknown";
+    }
+}
+
+static void ThrowParameterTypeError(
+    const napi_env env, size_t index, const std::string &expectedType, napi_valuetype actualType)
+{
+    std::string actualTypeStr = GetNapiValueTypeString(actualType);
+    std::string msg = "Parameter error. Param[" + std::to_string(index) + "] type mismatch. Expected: " + expectedType +
+        ", Actual: " + actualTypeStr;
+    EDM_LOGE(MODULE_DEV_MGR, "message: %{public}s, code: %{public}d", msg.c_str(), PARAMETER_ERROR);
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    napi_value error = CreateBusinessError(env, PARAMETER_ERROR, msg);
+    napi_throw(env, error);
+    napi_close_handle_scope(env, scope);
+}
+
+static void ThrowParameterCountError(const napi_env env, size_t expectCount, size_t actualCount)
+{
+    std::string msg = "Parameter error. Incorrect parameter count. Expected: " + std::to_string(expectCount) +
+        ", Actual: " + std::to_string(actualCount);
+    EDM_LOGE(MODULE_DEV_MGR, "message: %{public}s, code: %{public}d", msg.c_str(), PARAMETER_ERROR);
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    napi_value error = CreateBusinessError(env, PARAMETER_ERROR, msg);
+    napi_throw(env, error);
+    napi_close_handle_scope(env, scope);
+}
+
+static bool CheckEmulatorNotSupported(napi_env env, const std::string &apiName)
+{
+#ifdef IS_EMULATOR
+    EDM_LOGW(MODULE_DEV_MGR, "The capability is not supported on the emulator at this time.");
+    ThrowErr(env, DDK_EMULATOR_NOT_SUPPORT, apiName);
+    return true;
+#else
+    (void)env;
+    (void)apiName;
+    return false;
+#endif
 }
 
 static napi_value ConvertDeviceToJsDevice(napi_env& env, std::shared_ptr<DeviceData> device)
@@ -419,6 +542,9 @@ static napi_value ConvertToJsDriverInfo(napi_env& env, std::shared_ptr<DriverInf
 
 static napi_value QueryDevices(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "queryDevices")) {
+        return nullptr;
+    }
     EDM_LOGI(MODULE_DEV_MGR, "queryDevices start");
     ExtDevApiMetrics metrics("queryDevices");
     size_t argc = PARAM_COUNT_1;
@@ -474,6 +600,9 @@ static bool ParseDeviceId(const napi_env& env, const napi_value& value, uint64_t
 
 static napi_value BindDevice(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "bindDevice")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("bindDevice");
     size_t argc = PARAM_COUNT_3;
     napi_value argv[PARAM_COUNT_3] = {nullptr};
@@ -507,12 +636,6 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
     data->env = env;
     data->deviceId = deviceId;
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
-    napi_value promise = nullptr;
-    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
-        NAPI_CALL(env, napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback));
-    } else {
-        NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
-    }
 
     {
         std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -521,16 +644,49 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
 
     UsbErrCode retCode = g_edmClient.BindDevice(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
+        {
             std::lock_guard<std::mutex> mapLock(mapMutex);
-            g_callbackMap[data->deviceId] = data;
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDevice: no permission");
         } else {
             metrics.SetErrorCode(SERVICE_EXCEPTION);
             ThrowErr(env, SERVICE_EXCEPTION, "bindDevice service failed");
         }
+        return nullptr;
+    }
 
+    napi_value promise = nullptr;
+    napi_status status = napi_ok;
+    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
+        status = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
+    } else {
+        status = napi_create_promise(env, &data->bindDeferred, &promise);
+    }
+    if (status != napi_ok) {
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        g_edmClient.UnBindDevice(deviceId);
+        metrics.SetErrorCode(SERVICE_EXCEPTION);
+        ThrowErr(env, SERVICE_EXCEPTION, "bindDevice: create reference or promise failed");
         return nullptr;
     }
     return promise;
@@ -538,6 +694,9 @@ static napi_value BindDevice(napi_env env, napi_callback_info info)
 
 static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "unbindDevice")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("unbindDevice");
     size_t argc = PARAM_COUNT_2;
     napi_value argv[PARAM_COUNT_2] = {nullptr};
@@ -587,45 +746,47 @@ static napi_value UnbindDevice(napi_env env, napi_callback_info info)
 
 static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "bindDriverWithDeviceId")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("bindDriverWithDeviceId");
     size_t argc = PARAM_COUNT_3;
     napi_value argv[PARAM_COUNT_3] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_2) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "bindDriver parameter count not match");
+        ThrowParameterCountError(env, PARAM_COUNT_2, argc);
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "number", actualType);
         return nullptr;
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter bindDriver:%{public}016" PRIX64, deviceId);
 
     if (!IsMatchType(env, argv[1], napi_function)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "onDisconnect param is error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[1], &actualType);
+        ThrowParameterTypeError(env, 1, "AsyncCallback<number>", actualType);
         return nullptr;
     }
 
     sptr<AsyncData> data = new (std::nothrow) AsyncData {};
     if (data == nullptr) {
-        metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "malloc callback data fail");
+        metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "malloc callback data fail");
         return nullptr;
     }
     data->env = env;
     data->deviceId = deviceId;
+
     NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &data->onDisconnect));
-    napi_value promise = nullptr;
-    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
-        NAPI_CALL(env, napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback));
-    } else {
-        NAPI_CALL(env, napi_create_promise(env, &data->bindDeferred, &promise));
-    }
 
     {
         std::lock_guard<std::mutex> mapLock(mapMutex);
@@ -634,8 +795,17 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
     UsbErrCode retCode = g_edmClient.BindDriverWithDeviceId(deviceId, g_edmCallback);
     if (retCode != UsbErrCode::EDM_OK) {
-        std::lock_guard<std::mutex> mapLock(mapMutex);
-        g_callbackMap[data->deviceId] = data;
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
         if (retCode == UsbErrCode::EDM_ERR_NO_PERM) {
             metrics.SetErrorCode(PERMISSION_DENIED);
             ThrowErr(env, PERMISSION_DENIED, "bindDriver: no permission");
@@ -650,25 +820,54 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
         return nullptr;
     }
 
+    napi_value promise = nullptr;
+    napi_status status = napi_ok;
+    if (argc > PARAM_COUNT_2 && IsMatchType(env, argv[PARAM_COUNT_2], napi_function)) {
+        status = napi_create_reference(env, argv[PARAM_COUNT_2], 1, &data->bindCallback);
+    } else {
+        status = napi_create_promise(env, &data->bindDeferred, &promise);
+    }
+    if (status != napi_ok) {
+        {
+            std::lock_guard<std::mutex> mapLock(mapMutex);
+            auto it = g_callbackMap.find(data->deviceId);
+            if (it != g_callbackMap.end() && it->second == data) {
+                g_callbackMap.erase(it);
+            }
+        }
+        if (data->onDisconnect != nullptr) {
+            napi_delete_reference(env, data->onDisconnect);
+            data->onDisconnect = nullptr;
+        }
+        g_edmClient.UnbindDriverWithDeviceId(deviceId);
+        metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "bindDriver: create reference or promise failed");
+        return nullptr;
+    }
     return promise;
 }
 
 static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "unbindDriverWithDeviceId")) {
+        return nullptr;
+    }
     ExtDevApiMetrics metrics("unbindDriverWithDeviceId");
     size_t argc = PARAM_COUNT_2;
     napi_value argv[PARAM_COUNT_2] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_1) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "Param count error");
+        ThrowParameterCountError(env, PARAM_COUNT_1, argc);
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "number", actualType);
         return nullptr;
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDriver:%{public}016" PRIX64, deviceId);
@@ -707,6 +906,9 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
 
 static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "queryDeviceInfo")) {
+        return nullptr;
+    }
     size_t argc = PARAM_COUNT_1;
     ExtDevApiMetrics metrics("queryDeviceInfo");
     napi_value argv[PARAM_COUNT_1] = {nullptr};
@@ -715,7 +917,9 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
     uint64_t deviceId = 0;
     if (argc > PARAM_COUNT_0 && !ParseDeviceId(env, argv[0], &deviceId)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "deviceId type error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "number", actualType);
         return nullptr;
     }
     std::vector<std::shared_ptr<DeviceInfoData>> deviceInfos;
@@ -751,13 +955,18 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
 
 static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
 {
+    if (CheckEmulatorNotSupported(env, "queryDriverInfo")) {
+        return nullptr;
+    }
     size_t argc = PARAM_COUNT_1;
     ExtDevApiMetrics metrics("queryDriverInfo");
     napi_value argv[PARAM_COUNT_1] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc > PARAM_COUNT_0 && !IsMatchType(env, argv[0], napi_string)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "driverUid type is invalid");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "string", actualType);
         return nullptr;
     }
 
@@ -829,6 +1038,10 @@ EXTERN_C_START
  */
 static napi_value ExtDeviceManagerInit(napi_env env, napi_value exports)
 {
+    if (napi_add_env_cleanup_hook(env, EnvCleanupHook, env) != napi_status::napi_ok) {
+        EDM_LOGE(MODULE_DEV_MGR, "add env cleanup hook failed");
+    }
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryDevices", QueryDevices),
         DECLARE_NAPI_FUNCTION("bindDevice", BindDevice),

@@ -36,14 +36,14 @@ static const std::string VALID_JSON = R"(
         "pid": "4321",
         "bundleName": "com.test.usb.launcher",
         "abilityName": "MainAbility",
-        "appStoreUri": "market://detail?id=com.test.usb.launcher"
+        "appStoreUri": "store://detail?id=com.test.usb.launcher"
     },
     {
         "vid": "04E8",
         "pid": "6860",
         "bundleName": "com.test.usb.viewer",
         "abilityName": "EntryAbility",
-        "appStoreUri": "market://detail?id=com.test.usb.viewer"
+        "appStoreUri": "store://detail?id=com.test.usb.viewer"
     }
 ]
 )";
@@ -117,7 +117,7 @@ HWTEST_F(AppLaunchConfigTest, ParseConfigFileTo001, TestSize.Level1)
     EXPECT_EQ(outMap[key1].pid, 0x4321);
     EXPECT_EQ(outMap[key1].bundleName, "com.test.usb.launcher");
     EXPECT_EQ(outMap[key1].abilityName, "MainAbility");
-    EXPECT_EQ(outMap[key1].appStoreUri, "market://detail?id=com.test.usb.launcher");
+    EXPECT_EQ(outMap[key1].appStoreUri, "store://detail?id=com.test.usb.launcher");
 
     std::string key2 = "1256_26720"; // 0x04E8=1256, 0x6860=26720
     ASSERT_TRUE(outMap.find(key2) != outMap.end());
@@ -211,7 +211,7 @@ HWTEST_F(AppLaunchConfigTest, FindEntry001, TestSize.Level1)
     EXPECT_EQ(entry->pid, 0x4321);
     EXPECT_EQ(entry->bundleName, "com.test.usb.launcher");
     EXPECT_EQ(entry->abilityName, "MainAbility");
-    EXPECT_EQ(entry->appStoreUri, "market://detail?id=com.test.usb.launcher");
+    EXPECT_EQ(entry->appStoreUri, "store://detail?id=com.test.usb.launcher");
     EDM_LOGI(MODULE_BUS_USB, "FindEntry001 end");
 }
 

@@ -86,16 +86,21 @@ void AppLaunchParamSubscriber::UnsubscribeEvent()
 
 void AppLaunchParamSubscriber::OnReceiveEvent(const AAFwk::Want &want)
 {
-    std::lock_guard<std::mutex> lock(callbackMutex_);
     std::string action = want.GetAction();
     if (action != EVENT_ACTION) {
         EDM_LOGI(MODULE_BUS_USB, "Ignore event: %{public}s", action.c_str());
         return;
     }
-    HandleParamUpdate(want);
+    std::function<void()> callback;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        callback = updateCallback_;
+    }
+    HandleParamUpdate(want, callback);
 }
 
-void AppLaunchParamSubscriber::HandleParamUpdate(const AAFwk::Want &want)
+void AppLaunchParamSubscriber::HandleParamUpdate(const AAFwk::Want &want,
+    const std::function<void()> &callback)
 {
     std::string type = want.GetStringParam(EVENT_INFO_TYPE);
     std::string subtype = want.GetStringParam(EVENT_INFO_SUBTYPE);
@@ -105,8 +110,8 @@ void AppLaunchParamSubscriber::HandleParamUpdate(const AAFwk::Want &want)
         EDM_LOGW(MODULE_BUS_USB, "Invalid type or subtype!");
         return;
     }
-    if (updateCallback_) {
-        updateCallback_();
+    if (callback) {
+        callback();
     }
 }
 

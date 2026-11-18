@@ -46,6 +46,7 @@ public:
     ErrMsg unBindErrMsg;
 
     void DeleteNapiRef();
+    void DeleteNapiRefDirect();
 
     ~AsyncData()
     {

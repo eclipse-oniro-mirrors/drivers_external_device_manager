@@ -160,6 +160,7 @@ if (external_device_manager_enable_service) {
       "device_notification_test:event_config_test",
       "device_notification_test:notification_locale_test",
       "device_notification_test:notification_peripheral_test",
+      "drv_ext_remote_concurrency_test:drv_ext_remote_concurrency_test",
       "driver_extension_context_test:driver_extension_context_test",
       "ndk_permission_js_test:NdkPermissionJsTest",
       "ndk_stage_js_test:NdkStageJsTest",
@@ -170,6 +171,17 @@ if (external_device_manager_enable_service) {
       deps += [
         "app_launch_manager_test:app_launch_config_test",
         "app_launch_manager_test:app_launch_manager_test",
+      ]
+    }
+    if (is_emulator) {
+      deps = []
+      deps += [
+        "ddk_base_test:ddk_base_emulator_test",
+        "ddk_hid_test:ddk_hid_emulator_test",
+        "ddk_scsi_test:ddk_scsi_emulator_test",
+        "ddk_usb_serial_test:ddk_usb_serial_emulator_test",
+        "ddk_usb_test:ddk_usb_emulator_test",
+        "device_manager_emulator_js_test:DeviceManagerEmulatorTest",
       ]
     }
   }
