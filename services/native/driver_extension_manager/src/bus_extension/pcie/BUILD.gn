@@ -22,6 +22,12 @@ config("pcie_driver_public_config") {
 
 if (external_device_manager_enable_pcie) {
   ohos_static_library("pcie_driver_manager") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
     sources = [
       "common/pcie_wildcard_match.cpp",
       "manager/pcie_driver_manager.cpp",
