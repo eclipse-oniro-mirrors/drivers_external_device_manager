@@ -15,6 +15,8 @@
 #ifndef DEVICE_MANAGER_MIDDLE_H
 #define DEVICE_MANAGER_MIDDLE_H
 
+#include <mutex>
+
 #include "hilog_wrapper.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -44,6 +46,7 @@ public:
     napi_deferred bindDeferred;
     napi_deferred unbindDeferred;
     ErrMsg unBindErrMsg;
+    mutable std::mutex dataMutex;
 
     void DeleteNapiRef();
     void DeleteNapiRefDirect();
