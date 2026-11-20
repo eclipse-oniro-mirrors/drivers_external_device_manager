@@ -2,7 +2,7 @@
 
 external_device_manager 模块核心技术框架和机制的知识定义，涵盖价值认知、原理、使用方式和代码关联。路径相对仓根。
 
-> 行号基线：commit 1412c92（2026-11-10 生成）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
+> 行号基线：commit 14f2e25（2026-11-10 生成，2026-11-20 增量刷新）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
 
 ## SA 服务与 IPC 接口机制（DriverExtMgr / SA 5110）
 
@@ -15,7 +15,7 @@ external_device_manager 模块核心技术框架和机制的知识定义，涵�
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | `DriverExtMgr` 继承 SystemAbility(5110, supportDump=true)，经 `MakeAndRegisterAbility` 注册（services/native/driver_extension_manager/src/driver_ext_mgr.cpp:39-44）。OnStart 依序装配：LoadBusExtensionLibs → 取 USB driverChangeCallback → DriverPkgManager::Init(三个 future) → AddSystemAbilityListener(BMS/账户/CES) → ExtDeviceManager::Init → BusExtensionCore::Init(DevChangeCallback) → Publish → EventConfig 解析（driver_ext_mgr.cpp:47-82）。方法实现模式：入口权限校验 → 委托单例子模块 → 业务码写入 errorCode、IPC 层恒返回 EDM_OK |
+| 核心机制 | `DriverExtMgr` 继承 SystemAbility(5110, supportDump=true)，经 `MakeAndRegisterAbility` 注册（services/native/driver_extension_manager/src/driver_ext_mgr.cpp:62-63）。OnStart 依序装配：LoadBusExtensionLibs → 取 USB driverChangeCallback → DriverPkgManager::Init(三个 future) → AddSystemAbilityListener(BMS/账户/CES) → ExtDeviceManager::Init → BusExtensionCore::Init(DevChangeCallback) → [ENABLE_PCIE] StartPcieDriverManager → Publish → EventConfig 解析（driver_ext_mgr.cpp:564-607）。方法实现模式：入口权限校验 → 委托单例子模块 → 业务码写入 errorCode、IPC 层恒返回 EDM_OK |
 | 关键流程 | 客户端 `DriverExtMgrClient::Connect`：CheckSystemAbility(5110)（不触发拉起）→ AddDeathRecipient → iface_cast\<IDriverExtMgr\>（frameworks/native/driver_ext_mgr_client.cpp:60-101）；调用后 ProxyRetTranslate 区分 IPC 错与业务错（driver_ext_mgr_client.cpp:42-58） |
 
 ```plantuml
@@ -47,15 +47,15 @@ Cli --> App : napi_send_event → JS 回调
 | 子维度 | 内容 |
 |---|---|
 | 核心类 | `DriverExtMgr`（services/native/driver_extension_manager/include/driver_ext_mgr.h + services/native/driver_extension_manager/src/driver_ext_mgr.cpp）、`DriverExtMgrClient`（frameworks/native/） |
-| 核心成员 | 权限常量 PERMISSION_NAME/ACCESS_DDK_DRIVERS_PERMISSION（driver_ext_mgr.cpp:41-42）、bms/account/commEvent 三个 promise+future（driver_ext_mgr.h） |
-| 核心方法 | `OnStart`/`OnAddSystemAbility`（driver_ext_mgr.cpp:47/97）、`QueryDevice`:136、`BindDevice`:175、`BindDriverWithDeviceId`:211、`QueryDeviceInfo`:333、`QueryDriverInfo`:366、`NotifyUsbPeripheralFault`:400 |
+| 核心成员 | 权限常量 PERMISSION_NAME/ACCESS_DDK_DRIVERS_PERMISSION（driver_ext_mgr.cpp:64-65）、bms/account/commEvent 三个 promise+future（driver_ext_mgr.h） |
+| 核心方法 | `OnStart`/`OnAddSystemAbility`（driver_ext_mgr.cpp:564/654）、`QueryDevice`:693、`BindDevice`:732、`BindDriverWithDeviceId`:768、`QueryDeviceInfo`:889、`QueryDriverInfo`:922、`NotifyUsbPeripheralFault`:955 |
 
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
 |---|---|
 | 系统限制 | IPC 码 1-8 线序契约（hdf_ext_devmgr_interface_code.h:23-30）不可重排；服务关闭编译态（external_device_manager_enable_service=false）时客户端全部返回 22900001（driver_ext_mgr_client.cpp:23-25） |
-| 并发约束 | SA 多线程入口；OnAddSystemAbility 用 promiseMutex_ 保证 future 只置值一次（driver_ext_mgr.cpp:100、104/112/125） |
-| 安全约束 | 全方法先权限校验；QueryDeviceInfo/QueryDriverInfo/NotifyUsbPeripheralFault 追加 IsSystemAppOrSa（driver_ext_mgr.cpp:337/369/402） |
+| 并发约束 | SA 多线程入口；OnAddSystemAbility 用 promiseMutex_ 保证 future 只置值一次（driver_ext_mgr.cpp:657、663/671/683） |
+| 安全约束 | 全方法先权限校验；QueryDeviceInfo/QueryDriverInfo/NotifyUsbPeripheralFault 追加 IsSystemAppOrSa（driver_ext_mgr.cpp:893/925/957） |
 
 ## 总线扩展插件机制（BusExtensionCore / IBusExtension）
 
@@ -86,9 +86,42 @@ Cli --> App : napi_send_event → JS 回调
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
 |---|---|
-| 系统限制 | 仅标准系统（adapted_system_type standard，bundle.json:30-32）；.so 命名前缀 lib + 固定名 + .z.so（bus_extension_core.cpp:29-31） |
+| 系统限制 | 仅标准系统（adapted_system_type standard，bundle.json:31-33）；.so 命名前缀 lib + 固定名 + .z.so（bus_extension_core.cpp:29-31） |
 | 并发约束 | 插件注册发生在 dlopen 阶段（OnStart 单线程内），运行期 busExtensions_ 只读 |
-| 安全约束 | realpath 防 .so 路径逃逸（bus_extension_core.cpp:66-70）；当前总线集仅 "usb"（新总线接入需 bundle.json SysCap 等配套，属需评审变更） |
+| 安全约束 | realpath 防 .so 路径逃逸（bus_extension_core.cpp:66-70）；当前总线集仅 "usb"（新总线接入需 bundle.json SysCap 等配套，属需评审变更）；PCIE 不走本机制，为 SA 内嵌独立支路（见下节） |
+
+## PCIE 驱动匹配与加载机制（PcieDriverManager，ENABLE_PCIE 门控）
+
+### 解决的问题（Problem）
+| 子维度 | 内容 |
+|---|---|
+| 业务痛点 | PCIe 板卡驱动以内核模块形态分发，无法套用 USB 的"驱动扩展应用 + VID/PID 匹配"路线；需要从沙箱目录中为在位板卡选出兼容模块并安全加载 |
+| 技术目标 | 编译期可裁剪的 PCIE 支路：沙箱内元数据解析 → 确定性六门禁策略 → HDI 侧模块加载，全程埋点可观测 |
+
+### 原理（Principles）
+| 子维度 | 内容 |
+|---|---|
+| 核心机制 | 编译门控 `external_device_manager_enable_pcie`（默认 false，ENABLE_PCIE，extdevmgr.gni:24/47-50）。SA OnStart 装配 `StartPcieDriverManager`（driver_ext_mgr.cpp:531-561）：配置沙箱根 /data/service/el1/public/pcie_driver 与 builtinModulesPath /lib/modules/\<kernel\>/modules.builtin，构建 PcieDriverManager 并启动 reconcile 工作线程。协调线程以 condition_variable + dirty 标志驱动（PcieDriverReconcileWorker，driver_ext_mgr.cpp:483-506）：触发源为启动 kick-off 与 BMS 包变更（DrvBundleStateCallback::NotifyBundleChange → SetBundleChangeCallback，drv_bundle_state_callback.cpp:203-220）。每轮：QueryCurrentPcieHostDevices（pcie HDI IPcieInterface::GetPcieDevices，driver_ext_mgr.cpp:84）→ ExtDeviceManager::SetPcieDevicesPresent → RunPcieDriverReconcile（driver_ext_mgr.cpp:144：MatchBoardDrivers 产出 loadRequests → IPcieInterface::LoadPcieDrivers 由 HDI 侧执行加载，执行与埋点 driver_ext_mgr.cpp:117-142，失败埋点 LOAD_FAIL） |
+| 关键流程 | PcieDriverManager::MatchBoardDrivers（pcie_driver_manager.cpp，RunEvaluation）：沙箱扫描 → PcieDriverMetadataParser 解析内核模块 ELF .modinfo（alias/depends/vermagic/kabi，pcie_driver_metadata_parser.cpp）→ 合并 modprobe 别名配置 → PcieDriverModuleIndex 建模块索引 → PcieDriverMatchPolicy 纯函数六门禁评估（Gate1 别名双向通配匹配+ScoreAlias 打分、Gate2 KABI/vermagic 版本核验、Gate3 DSL 安全级别白名单、Gate4 depends 闭包、Gate5 已加载/内置去重、Gate6 沙箱路径前缀，pcie_driver_match_policy.h）→ 每板卡排名择优（落选者标 LOWER_PRECISION）→ ValidateResolvedModules 安全校验后生成加载请求 |
+
+### 使用方式（Usage）
+| 子维度 | 内容 |
+|---|---|
+| 核心 API | 内部机制，无对外 API。观测面：PCIE_MATCH_EVENT 埋点（boardId/aliasMatched/aliasScore/blockReason/moduleName/statusMsg，hisysevent.yaml:47-55，pcie_driver_report_sys_event.cpp）；诊断面：hidumper 经 `DriverExtMgr::Dump` 输出匹配结果、门禁细节与模块状态（driver_ext_mgr.cpp:620-652） |
+
+### 代码关联（Code）
+| 子维度 | 内容 |
+|---|---|
+| 核心类 | `PcieDriverManager`（bus_extension/pcie/manager/）、`PcieDriverMatchPolicy`（bus_extension/pcie/policy/，纯函数）、`PcieDriverMetadataParser`（bus_extension/pcie/metadata/）、`PcieDriverModuleIndex`（bus_extension/pcie/modprobe/）、`KernelSecurityContext`（bus_extension/pcie/system/security_query.h） |
+| 核心成员 | pcieDriverManager_/pcieDriverReconcileMutex_/pcieDriverReconcileCv_/pcieDriverReconcileDirty_/pcieDriverReconcileStop_/pcieDriverReconcileWorker_（driver_ext_mgr.h，ENABLE_PCIE 门控）、ExtDeviceManager::pcieDevicesPresent_（etx_device_mgr.h:80） |
+| 核心方法 | `StartPcieDriverManager`:531、`PcieDriverReconcileWorker`:483、`StopPcieDriverReconcileWorker`:518、`RunPcieDriverReconcile`:144、`QueryCurrentPcieHostDevices`:84（driver_ext_mgr.cpp）；`MatchBoardDrivers`（pcie_driver_manager.h）；`SetPcieDevicesPresent`（etx_device_mgr.cpp:486-497） |
+
+### 约束与限制（Constraints）
+| 子维度 | 内容 |
+|---|---|
+| 系统限制 | 默认关闭（ENABLE_PCIE），开启需 bundle.json features 与 drivers_interface_pcie 依赖（bundle.json:29/60）；六门禁顺序固定且全部通过才可加载 |
+| 并发约束 | reconcile 线程独立于 IPC/HDI 回调线程（prctl 命名 "SA:wake"）；evaluationMutex_ 串行化每轮评估；NotifyBundleChange 持独立 mutex |
+| 安全约束 | 驱动路径必须位于沙箱根前缀内（Gate6）；KABI/vermagic 双通道版本核验（Gate2）；DSL 安全级别白名单（Gate3，KernelSecurityContext 经 security_query 获取）；PCIE 设备在位时阻止 SA 自卸载（UnLoadSelf 检查 pcieDevicesPresent_，etx_device_mgr.cpp:503-505/529-531） |
 
 ## USB 热插拔感知与设备信息采集机制（UsbDevSubscriber）
 
@@ -134,7 +167,7 @@ Cli --> App : napi_send_event → JS 回调
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 匹配入口两处：设备上线 RegisterDevice("[DEVICE_ADD]")、包事件后 MatchDriverInfos("[BUNDLE_UPDATE]")（etx_device_mgr.cpp:348/258）。`DriverPkgManager::QueryMatchDriver` 刷新 BMS 扫描 → QueryPkgInfos 全表 → 逐行 UnSerialize → 总线插件 MatchDriver（driver_pkg_manager.cpp:114-159）；USB 判定 VID∈vids_ 且 PID∈pids_（usb_bus_extension.cpp:148-180）。命中 → Device::AddBundleInfo + AddDevIdOfBundleInfoMap；未命中静默等待（etx_device_mgr.cpp:357-362）。驱动拉起规则：launchOnBind=false → 设备命中即 `Device::Connect()`（无回调、仅拉起，etx_device_mgr.cpp:103-116）；true → 首次 bindDevice 时拉起。停止规则：解绑时"launchOnBind && IsLastCaller"才 Disconnect（etx_device_mgr.cpp:575-582/636-643）；拔出/包删除经 OnDisconnect → StopDriverExtension（device.cpp:221） |
+| 核心机制 | 匹配入口两处：设备上线 RegisterDevice("[DEVICE_ADD]")、包事件后 MatchDriverInfos("[BUNDLE_UPDATE]")（etx_device_mgr.cpp:348/258）。`DriverPkgManager::QueryMatchDriver` 刷新 BMS 扫描 → QueryPkgInfos 全表 → 逐行 UnSerialize → 总线插件 MatchDriver（driver_pkg_manager.cpp:124-169）；USB 判定 VID∈vids_ 且 PID∈pids_（usb_bus_extension.cpp:148-180）。命中 → Device::AddBundleInfo + AddDevIdOfBundleInfoMap；未命中静默等待（etx_device_mgr.cpp:357-362）。驱动拉起规则：launchOnBind=false → 设备命中即 `Device::Connect()`（无回调、仅拉起，etx_device_mgr.cpp:103-116）；true → 由应用 bindDevice 触发拉起。停止规则：解绑时"launchOnBind && IsLastCaller"才 Disconnect（etx_device_mgr.cpp:594-601/655-662）；拔出/包删除经 OnDisconnect → StopDriverExtension（device.cpp:221） |
 | 关键流程 | 无参 Connect 的开机重试：最多 30 次×100ms（BMS 未就绪场景，device.cpp:72-89）；OnConnect 广播所有 callbacks_ 并置 isBound；OnDisconnect 清 caller/callback/远端并 Stop |
 
 ```plantuml
@@ -143,18 +176,18 @@ participant "usbd 回调" as Usbd
 participant "ExtDeviceManager" as Edm
 participant "DriverPkgManager" as Pkg
 participant "Device" as Dev
-participant "AMS" as Ams
+participant "AbilityManagerService" as AbilityManagerService
 Usbd -> Edm : OnDeviceAdd(UsbDeviceInfo)
 Edm -> Pkg : QueryMatchDriver("[DEVICE_ADD]")
 Pkg -> Pkg : RDB 全表 + UnSerialize
 Pkg --> Edm : 命中 DriverInfo（VID/PID）
 Edm -> Dev : AddBundleInfo + AddDevIdOfBundleInfoMap
 alt launchOnBind == false
-  Dev -> Ams : ConnectAbility(want{deviceId})
-  Ams --> Dev : OnAbilityConnectDone(remote)
+Dev -> AbilityManagerService : ConnectAbility(want{deviceId})
+AbilityManagerService --> Dev : OnAbilityConnectDone(remote)
   Dev -> Dev : OnConnect 更新 drvExtRemote_
 else launchOnBind == true
-  Note over Dev : 等待首次 bindDevice
+  Note over Dev : 等待 bindDevice
 end
 Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 @enduml
@@ -163,21 +196,21 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 使用方式（Usage）
 | 子维度 | 内容 |
 |---|---|
-| 核心 API | 应用侧 bindDevice/unbindDevice（回调三联 OnConnect/OnUnBind/OnDisconnect）；驱动侧 bindDriverWithDeviceId/unbindDriverWithDeviceId（带 appIds ACL）。服务内部：RegisterDevice/UnRegisterDevice/MatchDriverInfos/ClearMatchedDrivers（etx_device_mgr.h:41-55） |
+| 核心 API | 应用侧 bindDevice/unbindDevice（回调三联 OnConnect/OnUnBind/OnDisconnect）；驱动侧 bindDriverWithDeviceId/unbindDriverWithDeviceId（带 appIds ACL）。服务内部：RegisterDevice/UnRegisterDevice/MatchDriverInfos/ClearMatchedDrivers（etx_device_mgr.h:42-56） |
 
 ### 代码关联（Code）
 | 子维度 | 内容 |
 |---|---|
 | 核心类 | `ExtDeviceManager`（单例）、`Device`、`DriverExtensionController` |
-| 核心成员 | deviceMap_/bundleMatchMap_（etx_device_mgr.h:72-73）、Device::boundCallerInfos_/callbacks_/drvExtRemote_（device.h:181-185） |
-| 核心方法 | `RegisterDevice`:315、`UnRegisterDevice`:376、`ConnectDevice`:542、`DisConnectDevice`:556、`ConnectDriverWithDeviceId`:585、`MatchDriverInfos`:244、`ClearMatchedDrivers`:277、`Device::Connect`:61/96、`Device::OnDisconnect`:197 |
+| 核心成员 | deviceMap_/bundleMatchMap_（etx_device_mgr.h:74-75）、Device::boundCallerInfos_/callbacks_/drvExtRemote_（device.h:181-185） |
+| 核心方法 | `RegisterDevice`:315、`UnRegisterDevice`:376、`ConnectDevice`:561、`DisConnectDevice`:575、`ConnectDriverWithDeviceId`:604、`MatchDriverInfos`:244、`ClearMatchedDrivers`:277、`Device::Connect`:61/96、`Device::OnDisconnect`:197 |
 
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
 |---|---|
-| 系统限制 | 匹配为首个命中即返回（driver_pkg_manager.cpp:148-153），多驱动命中同一设备时顺序敏感（RDB 行序）；ConnectAbility 为异步，OnConnect 时机不保证在 bindDevice 返回前 |
+| 系统限制 | 匹配为命中即返回（driver_pkg_manager.cpp:158-163），多驱动命中同一设备时顺序敏感（RDB 行序）；ConnectAbility 为异步，OnConnect 时机不保证在 bindDevice 返回前 |
 | 并发约束 | RegisterDevice/ConnectDevice 全程持 deviceMapMutex_；Device::OnConnect/OnDisconnect 持 recursive deviceMutex_ 与回调线程互斥 |
-| 安全约束 | bindDriverWithDeviceId 路径须过 CheckAccessPermission（accessAllowed + appIdentifier ACL/自身，etx_device_mgr.cpp:651-700）；失败埋点 BIND_ACCESS_NOT_ALLOWED |
+| 安全约束 | bindDriverWithDeviceId 路径须过 CheckAccessPermission（accessAllowed + appIdentifier ACL/自身，etx_device_mgr.cpp:670-719）；失败埋点 BIND_ACCESS_NOT_ALLOWED |
 
 ## 驱动包元数据解析与持久化机制（DrvBundleStateCallback / pkg.db）
 
@@ -190,27 +223,27 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 解析：`QueryDriverInfos` 以 GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY/APPLICATION/METADATA 三 flag 拉 BundleInfo 过滤 DRIVER 型（drv_bundle_state_callback.cpp:385-415）；`ChangeValue` 按键取 bus/vendor/description/launchonbind(忽略大小写)/ACCESS_DDK_ALLOWED（drv_bundle_state_callback.cpp:83-103）；`ParseDriverInfo`（总线插件）补 vids/pids；`CreatePkgInfoTable` 生成 driverUid=name+"-"+accessTokenId、bundleAbility，并经 AccessTokenKit 取 userId/appIndex（drv_bundle_state_callback.cpp:154-170）；`DriverInfo::Serialize` 组装 8 键 JSON（driver_info.cpp:24-54）。持久化：PkgDbHelper → PkgDataBase（RdbHelper，S1，pkg_database.cpp:27-42）；`AddOrUpdatePkgInfo` 支持按 bundleName 整包替换或全量写入。刷新触发：包事件 OnBundleAdded/Updated/Removed（校验 IsCurrentUserId）→ UpdateToRdb/OnBundleDrvRemoved → 异步线程回调 `BundleUpdateCallback::OnBundlesUpdated` → DeleteBundlesOfBundleInfoMap + MatchDriverInfos（bundle_update_callback.cpp:21-25）。账户切换：SWITCHING/SWITCHED 订阅（driver_pkg_manager.cpp:91-112）→ OnBundlesReseted → ClearMatchedDrivers（bundle_update_callback.cpp:27-30）。启动：GetAllDriverInfosAsync 等 bms/account future 后一次性全量扫描（initOnce 防重复，drv_bundle_state_callback.cpp:316-359） |
-| 关键流程 | 更新语义：OnBundleUpdated 时若 DRIVER 扩展清空则按移除处理（drv_bundle_state_callback.cpp:265-269）；BMS 死亡经 BundleMgrDeathRecipient 重建代理（drv_bundle_state_callback.cpp:518-529/556-564） |
+| 核心机制 | 解析：`QueryDriverInfos` 以 GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY/APPLICATION/METADATA 三 flag 拉 BundleInfo 过滤 DRIVER 型（drv_bundle_state_callback.cpp:417-447）；`ChangeValue` 按键取 bus/vendor/description/launchonbind(忽略大小写)/ACCESS_DDK_ALLOWED（drv_bundle_state_callback.cpp:83-103）；`ParseDriverInfo`（总线插件）补 vids/pids；`CreatePkgInfoTable` 生成 driverUid=name+"-"+accessTokenId、bundleAbility，并经 AccessTokenKit 取 userId/appIndex（drv_bundle_state_callback.cpp:154-170）；`DriverInfo::Serialize` 组装 8 键 JSON（driver_info.cpp:24-54）。持久化：PkgDbHelper → PkgDataBase（RdbHelper，S1，pkg_database.cpp:27-42）；`AddOrUpdatePkgInfo` 支持按 bundleName 整包替换或全量写入。刷新触发：包事件 OnBundleAdded/Updated/Removed（校验 IsCurrentUserId）→ UpdateToRdb/OnBundleDrvRemoved → 异步线程回调 `BundleUpdateCallback::OnBundlesUpdated` → DeleteBundlesOfBundleInfoMap + MatchDriverInfos（bundle_update_callback.cpp:21-25）。账户切换：SWITCHING/SWITCHED 订阅（driver_pkg_manager.cpp:101-122）→ OnBundlesReseted → ClearMatchedDrivers（bundle_update_callback.cpp:27-30）。启动：GetAllDriverInfosAsync 等 bms/account future 后一次性全量扫描（initOnce 防重复，drv_bundle_state_callback.cpp:348-391）。ENABLE_PCIE 构建下各包事件尾部追加 NotifyBundleChange 触发 PCIE 重匹配（drv_bundle_state_callback.cpp:203-220） |
+| 关键流程 | 更新语义：OnBundleUpdated 时若 DRIVER 扩展清空则按移除处理（drv_bundle_state_callback.cpp:292-296）；BMS 死亡经 BundleMgrDeathRecipient 重建代理（drv_bundle_state_callback.cpp:550-561/588-596） |
 
 ### 使用方式（Usage）
 | 子维度 | 内容 |
 |---|---|
-| 核心 API | 内部机制，无对外 API。相关只读出口：QueryDriverInfo（按 driverUid 或全量）经 DriverExtMgr 暴露（driver_ext_mgr.cpp:366-397）；PkgDbHelper 查询族（pkg_db_helper.h:38-53） |
+| 核心 API | 内部机制，无对外 API。相关只读出口：QueryDriverInfo（按 driverUid 或全量）经 DriverExtMgr 暴露（driver_ext_mgr.cpp:922-953）；PkgDbHelper 查询族（pkg_db_helper.h:38-53） |
 
 ### 代码关联（Code）
 | 子维度 | 内容 |
 |---|---|
 | 核心类 | `DriverPkgManager`（单例）、`DrvBundleStateCallback`、`PkgDbHelper`/`PkgDataBase`、`BundleUpdateCallback`、`BundleMonitor`（bundle_framework 提供） |
 | 核心成员 | initOnce/initOnceMutex_、bundleMgr_/bmsDeathRecipient_/bundleMgrMutex_（drv_bundle_state_callback.h）、PkgDataBase::store_ |
-| 核心方法 | `ParseToPkgInfoTables`:105、`CreatePkgInfoTable`:154、`UpdateToRdb`:456、`OnBundleAdded/Updated/Removed`:215/245/281、`GetAllDriverInfos`:316、`GetAllDriverInfosAsync`:347、`OnBundleDrvRemoved`:531 |
+| 核心方法 | `ParseToPkgInfoTables`:105、`CreatePkgInfoTable`:154、`UpdateToRdb`:488、`OnBundleAdded/Updated/Removed`:235/270/310、`GetAllDriverInfos`:348、`GetAllDriverInfosAsync`:379、`OnBundleDrvRemoved`:563 |
 
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
 |---|---|
 | 系统限制 | RDB 路径与表结构（pkgInfoTable 8 列，pkg_database.h:38-46）跨版本持久，变更须迁移（AGENTS.md Ask-Before）；driverUid 含 accessTokenId，卸载重装会生成新行 |
 | 并发约束 | RDB 单写者（databaseMutex_）；包事件回调线程与异步通知线程分离（pthread_setname_np 命名 BUNDLE_UPDATE_TASK_NAME 等，drv_bundle_state_callback.cpp:55-57） |
-| 安全约束 | 服务须持 LISTEN_BUNDLE_CHANGE/GET_BUNDLE_INFO_PRIVILEGED（hdf_ext_devmgr.cfg:26/36）；CheckBundleMgrProxyPermission 校验系统 API 调用身份（drv_bundle_state_callback.cpp:366-383） |
+| 安全约束 | 服务须持 LISTEN_BUNDLE_CHANGE/GET_BUNDLE_INFO_PRIVILEGED（hdf_ext_devmgr.cfg:26/36）；CheckBundleMgrProxyPermission 校验系统 API 调用身份（drv_bundle_state_callback.cpp:398-415） |
 
 ## 权限与访问控制机制（ExtPermissionManager + appIdentifier ACL）
 
@@ -223,12 +256,12 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 第一层 `VerifyPermission`：AccessTokenKit::VerifyAccessToken(callingToken, name)（ext_permission_manager.cpp:43-52）。第二层 `IsSystemAppOrSa`：IsSystemAppByFullTokenID 或 TOKEN_NATIVE（ext_permission_manager.cpp:54-67）。第三层（bindDriverWithDeviceId）：`GetPermissionValues` 经 GetReqPermissionByName 取 ACCESS_DDK_DRIVERS 的 appIds 参数，JSON 解析为集合（ext_permission_manager.cpp:74-104）；`CheckAccessPermission` 依次判 driverInfo 非空 → IsAccessAllowed → BMS GetAppProvisionInfo(驱动 bundle) 取 appIdentifier → 自身放行（IsCallerMatchDriverApp，比对调用方 provision appIdentifier，etx_device_mgr.cpp:702-718）或 appIdentifier ∈ accessibleAppIds（etx_device_mgr.cpp:651-700） |
+| 核心机制 | 第一层 `VerifyPermission`：AccessTokenKit::VerifyAccessToken(callingToken, name)（ext_permission_manager.cpp:43-52）。第二层 `IsSystemAppOrSa`：IsSystemAppByFullTokenID 或 TOKEN_NATIVE（ext_permission_manager.cpp:54-67）。第三层（bindDriverWithDeviceId）：`GetPermissionValues` 经 GetReqPermissionByName 取 ACCESS_DDK_DRIVERS 的 appIds 参数，JSON 解析为集合（ext_permission_manager.cpp:74-104）；`CheckAccessPermission` 依次判 driverInfo 非空 → IsAccessAllowed → BMS GetAppProvisionInfo(驱动 bundle) 取 appIdentifier → 自身放行（IsCallerMatchDriverApp，比对调用方 provision appIdentifier，etx_device_mgr.cpp:721-737）或 appIdentifier ∈ accessibleAppIds（etx_device_mgr.cpp:670-719） |
 
 ### 使用方式（Usage）
 | 子维度 | 内容 |
 |---|---|
-| 核心 API | `ExtPermissionManager::VerifyPermission/IsSystemAppOrSa/GetCallingTokenID/GetPermissionValues/GetHapTokenInfo`（services/native/driver_extension_manager/include/ext_permission_manager.h）；调用方为 driver_ext_mgr.cpp 各入口（141/179/215/337/343/369/375/402） |
+| 核心 API | `ExtPermissionManager::VerifyPermission/IsSystemAppOrSa/GetCallingTokenID/GetPermissionValues/GetHapTokenInfo`（services/native/driver_extension_manager/include/ext_permission_manager.h）；调用方为 driver_ext_mgr.cpp 各入口（VerifyPermission:696/736/756/772/792/899/931，IsSystemAppOrSa:893/925/957） |
 
 ### 代码关联（Code）
 | 子维度 | 内容 |
@@ -240,9 +273,9 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
 |---|---|
-| 系统限制 | appIds 参数格式 {"appIds":"id1,id2"}，逗号分隔且逐项 Trim（ext_permission_manager.cpp:97-101）；取值失败仅告警不拒绝（driver_ext_mgr.cpp:223-226，此时 ACL 为空集、仅自身可绑定） |
+| 系统限制 | appIds 参数格式 {"appIds":"id1,id2"}，逗号分隔且逐项 Trim（ext_permission_manager.cpp:97-101）；取值失败仅告警不拒绝（driver_ext_mgr.cpp:780-783，此时 ACL 为空集、仅自身可绑定） |
 | 并发约束 | 无共享状态，线程安全 |
-| 安全约束 | **禁止**移除/放宽任何校验（coding-standards 红线）；权限名拼写以 driver_ext_mgr.cpp:41-42 常量为准 |
+| 安全约束 | **禁止**移除/放宽任何校验（coding-standards 红线）；权限名拼写以 driver_ext_mgr.cpp:64-65 常量为准 |
 
 ## USB DDK 用户态访问机制（frameworks/ddk/usb）
 
@@ -255,7 +288,7 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 进程级单例 g_ddk = IUsbDdk(V1_1)，OH_Usb_Init 时 Get()+Init（usb_ddk_api.cpp:96-111）；每次调用 GetDdk() 判空 → USB_DDK_INVALID_OPERATION；HDI 错误经 g_errorMap 映射（HDF_ERR_NOPERM→USB_DDK_NO_PERM 等，usb_ddk_api.cpp:38-49），未命中默认透传或 defaultCode（usb_ddk_api.cpp:69-79）。大缓冲：GetDeviceMemMapFd + ftruncate + mmap(PROT_READ\|WRITE, MAP_SHARED)，g_fdMap 登记防泄漏（usb_ddk_api.cpp:497-545）；Release/ReleaseResource 统一 close+munmap（usb_ddk_api.cpp:137-150/182-195）。版本演进：V1_2 能力（ControlTransfer/GetDevices/GetNonRootHubs 等）经 IUsbDdk::CastFrom 升版调用（usb_ddk_api.cpp:614-671） |
+| 核心机制 | 进程级单例 g_ddk = IUsbDdk(V1_1)，OH_Usb_Init 时 Get()+Init（usb_ddk_api.cpp:96-111）；每次调用 GetDdk() 判空 → USB_DDK_INVALID_OPERATION；HDI 错误经 g_errorMap 映射（HDF_ERR_NOPERM→USB_DDK_NO_PERM 等，usb_ddk_api.cpp:38-49），未命中默认透传或 defaultCode（usb_ddk_api.cpp:69-79）。大缓冲：GetDeviceMemMapFd + ftruncate + mmap(PROT_READ\|WRITE, MAP_SHARED)，g_fdMap 登记防泄漏（usb_ddk_api.cpp:497-545）；Release/ReleaseResource 统一 close+munmap（usb_ddk_api.cpp:137-150/182-195）。版本演进：V1_2 能力（ControlTransfer/GetDevices/GetNonRootHubs 等）经 IUsbDdk::CastFrom 升版调用（usb_ddk_api.cpp:614-653）。模拟器守卫已覆盖全部入口（含 Create/DestroyDeviceMemBuffer、Write/ReadPipe） |
 | 关键流程 | 控制读：SendControlReadRequest 以 vector 暂存 → 长度校验 → memcpy_s（usb_ddk_api.cpp:363-400）；管道传输：offset/bufferLength 边界校验后整段下发（usb_ddk_api.cpp:431-461）；Ashmem 变体把 fd+地址向量打包 UsbAshmem（usb_ddk_api.cpp:463-495）；配置描述符 GetConfigDescriptor → ParseUsbConfigDescriptor 组装可释放结构（usb_ddk_api.cpp:241-268，parser 在 frameworks/ddk/usb/usb_config_desc_parser.h） |
 
 ### 使用方式（Usage）
@@ -288,27 +321,27 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | init 侧 `"ondemand": true`（hdf_ext_devmgr.cfg:22）+ samgr 拉起。退出触发：`UnRegisterDevice` 后调 `UnLoadSelf`：注销旧 timer → 无设备（GetTotalDeviceNum==0）才 Setup 新 timer → 30 秒后任务里 CheckSystemAbility 仍存在才 UnloadSystemAbility(5110)（etx_device_mgr.cpp:486-519）。期间任何 RegisterDevice 会注销 timer（etx_device_mgr.cpp:355）。非 pass-through USB 下 usbd 死亡也触发卸载（usb_bus_extension.cpp:219-232） |
+| 核心机制 | init 侧 `"ondemand": true`（hdf_ext_devmgr.cfg:22）+ samgr 拉起。退出触发：`UnRegisterDevice` 后调 `UnLoadSelf`：注销旧 timer → 无设备（GetTotalDeviceNum==0）才 Setup 新 timer → 30 秒后任务里 CheckSystemAbility 仍存在才 UnloadSystemAbility(5110)（etx_device_mgr.cpp:499-537）。期间任何 RegisterDevice 会注销 timer（etx_device_mgr.cpp:355）。非 pass-through USB 下 usbd 死亡也触发卸载（usb_bus_extension.cpp:219-232）。ENABLE_PCIE 构建下 PCIE 设备在位会阻止自卸载（SetPcieDevicesPresent，etx_device_mgr.cpp:486-497） |
 | 关键流程 | 30 秒窗口内设备回插：timer 注销，无卸载；卸载后客户端下次 CheckSystemAbility 由 samgr 重新拉起 |
 
 ### 使用方式（Usage）
 | 子维度 | 内容 |
 |---|---|
-| 核心 API | 内部机制（Utils::Timer unloadSelftimer_，etx_device_mgr.h:76-77）；对外表现为 SA 生命周期，无调用接口 |
+| 核心 API | 内部机制（Utils::Timer unloadSelftimer_，etx_device_mgr.h:78-79）；对外表现为 SA 生命周期，无调用接口 |
 
 ### 代码关联（Code）
 | 子维度 | 内容 |
 |---|---|
 | 核心类 | `ExtDeviceManager`（timer 持有者） |
 | 核心成员 | unloadSelftimer_ {"unLoadSelfTimer"}、unloadSelftimerId_、UNLOAD_SA_TIMER_INTERVAL=30*1000（etx_device_mgr.cpp:33） |
-| 核心方法 | `UnLoadSelf`:486、`GetTotalDeviceNum`:471、析构注销（etx_device_mgr.cpp:37-41） |
+| 核心方法 | `UnLoadSelf`:499、`GetTotalDeviceNum`:471、析构注销（etx_device_mgr.cpp:37-41） |
 
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
 |---|---|
 | 系统限制 | GetTotalDeviceNum 不加锁，只允许持 deviceMapMutex_ 的调用路径使用（etx_device_mgr.cpp:473 注释），否则计数竞态 |
 | 并发约束 | timer 回调独立线程执行 samgr 调用，不持任何设备锁 |
-| 安全约束 | 卸载仅作用于自身 SA；CheckSystemAbility 先行确认避免误卸载（etx_device_mgr.cpp:507-511） |
+| 安全约束 | 卸载仅作用于自身 SA；CheckSystemAbility 先行确认避免误卸载（etx_device_mgr.cpp:523-527） |
 
 ## 观测埋点机制（HiSysEvent EXTERNAL_DEVICE 域）
 
@@ -321,8 +354,8 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | `ExtDevReportSysEvent` 静态类两步走：ParseToExtDevEvent 把 DeviceInfo/DriverInfo/PkgInfoTable 折叠进 ExtDevEvent（设备字段 + 驱动字段 + interfaceName/operatType），ReportExternalDeviceEvent 组装 17 字段 HiSysEventWrite（driver_report_sys_event.cpp:62-102/104-158）。错误语义集中在 EventErrCode 枚举 + ErrMsgs 文案表（driver_report_sys_event.cpp:31-60）。SN_NUM 截末 5 位（driver_report_sys_event.cpp:29/70-72）。另有 SA 事件（OnStart 失败等）与 DDK 事件、包周期事件，schema 全量见 hisysevent.yaml:16-63 |
-| 关键流程 | 调用点覆盖：匹配（QueryMatchDriver 三种结局）、绑定/解绑全链（device.cpp 与 etx_device_mgr.cpp）、包刷新与删库（drv_bundle_state_callback.cpp:425-454）、设备采集失败（usb_dev_subscriber.cpp:161-214） |
+| 核心机制 | `ExtDevReportSysEvent` 静态类两步走：ParseToExtDevEvent 把 DeviceInfo/DriverInfo/PkgInfoTable 折叠进 ExtDevEvent（设备字段 + 驱动字段 + interfaceName/operatType），ReportExternalDeviceEvent 组装 17 字段 HiSysEventWrite（driver_report_sys_event.cpp:62-102/104-158）。错误语义集中在 EventErrCode 枚举 + ErrMsgs 文案表（driver_report_sys_event.cpp:31-60）。SN_NUM 截末 5 位（driver_report_sys_event.cpp:29/70-72）。另有 SA 事件（OnStart 失败等）与 DDK 事件、包周期事件，PCIE 匹配事件经 PcieDriverReportSysEvent 单独上报（pcie_driver_report_sys_event.cpp），schema 全量见 hisysevent.yaml:16-74 |
+| 关键流程 | 调用点覆盖：匹配（QueryMatchDriver 三种结局）、绑定/解绑全链（device.cpp 与 etx_device_mgr.cpp）、包刷新与删库（drv_bundle_state_callback.cpp:457-486）、设备采集失败（usb_dev_subscriber.cpp:161-214） |
 
 ### 使用方式（Usage）
 | 子维度 | 内容 |
@@ -339,7 +372,7 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 约束与限制（Constraints）
 | 子维度 | 内容 |
 |---|---|
-| 系统限制 | 4 事件字段名/类型/等级不可变更（hisysevent.yaml 为发布契约）；STATISTIC 类型不携带恢复语义 |
+| 系统限制 | 5 事件字段名/类型/等级不可变更（hisysevent.yaml 为发布契约）；STATISTIC 类型不携带恢复语义 |
 | 并发约束 | 埋点在业务线程内同步写，无锁（HiSysEvent 自身线程安全） |
 | 安全约束 | 序列号截断；不得新增明文敏感字段（token/完整 SN） |
 
@@ -354,8 +387,8 @@ Edm -> Usbd : (旁路) IUsbDdk::UpdateDriverInfo
 ### 原理（Principles）
 | 子维度 | 内容 |
 |---|---|
-| 核心机制 | 配置双源：/sys_prod/etc/peripheral/peripheral_fault_notifier_config.json（CCM，授权面）与 /system/etc/peripheral/ 同名（本地文案），`EventConfig::FillFaultsMap` 取交集且以 CCM 为准（event_config.cpp:20-23/142-183）。运行：NotifyUsbPeripheralFault（系统应用/SA 限定，driver_ext_mgr.cpp:400-426）→ GetFaultInfo(domain, faultName) 四字段齐备才放行 → `DeviceNotification::HandleNotification`：NotificationLocale 本地化 → 组装 NotificationRequest（SOCIAL_COMMUNICATION 槽、不可移除、creator=3085）→ WantAgent(ohos.want.action.viewData + uri) → 图标 system/etc/peripheral/resources/peripheral_fault_icon.png（notification_peripheral.cpp:36-40/48-108） |
-| 关键流程 | 失败路径全部显式返回：配置缺失 EDM_ERR_INVALID_PARAM、通知失败 EDM_NOK（driver_ext_mgr.cpp:407-425） |
+| 核心机制 | 配置双源：/sys_prod/etc/peripheral/peripheral_fault_notifier_config.json（CCM，授权面）与 /system/etc/peripheral/ 同名（本地文案），`EventConfig::FillFaultsMap` 取交集且以 CCM 为准（event_config.cpp:20-23/142-183）。运行：NotifyUsbPeripheralFault（系统应用/SA 限定，driver_ext_mgr.cpp:955-981）→ GetFaultInfo(domain, faultName) 四字段齐备才放行 → `DeviceNotification::HandleNotification`：NotificationLocale 本地化 → 组装 NotificationRequest（SOCIAL_COMMUNICATION 槽、不可移除、creator=3085）→ WantAgent(ohos.want.action.viewData + uri) → 图标 system/etc/peripheral/resources/peripheral_fault_icon.png（notification_peripheral.cpp:36-40/48-108） |
+| 关键流程 | 失败路径全部显式返回：配置缺失 EDM_ERR_INVALID_PARAM、通知失败 EDM_NOK（driver_ext_mgr.cpp:962-979） |
 
 ### 使用方式（Usage）
 | 子维度 | 内容 |

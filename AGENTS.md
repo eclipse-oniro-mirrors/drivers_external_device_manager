@@ -84,6 +84,7 @@ On-demand reading order: for a task touching the bind/match flow read business-c
 | Changing DFX events (adding/removing/changing HiSysEvent fields) | hisysevent.yaml - event schemas are a public observability contract; changing field names/types is a compatibility break |
 | Changing build behavior or feature flags | extdevmgr.gni, bundle.json, relevant BUILD.gn |
 | Changing USB bus extension behavior | include/bus_extension/usb/, src/bus_extension/usb/; check extdevmgr_usb_pass_through in extdevmgr.gni - it switches USB proxy 1.0 vs 2.0 |
+| Changing PCIE driver matching or loading (ENABLE_PCIE builds) | src/bus_extension/pcie/ (manager/policy/metadata/modprobe); check external_device_manager_enable_pcie in extdevmgr.gni; PCIE_MATCH_EVENT schema in hisysevent.yaml; see docs/knowledge/edm-Technology.md (PCIE section) |
 | Changing driver-package metadata parsing | include/drivers_pkg_manager/, src/drivers_pkg_manager/ - metadata fields (driver_uid, VID/PID, bus type) are persistent and cross-version |
 | Changing error codes | utils/include/edm_errors.h - EDM_NOK = ErrCodeOffset(SUBSYS_DRIVERS, EDM_MODULE_ID), not a simple increment; inserting codes shifts all subsequent values |
 | Changing logging domains or module IDs | utils/include/hilog_wrapper.h - 13 module IDs in UsbMgrSubModule enum; log domain base 0xD002550 |

@@ -2,7 +2,7 @@
 
 > 模块：external_device_manager（@ohos/external_device_manager，HDF 子系统，SA 5110，进程 hdf_ext_devmgr）
 > 源码依据：bundle.json、sa_profile/、services/、frameworks/、interfaces/、utils/，路径均相对仓根。
-> 行号基线：commit 1412c92（2026-11-10 生成）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
+> 行号基线：commit 14f2e25（2026-11-10 生成，2026-11-20 增量刷新）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
 
 ## 应用定位
 
@@ -16,12 +16,13 @@
 | 设备-驱动匹配与绑定 | 对热插拔设备按 VID/PID 匹配驱动，按需拉起/停止 DriverExtensionAbility，并维护应用与驱动的绑定关系 | `ExtDeviceManager`（services/native/driver_extension_manager/src/device_manager/etx_device_mgr.cpp）、`UsbBusExtension::MatchDriver`（services/native/driver_extension_manager/src/bus_extension/usb/usb_bus_extension.cpp:148） |
 | 设备查询与驱动查询 API | 对外提供 QueryDevice/BindDevice/UnBindDevice/QueryDeviceInfo/QueryDriverInfo/BindDriverWithDeviceId/UnBindDriverWithDeviceId/NotifyUsbPeripheralFault 八个 SA 方法 | `DriverExtMgr`（services/native/driver_extension_manager/src/driver_ext_mgr.cpp）、IDL：interfaces/innerkits/IDriverExtMgr.idl |
 | DDK C API | 面向设备厂商应用提供 USB/HID/SCSI/UsbSerial/Base 五组用户态 C 接口（接口在 interfaces/ddk/，实现在 frameworks/ddk/） | 如 `OH_Usb_Init`（frameworks/ddk/usb/usb_ddk_api.cpp:81）、`OH_DDK_CreateAshmem`（frameworks/ddk/base/） |
+| PCIE 驱动匹配（可选） | ENABLE_PCIE 构建下从沙箱目录解析 PCIE 驱动内核模块元数据，按六门禁策略与在位板卡匹配，经 pcie HDI 加载 | `PcieDriverManager`（services/native/driver_extension_manager/src/bus_extension/pcie/）、`DriverExtMgr::StartPcieDriverManager`（services/native/driver_extension_manager/src/driver_ext_mgr.cpp:531） |
 
 ### 职责边界（本组件不负责）
 
 - **USB 总线枚举与设备访问**：由 HDI 侧 usbd（drivers_interface_usb 的 `IUsbHostInterface`/`IUsbInterface`/`IUsbDdk`）承担，本组件只订阅事件并转发请求。
-- **HAP 安装与包信息查询**：由 Bundle Manager Service（BMS）承担，本组件通过 `bundleMgr_->QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER, ...)` 获取（drv_bundle_state_callback.cpp:337）。
-- **Ability 生命周期调度**：由 Ability Manager Service（AMS）承担，本组件仅通过 `AAFwk::AbilityManagerClient` 发起 Connect/Start/Stop（driver_extension_controller.cpp:68-189）。
+- **HAP 安装与包信息查询**：由 Bundle Manager Service（BMS）承担，本组件通过 `bundleMgr_->QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER, ...)` 获取（drv_bundle_state_callback.cpp:369）。
+- **Ability 生命周期调度**：由 AbilityManagerService 承担，本组件仅通过 `AAFwk::AbilityManagerClient` 发起 Connect/Start/Stop（driver_extension_controller.cpp:68-189）。
 - **内核驱动、文件系统、外设供电**：不涉及；DDK 全部走用户态 HDI 通道。
 - **权限授予本身**：由 access_token 子系统承担，本组件只做校验（`ExtPermissionManager::VerifyPermission`，ext_permission_manager.cpp:43）。
 
@@ -38,13 +39,14 @@ package "本组件 external_device_manager" {
   component "Client SDK\nDriverExtMgrClient" as Client
   component "SA 5110 服务\nDriverExtMgr / ExtDeviceManager\nDriverPkgManager / BusExtensionCore" as SA
   component "USB 总线扩展插件\nlibdriver_extension_usb_bus.z.so" as UsbExt
+  component "PCIE 驱动匹配（可选，ENABLE_PCIE）\nPcieDriverManager" as Pcie
   component "DDK 框架\nframeworks/ddk/(usb/hid/scsi/usb_serial/base)" as Ddk
 }
 
 package "系统服务" {
   component "samgr\n(SA 注册/按需加载)" as Samgr
   component "BMS\n包管理" as BMS
-  component "AMS\nAbility 调度" as AMS
+  component "AbilityManagerService\nAbility 调度" as AbilityManagerService
   component "AccessToken\n权限校验" as AT
   component "通知服务 (3085)" as Notif
   component "HiSysEvent" as DFX
@@ -53,6 +55,7 @@ package "系统服务" {
 
 package "HDI / 内核" {
   component "usbd\nIUsbHostInterface / IUsbDdk" as Usbd
+  component "pcie HDI\nIPcieInterface" as PcieHdi
   component "USB 设备" as Dev
 }
 
@@ -61,14 +64,16 @@ Napi --> Client : DriverExtMgrClient
 Client --> Samgr : IPC 到 SA 5110
 Samgr --> SA : 代理调用
 SA --> BMS : 查询 DRIVER 扩展 / 包事件
-SA --> AMS : ConnectAbility / StopExtensionAbility
+SA --> AbilityManagerService : ConnectAbility / StopExtensionAbility
 SA --> AT : VerifyAccessToken / GetHapTokenInfo
 SA --> RDB : 驱动元数据持久化
 SA --> UsbExt : dlopen + IBusExtension
+SA --> Pcie : PCIE 板卡驱动匹配（ENABLE_PCIE）
+Pcie --> PcieHdi : 设备查询 / 模块加载
 SA --> DFX : EXT_DEVICE_EVENT 等埋点
 SA --> Notif : 外设故障通知
 UsbExt --> Usbd : 设备热插拔订阅 / VID-PID 匹配
-DriverApp --> AMS : DriverExtensionAbility 生命周期
+DriverApp --> AbilityManagerService : DriverExtensionAbility 生命周期
 DriverApp --> Ddk : OH_Usb_* / OH_DDK_* C API
 Ddk --> Usbd : IUsbDdk HDI 调用
 Usbd <-- Dev : 枚举与传输
@@ -84,7 +89,7 @@ Usbd <-- Dev : 枚举与传输
 | 包状态公共事件 | `BundleMonitor` 订阅 COMMON_EVENT_PACKAGE_ADDED/CHANGED/REMOVED（driver_pkg_manager.cpp:202-204） | bundleName、userId | 驱动包安装/更新/卸载 |
 | 账户切换事件 | `OsAccountManager::SubscribeOsAccount` SWITCHING/SWITCHED（driver_pkg_manager.cpp:91-112） | 账户 localId | 多用户切换 |
 | 驱动包元数据 | BMS `QueryExtensionAbilityInfos(ExtensionAbilityType::DRIVER)` | module.json5 metadata：bus、vendor、description、launchonbind、ohos.permission.ACCESS_DDK_ALLOWED、vid、pid | 启动扫描与包事件 |
-| SA 就绪事件 | `OnAddSystemAbility`：BMS / 账户 / CES（driver_ext_mgr.cpp:97-134） | systemAbilityId | 按需启动依赖服务上线时 |
+| SA 就绪事件 | `OnAddSystemAbility`：BMS / 账户 / CES（driver_ext_mgr.cpp:654-691） | systemAbilityId | 按需启动依赖服务上线时 |
 
 ## 核心输出
 
@@ -92,9 +97,9 @@ Usbd <-- Dev : 枚举与传输
 |---|---|---|
 | 设备列表/设备信息/驱动信息 | 调用应用（JS 侧转换为 Array\<Device\> 等结构） | 设备发现、驱动详情展示；`QueryDeviceInfo` 额外返回 isDriverMatched/driverUid（driver_ext_mgr_types.h:68-103） |
 | 驱动绑定结果回调 | 绑定应用的 `IDriverExtMgrCallback::OnConnect/OnUnBind/OnDisconnect`（interfaces/innerkits/IDriverExtMgrCallback.idl） | 交付 DriverExtensionAbility 的远端对象，应用据此与驱动通信 |
-| Ability 拉起/停止指令 | AMS（`ConnectAbility`/`StopExtensionAbility`，driver_extension_controller.cpp:145/105） | 驱动实例生命周期受设备在位与绑定关系驱动 |
+| Ability 拉起/停止指令 | AbilityManagerService（`ConnectAbility`/`StopExtensionAbility`，driver_extension_controller.cpp:145/105） | 驱动实例生命周期受设备在位与绑定关系驱动 |
 | 驱动信息同步 | usbd HDI `IUsbDdk::UpdateDriverInfo/RemoveDriverInfo`（usb_driver_change_callback.cpp:41/54） | 把 driverUid/vids 下发 HDI，支撑 DDK 设备归属与访问控制 |
 | 持久化记录 | RDB `pkg.db` 的 `pkgInfoTable` 表（pkg_database.h:38-46） | 重启后恢复驱动目录，路径 /data/service/el1/public/pkg_service/ |
-| 观测事件 | HiSysEvent 域 EXTERNAL_DEVICE 的 4 个事件（hisysevent.yaml） | 事件含设备/驱动标识与错误码，供 hiview 消费 |
+| 观测事件 | HiSysEvent 域 EXTERNAL_DEVICE 的 5 个事件（hisysevent.yaml，含 PCIE_MATCH_EVENT） | 事件含设备/驱动标识与错误码，供 hiview 消费 |
 | 故障通知 | 通知服务（SA 3085），带 WantAgent 跳转 URI（notification_peripheral.cpp:36-40） | 外设故障对用户的可见提示 |
-| SA 自卸载指令 | samgr `UnloadSystemAbility(5110)`（etx_device_mgr.cpp:513，USB 非 pass-through 模式下 usbd 死亡时同样触发，usb_bus_extension.cpp:228） | 30 秒无设备时回收服务进程 |
+| SA 自卸载指令 | samgr `UnloadSystemAbility(5110)`（etx_device_mgr.cpp:532，USB 非 pass-through 模式下 usbd 死亡时同样触发，usb_bus_extension.cpp:228） | 30 秒无设备时回收服务进程 |

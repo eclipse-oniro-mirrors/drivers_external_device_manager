@@ -2,7 +2,7 @@
 
 external_device_manager 模块核心业务实体的完整知识定义，涵盖静态概念、动态运行、规则约束与代码映射。路径相对仓根。
 
-> 行号基线：commit 1412c92（2026-11-10 生成）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
+> 行号基线：commit 14f2e25（2026-11-10 生成，2026-11-20 增量刷新）；与代码不一致时以代码为准，溯源与刷新规则见 [README.md](README.md)。
 
 ## 外部设备（Device / DeviceInfo / UsbDeviceInfo）
 
@@ -30,14 +30,14 @@ external_device_manager 模块核心业务实体的完整知识定义，涵盖�
 | 子维度 | 内容 |
 |---|---|
 | 上层依赖 | ExtDeviceManager::deviceMap_ 按 (busType, deviceId) 持有 shared_ptr\<Device\>（etx_device_mgr.h:72）；bundleMatchMap_ 反向按 bundleInfo 聚合 deviceId |
-| 下游影响 | 绑定状态驱动 IDriverExtMgrCallback 回调与 AMS 侧 Ability 生死；查询 API（USBDevice/DeviceInfoData）由其装配（driver_ext_mgr.cpp:151-173、247-293） |
+| 下游影响 | 绑定状态驱动 IDriverExtMgrCallback 回调与 AbilityManagerService 侧 Ability 生死；查询 API（USBDevice/DeviceInfoData）由其装配（driver_ext_mgr.cpp:708-730、804-849） |
 | 平级关联 | DeviceInfo 由总线扩展生产（UsbDevSubscriber）；DriverInfo 经 AddBundleInfo 挂接（device.h:58-65） |
 
 ### 代码与符号
 | 子维度 | 内容 |
 |---|---|
 | 核心类 | `Device`（services/native/driver_extension_manager/src/device_manager/device.cpp）、`DeviceInfo`/`UsbDeviceInfo`（utils/include/ext_object.h:117、services/native/driver_extension_manager/include/bus_extension/usb/usb_device_info.h） |
-| 核心方法 | `RegisterDevice`/`UnRegisterDevice`（etx_device_mgr.cpp:315/376）、`Device::Connect`（无参/带回调两个重载，device.cpp:61/96）、`Device::Disconnect`（device.cpp:145）、`QueryDeviceByDeviceID`（etx_device_mgr.cpp:521） |
+| 核心方法 | `RegisterDevice`/`UnRegisterDevice`（etx_device_mgr.cpp:315/376）、`Device::Connect`（无参/带回调两个重载，device.cpp:61/96）、`Device::Disconnect`（device.cpp:145）、`QueryDeviceByDeviceID`（etx_device_mgr.cpp:540） |
 
 ## 驱动信息（DriverInfo / UsbDriverInfo 与 PkgInfoTable）
 
@@ -52,27 +52,27 @@ external_device_manager 模块核心业务实体的完整知识定义，涵盖�
 ### 上下文与场景
 | 子维度 | 内容 |
 |---|---|
-| 交互流程 | 产生：BMS 扫描 DRIVER 扩展 → `DrvBundleStateCallback::ParseToPkgInfoTables`（drv_bundle_state_callback.cpp:105-152，`CreatePkgInfoTable` 生成 driverUid=name+"-"+accessTokenId）→ `UpdateToRdb` 落库（drv_bundle_state_callback.cpp:456-481）。消费：`DriverPkgManager::QueryMatchDriver` 读库逐行 UnSerialize 后交总线插件 MatchDriver（driver_pkg_manager.cpp:114-159）；`QueryDriverInfo` 直接整表/按 driverUid 返回（driver_pkg_manager.cpp:161-192）。消亡：包删除/元数据清空 → `OnBundleDrvRemoved` 删行（drv_bundle_state_callback.cpp:531-554） |
+| 交互流程 | 产生：BMS 扫描 DRIVER 扩展 → `DrvBundleStateCallback::ParseToPkgInfoTables`（drv_bundle_state_callback.cpp:105-152，`CreatePkgInfoTable` 生成 driverUid=name+"-"+accessTokenId）→ `UpdateToRdb` 落库（drv_bundle_state_callback.cpp:488-513）。消费：`DriverPkgManager::QueryMatchDriver` 读库逐行 UnSerialize 后交总线插件 MatchDriver（driver_pkg_manager.cpp:124-169）；`QueryDriverInfo` 直接整表/按 driverUid 返回（driver_pkg_manager.cpp:171-202）。消亡：包删除/元数据清空 → `OnBundleDrvRemoved` 删行（drv_bundle_state_callback.cpp:563-586） |
 | 状态流转 | RDB 行随包事件 replace（AddOrUpdatePkgInfo，pkg_db_helper.h:53）；内存中每次匹配重建临时对象，无长期驻留状态。匹配成功时镜像到 Device（bundleInfo_/driverUid_）并在 bundleMatchMap_ 建立反查 |
 
 ### 规格与约束
 | 子维度 | 内容 |
 |---|---|
-| 业务规则 | 元数据键大小写：bus/vendor/description 精确匹配，launchonbind 忽略大小写（LowerStr，drv_bundle_state_callback.cpp:96）；vid/pid 值按十六进制解析（usb_bus_extension.cpp:199-217）；driverUid 持久层以 accessTokenId 版本为准（drv_bundle_state_callback.cpp:157）；包事件仅处理当前激活用户的（IsCurrentUserId，drv_bundle_state_callback.cpp:494-497） |
-| 并发约束 | BMS 代理访问持 bundleMgrMutex_；initOnce 保证启动全量扫描一次（drv_bundle_state_callback.cpp:316-345）；RDB 读写经 PkgDbHelper::databaseMutex_（pkg_db_helper.h:68） |
+| 业务规则 | 元数据键大小写：bus/vendor/description 精确匹配，launchonbind 忽略大小写（LowerStr，drv_bundle_state_callback.cpp:96）；vid/pid 值按十六进制解析（usb_bus_extension.cpp:199-217）；driverUid 持久层以 accessTokenId 版本为准（drv_bundle_state_callback.cpp:157）；包事件仅处理当前激活用户的（IsCurrentUserId，drv_bundle_state_callback.cpp:526-529） |
+| 并发约束 | BMS 代理访问持 bundleMgrMutex_；initOnce 保证启动全量扫描一次（drv_bundle_state_callback.cpp:348-377）；RDB 读写经 PkgDbHelper::databaseMutex_（pkg_db_helper.h:68） |
 
 ### 知识关联
 | 子维度 | 内容 |
 |---|---|
 | 上层依赖 | ExtDeviceManager 匹配流程持有临时 DriverInfo；Device::driverInfo_ 保存命中结果（device.h:58-65） |
-| 下游影响 | 命中后驱动 UsbDriverChangeCallback → IUsbDdk::UpdateDriverInfo（usb_driver_change_callback.cpp:23-42）；QueryDriverInfo API 输出 DriverInfoData（driver_ext_mgr.cpp:295-331） |
+| 下游影响 | 命中后驱动 UsbDriverChangeCallback → IUsbDdk::UpdateDriverInfo（usb_driver_change_callback.cpp:23-42）；QueryDriverInfo API 输出 DriverInfoData（driver_ext_mgr.cpp:851-887） |
 | 平级关联 | 与 DeviceInfo 通过总线插件 MatchDriver 发生判定关系；与 bundleInfo 一一对应（bundleName-driverName） |
 
 ### 代码与符号
 | 子维度 | 内容 |
 |---|---|
 | 核心类 | `DriverInfo`/`DriverInfoExt`（utils/include/ext_object.h:31-115）、`UsbDriverInfo`（services/native/driver_extension_manager/include/bus_extension/usb/usb_driver_info.h）、`PkgInfoTable`（services/native/driver_extension_manager/include/drivers_pkg_manager/pkg_tables.h:22-30） |
-| 核心方法 | `ParseToPkgInfoTables`/`CreatePkgInfoTable`/`UpdateToRdb`（drv_bundle_state_callback.cpp:105/154/456）、`DriverInfo::Serialize/UnSerialize`（driver_info.cpp:24/105）、`PkgDbHelper::AddOrUpdatePkgInfo/QueryPkgInfos/DeleteRightRecord`（pkg_db_helper.h:39-53） |
+| 核心方法 | `ParseToPkgInfoTables`/`CreatePkgInfoTable`/`UpdateToRdb`（drv_bundle_state_callback.cpp:105/154/488）、`DriverInfo::Serialize/UnSerialize`（driver_info.cpp:24/105）、`PkgDbHelper::AddOrUpdatePkgInfo/QueryPkgInfos/DeleteRightRecord`（pkg_db_helper.h:39-53） |
 
 ## 绑定关系（Device 上的 caller/callback/远端对象三元组）
 
@@ -87,21 +87,21 @@ external_device_manager 模块核心业务实体的完整知识定义，涵盖�
 ### 上下文与场景
 | 子维度 | 内容 |
 |---|---|
-| 交互流程 | 建立：bindDevice → `Device::Connect(callback, tokenId)`：drvExtRemote_ 已存在则立即 OnConnect 回调并置 isBound=true（device.cpp:102-115）；否则登记 caller={isBound:false}、注册回调与死亡监听、发起 ConnectAbility（device.cpp:117-138）。驱动就绪：`OnConnect` 统一置全部 caller isBound=true 并广播（device.cpp:177-195）。解除：unbindDevice 非最后 caller 只 `RemoveCaller`（etx_device_mgr.cpp:575-582）；最后 caller 或拔出触发 Disconnect → `OnDisconnect` 清空三者并 StopDriverExtension（device.cpp:197-222）。caller 进程死亡：`DriverExtMgrCallbackDeathRecipient::OnRemoteDied` 仅移除回调（device.cpp:285-295） |
+| 交互流程 | 建立：bindDevice → `Device::Connect(callback, tokenId)`：drvExtRemote_ 已存在则立即 OnConnect 回调并置 isBound=true（device.cpp:102-115）；否则登记 caller={isBound:false}、注册回调与死亡监听、发起 ConnectAbility（device.cpp:117-138）。驱动就绪：`OnConnect` 统一置全部 caller isBound=true 并广播（device.cpp:177-195）。解除：unbindDevice 非最后 caller 只 `RemoveCaller`（etx_device_mgr.cpp:594-601）；最后 caller 或拔出触发 Disconnect → `OnDisconnect` 清空三者并 StopDriverExtension（device.cpp:197-222）。caller 进程死亡：`DriverExtMgrCallbackDeathRecipient::OnRemoteDied` 仅移除回调（device.cpp:285-295） |
 | 状态流转 | 空 → {caller:isBound=false} → （驱动连上）全体 isBound=true → 逐个解绑 → 空+Stop；拔出时先 isUnRegisted=true，OnDisconnect 后从 deviceMap_ 摘除（device.cpp:215-217） |
 
 ### 规格与约束
 | 子维度 | 内容 |
 |---|---|
-| 业务规则 | 真正断开驱动的条件：launchOnBind 为 true 且调用方是最后 caller（IsLastCaller，etx_device_mgr.cpp:575/636）；launchOnBind 为 false 时解绑仅移除 caller、驱动随设备在位存活；UnBindDriverWithDeviceId 校验存在绑定关系否则 EDM_ERR_SERVICE_NOT_BOUND（etx_device_mgr.cpp:621-626） |
+| 业务规则 | 真正断开驱动的条件：launchOnBind 为 true 且调用方是最后 caller（IsLastCaller，etx_device_mgr.cpp:594/655）；launchOnBind 为 false 时解绑仅移除 caller、驱动随设备在位存活；UnBindDriverWithDeviceId 校验存在绑定关系否则 EDM_ERR_SERVICE_NOT_BOUND（etx_device_mgr.cpp:640-645） |
 | 并发约束 | 全部变更持 Device::deviceMutex_（recursive）；callbacks_ 修改与遍历同锁；远端对象读写另有 drvExtRemoteMutex_（device.h:93-109） |
 
 ### 知识关联
 | 子维度 | 内容 |
 |---|---|
 | 上层依赖 | 附着于 Device；caller 身份来自 `ExtPermissionManager::GetCallingTokenID()`（IPC 骨架取值，ext_permission_manager.cpp:69-72） |
-| 下游影响 | OnDisconnect 触发 AMS StopExtensionAbility（device.cpp:221）；驱动远端对象经回调交付应用后由应用侧使用（NAPI 转成 JS 对象，device_manager_middle.cpp） |
-| 平级关联 | NAPI 层 g_callbackMap\<deviceId, AsyncData\> 与之镜像（device_manager_middle.cpp:55） |
+| 下游影响 | OnDisconnect 触发 AbilityManagerService StopExtensionAbility（device.cpp:221）；驱动远端对象经回调交付应用后由应用侧使用（NAPI 转成 JS 对象，device_manager_middle.cpp） |
+| 平级关联 | NAPI 层 g_callbackMap\<deviceId, AsyncData\> 与之镜像（device_manager_middle.cpp:56） |
 
 ### 代码与符号
 | 子维度 | 内容 |
@@ -114,15 +114,15 @@ external_device_manager 模块核心业务实体的完整知识定义，涵盖�
 ### 实体概念
 | 子维度 | 内容 |
 |---|---|
-| 实体名称 | 驱动扩展连接（一次 AMS ConnectAbility 的会话记录） |
-| 实体定义 | Device 到厂商 DriverExtensionAbility 的连接凭据：目标（bundleName/abilityName/deviceId）、AMS 侧连接桩（持有 remoteObject_）、以及服务侧通知器（DrvExtConnNotify） |
+| 实体名称 | 驱动扩展连接（一次 AbilityManagerService ConnectAbility 的会话记录） |
+| 实体定义 | Device 到厂商 DriverExtensionAbility 的连接凭据：目标（bundleName/abilityName/deviceId）、AbilityManagerService 侧连接桩（持有 remoteObject_）、以及服务侧通知器（DrvExtConnNotify） |
 | 核心特征 | `DrvExtConnectionInfo`（services/native/driver_extension_manager/include/device_manager/driver_extension_controller.h:51-56）；`DriverExtensionAbilityConnection : AbilityConnectionStub`（services/native/driver_extension_manager/src/device_manager/driver_extension_controller.cpp:26-56，callback_ 为 weak_ptr）；`DrvExtConnNotify : IDriverExtensionConnectCallback`（services/native/driver_extension_manager/include/device_manager/device.h:199-216，持 weak_ptr\<Device\>） |
 | 类型/分类 | 每次 ConnectDriverExtension 生成一组，不跨 Device 复用 |
 
 ### 上下文与场景
 | 子维度 | 内容 |
 |---|---|
-| 交互流程 | `ConnectDriverExtension` 创建三元组并 `ConnectAbility(want, connectInner_, -1)`，Want 携带 deviceId 参数（driver_extension_controller.cpp:131-149）；AMS 回 `OnAbilityConnectDone` 存 remoteObject_ 并回调 OnConnectDone → Device::OnConnect；断开时校验三元组一致后 `DisconnectAbility`（driver_extension_controller.cpp:154-189），AMS 回 OnAbilityDisconnectDone → Device::OnDisconnect |
+| 交互流程 | `ConnectDriverExtension` 创建三元组并 `ConnectAbility(want, connectInner_, -1)`，Want 携带 deviceId 参数（driver_extension_controller.cpp:131-149）；AbilityManagerService 回 `OnAbilityConnectDone` 存 remoteObject_ 并回调 OnConnectDone → Device::OnConnect；断开时校验三元组一致后 `DisconnectAbility`（driver_extension_controller.cpp:154-189），AbilityManagerService 回 OnAbilityDisconnectDone → Device::OnDisconnect |
 | 状态流转 | 未连接 → ConnectAbility 已发起 → remoteObject_ 非空（IsConnectDone，driver_extension_controller.h:63-66）→ 断开 remoteObject_ 置空并触发 Device 清理。失败重试：无参 Connect 循环最多 30 次×100ms（device.cpp:73-89，针对开机 BMS 未就绪的 RESOLVE_ABILITY_ERR） |
 
 ### 规格与约束
@@ -171,7 +171,7 @@ external_device_manager 模块核心业务实体的完整知识定义，涵盖�
 | 子维度 | 内容 |
 |---|---|
 | 上层依赖 | 依赖先 OH_Usb_Init 成功（否则 USB_DDK_INVALID_OPERATION）；deviceId 使用 DDK 编码 (busNum\<\<32)+devAddr |
-| 下游影响 | usbd HDI（V1_1 传输 / V1_2 ControlTransfer、GetDevices 等，usb_ddk_api.cpp:614-671 经 CastFrom 升版） |
+| 下游影响 | usbd HDI（V1_1 传输 / V1_2 ControlTransfer、GetDevices 等，usb_ddk_api.cpp:614-653 经 CastFrom 升版） |
 | 平级关联 | Base DDK 的 Ashmem 供 UsbSerial/SCSI 等场景复用（bundle.json syscap SystemCapability.Driver.DDK.Extension） |
 
 ### 代码与符号
