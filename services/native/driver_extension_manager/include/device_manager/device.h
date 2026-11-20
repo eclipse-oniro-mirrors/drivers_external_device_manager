@@ -39,6 +39,8 @@ public:
     int32_t Connect();
     int32_t Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint32_t callingTokenId);
     int32_t Disconnect(const bool isFromBind);
+    // EDM_OK and EDM_ERR_NOT_SUPPORT are final results; public for unit tests.
+    static bool ShouldRetry(int32_t ret);
 
     bool HasDriver() const
     {
@@ -150,6 +152,9 @@ private:
     void OnConnect(const sptr<IRemoteObject> &remote, int resultCode);
     void OnDisconnect(int resultCode);
     void UpdateDrvExtConnNotify();
+    // Caller must hold deviceMutex_.
+    int32_t ConnectDriverExtensionWithRetry(const std::string &bundleName, const std::string &abilityName,
+        uint32_t busDevId);
     int32_t RegisterDrvExtMgrCallback(const sptr<IDriverExtMgrCallback> &callback);
     void UnregisterDrvExtMgrCallback(const sptr<IDriverExtMgrCallback> &callback);
     void UnregisterDrvExtMgrCallback(const wptr<IRemoteObject> &object);

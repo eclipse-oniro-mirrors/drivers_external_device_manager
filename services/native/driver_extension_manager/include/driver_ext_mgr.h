@@ -31,6 +31,10 @@
 
 namespace OHOS {
 namespace ExternalDeviceManager {
+#if defined(ENABLE_PCIE) && defined(RECOVERY_MODE_TEST_HOOKS)
+// Test-only probe for the BOPD gate at the LoadPcieDrivers entry.
+bool IsPcieDriverLoadBlockedForTest();
+#endif
 class DriverExtMgr : public SystemAbility, public DriverExtMgrStub {
     DECLARE_SYSTEM_ABILITY(DriverExtMgr)
     DECLARE_DELAYED_SINGLETON(DriverExtMgr);

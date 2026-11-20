@@ -37,6 +37,7 @@
 #include "bus_extension/pcie/system/security_query.h"
 #include "hdf_base.h"
 #include "pcie_driver_report_sys_event.h"
+#include "recovery_mode_checker.h"
 #include "v1_0/ipcie_interface.h"
 #include <cerrno>
 #include <dirent.h>
@@ -115,6 +116,10 @@ bool QueryCurrentPcieHostDevices(std::vector<PcieDeviceInfo> &devices)
 bool LoadPcieDrivers(const std::vector<PcieDriverLoadItem> &loadRequests,
     std::vector<OHOS::HDI::Pcie::V1_0::PcieDriverLoadResult> &hdiLoadResults)
 {
+    if (RecoveryModeChecker::IsRecoveryMode()) {
+        EDM_LOGW(MODULE_SERVICE, "BOPD mode, skip LoadPcieDrivers, requests=%{public}zu", loadRequests.size());
+        return false;
+    }
     using OHOS::HDI::Pcie::V1_0::IPcieInterface;
     auto pcieInterface = IPcieInterface::Get();
     if (!pcieInterface) {
@@ -296,6 +301,13 @@ void DumpPcieEvaluationIssues(int fd, const PcieDriverMatchResult &matchResult)
 }
 
 } // namespace
+
+#ifdef RECOVERY_MODE_TEST_HOOKS
+bool IsPcieDriverLoadBlockedForTest()
+{
+    return RecoveryModeChecker::IsRecoveryMode();
+}
+#endif
 /* ── File reader ───────────────────────────────────────────────────── */
 bool ReadFile(int fileFd, std::string &content)
 {

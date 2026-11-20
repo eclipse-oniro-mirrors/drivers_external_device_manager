@@ -16,8 +16,10 @@
 #include <gtest/gtest.h>
 #include "edm_errors.h"
 #include "hilog_wrapper.h"
+#include "recovery_mode_checker.h"
 #define private public
 #include "dev_change_callback.h"
+#include "device.h"
 #include "etx_device_mgr.h"
 #include "ibus_extension.h"
 #include "usb_bus_extension.h"
@@ -36,6 +38,16 @@ const unordered_set<std::string> accessibleBundles = {"testBundleName1", "testBu
 
 class DeviceManagerTest : public testing::Test {
 public:
+    static void SetUpTestCase()
+    {
+        RecoveryModeChecker::SetParameterReaderForTest([]() { return std::string("0x0"); });
+    }
+
+    static void TearDownTestCase()
+    {
+        RecoveryModeChecker::ClearParameterReaderForTest();
+    }
+
     void SetUp() override
     {
         EDM_LOGD(MODULE_DEV_MGR, "DeviceManagerTest SetUp");
@@ -481,6 +493,14 @@ HWTEST_F(DeviceManagerTest, DisConnectDeviceTest2, TestSize.Level1)
     const uint32_t tokenId2 = 2;
     ret = extMgr.DisConnectDriverWithDeviceId(deviceId, tokenId2);
     ASSERT_EQ(ret, EDM_ERR_SERVICE_NOT_BOUND);
+}
+
+HWTEST_F(DeviceManagerTest, ShouldRetryExcludesNotSupportTest, TestSize.Level1)
+{
+    EXPECT_FALSE(Device::ShouldRetry(static_cast<int32_t>(UsbErrCode::EDM_OK)));
+    EXPECT_FALSE(Device::ShouldRetry(static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SUPPORT)));
+    EXPECT_TRUE(Device::ShouldRetry(static_cast<int32_t>(UsbErrCode::EDM_ERR_CONNECTION_FAILED)));
+    EXPECT_TRUE(Device::ShouldRetry(static_cast<int32_t>(UsbErrCode::EDM_ERR_TIMEOUT)));
 }
 } // namespace ExternalDeviceManager
 } // namespace OHOS
