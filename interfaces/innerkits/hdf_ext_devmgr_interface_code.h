@@ -28,7 +28,8 @@ enum class DriverExtMgrInterfaceCode : uint32_t {
     QUERY_DEVICE_INFO,
     QUERY_DRIVER_INFO,
     NOTIFY_USB_PERIPHERAL_FAULT,
-    INVALID_CODE
+    // Code 9 is reserved for future interfaces. INVALID_CODE is only an invalid IPC request sentinel.
+    INVALID_CODE = 10,
 };
 } // namespace ExternalDeviceManager
 } // namespace OHOS

@@ -22,7 +22,12 @@ ohos_shared_library("report_sys_event") {
     debug = false
   }
   sources = [ "driver_report_sys_event.cpp" ]
+  if (external_device_manager_enable_pcie) {
+    sources += [ "pcie_driver_report_sys_event.cpp" ]
+  }
+  defines = pcie_defines
   include_dirs = [
+    "../../include",
     "../../include/bus_extension/usb",
     "../../include/drivers_hisysevent",
     "../../include/drivers_pkg_manager",
@@ -38,6 +43,9 @@ ohos_shared_library("report_sys_event") {
     "ipc:ipc_core",
     "os_account:os_account_innerkits",
   ]
+  if (external_device_manager_enable_pcie) {
+    external_deps += [ "drivers_interface_pcie:pcie_interface_idl_headers" ]
+  }
   cflags_cc = [
     "-fno-asynchronous-unwind-tables",
     "-fno-unwind-tables",

@@ -44,6 +44,16 @@ EXT_DEVICE_EVENT:
   MESSAGE: {type: STRING, desc: message}
   ERR_CODE: {type: INT32, desc: errCode}
 
+PCIE_MATCH_EVENT:
+  __BASE: {type: STATISTIC, level: MINOR, tag: ExternalDevice, desc: PcieMatchEvent}
+  BOARD_ID: {type: STRING, desc: PCIe BDF identifier}
+  ALIAS_MATCHED: {type: STRING, desc: matched PCIe alias}
+  ALIAS_SCORE: {type: INT32, desc: PCIe alias match score}
+  BOARD_HAS_BOUND_DRIVER: {type: INT32, desc: whether the PCIe board has a bound driver}
+  BLOCK_REASON: {type: STRING, desc: driver match block reason}
+  MODULE_NAME: {type: STRING, desc: kernel module name}
+  STATUS_MSG: {type: STRING, desc: driver match or load status}
+
 EXTERNAL_DEVICE_SA_EVENT:
   __BASE: {type: STATISTIC, level: CRITICAL, tag: ExternalDevice, desc: ExternalDeviceSaEvent}
   USER_ID: {type: INT32, desc: user id}

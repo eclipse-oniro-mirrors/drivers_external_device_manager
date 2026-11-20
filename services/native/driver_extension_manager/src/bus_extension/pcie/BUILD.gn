@@ -1,0 +1,54 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../../../../extdevmgr.gni")
+
+config("pcie_driver_public_config") {
+  include_dirs = [
+    "${ext_mgr_path}/services/native/driver_extension_manager/include",
+  ]
+}
+
+if (external_device_manager_enable_pcie) {
+  ohos_static_library("pcie_driver_manager") {
+    branch_protector_ret = "pac_ret"
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = false
+    }
+    sources = [
+      "common/pcie_wildcard_match.cpp",
+      "manager/pcie_driver_manager.cpp",
+      "metadata/pcie_driver_metadata_parser.cpp",
+      "modprobe/pcie_driver_module_index.cpp",
+      "policy/pcie_driver_match_policy.cpp",
+      "system/security_query.cpp",
+    ]
+
+    public_configs = [ ":pcie_driver_public_config" ]
+    configs = [ "${utils_path}:utils_config" ]
+    external_deps = [
+      "drivers_interface_pcie:pcie_interface_idl_headers",
+      "c_utils:utils",
+      "hdf_core:libhdf_utils",
+      "hilog:libhilog",
+      "init:libbegetutil",
+    ]
+    subsystem_name = "hdf"
+    part_name = "external_device_manager"
+  }
+} else {
+  group("pcie_driver_manager") {}
+}
