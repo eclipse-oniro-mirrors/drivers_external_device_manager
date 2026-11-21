@@ -58,15 +58,17 @@ bool Device::IsBindCaller(uint32_t caller) const
     return boundCallerInfos_.find(caller) != boundCallerInfos_.end();
 }
 
-int32_t Device::Connect()
+bool Device::ShouldRetry(int32_t ret)
 {
-    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
-    std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
-    uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
-    std::string bundleInfo = GetBundleInfo();
-    std::string bundleName = Device::GetBundleName(bundleInfo);
-    std::string abilityName = Device::GetAbilityName(bundleInfo);
-    AddDrvExtConnNotify();
+    // The boot parameter check returns EDM_ERR_NOT_SUPPORT before the ability is connected.
+    // Retrying this result would only repeat the 30 x 100 ms backoff without any chance of success.
+    return ret != static_cast<int32_t>(UsbErrCode::EDM_OK) &&
+        ret != static_cast<int32_t>(UsbErrCode::EDM_ERR_NOT_SUPPORT);
+}
+
+int32_t Device::ConnectDriverExtensionWithRetry(const std::string &bundleName, const std::string &abilityName,
+    uint32_t busDevId)
+{
     int32_t ret = DriverExtensionController::GetInstance().ConnectDriverExtension(
         bundleName, abilityName, connectNofitier_, busDevId);
     // RESOLVE_ABILITY_ERR maybe due to bms is not ready in the boot process, sleep 100ms and try again
@@ -74,7 +76,7 @@ int32_t Device::Connect()
     const int retryTimes = 30;
     const int waitTimeMs = 100;
     const int msToUs = 1000;
-    while (ret != UsbErrCode::EDM_OK && retry < retryTimes) {
+    while (Device::ShouldRetry(ret) && retry < retryTimes) {
         EDM_LOGW(MODULE_DEV_MGR,
             "%{public}s sleep 100ms to reconnect %{public}s %{public}s, ret %{public}d, retry %{public}d",
             __func__, bundleName.c_str(), abilityName.c_str(), ret, retry);
@@ -93,10 +95,25 @@ int32_t Device::Connect()
     return ret;
 }
 
+int32_t Device::Connect()
+{
+    EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
+    std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
+    std::string bundleInfo = GetBundleInfo();
+    std::string bundleName = Device::GetBundleName(bundleInfo);
+    std::string abilityName = Device::GetAbilityName(bundleInfo);
+    uint32_t busDevId = GetDeviceInfo()->GetBusDevId();
+    AddDrvExtConnNotify();
+    return ConnectDriverExtensionWithRetry(bundleName, abilityName, busDevId);
+}
+
 int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint32_t callingTokenId)
 {
     EDM_LOGI(MODULE_DEV_MGR, "%{public}s enter", __func__);
     std::lock_guard<std::recursive_mutex> lock(deviceMutex_);
+    std::string bundleInfo = GetBundleInfo();
+    std::string bundleName = Device::GetBundleName(bundleInfo);
+    std::string abilityName = Device::GetAbilityName(bundleInfo);
     auto extDevEvent = std::make_shared<ExtDevEvent>(__func__, DRIVER_BIND);
     ExtDevReportSysEvent::ParseToExtDevEvent(GetDeviceInfo(), GetDriverInfo(), extDevEvent);
     sptr<IRemoteObject> remoteCopy = GetDrvExtRemote();
@@ -123,9 +140,6 @@ int32_t Device::Connect(const sptr<IDriverExtMgrCallback> &connectCallback, uint
     }
 
     UpdateDrvExtConnNotify();
-    std::string bundleInfo = GetBundleInfo();
-    std::string bundleName = Device::GetBundleName(bundleInfo);
-    std::string abilityName = Device::GetAbilityName(bundleInfo);
     AddDrvExtConnNotify();
     boundCallerInfos_[callingTokenId] = CallerInfo{false};
     uint32_t busDevId = GetDeviceInfo()->GetBusDevId();

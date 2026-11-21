@@ -22,6 +22,7 @@ group("driver_extension_manager_fuzzer") {
     "querydevice_fuzzer:QueryDeviceFuzzTest",
     "querydeviceinfo_fuzzer:QueryDeviceInfoFuzzTest",
     "querydriverinfo_fuzzer:QueryDriverInfoFuzzTest",
+    "recoverymodechecker_fuzzer:RecoveryModeCheckerFuzzTest",
     "unbinddevice_fuzzer:UnBindDeviceFuzzTest",
   ]
   if (external_device_manager_enable_app_launch) {

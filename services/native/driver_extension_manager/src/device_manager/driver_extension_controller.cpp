@@ -18,6 +18,8 @@
 #include "ability_connect_callback_stub.h"
 #include "edm_errors.h"
 #include "driver_extension_controller.h"
+#include "recovery_mode_checker.h"
+
 namespace OHOS {
 namespace ExternalDeviceManager {
 using namespace std;
@@ -71,6 +73,11 @@ int32_t DriverExtensionController::StartDriverExtension(
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to start DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
+    if (RecoveryModeChecker::IsRecoveryMode()) {
+        EDM_LOGW(MODULE_EA_MGR, "BOPD mode, skip StartDriverExtension, bundle:%{public}s, ability:%{public}s",
+            bundleName.c_str(), abilityName.c_str());
+        return EDM_ERR_NOT_SUPPORT;
+    }
     auto abmc = AAFwk::AbilityManagerClient::GetInstance();
     if (abmc == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "Get AMC Instance failed");
@@ -119,6 +126,11 @@ int32_t DriverExtensionController::ConnectDriverExtension(
 {
     EDM_LOGI(MODULE_EA_MGR, "Begin to Connect DriverExtension, bundle:%{public}s, ability:%{public}s", \
         bundleName.c_str(), abilityName.c_str());
+    if (RecoveryModeChecker::IsRecoveryMode()) {
+        EDM_LOGW(MODULE_EA_MGR, "BOPD mode, skip ConnectDriverExtension, bundle:%{public}s, ability:%{public}s",
+            bundleName.c_str(), abilityName.c_str());
+        return EDM_ERR_NOT_SUPPORT;
+    }
     if (callback == nullptr) {
         EDM_LOGE(MODULE_EA_MGR, "param callback is nullptr");
         return EDM_ERR_INVALID_PARAM;

@@ -35,6 +35,7 @@ ohos_unittest("device_manager_test") {
     "${ext_mgr_path}/services/native/driver_extension_manager/include/drivers_pkg_manager",
     "${ext_mgr_path}/interfaces/ddk/usb/",
     "${ext_mgr_path}/interfaces/innerkits/",
+    "${ext_mgr_path}/services/native/driver_extension_manager/include",
   ]
   deps = [
     "${ext_mgr_path}/interfaces/innerkits:external_device_manager_stub",
@@ -54,4 +55,5 @@ ohos_unittest("device_manager_test") {
     "samgr:samgr_proxy",
   ]
   configs = [ "${utils_path}:utils_config" ]
+  defines = [ "RECOVERY_MODE_TEST_HOOKS" ]
 }

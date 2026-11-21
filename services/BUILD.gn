@@ -61,6 +61,7 @@ if (external_device_manager_enable_service) {
     ]
     if (external_device_manager_enable_pcie) {
       deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/pcie:pcie_driver_manager" ]
+      deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/utils:recovery_mode_checker" ]
     }
     if (external_device_manager_enable_app_launch) {
       deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/app_launch_manager:app_launch_manager" ]
@@ -183,6 +184,7 @@ if (external_device_manager_enable_service) {
     ]
     if (external_device_manager_enable_pcie) {
       deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/bus_extension/pcie:pcie_driver_manager" ]
+      public_deps = [ "${ext_mgr_path}/services/native/driver_extension_manager/src/utils:recovery_mode_checker_test_hooks" ]
     }
     if (external_device_manager_enable_app_launch) {
       deps += [ "${ext_mgr_path}/services/native/driver_extension_manager/src/app_launch_manager:app_launch_manager" ]
@@ -218,6 +220,7 @@ if (external_device_manager_enable_service) {
     if (external_device_manager_enable_app_launch) {
       defines += app_launch_defines
     }
+    defines += [ "RECOVERY_MODE_TEST_HOOKS" ]
 
     subsystem_name = "hdf"
     part_name = "external_device_manager"
