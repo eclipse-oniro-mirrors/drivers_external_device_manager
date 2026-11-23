@@ -40,4 +40,5 @@ ohos_shared_library("ddk_base") {
   relative_install_dir = "ndk"
   subsystem_name = "hdf"
   part_name = "external_device_manager"
+  version_script = "libddk_base.map"
 }

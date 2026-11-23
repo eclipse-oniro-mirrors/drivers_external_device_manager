@@ -1,0 +1,39 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License")*;
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Version Script for libDriverExtensionContext_native.z.so
+# SO Type: ani (taihe native module) + innerapi (consumed by libdriverextension_ani.so)
+# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
+# Generated: 2026-10-31 | baseline 84 symbols -> global 7 entries (K-ANI/K-CFI/K-PLT x2/K-SA glob x2/R-SEM x1)
+# Note: C++ symbols use mangled names (lld-safe, 1:1 verifiable against llvm-nm -D output;
+#       official napi.versionscript also uses plain globs over mangled names; see build_gn_changes.md)
+
+{
+  global:
+    # === KEEP [K-ANI]: ANI module entry, resolved by runtime via dlsym ===
+    ANI_Constructor;
+    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
+    __cfi_check;
+    # === KEEP [K-PLT]: consumed by libdriverextension_ani.so (DT_NEEDED + PLT/GOT) ===
+    _ZN4OHOS14AbilityRuntime31CreateAniDriverExtensionContextEP9__ani_envNSt3__h10shared_ptrINS0_22DriverExtensionContextEEERKNS4_INS_10AppExecFwk15OHOSApplicationEEE;
+    _ZN4OHOS14AbilityRuntime22DriverExtensionContext15CONTEXT_TYPE_IDE;
+
+    # === KEEP [K-SA]: SA registration entities (official glob convention) ===
+    *delegator_E;
+
+    # === REVIEW [R-SEM]: conservative keep, pending manual confirmation ===
+    _ZTVN4OHOS19BrokerDelegatorBaseE;
+
+  local:
+    *;
+};

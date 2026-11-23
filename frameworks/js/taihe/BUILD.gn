@@ -80,6 +80,7 @@ taihe_shared_library("device_manager_taihe_native") {
     defines += [ "EDM_MANAGER_METRICS_ENABLE" ]
     external_deps += [ "api_metrics:histogrammanager" ]
   }
+  version_script = "libdevice_manager_taihe_native.map"
 }
 
 generate_static_abc("device_manager_abc") {

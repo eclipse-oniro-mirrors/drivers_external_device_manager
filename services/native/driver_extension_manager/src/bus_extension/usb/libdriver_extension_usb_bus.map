@@ -1,0 +1,47 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License")*;
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Version Script for libdriver_extension_usb_bus.z.so
+# SO Type: USB bus extension plugin (dlopen self-registration pattern via DT_INIT constructor)
+# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
+# Generated: 2026-11-02 | baseline 48 symbols -> global 9 (K-CFI 1 + K-PLT 2 + R-ZTV 6)
+# Contract: BusExtensionCore dlopens this lib (no dlsym); registration happens via
+#           RegisterBusExtension<UsbBusExtension> template in DT_INIT constructor calling
+#           bus_core's GetInstance/Register through PLT; all later calls dispatch
+#           virtually through vptr - no symbol lookup involved.
+
+{
+  global:
+    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
+    __cfi_check;
+    # === KEEP [K-PLT]: consumed by device_manager_test (direct construction + vtable) ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionC1Ev;
+    _ZTVN4OHOS21ExternalDeviceManager13UsbDriverInfoE;
+    # === KEEP [K-PLT]: consumed by bus_extension_usb_test (direct method calls) ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension9SetUsbDdkENS_4sptrINS_3HDI3Usb3Ddk4V1_27IUsbDdkEEE;
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15SetUsbInferfaceENS_4sptrINS_3HDI3Usb4V2_017IUsbHostInterfaceEEE;
+    # === KEEP [K-PLT]: consumed by usbextension_fuzzer (devirtualized direct calls on concrete types) ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15ParseDriverInfoERKNSt3__h3mapINS2_12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEES9_NS2_4lessIS9_EENS7_INS2_4pairIKS9_S9_EEEEEE;
+    _ZN4OHOS21ExternalDeviceManager13UsbDriverInfo11UnSerializeERKNSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
+
+    # === REVIEW [R-ZTV]: conservative keep - cross-DSO inheritance (bases in bus_core / USB HDI lib) ===
+    _ZTCN4OHOS21ExternalDeviceManager16UsbDevSubscriberE0_NS_3HDI3Usb4V2_015IUsbdSubscriberE;
+    _ZTCN4OHOS21ExternalDeviceManager16UsbDevSubscriberE0_NS_3HDI7HdiBaseE;
+    _ZTTN4OHOS21ExternalDeviceManager16UsbDevSubscriberE;
+    _ZTVN4OHOS21ExternalDeviceManager15UsbBusExtensionE;
+    _ZTVN4OHOS21ExternalDeviceManager16UsbDevSubscriberE;
+    _ZTVN4OHOS21ExternalDeviceManager23UsbDriverChangeCallbackE;
+
+  local:
+    *;
+};

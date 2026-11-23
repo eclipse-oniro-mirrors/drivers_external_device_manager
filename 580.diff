@@ -1,0 +1,468 @@
+diff --git a/frameworks/ddk/base/BUILD.gn b/frameworks/ddk/base/BUILD.gn
+index f009082df283b4b84bb81e8a27bfe6bb89b5e6fb..a774a025b02098dabda5db794a8ab01625823e82 100644
+--- a/frameworks/ddk/base/BUILD.gn
++++ b/frameworks/ddk/base/BUILD.gn
+@@ -40,4 +40,5 @@ ohos_shared_library("ddk_base") {
+   relative_install_dir = "ndk"
+   subsystem_name = "hdf"
+   part_name = "external_device_manager"
++  version_script = "libddk_base.map"
+ }
+diff --git a/frameworks/ddk/base/libddk_base.map b/frameworks/ddk/base/libddk_base.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..12abcea8b8478d08dad1bd05d196a94f8ccca687
+--- /dev/null
++++ b/frameworks/ddk/base/libddk_base.map
+@@ -0,0 +1,33 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libddk_base.z.so
++# SO Type: DDK public C API (interfaces/ddk/base/ddk_api.h, @since 12, install to ndk/)
++# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
++# Generated: 2026-10-31 | baseline 7 symbols -> global 5 (4 public API + __cfi_check)
++# Note: extern "C" API symbols written directly as function names (per template rule);
++#       maintenance: new public API additions (@since bump) must add entries here.
++
++{
++  global:
++    # === KEEP [K-NDK]: public DDK C API (ddk_api.h) ===
++    OH_DDK_CreateAshmem;
++    OH_DDK_DestroyAshmem;
++    OH_DDK_MapAshmem;
++    OH_DDK_UnmapAshmem;
++    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
++    __cfi_check;
++
++  local:
++    *;
++};
+diff --git a/frameworks/js/ani/driver_extension_ability/BUILD.gn b/frameworks/js/ani/driver_extension_ability/BUILD.gn
+index 716c2c076197ab5a2a4bf142b0df5e4c81d92d55..e50bac4d04fc5404fb2c5a3116769180d6755b58 100644
+--- a/frameworks/js/ani/driver_extension_ability/BUILD.gn
++++ b/frameworks/js/ani/driver_extension_ability/BUILD.gn
+@@ -85,6 +85,7 @@ ohos_shared_library("driverextension_ani") {
+   subsystem_name = "hdf"
+   part_name = "external_device_manager"
+   output_extension = "so"
++  version_script = "libdriverextension_ani.map"
+ }
+ 
+ ohos_prebuilt_etc("driver_extension_ability_abc_etc") {
+diff --git a/frameworks/js/ani/driver_extension_ability/libdriverextension_ani.map b/frameworks/js/ani/driver_extension_ability/libdriverextension_ani.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..dd5c66b8be63e43206eee38789f80d2fa8a0bd2c
+--- /dev/null
++++ b/frameworks/js/ani/driver_extension_ability/libdriverextension_ani.map
+@@ -0,0 +1,38 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libdriverextension_ani.so
++# SO Type: DriverExtensionAbility ANI binding lib (out-of-tree loading, output_extension="so")
++# Strategy: Whitelist mode with expanded REVIEW (loading chain not traceable in-tree)
++# Generated: 2026-11-02 | baseline 45 symbols -> global 8 (K-CFI 1 + K-SA glob 2 + REVIEW 5)
++# Contract: loading mechanism lives out-of-tree; AniDriverExtension::Create is the
++#           plausible factory entry (SetCreator/creator_ pair kept in libdriver_extension) -
++#           kept as REVIEW. All lifecycle methods dispatch virtually via vptr.
++
++{
++  global:
++    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
++    __cfi_check;
++    # === KEEP [K-SA]: SA registration entities (official glob convention) ===
++    *delegator_E;
++
++    # === REVIEW [R-ENTRY/R-ZTV/R-ZZ/R-OBJ]: conservative keep, pending manual confirmation ===
++    _ZN4OHOS14AbilityRuntime18AniDriverExtension6CreateERKNSt3__h10unique_ptrINS0_7RuntimeENS2_14default_deleteIS4_EEEE;
++    _ZN4OHOS21ExternalDeviceManager13g_errorVectorE;
++    _ZTVN4OHOS14AbilityRuntime18AniDriverExtensionE;
++    _ZTVN4OHOS19BrokerDelegatorBaseE;
++    _ZZN4OHOS9histogram18GetHistogramPluginEvE8instance;
++
++  local:
++    *;
++};
+diff --git a/frameworks/js/taihe/BUILD.gn b/frameworks/js/taihe/BUILD.gn
+index f5641af88336eb4f308608cbc3f06e40a2183aaa..0886f6fc308c64eecd7350574163bf3e4fd6b812 100644
+--- a/frameworks/js/taihe/BUILD.gn
++++ b/frameworks/js/taihe/BUILD.gn
+@@ -74,6 +74,7 @@ taihe_shared_library("device_manager_taihe_native") {
+     defines += [ "EDM_MANAGER_METRICS_ENABLE" ]
+     external_deps += [ "api_metrics:histogrammanager" ]
+   }
++  version_script = "libdevice_manager_taihe_native.map"
+ }
+ 
+ generate_static_abc("device_manager_abc") {
+diff --git a/frameworks/js/taihe/driver_extension_context/BUILD.gn b/frameworks/js/taihe/driver_extension_context/BUILD.gn
+index ab602be4192e50e8bc6c087c0505101283818727..f8d9407230a6ea33badaeaae27a709b4d306bad3 100644
+--- a/frameworks/js/taihe/driver_extension_context/BUILD.gn
++++ b/frameworks/js/taihe/driver_extension_context/BUILD.gn
+@@ -81,6 +81,7 @@ taihe_shared_library("DriverExtensionContext_native") {
+     "runtime_core:ani",
+     "node:node_header_notice"
+   ]
++  version_script = "libDriverExtensionContext_native.map"
+ }
+ 
+ generate_static_abc("driverExtensionContext_abc") {
+diff --git a/frameworks/js/taihe/driver_extension_context/libDriverExtensionContext_native.map b/frameworks/js/taihe/driver_extension_context/libDriverExtensionContext_native.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..cdc070e0afd90e57b94f998010d2e181ed98ec48
+--- /dev/null
++++ b/frameworks/js/taihe/driver_extension_context/libDriverExtensionContext_native.map
+@@ -0,0 +1,39 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libDriverExtensionContext_native.z.so
++# SO Type: ani (taihe native module) + innerapi (consumed by libdriverextension_ani.so)
++# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
++# Generated: 2026-10-31 | baseline 84 symbols -> global 7 entries (K-ANI/K-CFI/K-PLT x2/K-SA glob x2/R-SEM x1)
++# Note: C++ symbols use mangled names (lld-safe, 1:1 verifiable against llvm-nm -D output;
++#       official napi.versionscript also uses plain globs over mangled names; see build_gn_changes.md)
++
++{
++  global:
++    # === KEEP [K-ANI]: ANI module entry, resolved by runtime via dlsym ===
++    ANI_Constructor;
++    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
++    __cfi_check;
++    # === KEEP [K-PLT]: consumed by libdriverextension_ani.so (DT_NEEDED + PLT/GOT) ===
++    _ZN4OHOS14AbilityRuntime31CreateAniDriverExtensionContextEP9__ani_envNSt3__h10shared_ptrINS0_22DriverExtensionContextEEERKNS4_INS_10AppExecFwk15OHOSApplicationEEE;
++    _ZN4OHOS14AbilityRuntime22DriverExtensionContext15CONTEXT_TYPE_IDE;
++
++    # === KEEP [K-SA]: SA registration entities (official glob convention) ===
++    *delegator_E;
++
++    # === REVIEW [R-SEM]: conservative keep, pending manual confirmation ===
++    _ZTVN4OHOS19BrokerDelegatorBaseE;
++
++  local:
++    *;
++};
+diff --git a/frameworks/js/taihe/libdevice_manager_taihe_native.map b/frameworks/js/taihe/libdevice_manager_taihe_native.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..ca6381755ee0df15353067c2a05a9557ce77643c
+--- /dev/null
++++ b/frameworks/js/taihe/libdevice_manager_taihe_native.map
+@@ -0,0 +1,61 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libdevice_manager_taihe_native.z.so
++# SO Type: @ohos.driver.deviceManager taihe module (ANI dlopen + dlsym ANI_Constructor)
++# Strategy: Whitelist mode (PR drivers_peripheral#9507 / PR#580 pattern)
++# Generated: 2026-11-03 | baseline 210 symbols -> global: K-ANI/K-ENTRY x4/K-SA globs + REVIEW (no cfi_cross_dso in this target)
++# Contract: native functions bound via Namespace_BindNativeFunctions function pointers
++#           (generated .ani.cpp:210-215) - no symbol lookup involved; the 4 ohos_*_f
++#           entries are the taihe ABI contract (TH_EXPORT in generated abi.h) published
++#           to other taihe modules - keep exported.
++
++{
++  global:
++    # === KEEP [K-ANI]: ANI module entry (dlsym by runtime) ===
++    ANI_Constructor;
++    # === KEEP [K-ENTRY]: taihe ABI contract entries (TH_EXPORT in generated abi.h) ===
++    ohos_driver_deviceManager_queryDevices_f;
++    ohos_driver_deviceManager_queryDeviceInfo_f;
++    ohos_driver_deviceManager_queryDriverInfo_f;
++    ohos_driver_deviceManager_UnbindDriverWithDeviceIdSync_f;
++    # === KEEP [K-SA]: SA registration entities (official glob convention) ===
++    *delegator_E;
++    *instance_E;
++    *mutex_E;
++
++    # === REVIEW [R-ZTV/R-ZZ/R-OBJ]: conservative keep, pending manual confirmation ===
++    _ZN4OHOS21ExternalDeviceManager13g_errorVectorE;
++    _ZTTN4OHOS21ExternalDeviceManager10DeviceDataE;
++    _ZTTN4OHOS21ExternalDeviceManager14DeviceInfoDataE;
++    _ZTTN4OHOS21ExternalDeviceManager14DriverInfoDataE;
++    _ZTTN4OHOS21ExternalDeviceManager17USBDeviceInfoDataE;
++    _ZTTN4OHOS21ExternalDeviceManager17USBDriverInfoDataE;
++    _ZTTN4OHOS21ExternalDeviceManager21DeviceManagerCallbackE;
++    _ZTTN4OHOS21ExternalDeviceManager6ErrMsgE;
++    _ZTTN4OHOS21ExternalDeviceManager9USBDeviceE;
++    _ZTVN4OHOS21ExternalDeviceManager10DeviceDataE;
++    _ZTVN4OHOS21ExternalDeviceManager14DeviceInfoDataE;
++    _ZTVN4OHOS21ExternalDeviceManager14DriverInfoDataE;
++    _ZTVN4OHOS21ExternalDeviceManager16USBInterfaceDescE;
++    _ZTVN4OHOS21ExternalDeviceManager17USBDeviceInfoDataE;
++    _ZTVN4OHOS21ExternalDeviceManager17USBDriverInfoDataE;
++    _ZTVN4OHOS21ExternalDeviceManager21DeviceManagerCallbackE;
++    _ZTVN4OHOS21ExternalDeviceManager6ErrMsgE;
++    _ZTVN4OHOS21ExternalDeviceManager9AsyncDataE;
++    _ZTVN4OHOS21ExternalDeviceManager9USBDeviceE;
++    _ZZN4OHOS9histogram18GetHistogramPluginEvE8instance;
++
++  local:
++    *;
++};
+diff --git a/services/native/driver_extension/BUILD.gn b/services/native/driver_extension/BUILD.gn
+index 3831dac9e07f40f7908f6392dd4642dcdc4b8f22..90230d4ee31d61a3a1373838f9ef0f2bb597acf2 100644
+--- a/services/native/driver_extension/BUILD.gn
++++ b/services/native/driver_extension/BUILD.gn
+@@ -81,6 +81,7 @@ ohos_shared_library("driver_extension") {
+ 
+   subsystem_name = "hdf"
+   part_name = "external_device_manager"
++  version_script = "libdriver_extension.map"
+ }
+ 
+ ohos_shared_library("driver_extension_module") {
+@@ -114,4 +115,5 @@ ohos_shared_library("driver_extension_module") {
+   relative_install_dir = "extensionability/"
+   subsystem_name = "hdf"
+   part_name = "external_device_manager"
++  version_script = "libdriver_extension_module.map"
+ }
+diff --git a/services/native/driver_extension/libdriver_extension.map b/services/native/driver_extension/libdriver_extension.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..8cfc994fd96109ba3ab1e24099d172b74012b3fe
+--- /dev/null
++++ b/services/native/driver_extension/libdriver_extension.map
+@@ -0,0 +1,45 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libdriver_extension.z.so
++# SO Type: innerapi DriverExtensionAbility framework lib (consumed by module loader + ANI framework)
++# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
++# Generated: 2026-11-02 | baseline 46 symbols -> global 13 entries (KEEP 6 + R glob 1 + REVIEW 7) -> 14 symbols exported
++# Note: mangled names (lld-safe, 1:1 verifiable against llvm-nm -D; PR#9507 precedent)
++
++{
++  global:
++    # === KEEP [K-PLT]: consumed via PLT/GOT by module loader / ANI framework ===
++    _ZN4OHOS14AbilityRuntime15DriverExtension20CreateAndInitContextERKNSt3__h10shared_ptrINS_10AppExecFwk18AbilityLocalRecordEEERKNS3_INS4_15OHOSApplicationEEERNS3_INS4_14AbilityHandlerEEERKNS_4sptrINS_13IRemoteObjectEEE;
++    _ZN4OHOS14AbilityRuntime15DriverExtension4InitERKNSt3__h10shared_ptrINS_10AppExecFwk18AbilityLocalRecordEEERKNS3_INS4_15OHOSApplicationEEERNS3_INS4_14AbilityHandlerEEERKNS_4sptrINS_13IRemoteObjectEEE;
++    _ZN4OHOS14AbilityRuntime15DriverExtension6CreateERKNSt3__h10unique_ptrINS0_7RuntimeENS2_14default_deleteIS4_EEEE;
++    _ZN4OHOS14AbilityRuntime22DriverExtensionContext15CONTEXT_TYPE_IDE;
++    # === KEEP [K-CFI]: CFI cross-DSO entry (cfi_cross_dso = true) ===
++    __cfi_check;
++    # === KEEP [K-PLT]: consumed by driver_extension_context_test (direct method call) ===
++    _ZN4OHOS14AbilityRuntime22DriverExtensionContext17UpdateDriverStateEv;
++    # === KEEP [K-SA]: SA registration entities (official glob convention) ===
++    *delegator_E;
++
++    # === REVIEW [R-ZTV/R-ZZ/R-OBJ/R-STATE]: conservative keep, pending manual confirmation ===
++    _ZN4OHOS14AbilityRuntime15DriverExtension10SetCreatorERKNSt3__h8functionIFPS1_RKNS2_10unique_ptrINS0_7RuntimeENS2_14default_deleteIS6_EEEEEEE;
++    _ZN4OHOS14AbilityRuntime15DriverExtension8creator_E;
++    _ZN4OHOS21ExternalDeviceManager13g_errorVectorE;
++    _ZTVN4OHOS14AbilityRuntime15DriverExtensionE;
++    _ZTVN4OHOS14AbilityRuntime17JsDriverExtensionE;
++    _ZTVN4OHOS19BrokerDelegatorBaseE;
++    _ZZN4OHOS9histogram18GetHistogramPluginEvE8instance;
++
++  local:
++    *;
++};
+diff --git a/services/native/driver_extension/libdriver_extension_module.map b/services/native/driver_extension/libdriver_extension_module.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..f8bac5814f68a0d3e955e950cff7f4ae9bff818c
+--- /dev/null
++++ b/services/native/driver_extension/libdriver_extension_module.map
+@@ -0,0 +1,36 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libdriver_extension_module.z.so
++# SO Type: ExtensionAbility module loader (dlopen by extensionkit, entry via dlsym)
++# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
++# Generated: 2026-11-02 | baseline 16 symbols -> global 5 (K-ENTRY 1 + K-CFI 1 + REVIEW 3)
++# Contract: extensionkit resolves OHOS_EXTENSION_GetExtensionModule by name
++#           (extension_module_loader.cpp:24 EXTENSION_MODULE_ENTRY); all later calls
++#           dispatch virtually through vptr - no symbol lookup involved.
++
++{
++  global:
++    # === KEEP [K-ENTRY]: dlsym contract entry (explicit visibility("default") in source) ===
++    OHOS_EXTENSION_GetExtensionModule;
++    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
++    __cfi_check;
++
++    # === REVIEW [R-ZTV/R-STATE/R-ZGV]: conservative keep, pending manual confirmation ===
++    _ZGVN4OHOS9SingletonINS_14AbilityRuntime27DriverExtensionModuleLoaderEE9instance_E;
++    _ZN4OHOS9SingletonINS_14AbilityRuntime27DriverExtensionModuleLoaderEE9instance_E;
++    _ZTVN4OHOS14AbilityRuntime27DriverExtensionModuleLoaderE;
++
++  local:
++    *;
++};
+diff --git a/services/native/driver_extension_manager/src/bus_extension/core/BUILD.gn b/services/native/driver_extension_manager/src/bus_extension/core/BUILD.gn
+index 5620ecc645b1df5e20fed934fddb055eaaa725e2..288b919d2f3894e78d44df61f540f18f435d4f50 100644
+--- a/services/native/driver_extension_manager/src/bus_extension/core/BUILD.gn
++++ b/services/native/driver_extension_manager/src/bus_extension/core/BUILD.gn
+@@ -37,4 +37,5 @@ ohos_shared_library("driver_extension_bus_core") {
+ 
+   subsystem_name = "hdf"
+   part_name = "external_device_manager"
++  version_script = "libdriver_extension_bus_core.map"
+ }
+diff --git a/services/native/driver_extension_manager/src/bus_extension/core/libdriver_extension_bus_core.map b/services/native/driver_extension_manager/src/bus_extension/core/libdriver_extension_bus_core.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..b65fc9b5c78b18996c71525e0d075048cb08a6ba
+--- /dev/null
++++ b/services/native/driver_extension_manager/src/bus_extension/core/libdriver_extension_bus_core.map
+@@ -0,0 +1,37 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libdriver_extension_bus_core.z.so
++# SO Type: innerapi service framework lib (BusExtensionCore, consumed by SA/usb_bus plugin/pkg_manager)
++# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
++# Generated: 2026-11-02 | baseline 22 symbols -> global 8 (7 K-PLT methods + __cfi_check)
++# Note: mangled names (lld-safe, 1:1 verifiable against llvm-nm -D; PR#9507 precedent);
++#       bus extension plugins register via RegisterBusExtension<T> header template
++#       (bus_extension_core.h:50) calling GetInstance/Register through PLT - keep exported.
++
++{
++  global:
++    # === KEEP [K-PLT]: BusExtensionCore public methods (3 consumer DSOs) ===
++    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore11GetInstanceEv;
++    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore16GetBusTypeByNameERKNSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
++    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore20LoadBusExtensionLibsEv;
++    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore21GetBusExtensionByNameENSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
++    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore27AcquireDriverChangeCallbackENS0_7BusTypeE;
++    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore4InitENSt3__h10shared_ptrINS0_18IDevChangeCallbackEEE;
++    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore8RegisterENS0_7BusTypeENSt3__h10shared_ptrINS0_13IBusExtensionEEE;
++    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
++    __cfi_check;
++
++  local:
++    *;
++};
+diff --git a/services/native/driver_extension_manager/src/bus_extension/usb/BUILD.gn b/services/native/driver_extension_manager/src/bus_extension/usb/BUILD.gn
+index 975c6005b4f5caf628f6cc0625a02ff90e91fffc..e5a7b31ae5685858390b87a3912cf0a2cb217f76 100644
+--- a/services/native/driver_extension_manager/src/bus_extension/usb/BUILD.gn
++++ b/services/native/driver_extension_manager/src/bus_extension/usb/BUILD.gn
+@@ -79,4 +79,5 @@ ohos_shared_library("driver_extension_usb_bus") {
+   install_enable = true
+   subsystem_name = "hdf"
+   part_name = "external_device_manager"
++  version_script = "libdriver_extension_usb_bus.map"
+ }
+diff --git a/services/native/driver_extension_manager/src/bus_extension/usb/libdriver_extension_usb_bus.map b/services/native/driver_extension_manager/src/bus_extension/usb/libdriver_extension_usb_bus.map
+new file mode 100644
+index 0000000000000000000000000000000000000000..bfe28756bf9b75da168d5053f6b7850a9131a036
+--- /dev/null
++++ b/services/native/driver_extension_manager/src/bus_extension/usb/libdriver_extension_usb_bus.map
+@@ -0,0 +1,47 @@
++# Copyright (c) 2026 Huawei Device Co., Ltd.
++# Licensed under the Apache License, Version 2.0 (the "License")*;
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Version Script for libdriver_extension_usb_bus.z.so
++# SO Type: USB bus extension plugin (dlopen self-registration pattern via DT_INIT constructor)
++# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
++# Generated: 2026-11-02 | baseline 48 symbols -> global 9 (K-CFI 1 + K-PLT 2 + R-ZTV 6)
++# Contract: BusExtensionCore dlopens this lib (no dlsym); registration happens via
++#           RegisterBusExtension<UsbBusExtension> template in DT_INIT constructor calling
++#           bus_core's GetInstance/Register through PLT; all later calls dispatch
++#           virtually through vptr - no symbol lookup involved.
++
++{
++  global:
++    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
++    __cfi_check;
++    # === KEEP [K-PLT]: consumed by device_manager_test (direct construction + vtable) ===
++    _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionC1Ev;
++    _ZTVN4OHOS21ExternalDeviceManager13UsbDriverInfoE;
++    # === KEEP [K-PLT]: consumed by bus_extension_usb_test (direct method calls) ===
++    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension9SetUsbDdkENS_4sptrINS_3HDI3Usb3Ddk4V1_27IUsbDdkEEE;
++    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15SetUsbInferfaceENS_4sptrINS_3HDI3Usb4V2_017IUsbHostInterfaceEEE;
++    # === KEEP [K-PLT]: consumed by usbextension_fuzzer (devirtualized direct calls on concrete types) ===
++    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15ParseDriverInfoERKNSt3__h3mapINS2_12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEES9_NS2_4lessIS9_EENS7_INS2_4pairIKS9_S9_EEEEEE;
++    _ZN4OHOS21ExternalDeviceManager13UsbDriverInfo11UnSerializeERKNSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
++
++    # === REVIEW [R-ZTV]: conservative keep - cross-DSO inheritance (bases in bus_core / USB HDI lib) ===
++    _ZTCN4OHOS21ExternalDeviceManager16UsbDevSubscriberE0_NS_3HDI3Usb4V2_015IUsbdSubscriberE;
++    _ZTCN4OHOS21ExternalDeviceManager16UsbDevSubscriberE0_NS_3HDI7HdiBaseE;
++    _ZTTN4OHOS21ExternalDeviceManager16UsbDevSubscriberE;
++    _ZTVN4OHOS21ExternalDeviceManager15UsbBusExtensionE;
++    _ZTVN4OHOS21ExternalDeviceManager16UsbDevSubscriberE;
++    _ZTVN4OHOS21ExternalDeviceManager23UsbDriverChangeCallbackE;
++
++  local:
++    *;
++};

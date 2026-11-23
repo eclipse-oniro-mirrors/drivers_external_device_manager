@@ -1,0 +1,61 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License")*;
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Version Script for libdevice_manager_taihe_native.z.so
+# SO Type: @ohos.driver.deviceManager taihe module (ANI dlopen + dlsym ANI_Constructor)
+# Strategy: Whitelist mode (PR drivers_peripheral#9507 / PR#580 pattern)
+# Generated: 2026-11-03 | baseline 210 symbols -> global: K-ANI/K-ENTRY x4/K-SA globs + REVIEW (no cfi_cross_dso in this target)
+# Contract: native functions bound via Namespace_BindNativeFunctions function pointers
+#           (generated .ani.cpp:210-215) - no symbol lookup involved; the 4 ohos_*_f
+#           entries are the taihe ABI contract (TH_EXPORT in generated abi.h) published
+#           to other taihe modules - keep exported.
+
+{
+  global:
+    # === KEEP [K-ANI]: ANI module entry (dlsym by runtime) ===
+    ANI_Constructor;
+    # === KEEP [K-ENTRY]: taihe ABI contract entries (TH_EXPORT in generated abi.h) ===
+    ohos_driver_deviceManager_queryDevices_f;
+    ohos_driver_deviceManager_queryDeviceInfo_f;
+    ohos_driver_deviceManager_queryDriverInfo_f;
+    ohos_driver_deviceManager_UnbindDriverWithDeviceIdSync_f;
+    # === KEEP [K-SA]: SA registration entities (official glob convention) ===
+    *delegator_E;
+    *instance_E;
+    *mutex_E;
+
+    # === REVIEW [R-ZTV/R-ZZ/R-OBJ]: conservative keep, pending manual confirmation ===
+    _ZN4OHOS21ExternalDeviceManager13g_errorVectorE;
+    _ZTTN4OHOS21ExternalDeviceManager10DeviceDataE;
+    _ZTTN4OHOS21ExternalDeviceManager14DeviceInfoDataE;
+    _ZTTN4OHOS21ExternalDeviceManager14DriverInfoDataE;
+    _ZTTN4OHOS21ExternalDeviceManager17USBDeviceInfoDataE;
+    _ZTTN4OHOS21ExternalDeviceManager17USBDriverInfoDataE;
+    _ZTTN4OHOS21ExternalDeviceManager21DeviceManagerCallbackE;
+    _ZTTN4OHOS21ExternalDeviceManager6ErrMsgE;
+    _ZTTN4OHOS21ExternalDeviceManager9USBDeviceE;
+    _ZTVN4OHOS21ExternalDeviceManager10DeviceDataE;
+    _ZTVN4OHOS21ExternalDeviceManager14DeviceInfoDataE;
+    _ZTVN4OHOS21ExternalDeviceManager14DriverInfoDataE;
+    _ZTVN4OHOS21ExternalDeviceManager16USBInterfaceDescE;
+    _ZTVN4OHOS21ExternalDeviceManager17USBDeviceInfoDataE;
+    _ZTVN4OHOS21ExternalDeviceManager17USBDriverInfoDataE;
+    _ZTVN4OHOS21ExternalDeviceManager21DeviceManagerCallbackE;
+    _ZTVN4OHOS21ExternalDeviceManager6ErrMsgE;
+    _ZTVN4OHOS21ExternalDeviceManager9AsyncDataE;
+    _ZTVN4OHOS21ExternalDeviceManager9USBDeviceE;
+    _ZZN4OHOS9histogram18GetHistogramPluginEvE8instance;
+
+  local:
+    *;
+};
