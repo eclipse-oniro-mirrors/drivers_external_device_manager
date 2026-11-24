@@ -296,6 +296,58 @@ void ThrowErr(const napi_env &env, const int32_t errCode, const std::string &pri
     napi_close_handle_scope(env, scope);
 }
 
+static std::string GetNapiValueTypeString(napi_valuetype type)
+{
+    switch (type) {
+        case napi_undefined:
+            return "undefined";
+        case napi_null:
+            return "null";
+        case napi_boolean:
+            return "boolean";
+        case napi_number:
+            return "number";
+        case napi_string:
+            return "string";
+        case napi_symbol:
+            return "symbol";
+        case napi_object:
+            return "object";
+        case napi_function:
+            return "function";
+        case napi_bigint:
+            return "bigint";
+        default:
+            return "unknown";
+    }
+}
+
+static void ThrowParameterTypeError(
+    const napi_env env, size_t index, const std::string &expectedType, napi_valuetype actualType)
+{
+    std::string actualTypeStr = GetNapiValueTypeString(actualType);
+    std::string msg = "Parameter error. Param[" + std::to_string(index) + "] type mismatch. Expected: " + expectedType +
+        ", Actual: " + actualTypeStr;
+    EDM_LOGE(MODULE_DEV_MGR, "message: %{public}s, code: %{public}d", msg.c_str(), PARAMETER_ERROR);
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    napi_value error = CreateBusinessError(env, PARAMETER_ERROR, msg);
+    napi_throw(env, error);
+    napi_close_handle_scope(env, scope);
+}
+
+static void ThrowParameterCountError(const napi_env env, size_t expectCount, size_t actualCount)
+{
+    std::string msg = "Parameter error. Incorrect parameter count. Expected: " + std::to_string(expectCount) +
+        ", Actual: " + std::to_string(actualCount);
+    EDM_LOGE(MODULE_DEV_MGR, "message: %{public}s, code: %{public}d", msg.c_str(), PARAMETER_ERROR);
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    napi_value error = CreateBusinessError(env, PARAMETER_ERROR, msg);
+    napi_throw(env, error);
+    napi_close_handle_scope(env, scope);
+}
+
 static napi_value ConvertDeviceToJsDevice(napi_env& env, std::shared_ptr<DeviceData> device)
 {
     napi_value object;
@@ -588,21 +640,25 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_2) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "bindDriver parameter count not match");
+        ThrowParameterCountError(env, PARAM_COUNT_2, argc);
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "number", actualType);
         return nullptr;
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter bindDriver:%{public}016" PRIX64, deviceId);
 
     if (!IsMatchType(env, argv[1], napi_function)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "onDisconnect param is error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[1], &actualType);
+        ThrowParameterTypeError(env, 1, "AsyncCallback<number>", actualType);
         return nullptr;
     }
 
@@ -625,8 +681,8 @@ static napi_value BindDriverWithDeviceId(napi_env env, napi_callback_info info)
 
     sptr<AsyncData> data = new (std::nothrow) AsyncData {};
     if (data == nullptr) {
-        metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "malloc callback data fail");
+        metrics.SetErrorCode(SERVICE_EXCEPTION_NEW);
+        ThrowErr(env, SERVICE_EXCEPTION_NEW, "malloc callback data fail");
         return nullptr;
     }
     data->env = env;
@@ -651,14 +707,16 @@ static napi_value UnbindDriverWithDeviceId(napi_env env, napi_callback_info info
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc < PARAM_COUNT_1) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "Param count error");
+        ThrowParameterCountError(env, PARAM_COUNT_1, argc);
         return nullptr;
     }
 
     uint64_t deviceId;
     if (!ParseDeviceId(env, argv[0], &deviceId)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "deviceid type error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "number", actualType);
         return nullptr;
     }
     EDM_LOGI(MODULE_DEV_MGR, "Enter unbindDriver:%{public}016" PRIX64, deviceId);
@@ -705,7 +763,9 @@ static napi_value QueryDeviceInfo(napi_env env, napi_callback_info info)
     uint64_t deviceId = 0;
     if (argc > PARAM_COUNT_0 && !ParseDeviceId(env, argv[0], &deviceId)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "deviceId type error");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "number", actualType);
         return nullptr;
     }
     std::vector<std::shared_ptr<DeviceInfoData>> deviceInfos;
@@ -747,7 +807,9 @@ static napi_value QueryDriverInfo(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     if (argc > PARAM_COUNT_0 && !IsMatchType(env, argv[0], napi_string)) {
         metrics.SetErrorCode(PARAMETER_ERROR);
-        ThrowErr(env, PARAMETER_ERROR, "driverUid type is invalid");
+        napi_valuetype actualType = napi_undefined;
+        napi_typeof(env, argv[0], &actualType);
+        ThrowParameterTypeError(env, 0, "string", actualType);
         return nullptr;
     }
 
