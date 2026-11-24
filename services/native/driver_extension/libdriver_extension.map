@@ -1,9 +1,9 @@
 # Copyright (c) 2026 Huawei Device Co., Ltd.
-# Licensed under the Apache License, Version 2.0 (the "License")*;
+# Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@
 # Version Script for libdriver_extension.z.so
 # SO Type: innerapi DriverExtensionAbility framework lib (consumed by module loader + ANI framework)
 # Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
-# Generated: 2026-11-02 | baseline 46 symbols -> global 13 entries (KEEP 6 + R glob 1 + REVIEW 7) -> 14 symbols exported
+# Generated: 2026-11-02 | updated 2026-11-24 (review fix) | baseline 46 symbols -> global 13 entries (KEEP 6 + K-SA glob 1 + REVIEW 6)
 # Note: mangled names (lld-safe, 1:1 verifiable against llvm-nm -D; PR#9507 precedent)
 
 {
@@ -31,10 +31,15 @@
     # === KEEP [K-SA]: SA registration entities (official glob convention) ===
     *delegator_E;
 
-    # === REVIEW [R-ZTV/R-ZZ/R-OBJ/R-STATE]: conservative keep, pending manual confirmation ===
+    # REMOVED (review fix): _ZN4OHOS21ExternalDeviceManager13g_errorVectorE -> local.
+    # utils/src/ext_dev_api_metrics.cpp:36 is a strong definition compiled into every
+    # metrics user (taihe BUILD.gn:57, napi device_manager BUILD.gn:25, this target
+    # BUILD.gn:40, ani BUILD.gn:39); zero extern imports (grep-verified), content is
+    # const after init -> per-DSO local copy is semantically identical.
+
+    # === REVIEW [R-ZTV/R-ZZ/R-STATE]: conservative keep, pending manual confirmation ===
     _ZN4OHOS14AbilityRuntime15DriverExtension10SetCreatorERKNSt3__h8functionIFPS1_RKNS2_10unique_ptrINS0_7RuntimeENS2_14default_deleteIS6_EEEEEEE;
     _ZN4OHOS14AbilityRuntime15DriverExtension8creator_E;
-    _ZN4OHOS21ExternalDeviceManager13g_errorVectorE;
     _ZTVN4OHOS14AbilityRuntime15DriverExtensionE;
     _ZTVN4OHOS14AbilityRuntime17JsDriverExtensionE;
     _ZTVN4OHOS19BrokerDelegatorBaseE;
