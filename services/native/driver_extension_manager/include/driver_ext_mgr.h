@@ -15,13 +15,10 @@
 
 #ifndef DRIVER_EXTENSION_MANAGER_H
 #define DRIVER_EXTENSION_MANAGER_H
-#include <atomic>
-#include <condition_variable>
 #include <future>
 #include <mutex>
 #include <singleton.h>
 #include <system_ability.h>
-#include <thread>
 
 #include "driver_ext_mgr_stub.h"
 #include "event_config.h"
@@ -75,13 +72,9 @@ private:
 #ifdef ENABLE_PCIE
     std::shared_ptr<IPcieDriverManager> pcieDriverManager_;
     std::mutex pcieDriverReconcileMutex_;
-    std::condition_variable pcieDriverReconcileCv_;
-    std::atomic<bool> pcieDriverReconcileDirty_ {false};
-    std::atomic<bool> pcieDriverReconcileStop_ {false};
-    std::thread pcieDriverReconcileWorker_;
     void StartPcieDriverManager();
-    void PcieDriverReconcileWorker();
-    void StopPcieDriverReconcileWorker();
+    void StopPcieDriverManager();
+    void ReconcilePcieDrivers();
 #endif
 };
 } // namespace ExternalDeviceManager

@@ -66,18 +66,12 @@ public:
     int32_t UnRegisterOnBundleUpdate();
     int32_t RegisterBundleStatusCallback();
     bool SubscribeOsAccountSwitch();
-#ifdef ENABLE_PCIE
-    void SetBundleChangeCallback(std::function<void()> callback);
-#endif
     ~DriverPkgManager();
 
 private:
     shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
     sptr<DrvBundleStateCallback> bundleStateCallback_ = nullptr;
     BundleInfoNames bundleInfoName_;
-#ifdef ENABLE_PCIE
-    std::function<void()> bundleChangeCallback_ = nullptr;
-#endif
 
     shared_future<int32_t> bmsFuture_;
     shared_future<int32_t> accountFuture_;

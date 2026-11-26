@@ -44,13 +44,10 @@
 #include <fcntl.h>
 #include <fstream>
 #include <sstream>
-#include <sys/prctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <cJSON.h>
-#include <chrono>
-#include <thread>
 #include <utility>
 #endif
 #ifdef ENABLE_APP_LAUNCH_MANAGER
@@ -492,29 +489,15 @@ std::shared_ptr<PcieDriverManager> BuildPcieDriverManagerDeps(const PcieDriverMa
     return pcieDriverManager;
 }
 
-void DriverExtMgr::PcieDriverReconcileWorker()
+void DriverExtMgr::ReconcilePcieDrivers()
 {
-    EDM_LOGI(MODULE_SERVICE, "ReconcileWorker: started");
-    while (!pcieDriverReconcileStop_.load()) {
-        std::vector<PcieDeviceInfo> devices;
-        {
-            std::unique_lock<std::mutex> lock(pcieDriverReconcileMutex_);
-            pcieDriverReconcileCv_.wait(lock, [this] {
-                return pcieDriverReconcileDirty_.load() || pcieDriverReconcileStop_.load();
-            });
-            if (pcieDriverReconcileStop_.load()) {
-                break;
-            }
-            pcieDriverReconcileDirty_ = false;
-            prctl(PR_SET_NAME, "SA:wake");
-        }
-        if (!QueryCurrentPcieHostDevices(devices)) {
-            EDM_LOGE(MODULE_SERVICE, "ReconcileWorker: skip evaluation because Host query failed");
-            continue;
-        }
-        ExtDeviceManager::GetInstance().SetPcieDevicesPresent(!devices.empty());
-        RunPcieDriverReconcile(pcieDriverManager_, devices);
+    std::lock_guard<std::mutex> lock(pcieDriverReconcileMutex_);
+    std::vector<PcieDeviceInfo> devices;
+    if (!QueryCurrentPcieHostDevices(devices)) {
+        EDM_LOGE(MODULE_SERVICE, "ReconcilePcieDrivers: skip evaluation because Host query failed");
+        return;
     }
+    RunPcieDriverReconcile(pcieDriverManager_, devices);
 }
 #endif
 
@@ -522,24 +505,11 @@ DriverExtMgr::DriverExtMgr() : SystemAbility(HDF_EXTERNAL_DEVICE_MANAGER_SA_ID, 
 DriverExtMgr::~DriverExtMgr()
 {
 #ifdef ENABLE_PCIE
-    StopPcieDriverReconcileWorker();
+    StopPcieDriverManager();
 #endif
 }
 
 #ifdef ENABLE_PCIE
-void DriverExtMgr::StopPcieDriverReconcileWorker()
-{
-    {
-        std::lock_guard<std::mutex> lock(pcieDriverReconcileMutex_);
-        pcieDriverReconcileStop_ = true;
-    }
-    DriverPkgManager::GetInstance().SetBundleChangeCallback(nullptr);
-    pcieDriverReconcileCv_.notify_all();
-    if (pcieDriverReconcileWorker_.joinable()) {
-        pcieDriverReconcileWorker_.join();
-    }
-}
-
 void DriverExtMgr::StartPcieDriverManager()
 {
     PcieDriverManagerConfig pcieDriverConfig;
@@ -551,25 +521,14 @@ void DriverExtMgr::StartPcieDriverManager()
         EDM_LOGE(MODULE_SERVICE, "OnStart: pcieDriverManager_ is NULL");
         return;
     }
-    EDM_LOGI(MODULE_SERVICE, "OnStart: creating reconcile worker");
-    {
-        std::lock_guard<std::mutex> lock(pcieDriverReconcileMutex_);
-        pcieDriverReconcileStop_ = false;
-    }
-    pcieDriverReconcileWorker_ = std::thread(&DriverExtMgr::PcieDriverReconcileWorker, this);
-    DriverPkgManager::GetInstance().SetBundleChangeCallback([this] {
-        {
-            std::lock_guard<std::mutex> lock(pcieDriverReconcileMutex_);
-            pcieDriverReconcileDirty_ = true;
-        }
-        pcieDriverReconcileCv_.notify_one();
-    });
-    EDM_LOGI(MODULE_SERVICE, "OnStart: kick-off initial reconcile");
-    {
-        std::lock_guard<std::mutex> lock(pcieDriverReconcileMutex_);
-        pcieDriverReconcileDirty_ = true;
-    }
-    pcieDriverReconcileCv_.notify_one();
+    EDM_LOGI(MODULE_SERVICE, "OnStart: run initial reconcile");
+    ReconcilePcieDrivers();
+    ExtDeviceManager::GetInstance().UnLoadSelf();
+}
+
+void DriverExtMgr::StopPcieDriverManager()
+{
+    std::lock_guard<std::mutex> lock(pcieDriverReconcileMutex_);
 }
 #endif
 
@@ -608,7 +567,7 @@ void DriverExtMgr::OnStart()
     if (!Publish(AsObject())) {
         EDM_LOGE(MODULE_DEV_MGR, "OnStart register to system ability manager failed.");
 #ifdef ENABLE_PCIE
-        StopPcieDriverReconcileWorker();
+        StopPcieDriverManager();
 #endif
         return;
     }
@@ -622,7 +581,7 @@ void DriverExtMgr::OnStop()
 {
     EDM_LOGI(MODULE_SERVICE, "hdf_ext_devmgr OnStop");
 #ifdef ENABLE_PCIE
-    StopPcieDriverReconcileWorker();
+    StopPcieDriverManager();
 #endif
 #ifdef ENABLE_APP_LAUNCH_MANAGER
     AppLaunchManager::GetInstance().UnInit();

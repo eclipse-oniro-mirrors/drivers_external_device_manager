@@ -12,7 +12,7 @@
         *QueryDevicesById*;
         *QueryAllDevices*;
         *SetDriverChangeCallback*;
-        *SetPcieDevicesPresent*;
+        *UnLoadSelf*;
       };
     local:
       *;
