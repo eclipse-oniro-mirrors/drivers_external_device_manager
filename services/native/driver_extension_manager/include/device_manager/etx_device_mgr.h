@@ -16,7 +16,6 @@
 #ifndef DEVICE_MANAGER_ETX_DEVICE_MGR_H
 #define DEVICE_MANAGER_ETX_DEVICE_MGR_H
 
-#include <atomic>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -55,7 +54,7 @@ public:
     void MatchDriverInfos(std::unordered_set<uint64_t> deviceIds);
     void ClearMatchedDrivers(const int32_t userId);
     void SetDriverChangeCallback(shared_ptr<IDriverChangeCallback> &driverChangeCallback);
-    void SetPcieDevicesPresent(bool devicesPresent);
+    void UnLoadSelf(void);
 
 private:
     ExtDeviceManager() = default;
@@ -65,7 +64,6 @@ private:
     void UpdateDriverInfo(const shared_ptr<Device> &device);
     void RemoveDriverInfo(const shared_ptr<Device> &device);
     std::shared_ptr<Device> QueryDeviceByDeviceID(uint64_t deviceId);
-    void UnLoadSelf(void);
     size_t GetTotalDeviceNum(void) const;
     int32_t CheckAccessPermission(const std::shared_ptr<DriverInfo> &driverInfo,
         const unordered_set<std::string> &accessibleAppIds, uint32_t callingTokenId) const;
@@ -77,7 +75,6 @@ private:
     mutex bundleMatchMapMutex_;
     Utils::Timer unloadSelftimer_ {"unLoadSelfTimer"};
     uint32_t unloadSelftimerId_ {UINT32_MAX};
-    std::atomic<bool> pcieDevicesPresent_ {false};
     std::shared_ptr<IDriverChangeCallback> driverChangeCallback_ = nullptr;
 };
 } // namespace ExternalDeviceManager
