@@ -1,0 +1,33 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Version Script for libddk_base.z.so
+# SO Type: DDK public C API (interfaces/ddk/base/ddk_api.h, @since 12, install to ndk/)
+# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
+# Generated: 2026-10-31 | baseline 7 symbols -> global 5 (4 public API + __cfi_check)
+# Note: extern "C" API symbols written directly as function names (per template rule);
+#       maintenance: new public API additions (@since bump) must add entries here.
+
+{
+  global:
+    # === KEEP [K-NDK]: public DDK C API (ddk_api.h) ===
+    OH_DDK_CreateAshmem;
+    OH_DDK_DestroyAshmem;
+    OH_DDK_MapAshmem;
+    OH_DDK_UnmapAshmem;
+    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
+    __cfi_check;
+
+  local:
+    *;
+};

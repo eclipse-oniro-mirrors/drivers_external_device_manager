@@ -1,0 +1,37 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Version Script for libdriver_extension_bus_core.z.so
+# SO Type: innerapi service framework lib (BusExtensionCore, consumed by SA/usb_bus plugin/pkg_manager)
+# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
+# Generated: 2026-11-02 | baseline 22 symbols -> global 8 (7 K-PLT methods + __cfi_check)
+# Note: mangled names (lld-safe, 1:1 verifiable against llvm-nm -D; PR#9507 precedent);
+#       bus extension plugins register via RegisterBusExtension<T> header template
+#       (bus_extension_core.h:50) calling GetInstance/Register through PLT - keep exported.
+
+{
+  global:
+    # === KEEP [K-PLT]: BusExtensionCore public methods (3 consumer DSOs) ===
+    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore11GetInstanceEv;
+    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore16GetBusTypeByNameERKNSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
+    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore20LoadBusExtensionLibsEv;
+    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore21GetBusExtensionByNameENSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
+    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore27AcquireDriverChangeCallbackENS0_7BusTypeE;
+    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore4InitENSt3__h10shared_ptrINS0_18IDevChangeCallbackEEE;
+    _ZN4OHOS21ExternalDeviceManager16BusExtensionCore8RegisterENS0_7BusTypeENSt3__h10shared_ptrINS0_13IBusExtensionEEE;
+    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
+    __cfi_check;
+
+  local:
+    *;
+};

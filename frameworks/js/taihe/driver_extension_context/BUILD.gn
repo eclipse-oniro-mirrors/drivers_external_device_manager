@@ -82,6 +82,7 @@ taihe_shared_library("DriverExtensionContext_native") {
     "runtime_core:ani",
     "node:node_header_notice"
   ]
+  version_script = "libDriverExtensionContext_native.map"
 }
 
 generate_static_abc("driverExtensionContext_abc") {

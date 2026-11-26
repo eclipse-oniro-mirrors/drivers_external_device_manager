@@ -1,0 +1,36 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Version Script for libdriver_extension_module.z.so
+# SO Type: ExtensionAbility module loader (dlopen by extensionkit, entry via dlsym)
+# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
+# Generated: 2026-11-02 | baseline 16 symbols -> global 5 (K-ENTRY 1 + K-CFI 1 + REVIEW 3)
+# Contract: extensionkit resolves OHOS_EXTENSION_GetExtensionModule by name
+#           (extension_module_loader.cpp:24 EXTENSION_MODULE_ENTRY); all later calls
+#           dispatch virtually through vptr - no symbol lookup involved.
+
+{
+  global:
+    # === KEEP [K-ENTRY]: dlsym contract entry (explicit visibility("default") in source) ===
+    OHOS_EXTENSION_GetExtensionModule;
+    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
+    __cfi_check;
+
+    # === REVIEW [R-ZTV/R-STATE/R-ZGV]: conservative keep, pending manual confirmation ===
+    _ZGVN4OHOS9SingletonINS_14AbilityRuntime27DriverExtensionModuleLoaderEE9instance_E;
+    _ZN4OHOS9SingletonINS_14AbilityRuntime27DriverExtensionModuleLoaderEE9instance_E;
+    _ZTVN4OHOS14AbilityRuntime27DriverExtensionModuleLoaderE;
+
+  local:
+    *;
+};

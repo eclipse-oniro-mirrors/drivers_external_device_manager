@@ -1,0 +1,53 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Version Script for libdriver_extension_usb_bus.z.so (USB bus extension plugin, dlopen self-registration)
+# Generated: 2026-11-02 | updated 2026-11-24 (review fix) | baseline 48 symbols -> global 17 (K-CFI 1 + K-PLT 10 + R-ZTV 6)
+# Contract: BusExtensionCore dlopens (no dlsym); DT_INIT constructor registers via bus_core PLT; later calls via vptr.
+
+{
+  global:
+    # === KEEP [K-CFI]: CFI cross-DSO check entry (cfi_cross_dso = true) ===
+    __cfi_check;
+    # === KEEP [K-PLT]: consumed by device_manager_test (direct construction + vtable) ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionC1Ev;
+    _ZTVN4OHOS21ExternalDeviceManager13UsbDriverInfoE;
+    # === KEEP [K-PLT]: direct calls from tests/mt on concrete type; SetUsbInferface
+    # glob covers both ABI variants (pass_through V2_0 / V1_0, usb_bus_extension.h:48-52) ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension9SetUsbDdk*;
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15SetUsbInferface*;
+    # === KEEP [K-PLT]: out-of-line members (usb_bus_extension.cpp:94/148), direct test U-refs ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension20SetDevChangeCallback*;
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension11MatchDriver*;
+    # === KEEP [K-PLT]: out-of-line dtor (usb_bus_extension.cpp:43); every make_shared
+    # control block in consumer TUs (tests/mt/fuzzer) destroys through it ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionD1Ev;
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionD2Ev;
+    # === KEEP [K-PLT]: consumed by usbextension_fuzzer (devirtualized direct calls on concrete types) ===
+    _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15ParseDriverInfoERKNSt3__h3mapINS2_12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEES9_NS2_4lessIS9_EENS7_INS2_4pairIKS9_S9_EEEEEE;
+    _ZN4OHOS21ExternalDeviceManager13UsbDriverInfo11UnSerializeERKNSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
+
+    # NOTE: UsbDriverInfo ctor/dtor implicit-inline (ext_object.h:33) - no cross-DSO ref;
+    # Serialize only reached via virtual dispatch - no export needed.
+
+    # === REVIEW [R-ZTV]: conservative keep - cross-DSO inheritance (bases in bus_core / USB HDI lib) ===
+    _ZTCN4OHOS21ExternalDeviceManager16UsbDevSubscriberE0_NS_3HDI3Usb4V2_015IUsbdSubscriberE;
+    _ZTCN4OHOS21ExternalDeviceManager16UsbDevSubscriberE0_NS_3HDI7HdiBaseE;
+    _ZTTN4OHOS21ExternalDeviceManager16UsbDevSubscriberE;
+    _ZTVN4OHOS21ExternalDeviceManager15UsbBusExtensionE;
+    _ZTVN4OHOS21ExternalDeviceManager16UsbDevSubscriberE;
+    _ZTVN4OHOS21ExternalDeviceManager23UsbDriverChangeCallbackE;
+
+  local:
+    *;
+};

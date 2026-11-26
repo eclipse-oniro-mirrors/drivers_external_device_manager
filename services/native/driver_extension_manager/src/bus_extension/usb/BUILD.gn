@@ -79,4 +79,5 @@ ohos_shared_library("driver_extension_usb_bus") {
   install_enable = true
   subsystem_name = "hdf"
   part_name = "external_device_manager"
+  version_script = "libdriver_extension_usb_bus.map"
 }

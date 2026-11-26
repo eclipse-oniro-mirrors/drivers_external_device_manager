@@ -85,6 +85,7 @@ ohos_shared_library("driverextension_ani") {
   subsystem_name = "hdf"
   part_name = "external_device_manager"
   output_extension = "so"
+  version_script = "libdriverextension_ani.map"
 }
 
 ohos_prebuilt_etc("driver_extension_ability_abc_etc") {
