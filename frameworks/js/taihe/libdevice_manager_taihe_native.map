@@ -11,12 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Version Script for libdevice_manager_taihe_native.z.so
-# SO Type: @ohos.driver.deviceManager taihe module (ANI dlopen + dlsym ANI_Constructor)
-# Strategy: Whitelist mode (PR drivers_peripheral#9507 / PR#580 pattern)
+# Version Script for libdevice_manager_taihe_native.z.so (@ohos.driver.deviceManager taihe module, dlsym ANI_Constructor)
 # Generated: 2026-11-03 | updated 2026-11-24 (review fix) | baseline 210 symbols -> global 25 (K-CFI 1 + K-ANI 1 + K-ENTRY glob + K-SA globs + REVIEW 19)
-# Contract: native functions bound via Namespace_BindNativeFunctions function pointers
-#           (generated .ani.cpp:210-215); ohos_*_f entries are the taihe ABI contract.
+# Contract: native functions bound via function pointers (generated .ani.cpp:210-215); ohos_*_f = taihe ABI contract.
 # CFI: cfi_cross_dso = true (BUILD.gn sanitize, enabled 2026-11-19) -> __cfi_check is required.
 
 {

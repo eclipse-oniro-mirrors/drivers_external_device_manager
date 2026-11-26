@@ -11,13 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Version Script for libdriverextension_ani.so
-# SO Type: DriverExtensionAbility ANI binding lib (out-of-tree loading, output_extension = "so")
-# Strategy: Whitelist mode; keeps carry consumer evidence + "deleting breaks" note
+# Version Script for libdriverextension_ani.so (DriverExtensionAbility ANI binding lib, out-of-tree loading)
 # Generated: 2026-11-02 | updated 2026-11-24 (review fix) | baseline 45 symbols -> global 6 (K-CFI 1 + K-SA glob 1 + KEEP 4)
-# Contract: loaded by extensionkit ANI loader (dep ability_runtime:extensionkit_native) by
-#           name; Create is the factory entry, consumed like the JS path
-#           (DriverExtensionModuleLoader::Create, driver_extension_module_loader.cpp:23-26).
+# Contract: extensionkit loads by name; Create = factory entry (cf. driver_extension_module_loader.cpp:23-26).
 
 {
   global:

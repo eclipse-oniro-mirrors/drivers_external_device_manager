@@ -11,9 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Version Script for libdriver_extension.z.so
-# SO Type: innerapi DriverExtensionAbility framework lib (consumed by module loader + ANI framework)
-# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
+# Version Script for libdriver_extension.z.so (innerapi DriverExtensionAbility framework lib)
 # Generated: 2026-11-02 | updated 2026-11-24 (review fix) | baseline 46 symbols -> global 13 entries (KEEP 6 + K-SA glob 1 + REVIEW 6)
 # Note: mangled names (lld-safe, 1:1 verifiable against llvm-nm -D; PR#9507 precedent)
 

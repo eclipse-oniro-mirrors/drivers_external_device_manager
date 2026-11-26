@@ -11,14 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Version Script for libdriver_extension_usb_bus.z.so
-# SO Type: USB bus extension plugin (dlopen self-registration pattern via DT_INIT constructor)
-# Strategy: Whitelist mode (PR drivers_peripheral#9507 pattern)
+# Version Script for libdriver_extension_usb_bus.z.so (USB bus extension plugin, dlopen self-registration)
 # Generated: 2026-11-02 | updated 2026-11-24 (review fix) | baseline 48 symbols -> global 17 (K-CFI 1 + K-PLT 10 + R-ZTV 6)
-# Contract: BusExtensionCore dlopens this lib (no dlsym); registration happens via
-#           RegisterBusExtension<UsbBusExtension> template in DT_INIT constructor calling
-#           bus_core's GetInstance/Register through PLT; all later calls dispatch
-#           virtually through vptr - no symbol lookup involved.
+# Contract: BusExtensionCore dlopens (no dlsym); DT_INIT constructor registers via bus_core PLT; later calls via vptr.
 
 {
   global:
