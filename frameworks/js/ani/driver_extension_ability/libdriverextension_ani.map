@@ -13,16 +13,11 @@
 
 # Version Script for libdriverextension_ani.so
 # SO Type: DriverExtensionAbility ANI binding lib (out-of-tree loading, output_extension = "so")
-# Strategy: Whitelist mode; every keep below carries documented evidence and a
-#           "deleting breaks" statement (review follow-up)
+# Strategy: Whitelist mode; keeps carry consumer evidence + "deleting breaks" note
 # Generated: 2026-11-02 | updated 2026-11-24 (review fix) | baseline 45 symbols -> global 6 (K-CFI 1 + K-SA glob 1 + KEEP 4)
-# Contract: loaded by the extensionkit ANI extension module loader (dependency
-#           ability_runtime:extensionkit_native) by name per output_extension = "so".
-#           In-tree parallel for the consumption pattern:
-#           DriverExtensionModuleLoader::Create calls DriverExtension::Create for the JS
-#           path (driver_extension_module_loader.cpp:23-26); this lib is the ANI
-#           counterpart, so AniDriverExtension::Create is the analogous factory entry.
-#           All lifecycle methods dispatch virtually via vptr.
+# Contract: loaded by extensionkit ANI loader (dep ability_runtime:extensionkit_native) by
+#           name; Create is the factory entry, consumed like the JS path
+#           (DriverExtensionModuleLoader::Create, driver_extension_module_loader.cpp:23-26).
 
 {
   global:
@@ -31,39 +26,21 @@
     # === KEEP [K-SA]: SA registration entities (official glob convention) ===
     *delegator_E;
 
-    # === KEEP [R-ENTRY]: out-of-tree factory entry. Deleting breaks: extensionkit ANI
-    # loader cannot instantiate AniDriverExtension -> DriverExtensionAbility ANI apps
-    # fail to load. Evidence: ani_driver_extension.h:33 declares the static factory
-    # (ani_driver_extension.cpp:37-40, "return new AniDriverExtension(...)"); the in-tree
-    # JS path consumes the matching factory DriverExtension::Create through the module
-    # loader (driver_extension_module_loader.cpp:23-26) ===
+    # === KEEP [R-ENTRY]: out-of-tree factory entry (ani_driver_extension.cpp:37-40) -
+    # deleting breaks ANI loading of DriverExtensionAbility ===
     _ZN4OHOS14AbilityRuntime18AniDriverExtension6CreateERKNSt3__h10unique_ptrINS0_7RuntimeENS2_14default_deleteIS4_EEEE;
 
-    # === KEEP [R-ZTV]: derived-class vtable. Deleting breaks: cross-DSO virtual dispatch,
-    # CFI checks and RTTI for objects created by the loading chain - the base class
-    # DriverExtension and its vtable live in libdriver_extension.z.so, while lifecycle
-    # methods (Init/OnStart/OnConnect/OnStop/..., ani_driver_extension.cpp:42-320) are
-    # invoked virtually from the out-of-tree extensionkit loader under cfi_cross_dso ===
+    # === KEEP [R-ZTV]: derived-class vtable; base DriverExtension in libdriver_extension.z.so,
+    # lifecycle dispatched virtually from extensionkit under cfi_cross_dso ===
     _ZTVN4OHOS14AbilityRuntime18AniDriverExtensionE;
 
-    # === KEEP [R-ZTV]: base-class vtable of the SA-registration statics matched by
-    # *delegator_E above (ipc iremote_broker.h BrokerDelegatorBase). It is a weak
-    # header-defined copy interposing with libipc's single copy. Deleting breaks:
-    # vtable-address unification with libipc for cross-DSO broker registration ===
+    # === KEEP [R-ZTV]: ipc base-class vtable of the *delegator_E statics (iremote_broker.h) ===
     _ZTVN4OHOS19BrokerDelegatorBaseE;
 
-    # === KEEP [R-ZZ]: shared metrics singleton - function-local static of inline
-    # OHOS::histogram::GetHistogramPlugin() (api_metrics:histogrammanager SDK header).
-    # Every metrics user in this component compiles utils/src/ext_dev_api_metrics.cpp
-    # (taihe BUILD.gn:57, napi device_manager BUILD.gn:25, driver_extension BUILD.gn:40,
-    # ani BUILD.gn:39) and must aggregate into ONE plugin instance. Deleting (localizing)
-    # breaks: per-DSO duplicate plugins -> split metric reports ===
+    # === KEEP [R-ZZ]: shared metrics singleton - deleting (localizing) splits metrics ===
     _ZZN4OHOS9histogram18GetHistogramPluginEvE8instance;
 
-    # REMOVED (review fix): _ZN4OHOS21ExternalDeviceManager13g_errorVectorE -> local.
-    # utils/src/ext_dev_api_metrics.cpp:36 is a strong definition compiled into every
-    # metrics user (see list above); zero extern imports (grep-verified), content is
-    # const after init -> per-DSO local copy is semantically identical.
+    # REMOVED (review fix): g_errorVector -> local (same evidence as taihe map).
 
   local:
     *;

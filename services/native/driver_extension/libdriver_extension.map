@@ -31,11 +31,8 @@
     # === KEEP [K-SA]: SA registration entities (official glob convention) ===
     *delegator_E;
 
-    # REMOVED (review fix): _ZN4OHOS21ExternalDeviceManager13g_errorVectorE -> local.
-    # utils/src/ext_dev_api_metrics.cpp:36 is a strong definition compiled into every
-    # metrics user (taihe BUILD.gn:57, napi device_manager BUILD.gn:25, this target
-    # BUILD.gn:40, ani BUILD.gn:39); zero extern imports (grep-verified), content is
-    # const after init -> per-DSO local copy is semantically identical.
+    # REMOVED (review fix): g_errorVector -> local (strong per-lib copy,
+    # utils/src/ext_dev_api_metrics.cpp:36, zero extern imports).
 
     # === REVIEW [R-ZTV/R-ZZ/R-STATE]: conservative keep, pending manual confirmation ===
     _ZN4OHOS14AbilityRuntime15DriverExtension10SetCreatorERKNSt3__h8functionIFPS1_RKNS2_10unique_ptrINS0_7RuntimeENS2_14default_deleteIS6_EEEEEEE;

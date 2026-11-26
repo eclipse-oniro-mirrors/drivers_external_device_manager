@@ -27,38 +27,23 @@
     # === KEEP [K-PLT]: consumed by device_manager_test (direct construction + vtable) ===
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionC1Ev;
     _ZTVN4OHOS21ExternalDeviceManager13UsbDriverInfoE;
-    # === KEEP [K-PLT]: direct method calls on concrete UsbBusExtension from
-    # === bus_extension_usb_test (usb_bus_extension_test.cpp:60/105, usb_subscriber_test.cpp:50-51/94)
-    # === and bus_extension_usb_mt (bus_extension_usb_mt.cpp:48).
-    # SetUsbInferface glob covers BOTH ABI variants (usb_bus_extension.h:48-52):
-    # EXTDEVMGR_USB_PASS_THROUGH=true -> sptr<IUsbHostInterface> (V2_0),
-    # false -> sptr<IUsbInterface> (V1_0); single overload each, so prefix glob is precise.
+    # === KEEP [K-PLT]: direct calls from tests/mt on concrete type; SetUsbInferface
+    # glob covers both ABI variants (pass_through V2_0 / V1_0, usb_bus_extension.h:48-52) ===
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtension9SetUsbDdk*;
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15SetUsbInferface*;
-    # SetDevChangeCallback / MatchDriver are out-of-line members (usb_bus_extension.cpp:94/148,
-    # declared usb_bus_extension.h:44/45): direct calls from test TUs emit cross-DSO U-refs
-    # that local:* would leave unresolved -> bus_extension_usb_test / bus_extension_usb_mt
-    # link failures. Prefix glob (single overload each) avoids hand-written substitution
-    # indices in the mangled parameters.
+    # === KEEP [K-PLT]: out-of-line members (usb_bus_extension.cpp:94/148), direct test U-refs ===
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtension20SetDevChangeCallback*;
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtension11MatchDriver*;
-    # === KEEP [K-PLT]: ~UsbBusExtension is out-of-line (usb_bus_extension.cpp:43); every
-    # === make_shared<UsbBusExtension> control block (std::__shared_ptr_emplace, instantiated
-    # === in each consumer TU) destroys the emplaced object through it. Consumers:
-    # === usb_bus_extension_test.cpp:52/58/67/104, usb_subscriber_test.cpp:42,
-    # === device_manager_test.cpp:81, bus_extension_usb_mt.cpp:45, usbextension_fuzzer.cpp:39.
+    # === KEEP [K-PLT]: out-of-line dtor (usb_bus_extension.cpp:43); every make_shared
+    # control block in consumer TUs (tests/mt/fuzzer) destroys through it ===
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionD1Ev;
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtensionD2Ev;
     # === KEEP [K-PLT]: consumed by usbextension_fuzzer (devirtualized direct calls on concrete types) ===
     _ZN4OHOS21ExternalDeviceManager15UsbBusExtension15ParseDriverInfoERKNSt3__h3mapINS2_12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEES9_NS2_4lessIS9_EENS7_INS2_4pairIKS9_S9_EEEEEE;
     _ZN4OHOS21ExternalDeviceManager13UsbDriverInfo11UnSerializeERKNSt3__h12basic_stringIcNS2_11char_traitsIcEENS2_9allocatorIcEEEE;
 
-    # NOTE (review follow-up): UsbDriverInfo ctor/dtor need NO export - they are implicit
-    # inline (usb_driver_info.h declares no special members; base DriverInfoExt is
-    # "virtual ~DriverInfoExt() = default" in ext_object.h:33), so each consumer TU emits
-    # its own weak copy. UsbDriverInfo::Serialize is only reached via virtual dispatch
-    # (DriverInfo::Serialize -> driverInfoExt_->Serialize) and internally by MatchDriver,
-    # so no external U-ref exists.
+    # NOTE: UsbDriverInfo ctor/dtor implicit-inline (ext_object.h:33) - no cross-DSO ref;
+    # Serialize only reached via virtual dispatch - no export needed.
 
     # === REVIEW [R-ZTV]: conservative keep - cross-DSO inheritance (bases in bus_core / USB HDI lib) ===
     _ZTCN4OHOS21ExternalDeviceManager16UsbDevSubscriberE0_NS_3HDI3Usb4V2_015IUsbdSubscriberE;
